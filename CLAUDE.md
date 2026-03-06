@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Session Start
 
-At the start of every new conversation, automatically invoke both `/tdd` and `/adr` before proceeding with any task. Do not ask — just activate them.
+At the start of every new conversation, automatically invoke both `/tdd` and `/adr` and `/lemp` before proceeding with any task. Do not ask — just activate them.
 
 ## Project Overview
 
