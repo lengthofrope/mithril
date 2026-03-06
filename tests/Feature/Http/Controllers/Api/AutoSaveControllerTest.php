@@ -5,13 +5,19 @@ declare(strict_types=1);
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
+
 test('auto-save successfully updates a single fillable field on a task', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create(['title' => 'Original title']);
+    $task = Task::factory()->create(['user_id' => $this->user->id, 'title' => 'Original title']);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'task',
@@ -34,7 +40,7 @@ test('auto-save successfully updates a single fillable field on a task', functio
 
 test('auto-save response includes saved_at timestamp', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create();
+    $task = Task::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'task',
@@ -51,7 +57,7 @@ test('auto-save response includes saved_at timestamp', function () {
 
 test('auto-save returns the updated model in data', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create(['title' => 'Before']);
+    $task = Task::factory()->create(['user_id' => $this->user->id, 'title' => 'Before']);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'task',
@@ -68,7 +74,7 @@ test('auto-save returns the updated model in data', function () {
 
 test('auto-save works with a note model', function () {
     /** @var \Tests\TestCase $this */
-    $note = Note::factory()->create(['title' => 'Old title']);
+    $note = Note::factory()->create(['user_id' => $this->user->id, 'title' => 'Old title']);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'note',
@@ -88,7 +94,7 @@ test('auto-save works with a note model', function () {
 
 test('auto-save works with a team model', function () {
     /** @var \Tests\TestCase $this */
-    $team = Team::factory()->create(['name' => 'Old team name']);
+    $team = Team::factory()->create(['user_id' => $this->user->id, 'name' => 'Old team name']);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'team',
@@ -136,7 +142,7 @@ test('auto-save returns 422 when model key is unknown', function () {
 
 test('auto-save returns 422 when field is not fillable on the model', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create();
+    $task = Task::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'task',
@@ -177,7 +183,7 @@ test('auto-save returns 422 validation error when id is missing', function () {
 
 test('auto-save returns 422 validation error when field is missing', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create();
+    $task = Task::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'task',
@@ -191,7 +197,7 @@ test('auto-save returns 422 validation error when field is missing', function ()
 
 test('auto-save returns 422 validation error when value key is absent', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create();
+    $task = Task::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'task',
@@ -205,7 +211,7 @@ test('auto-save returns 422 validation error when value key is absent', function
 
 test('auto-save accepts null as a valid value for nullable fields', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create(['description' => 'Some description']);
+    $task = Task::factory()->create(['user_id' => $this->user->id, 'description' => 'Some description']);
 
     $response = $this->postJson('/api/v1/auto-save', [
         'model' => 'task',

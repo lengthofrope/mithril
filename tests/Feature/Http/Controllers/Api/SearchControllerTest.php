@@ -6,9 +6,15 @@ use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\TeamMember;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 test('search returns 422 when query is empty', function () {
     /** @var \Tests\TestCase $this */
@@ -50,8 +56,8 @@ test('search returns success with grouped results structure when query is valid'
 
 test('search returns empty results when nothing matches', function () {
     /** @var \Tests\TestCase $this */
-    Task::factory()->create(['title' => 'Completely different']);
-    Note::factory()->create(['title' => 'Nothing relevant here']);
+    Task::factory()->create(['user_id' => $this->user->id,'title' => 'Completely different']);
+    Note::factory()->create(['user_id' => $this->user->id,'title' => 'Nothing relevant here']);
 
     $response = $this->getJson('/api/v1/search?q=xyznonexistent');
 
@@ -64,8 +70,8 @@ test('search returns empty results when nothing matches', function () {
 
 test('search returns matching tasks by title', function () {
     /** @var \Tests\TestCase $this */
-    Task::factory()->create(['title' => 'Fix the authentication bug']);
-    Task::factory()->create(['title' => 'Write unit tests']);
+    Task::factory()->create(['user_id' => $this->user->id,'title' => 'Fix the authentication bug']);
+    Task::factory()->create(['user_id' => $this->user->id,'title' => 'Write unit tests']);
 
     $response = $this->getJson('/api/v1/search?q=authentication');
 
@@ -76,8 +82,8 @@ test('search returns matching tasks by title', function () {
 
 test('search returns matching notes by title', function () {
     /** @var \Tests\TestCase $this */
-    Note::factory()->create(['title' => 'Deployment checklist']);
-    Note::factory()->create(['title' => 'Team meeting notes']);
+    Note::factory()->create(['user_id' => $this->user->id,'title' => 'Deployment checklist']);
+    Note::factory()->create(['user_id' => $this->user->id,'title' => 'Team meeting notes']);
 
     $response = $this->getJson('/api/v1/search?q=Deployment');
 
@@ -88,8 +94,8 @@ test('search returns matching notes by title', function () {
 
 test('search returns matching follow-ups by description', function () {
     /** @var \Tests\TestCase $this */
-    FollowUp::factory()->create(['description' => 'Follow up on contract renewal']);
-    FollowUp::factory()->create(['description' => 'Check in with stakeholders']);
+    FollowUp::factory()->create(['user_id' => $this->user->id, 'description' => 'Follow up on contract renewal']);
+    FollowUp::factory()->create(['user_id' => $this->user->id, 'description' => 'Check in with stakeholders']);
 
     $response = $this->getJson('/api/v1/search?q=contract');
 
@@ -99,8 +105,8 @@ test('search returns matching follow-ups by description', function () {
 
 test('search returns matching team members by name', function () {
     /** @var \Tests\TestCase $this */
-    TeamMember::factory()->create(['name' => 'Alice Johnson']);
-    TeamMember::factory()->create(['name' => 'Bob Smith']);
+    TeamMember::factory()->create(['user_id' => $this->user->id, 'name' => 'Alice Johnson']);
+    TeamMember::factory()->create(['user_id' => $this->user->id, 'name' => 'Bob Smith']);
 
     $response = $this->getJson('/api/v1/search?q=Alice');
 

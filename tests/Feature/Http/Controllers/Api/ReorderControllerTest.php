@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 use App\Models\Task;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
+
 test('reorder successfully updates sort_order on tasks', function () {
     /** @var \Tests\TestCase $this */
-    $taskA = Task::factory()->create(['sort_order' => 1]);
-    $taskB = Task::factory()->create(['sort_order' => 2]);
-    $taskC = Task::factory()->create(['sort_order' => 3]);
+    $taskA = Task::factory()->create(['user_id' => $this->user->id,'sort_order' => 1]);
+    $taskB = Task::factory()->create(['user_id' => $this->user->id,'sort_order' => 2]);
+    $taskC = Task::factory()->create(['user_id' => $this->user->id,'sort_order' => 3]);
 
     $response = $this->postJson('/api/v1/reorder', [
         'model' => 'task',
@@ -36,8 +42,8 @@ test('reorder successfully updates sort_order on tasks', function () {
 
 test('reorder successfully updates sort_order on teams', function () {
     /** @var \Tests\TestCase $this */
-    $teamA = Team::factory()->create(['sort_order' => 1]);
-    $teamB = Team::factory()->create(['sort_order' => 2]);
+    $teamA = Team::factory()->create(['user_id' => $this->user->id,'sort_order' => 1]);
+    $teamB = Team::factory()->create(['user_id' => $this->user->id,'sort_order' => 2]);
 
     $response = $this->postJson('/api/v1/reorder', [
         'model' => 'team',
@@ -173,7 +179,7 @@ test('reorder returns 422 validation error when item id is zero', function () {
 
 test('reorder response data is null on success', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create(['sort_order' => 1]);
+    $task = Task::factory()->create(['user_id' => $this->user->id,'sort_order' => 1]);
 
     $response = $this->postJson('/api/v1/reorder', [
         'model' => 'task',
