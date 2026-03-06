@@ -41,7 +41,7 @@ test('notes index passes required view variables', function () {
     $response = $this->actingAs($user)->get('/notes');
 
     $response->assertViewHas('notes');
-    $response->assertViewHas('availableTags');
+    $response->assertViewHas('allTags');
     $response->assertViewHas('searchTerm');
     $response->assertViewHas('selectedTag');
 });
@@ -129,7 +129,7 @@ test('notes index passes available tags to view', function () {
 
     $response = $this->actingAs($user)->get('/notes');
 
-    $tags = $response->viewData('availableTags');
+    $tags = $response->viewData('allTags');
     expect($tags)->toContain('alpha');
     expect($tags)->toContain('beta');
 });
@@ -143,7 +143,7 @@ test('notes index available tags are distinct', function () {
 
     $response = $this->actingAs($user)->get('/notes');
 
-    $tags = $response->viewData('availableTags');
+    $tags = $response->viewData('allTags');
     expect($tags->filter(fn ($t) => $t === 'duplicate'))->toHaveCount(1);
 });
 

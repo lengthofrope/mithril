@@ -32,11 +32,12 @@ class WeeklyReflectionController extends Controller
         $weekStart = now()->startOfWeek();
         $weekEnd = now()->endOfWeek();
 
-        $currentReflection = WeeklyReflection::query()
-            ->whereDate('week_start', $weekStart->toDateString())
-            ->first();
+        $currentReflection = WeeklyReflection::firstOrCreate(
+            ['week_start' => $weekStart->toDateString()],
+            ['week_end' => $weekEnd->toDateString()]
+        );
 
-        $summary = $this->buildWeeklySummary($weekStart, $weekEnd);
+        $summaryData = $this->buildWeeklySummary($weekStart, $weekEnd);
 
         $pastReflections = WeeklyReflection::query()
             ->whereDate('week_start', '<', $weekStart->toDateString())
@@ -48,7 +49,11 @@ class WeeklyReflectionController extends Controller
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd,
             'currentReflection' => $currentReflection,
-            'summary' => $summary,
+            'weekStats' => [
+                'tasks_completed' => $summaryData['completed_tasks_count'],
+                'tasks_open' => $summaryData['open_tasks_count'],
+                'follow_ups_handled' => $summaryData['handled_follow_ups_count'],
+            ],
             'pastReflections' => $pastReflections,
         ]);
     }

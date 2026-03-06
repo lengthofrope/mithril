@@ -47,37 +47,34 @@ test('dashboard passes greeting variable to view', function () {
     expect($response->viewData('greeting'))->toBeString()->not->toBeEmpty();
 });
 
-test('dashboard passes stats array to view', function () {
+test('dashboard passes counters array to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/');
 
-    $response->assertViewHas('stats');
-    expect($response->viewData('stats'))->toBeArray()->toHaveKeys([
+    $response->assertViewHas('counters');
+    expect($response->viewData('counters'))->toBeArray()->toHaveKeys([
         'open_tasks',
         'urgent_tasks',
         'overdue_follow_ups',
         'today_follow_ups',
-        'upcoming_bilas',
+        'bilas_this_week',
     ]);
 });
 
-test('dashboard passes today array to view', function () {
+test('dashboard passes todayTasks todayFollowUps todayBilas to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/');
 
-    $response->assertViewHas('today');
-    expect($response->viewData('today'))->toBeArray()->toHaveKeys([
-        'tasks_due_today',
-        'overdue_follow_ups',
-        'bilas_today',
-    ]);
+    $response->assertViewHas('todayTasks');
+    $response->assertViewHas('todayFollowUps');
+    $response->assertViewHas('todayBilas');
 });
 
-test('stats open_tasks counts non-done tasks only', function () {
+test('counters open_tasks counts non-done tasks only', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -88,10 +85,10 @@ test('stats open_tasks counts non-done tasks only', function () {
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('stats')['open_tasks'])->toBe(3);
+    expect($response->viewData('counters')['open_tasks'])->toBe(3);
 });
 
-test('stats urgent_tasks counts urgent non-done tasks only', function () {
+test('counters urgent_tasks counts urgent non-done tasks only', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -101,10 +98,10 @@ test('stats urgent_tasks counts urgent non-done tasks only', function () {
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('stats')['urgent_tasks'])->toBe(1);
+    expect($response->viewData('counters')['urgent_tasks'])->toBe(1);
 });
 
-test('stats overdue_follow_ups counts overdue non-done follow-ups', function () {
+test('counters overdue_follow_ups counts overdue non-done follow-ups', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -113,10 +110,10 @@ test('stats overdue_follow_ups counts overdue non-done follow-ups', function () 
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('stats')['overdue_follow_ups'])->toBe(1);
+    expect($response->viewData('counters')['overdue_follow_ups'])->toBe(1);
 });
 
-test('stats today_follow_ups counts follow-ups due today', function () {
+test('counters today_follow_ups counts follow-ups due today', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -125,10 +122,10 @@ test('stats today_follow_ups counts follow-ups due today', function () {
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('stats')['today_follow_ups'])->toBe(1);
+    expect($response->viewData('counters')['today_follow_ups'])->toBe(1);
 });
 
-test('stats upcoming_bilas counts bilas within the current week', function () {
+test('counters bilas_this_week counts bilas within the current week', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -138,10 +135,10 @@ test('stats upcoming_bilas counts bilas within the current week', function () {
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('stats')['upcoming_bilas'])->toBe(2);
+    expect($response->viewData('counters')['bilas_this_week'])->toBe(2);
 });
 
-test('today tasks_due_today contains tasks with deadline today and not done', function () {
+test('todayTasks contains tasks with deadline today and not done', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -151,11 +148,10 @@ test('today tasks_due_today contains tasks with deadline today and not done', fu
 
     $response = $this->actingAs($user)->get('/');
 
-    $tasksDueToday = $response->viewData('today')['tasks_due_today'];
-    expect($tasksDueToday)->toHaveCount(1);
+    expect($response->viewData('todayTasks'))->toHaveCount(1);
 });
 
-test('today overdue_follow_ups contains all overdue non-done follow-ups', function () {
+test('todayFollowUps contains all overdue non-done follow-ups', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -165,11 +161,10 @@ test('today overdue_follow_ups contains all overdue non-done follow-ups', functi
 
     $response = $this->actingAs($user)->get('/');
 
-    $overdueFollowUps = $response->viewData('today')['overdue_follow_ups'];
-    expect($overdueFollowUps)->toHaveCount(2);
+    expect($response->viewData('todayFollowUps'))->toHaveCount(2);
 });
 
-test('today bilas_today contains bilas scheduled for today', function () {
+test('todayBilas contains bilas scheduled for today', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -178,20 +173,19 @@ test('today bilas_today contains bilas scheduled for today', function () {
 
     $response = $this->actingAs($user)->get('/');
 
-    $bilasToday = $response->viewData('today')['bilas_today'];
-    expect($bilasToday)->toHaveCount(1);
+    expect($response->viewData('todayBilas'))->toHaveCount(1);
 });
 
-test('dashboard stats are zero when no data exists', function () {
+test('dashboard counters are zero when no data exists', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/');
 
-    $stats = $response->viewData('stats');
-    expect($stats['open_tasks'])->toBe(0);
-    expect($stats['urgent_tasks'])->toBe(0);
-    expect($stats['overdue_follow_ups'])->toBe(0);
-    expect($stats['today_follow_ups'])->toBe(0);
-    expect($stats['upcoming_bilas'])->toBe(0);
+    $counters = $response->viewData('counters');
+    expect($counters['open_tasks'])->toBe(0);
+    expect($counters['urgent_tasks'])->toBe(0);
+    expect($counters['overdue_follow_ups'])->toBe(0);
+    expect($counters['today_follow_ups'])->toBe(0);
+    expect($counters['bilas_this_week'])->toBe(0);
 });

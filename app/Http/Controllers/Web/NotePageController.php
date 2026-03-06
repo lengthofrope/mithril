@@ -39,7 +39,7 @@ class NotePageController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        $availableTags = NoteTag::query()
+        $allTags = NoteTag::query()
             ->select('tag')
             ->distinct()
             ->orderBy('tag')
@@ -48,7 +48,7 @@ class NotePageController extends Controller
         return view('pages.notes.index', [
             'title' => 'Notes',
             'notes' => $notes,
-            'availableTags' => $availableTags,
+            'allTags' => $allTags,
             'searchTerm' => $searchTerm,
             'selectedTag' => $filterTag,
         ]);

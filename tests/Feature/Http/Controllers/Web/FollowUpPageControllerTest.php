@@ -35,18 +35,16 @@ test('follow-up index renders the correct view', function () {
     $response->assertViewIs('pages.follow-ups.index');
 });
 
-test('follow-up index passes overdue today thisWeek upcoming to view', function () {
+test('follow-up index passes sections memberOptions selectedTeamMemberId to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    $response->assertViewHas('overdue');
-    $response->assertViewHas('today');
-    $response->assertViewHas('thisWeek');
-    $response->assertViewHas('upcoming');
-    $response->assertViewHas('teamMembers');
+    $response->assertViewHas('sections');
+    $response->assertViewHas('memberOptions');
     $response->assertViewHas('selectedTeamMemberId');
+    expect($response->viewData('sections'))->toHaveKeys(['overdue', 'today', 'thisWeek', 'upcoming']);
 });
 
 test('follow-up index groups overdue follow-ups correctly', function () {
@@ -59,7 +57,7 @@ test('follow-up index groups overdue follow-ups correctly', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    expect($response->viewData('overdue'))->toHaveCount(2);
+    expect($response->viewData('sections')['overdue'])->toHaveCount(2);
 });
 
 test('follow-up index groups today follow-ups correctly', function () {
@@ -71,7 +69,7 @@ test('follow-up index groups today follow-ups correctly', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    expect($response->viewData('today'))->toHaveCount(1);
+    expect($response->viewData('sections')['today'])->toHaveCount(1);
 });
 
 test('follow-up index groups this week follow-ups correctly', function () {
@@ -86,7 +84,7 @@ test('follow-up index groups this week follow-ups correctly', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    expect($response->viewData('thisWeek'))->toHaveCount(1);
+    expect($response->viewData('sections')['thisWeek'])->toHaveCount(1);
 });
 
 test('follow-up index groups upcoming follow-ups correctly', function () {
@@ -99,7 +97,7 @@ test('follow-up index groups upcoming follow-ups correctly', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    expect($response->viewData('upcoming'))->toHaveCount(1);
+    expect($response->viewData('sections')['upcoming'])->toHaveCount(1);
 });
 
 test('follow-up index excludes done follow-ups from all buckets', function () {
@@ -111,8 +109,8 @@ test('follow-up index excludes done follow-ups from all buckets', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    expect($response->viewData('overdue'))->toHaveCount(0);
-    expect($response->viewData('today'))->toHaveCount(0);
+    expect($response->viewData('sections')['overdue'])->toHaveCount(0);
+    expect($response->viewData('sections')['today'])->toHaveCount(0);
 });
 
 test('follow-up index filters by team_member_id when provided', function () {
@@ -133,6 +131,6 @@ test('follow-up index filters by team_member_id when provided', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups?team_member_id=' . $member->id);
 
-    expect($response->viewData('overdue'))->toHaveCount(1);
+    expect($response->viewData('sections')['overdue'])->toHaveCount(1);
     expect($response->viewData('selectedTeamMemberId'))->toBe((string) $member->id);
 });

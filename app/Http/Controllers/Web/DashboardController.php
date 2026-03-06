@@ -30,14 +30,16 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $greeting = $this->resolveGreeting();
-        $stats = $this->buildStats();
+        $counters = $this->buildStats();
         $today = $this->buildTodaySection();
 
         return view('pages.dashboard', [
             'title' => 'Dashboard',
             'greeting' => $greeting,
-            'stats' => $stats,
-            'today' => $today,
+            'counters' => $counters,
+            'todayTasks' => $today['tasks_due_today'],
+            'todayFollowUps' => $today['overdue_follow_ups'],
+            'todayBilas' => $today['bilas_today'],
         ]);
     }
 
@@ -80,7 +82,7 @@ class DashboardController extends Controller
             'urgent_tasks' => $urgentTaskCount,
             'overdue_follow_ups' => $overdueFollowUpCount,
             'today_follow_ups' => $todayFollowUpCount,
-            'upcoming_bilas' => $upcomingBilaCount,
+            'bilas_this_week' => $upcomingBilaCount,
         ];
     }
 

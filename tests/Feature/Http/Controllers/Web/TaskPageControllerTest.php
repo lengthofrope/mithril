@@ -56,10 +56,11 @@ test('task index passes required view variables', function () {
     $response->assertViewHas('tasks');
     $response->assertViewHas('filters');
     $response->assertViewHas('taskGroups');
-    $response->assertViewHas('taskCategories');
-    $response->assertViewHas('teams');
-    $response->assertViewHas('teamMembers');
     $response->assertViewHas('statuses');
+    $response->assertViewHas('teamOptions');
+    $response->assertViewHas('memberOptions');
+    $response->assertViewHas('categoryOptions');
+    $response->assertViewHas('groupOptions');
 });
 
 test('task index filters tasks by status', function () {
@@ -141,7 +142,20 @@ test('task kanban renders the correct view', function () {
     $response->assertViewIs('pages.tasks.kanban');
 });
 
-test('task kanban passes columns keyed by status to view', function () {
+test('task kanban passes tasks statuses filters teamOptions memberOptions to view', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/tasks/kanban');
+
+    $response->assertViewHas('tasks');
+    $response->assertViewHas('statuses');
+    $response->assertViewHas('filters');
+    $response->assertViewHas('teamOptions');
+    $response->assertViewHas('memberOptions');
+});
+
+test('task kanban passes all tasks to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -151,25 +165,17 @@ test('task kanban passes columns keyed by status to view', function () {
 
     $response = $this->actingAs($user)->get('/tasks/kanban');
 
-    $response->assertViewHas('columns');
-    $columns = $response->viewData('columns');
-
-    expect($columns)->toHaveKey(TaskStatus::Open->value);
-    expect($columns)->toHaveKey(TaskStatus::Done->value);
-    expect($columns[TaskStatus::Open->value])->toHaveCount(2);
-    expect($columns[TaskStatus::Done->value])->toHaveCount(1);
+    expect($response->viewData('tasks'))->toHaveCount(3);
 });
 
-test('task kanban columns contain all task status keys', function () {
+test('task kanban passes all TaskStatus cases in statuses', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/tasks/kanban');
 
-    $columns = $response->viewData('columns');
-    foreach (TaskStatus::cases() as $status) {
-        expect($columns)->toHaveKey($status->value);
-    }
+    $statuses = $response->viewData('statuses');
+    expect($statuses)->toHaveCount(count(TaskStatus::cases()));
 });
 
 test('task kanban filters tasks by priority', function () {
@@ -182,6 +188,5 @@ test('task kanban filters tasks by priority', function () {
     $response = $this->actingAs($user)->get('/tasks/kanban?priority=' . Priority::Urgent->value);
 
     $response->assertOk();
-    $openColumn = $response->viewData('columns')[TaskStatus::Open->value];
-    expect($openColumn)->toHaveCount(1);
+    expect($response->viewData('tasks'))->toHaveCount(1);
 });

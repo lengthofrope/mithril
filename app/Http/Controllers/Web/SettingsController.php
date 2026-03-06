@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\TaskCategory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,9 +28,13 @@ class SettingsController extends Controller
      */
     public function index(Request $request): View
     {
+        $user = $request->user();
+
         return view('pages.settings.index', [
             'title' => 'Settings',
-            'user' => $request->user(),
+            'user' => $user,
+            'pushEnabled' => (bool) ($user->push_enabled ?? false),
+            'categories' => TaskCategory::orderBySortOrder()->get(),
         ]);
     }
 

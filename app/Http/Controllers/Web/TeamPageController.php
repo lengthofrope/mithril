@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Note;
 use App\Models\Team;
 use App\Models\TeamMember;
 use Illuminate\Contracts\View\View;
@@ -70,9 +71,21 @@ class TeamPageController extends Controller
             'agreements' => fn ($q) => $q->orderBy('agreed_date', 'desc'),
         ]);
 
+        $memberNotes = Note::query()
+            ->where('team_member_id', $teamMember->id)
+            ->with('tags')
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('updated_at')
+            ->get();
+
         return view('pages.teams.member', [
             'title' => $teamMember->name,
-            'teamMember' => $teamMember,
+            'member' => $teamMember,
+            'memberTasks' => $teamMember->tasks,
+            'memberFollowUps' => $teamMember->followUps,
+            'memberBilas' => $teamMember->bilas,
+            'memberAgreements' => $teamMember->agreements,
+            'memberNotes' => $memberNotes,
         ]);
     }
 }

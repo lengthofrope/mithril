@@ -1,6 +1,6 @@
 {
-  "name": "Team Lead Dashboard",
-  "short_name": "TeamLead",
+  "name": "TeamDash",
+  "short_name": "TeamDash",
   "description": "Personal team management dashboard",
   "start_url": "/",
   "display": "standalone",

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\FollowUp;
+use App\Models\Team;
 use App\Models\TeamMember;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -51,13 +52,19 @@ class FollowUpPageController extends Controller
             ->orderBy('follow_up_date')
             ->get();
 
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
+
         return view('pages.follow-ups.index', [
             'title' => 'Follow-ups',
-            'overdue' => $overdue,
-            'today' => $today,
-            'thisWeek' => $thisWeek,
-            'upcoming' => $upcoming,
-            'teamMembers' => TeamMember::orderBySortOrder()->get(),
+            'sections' => [
+                'overdue' => $overdue,
+                'today' => $today,
+                'thisWeek' => $thisWeek,
+                'upcoming' => $upcoming,
+            ],
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
             'selectedTeamMemberId' => $teamMemberId,
         ]);
     }

@@ -54,16 +54,23 @@ class TaskPageController extends Controller
             $tasks = $query->get();
         }
 
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
+        $allGroups = TaskGroup::orderBySortOrder()->get();
+        $allCategories = TaskCategory::all();
+
         return view('pages.tasks.index', [
             'title' => 'Tasks',
             'tasks' => $tasks,
             'filters' => $filters,
             'groupByTaskGroup' => (bool) $groupById,
-            'taskGroups' => TaskGroup::orderBySortOrder()->get(),
-            'taskCategories' => TaskCategory::all(),
-            'teams' => Team::orderBySortOrder()->get(),
-            'teamMembers' => TeamMember::orderBySortOrder()->get(),
+            'groups' => $allGroups,
+            'taskGroups' => $allGroups,
             'statuses' => TaskStatus::cases(),
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
+            'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => $c->id, 'label' => $c->name])->all(),
+            'groupOptions' => $allGroups->map(fn (TaskGroup $g) => ['value' => $g->id, 'label' => $g->name])->all(),
         ]);
     }
 
@@ -89,21 +96,16 @@ class TaskPageController extends Controller
             ->with(['teamMember', 'taskCategory'])
             ->get();
 
-        $columns = collect(TaskStatus::cases())->mapWithKeys(
-            fn (TaskStatus $status) => [
-                $status->value => $tasks->filter(
-                    fn (Task $task) => $task->status === $status
-                )->values(),
-            ]
-        );
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
 
         return view('pages.tasks.kanban', [
             'title' => 'Kanban',
-            'columns' => $columns,
+            'tasks' => $tasks,
             'filters' => $filters,
             'statuses' => TaskStatus::cases(),
-            'teams' => Team::orderBySortOrder()->get(),
-            'teamMembers' => TeamMember::orderBySortOrder()->get(),
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
         ]);
     }
 }

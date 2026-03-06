@@ -31,20 +31,22 @@ class BilaPageController extends Controller
             ->when($teamMemberId, fn ($q) => $q->where('team_member_id', $teamMemberId))
             ->with(['teamMember', 'prepItems']);
 
-        $upcoming = $baseQuery()
+        $upcomingBilas = $baseQuery()
             ->whereDate('scheduled_date', '>=', now()->toDateString())
             ->orderBy('scheduled_date')
-            ->get();
+            ->get()
+            ->each(fn (Bila $bila) => $bila->setRelation('member', $bila->teamMember));
 
-        $past = $baseQuery()
+        $pastBilas = $baseQuery()
             ->whereDate('scheduled_date', '<', now()->toDateString())
             ->orderByDesc('scheduled_date')
-            ->get();
+            ->get()
+            ->each(fn (Bila $bila) => $bila->setRelation('member', $bila->teamMember));
 
         return view('pages.bilas.index', [
             'title' => "Bila's",
-            'upcoming' => $upcoming,
-            'past' => $past,
+            'upcomingBilas' => $upcomingBilas,
+            'pastBilas' => $pastBilas,
             'selectedTeamMemberId' => $teamMemberId,
         ]);
     }
@@ -58,10 +60,25 @@ class BilaPageController extends Controller
     public function show(Bila $bila): View
     {
         $bila->load(['teamMember', 'prepItems']);
+        $bila->setRelation('member', $bila->teamMember);
+
+        $previousBila = Bila::query()
+            ->where('team_member_id', $bila->team_member_id)
+            ->whereDate('scheduled_date', '<', $bila->scheduled_date->toDateString())
+            ->orderByDesc('scheduled_date')
+            ->first();
+
+        $nextBila = Bila::query()
+            ->where('team_member_id', $bila->team_member_id)
+            ->whereDate('scheduled_date', '>', $bila->scheduled_date->toDateString())
+            ->orderBy('scheduled_date')
+            ->first();
 
         return view('pages.bilas.show', [
             'title' => 'Bila — ' . $bila->teamMember->name,
             'bila' => $bila,
+            'previousBila' => $previousBila,
+            'nextBila' => $nextBila,
         ]);
     }
 }

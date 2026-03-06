@@ -46,11 +46,16 @@ test('weekly reflection index passes required view variables', function () {
     $response->assertViewHas('weekStart');
     $response->assertViewHas('weekEnd');
     $response->assertViewHas('currentReflection');
-    $response->assertViewHas('summary');
+    $response->assertViewHas('weekStats');
     $response->assertViewHas('pastReflections');
+    expect($response->viewData('weekStats'))->toHaveKeys([
+        'tasks_completed',
+        'tasks_open',
+        'follow_ups_handled',
+    ]);
 });
 
-test('weekly reflection summary includes completed tasks count this week', function () {
+test('weekly reflection weekStats includes completed tasks count this week', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -65,11 +70,11 @@ test('weekly reflection summary includes completed tasks count this week', funct
 
     $response = $this->actingAs($user)->get('/weekly');
 
-    $summary = $response->viewData('summary');
-    expect($summary['completed_tasks_count'])->toBe(1);
+    $weekStats = $response->viewData('weekStats');
+    expect($weekStats['tasks_completed'])->toBe(1);
 });
 
-test('weekly reflection summary includes open tasks count', function () {
+test('weekly reflection weekStats includes open tasks count', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -79,11 +84,11 @@ test('weekly reflection summary includes open tasks count', function () {
 
     $response = $this->actingAs($user)->get('/weekly');
 
-    $summary = $response->viewData('summary');
-    expect($summary['open_tasks_count'])->toBe(2);
+    $weekStats = $response->viewData('weekStats');
+    expect($weekStats['tasks_open'])->toBe(2);
 });
 
-test('weekly reflection summary includes handled follow-ups count this week', function () {
+test('weekly reflection weekStats includes handled follow-ups count this week', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -98,21 +103,8 @@ test('weekly reflection summary includes handled follow-ups count this week', fu
 
     $response = $this->actingAs($user)->get('/weekly');
 
-    $summary = $response->viewData('summary');
-    expect($summary['handled_follow_ups_count'])->toBe(1);
-});
-
-test('weekly reflection summary includes open follow-ups count', function () {
-    /** @var \Tests\TestCase $this */
-    $user = User::factory()->create();
-
-    FollowUp::factory()->create(['status' => FollowUpStatus::Open]);
-    FollowUp::factory()->create(['status' => FollowUpStatus::Done]);
-
-    $response = $this->actingAs($user)->get('/weekly');
-
-    $summary = $response->viewData('summary');
-    expect($summary['open_follow_ups_count'])->toBe(1);
+    $weekStats = $response->viewData('weekStats');
+    expect($weekStats['follow_ups_handled'])->toBe(1);
 });
 
 test('weekly reflection shows current week reflection when it exists', function () {
@@ -132,13 +124,15 @@ test('weekly reflection shows current week reflection when it exists', function 
     expect($current->id)->toBe($reflection->id);
 });
 
-test('weekly reflection current reflection is null when none exists for current week', function () {
+test('weekly reflection creates current week reflection when none exists', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/weekly');
 
-    expect($response->viewData('currentReflection'))->toBeNull();
+    $current = $response->viewData('currentReflection');
+    expect($current)->not->toBeNull();
+    expect($current->week_start)->toBe(now()->startOfWeek()->toDateString());
 });
 
 test('weekly reflection returns past reflections in descending order', function () {

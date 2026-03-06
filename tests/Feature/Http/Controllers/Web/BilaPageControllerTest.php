@@ -41,8 +41,8 @@ test('bila index passes upcoming and past to view', function () {
 
     $response = $this->actingAs($user)->get('/bilas');
 
-    $response->assertViewHas('upcoming');
-    $response->assertViewHas('past');
+    $response->assertViewHas('upcomingBilas');
+    $response->assertViewHas('pastBilas');
     $response->assertViewHas('selectedTeamMemberId');
 });
 
@@ -56,8 +56,8 @@ test('bila index splits bilas into upcoming and past groups', function () {
 
     $response = $this->actingAs($user)->get('/bilas');
 
-    expect($response->viewData('upcoming'))->toHaveCount(2);
-    expect($response->viewData('past'))->toHaveCount(1);
+    expect($response->viewData('upcomingBilas'))->toHaveCount(2);
+    expect($response->viewData('pastBilas'))->toHaveCount(1);
 });
 
 test('bila index filters by team_member_id when provided', function () {
@@ -70,7 +70,7 @@ test('bila index filters by team_member_id when provided', function () {
 
     $response = $this->actingAs($user)->get('/bilas?team_member_id=' . $member->id);
 
-    expect($response->viewData('upcoming'))->toHaveCount(1);
+    expect($response->viewData('upcomingBilas'))->toHaveCount(1);
     expect($response->viewData('selectedTeamMemberId'))->toBe((string) $member->id);
 });
 

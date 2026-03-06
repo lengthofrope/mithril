@@ -154,13 +154,18 @@ test('team member passes member with related data to view', function () {
 
     $response = $this->actingAs($user)->get("/teams/member/{$member->id}");
 
-    $response->assertViewHas('teamMember');
-    $viewMember = $response->viewData('teamMember');
+    $response->assertViewHas('member');
+    $response->assertViewHas('memberTasks');
+    $response->assertViewHas('memberFollowUps');
+    $response->assertViewHas('memberBilas');
+    $response->assertViewHas('memberAgreements');
+
+    $viewMember = $response->viewData('member');
     expect($viewMember->id)->toBe($member->id);
-    expect($viewMember->tasks)->toHaveCount(2);
-    expect($viewMember->followUps)->toHaveCount(1);
-    expect($viewMember->bilas)->toHaveCount(1);
-    expect($viewMember->agreements)->toHaveCount(1);
+    expect($response->viewData('memberTasks'))->toHaveCount(2);
+    expect($response->viewData('memberFollowUps'))->toHaveCount(1);
+    expect($response->viewData('memberBilas'))->toHaveCount(1);
+    expect($response->viewData('memberAgreements'))->toHaveCount(1);
 });
 
 test('team member returns 404 for non-existent member', function () {
