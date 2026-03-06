@@ -129,8 +129,8 @@ test('counters bilas_this_week counts bilas within the current week', function (
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Bila::factory()->create(['scheduled_date' => now()->startOfWeek()]);
-    Bila::factory()->create(['scheduled_date' => now()->endOfWeek()]);
+    Bila::factory()->create(['scheduled_date' => now()]);
+    Bila::factory()->create(['scheduled_date' => now()->addDay()]);
     Bila::factory()->create(['scheduled_date' => now()->addWeeks(2)]);
 
     $response = $this->actingAs($user)->get('/');

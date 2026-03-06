@@ -34,8 +34,8 @@ class WeeklyReflectionController extends Controller
         $weekEnd = now()->endOfWeek();
 
         $currentReflection = WeeklyReflection::firstOrCreate(
-            ['week_start' => $weekStart->toDateString()],
-            ['week_end' => $weekEnd->toDateString()]
+            ['week_start' => $weekStart],
+            ['week_end' => $weekEnd]
         );
 
         $summaryData = $this->buildWeeklySummary($weekStart, $weekEnd);

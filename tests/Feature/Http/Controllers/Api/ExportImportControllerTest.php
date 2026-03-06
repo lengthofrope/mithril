@@ -99,29 +99,54 @@ test('import returns 422 when data is not an array', function () {
         ->assertJsonValidationErrors(['data']);
 });
 
-/**
- * NOTE: The import endpoint uses `SET FOREIGN_KEY_CHECKS=0` which is MySQL-only syntax.
- * This causes a PDOException on SQLite (used in testing). These tests verify the
- * request validation layer which runs before the SQLite-incompatible code path.
- * The controller has a bug: it should use DB::connection()->getDriverName() to
- * use the correct syntax per driver (PRAGMA foreign_keys = OFF for SQLite).
- */
-
-test('import returns 200 with success message on valid empty payload', function () {
+test('import returns 422 when data is an empty array', function () {
     /** @var \Tests\TestCase $this */
-    // An empty data array triggers truncation via SET FOREIGN_KEY_CHECKS=0 — a MySQL-only statement.
-    // This test is skipped to avoid surfacing the controller's SQLite incompatibility.
-    // Bug: ExportImportController::truncateAllTables() uses MySQL-specific syntax.
-})->skip('Controller uses MySQL-specific SET FOREIGN_KEY_CHECKS=0; incompatible with SQLite test environment. See ExportImportController::truncateAllTables().');
+    $response = $this->postJson('/api/v1/import', ['data' => []]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['data']);
+});
 
 test('import creates teams from payload', function () {
     /** @var \Tests\TestCase $this */
-})->skip('Controller uses MySQL-specific SET FOREIGN_KEY_CHECKS=0; incompatible with SQLite test environment. See ExportImportController::truncateAllTables().');
+    $response = $this->postJson('/api/v1/import', [
+        'data' => [
+            'teams' => [
+                ['id' => 1, 'name' => 'Alpha Team', 'created_at' => now()->toDateTimeString(), 'updated_at' => now()->toDateTimeString()],
+            ],
+        ],
+    ]);
+
+    $response->assertOk();
+    expect(Team::count())->toBe(1);
+    expect(Team::first()->name)->toBe('Alpha Team');
+});
 
 test('import replaces existing records with imported data', function () {
     /** @var \Tests\TestCase $this */
-})->skip('Controller uses MySQL-specific SET FOREIGN_KEY_CHECKS=0; incompatible with SQLite test environment. See ExportImportController::truncateAllTables().');
+    Team::factory()->create(['name' => 'Old Team']);
+
+    $response = $this->postJson('/api/v1/import', [
+        'data' => [
+            'teams' => [
+                ['id' => 99, 'name' => 'New Team', 'created_at' => now()->toDateTimeString(), 'updated_at' => now()->toDateTimeString()],
+            ],
+        ],
+    ]);
+
+    $response->assertOk();
+    expect(Team::count())->toBe(1);
+    expect(Team::first()->name)->toBe('New Team');
+});
 
 test('import handles empty data keys gracefully', function () {
     /** @var \Tests\TestCase $this */
-})->skip('Controller uses MySQL-specific SET FOREIGN_KEY_CHECKS=0; incompatible with SQLite test environment. See ExportImportController::truncateAllTables().');
+    $response = $this->postJson('/api/v1/import', [
+        'data' => [
+            'teams' => [],
+            'tasks' => [],
+        ],
+    ]);
+
+    $response->assertOk();
+});

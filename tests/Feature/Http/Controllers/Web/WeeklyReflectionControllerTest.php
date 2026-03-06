@@ -118,6 +118,7 @@ test('weekly reflection shows current week reflection when it exists', function 
     ]);
 
     $response = $this->actingAs($user)->get('/weekly');
+    $response->assertStatus(200);
 
     $current = $response->viewData('currentReflection');
     expect($current)->not->toBeNull();
@@ -132,7 +133,7 @@ test('weekly reflection creates current week reflection when none exists', funct
 
     $current = $response->viewData('currentReflection');
     expect($current)->not->toBeNull();
-    expect($current->week_start)->toBe(now()->startOfWeek()->toDateString());
+    expect($current->week_start->toDateString())->toBe(now()->startOfWeek()->toDateString());
 });
 
 test('weekly reflection returns past reflections in descending order', function () {

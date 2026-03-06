@@ -16,8 +16,9 @@
                 'absent'              => 'Absent',
                 'partially_available' => 'Partially available',
             ];
-            $statusColor = $statusColorMap[$member->status] ?? 'bg-gray-400';
-            $statusLabel = $statusLabelMap[$member->status] ?? ucfirst($member->status);
+            $statusKey = $member->status instanceof \BackedEnum ? $member->status->value : (string) $member->status;
+            $statusColor = $statusColorMap[$statusKey] ?? 'bg-gray-400';
+            $statusLabel = $statusLabelMap[$statusKey] ?? ucfirst($statusKey);
         @endphp
 
         <div class="relative shrink-0">
