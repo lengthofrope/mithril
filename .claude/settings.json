@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read(//tmp/tailadmin-fresh/**)"
+      "Read(//tmp/tailadmin-fresh/**)",
+      "Bash(php artisan test --filter=Feature)"
     ]
   }
 }
