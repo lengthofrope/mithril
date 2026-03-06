@@ -22,7 +22,6 @@ use App\Models\TeamMember;
 use App\Models\User;
 use App\Models\WeeklyReflection;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 /**
  * Seeds the database with representative sample data for development and testing.
@@ -61,7 +60,7 @@ class DatabaseSeeder extends Seeder
         return User::create([
             'name' => 'Team Lead',
             'email' => 'admin@teamlead.test',
-            'password' => Hash::make('password'),
+            'password' => 'password',
             'theme_preference' => 'dark',
             'push_enabled' => false,
         ]);
