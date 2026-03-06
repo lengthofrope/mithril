@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\TaskCategory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,5 +76,35 @@ class SettingsController extends Controller
         $user->save();
 
         return redirect()->route('settings.index')->with('status', 'Profile updated successfully.');
+    }
+
+    /**
+     * Create a new task category.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function storeCategory(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:task_categories,name'],
+        ]);
+
+        TaskCategory::create($validated);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete a task category.
+     *
+     * @param TaskCategory $taskCategory
+     * @return JsonResponse
+     */
+    public function destroyCategory(TaskCategory $taskCategory): JsonResponse
+    {
+        $taskCategory->delete();
+
+        return response()->json(['success' => true]);
     }
 }

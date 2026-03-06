@@ -11,6 +11,7 @@ use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\WeeklyReflection;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -56,6 +57,25 @@ class WeeklyReflectionController extends Controller
             ],
             'pastReflections' => $pastReflections,
         ]);
+    }
+
+    /**
+     * Update the reflection text on a weekly reflection record.
+     *
+     * @param Request $request
+     * @param WeeklyReflection $weeklyReflection
+     * @return JsonResponse
+     */
+    public function update(Request $request, WeeklyReflection $weeklyReflection): JsonResponse
+    {
+        $validated = $request->validate([
+            'reflection' => ['sometimes', 'nullable', 'string'],
+            'summary'    => ['sometimes', 'nullable', 'string'],
+        ]);
+
+        $weeklyReflection->update($validated);
+
+        return response()->json(['success' => true]);
     }
 
     /**

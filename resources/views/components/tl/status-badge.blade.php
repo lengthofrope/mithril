@@ -17,8 +17,9 @@
         'snoozed'     => 'Snoozed',
     ];
 
-    $colorClass = $colorMap[$status] ?? 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400';
-    $label = $labelMap[$status] ?? ucfirst(str_replace('_', ' ', $status));
+    $key = $status instanceof \BackedEnum ? $status->value : (string) $status;
+    $colorClass = $colorMap[$key] ?? 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400';
+    $label = $labelMap[$key] ?? ucfirst(str_replace('_', ' ', $key));
 @endphp
 
 <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium {{ $colorClass }}">

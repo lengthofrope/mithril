@@ -15,8 +15,9 @@
         'low'    => 'Low',
     ];
 
-    $colorClass = $colorMap[$priority] ?? $colorMap['normal'];
-    $label = $labelMap[$priority] ?? ucfirst($priority);
+    $key = $priority instanceof \App\Enums\Priority ? $priority->value : (string) $priority;
+    $colorClass = $colorMap[$key] ?? $colorMap['normal'];
+    $label = $labelMap[$key] ?? ucfirst($key);
 @endphp
 
 <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize {{ $colorClass }}">

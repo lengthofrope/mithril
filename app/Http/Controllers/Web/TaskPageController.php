@@ -12,6 +12,7 @@ use App\Models\TaskGroup;
 use App\Models\Team;
 use App\Models\TeamMember;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -107,5 +108,47 @@ class TaskPageController extends Controller
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
         ]);
+    }
+
+    /**
+     * Bulk-update a set of tasks with the given field values.
+     *
+     * Accepts a list of task IDs and a map of fields to update on each.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function bulkUpdate(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'task_ids'   => ['required', 'array'],
+            'task_ids.*' => ['integer', 'exists:tasks,id'],
+            'fields'     => ['required', 'array'],
+        ]);
+
+        Task::whereIn('id', $validated['task_ids'])
+            ->each(fn (Task $task) => $task->update($validated['fields']));
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Move a task to a new kanban status column.
+     *
+     * Accepts a task ID and the target status value.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function move(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'task_id' => ['required', 'integer', 'exists:tasks,id'],
+            'status'  => ['required', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
+        ]);
+
+        Task::findOrFail($validated['task_id'])->update(['status' => $validated['status']]);
+
+        return response()->json(['success' => true]);
     }
 }

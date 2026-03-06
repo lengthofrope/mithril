@@ -9,6 +9,7 @@ use App\Models\Note;
 use App\Models\Team;
 use App\Models\TeamMember;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -87,5 +88,29 @@ class TeamPageController extends Controller
             'memberAgreements' => $teamMember->agreements,
             'memberNotes' => $memberNotes,
         ]);
+    }
+
+    /**
+     * Update editable profile fields on a team member record.
+     *
+     * @param Request $request
+     * @param TeamMember $teamMember
+     * @return JsonResponse
+     */
+    public function updateMember(Request $request, TeamMember $teamMember): JsonResponse
+    {
+        $validated = $request->validate([
+            'name'               => ['sometimes', 'string', 'max:255'],
+            'role'               => ['sometimes', 'nullable', 'string', 'max:255'],
+            'email'              => ['sometimes', 'nullable', 'email', 'max:255'],
+            'notes'              => ['sometimes', 'nullable', 'string'],
+            'status'             => ['sometimes', 'string'],
+            'bila_interval_days' => ['sometimes', 'integer', 'min:1'],
+            'next_bila_date'     => ['sometimes', 'nullable', 'date'],
+        ]);
+
+        $teamMember->update($validated);
+
+        return response()->json(['success' => true]);
     }
 }
