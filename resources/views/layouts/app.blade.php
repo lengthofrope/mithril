@@ -8,6 +8,9 @@
 
     <title>{{ $title ?? 'Dashboard' }} | Team Lead Dashboard</title>
 
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
 
@@ -134,5 +137,13 @@
 </body>
 
 @stack('scripts')
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
+</script>
 
 </html>

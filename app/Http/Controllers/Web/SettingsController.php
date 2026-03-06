@@ -1,0 +1,74 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Web;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+
+/**
+ * Handles the settings page rendering and profile update actions.
+ *
+ * Manages theme preference, push notification toggle, and profile details.
+ */
+class SettingsController extends Controller
+{
+    /**
+     * Display the settings page for the authenticated user.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function index(Request $request): View
+    {
+        return view('pages.settings.index', [
+            'title' => 'Settings',
+            'user' => $request->user(),
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's profile information.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'theme_preference' => ['required', 'string', 'in:light,dark'],
+            'push_enabled' => ['boolean'],
+            'current_password' => ['nullable', 'string'],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
+        ]);
+
+        if (isset($validated['current_password']) && $validated['current_password'] !== '') {
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+            }
+        }
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->theme_preference = $validated['theme_preference'];
+        $user->push_enabled = (bool) ($validated['push_enabled'] ?? false);
+
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        return redirect()->route('settings.index')->with('status', 'Profile updated successfully.');
+    }
+}

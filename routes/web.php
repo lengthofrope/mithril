@@ -1,39 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Web\BilaPageController;
+use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\FollowUpPageController;
+use App\Http\Controllers\Web\NotePageController;
+use App\Http\Controllers\Web\SettingsController;
+use App\Http\Controllers\Web\TaskPageController;
+use App\Http\Controllers\Web\TeamPageController;
+use App\Http\Controllers\Web\WeeklyReflectionController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('pages.dashboard', ['title' => 'Dashboard']);
-})->name('dashboard');
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->name('login')
+    ->middleware('guest');
 
-Route::get('/tasks', function () {
-    return view('pages.tasks.index', ['title' => 'Tasks']);
-})->name('tasks.index');
+Route::post('/login', [LoginController::class, 'login'])
+    ->middleware('guest');
 
-Route::get('/tasks/kanban', function () {
-    return view('pages.tasks.kanban', ['title' => 'Kanban']);
-})->name('tasks.kanban');
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->name('logout')
+    ->middleware('auth');
 
-Route::get('/follow-ups', function () {
-    return view('pages.follow-ups.index', ['title' => 'Follow-ups']);
-})->name('follow-ups.index');
+Route::middleware('auth')->group(function (): void {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::get('/teams', function () {
-    return view('pages.teams.index', ['title' => 'Teams']);
-})->name('teams.index');
+    Route::get('/tasks', [TaskPageController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/kanban', [TaskPageController::class, 'kanban'])->name('tasks.kanban');
 
-Route::get('/notes', function () {
-    return view('pages.notes.index', ['title' => 'Notes']);
-})->name('notes.index');
+    Route::get('/follow-ups', [FollowUpPageController::class, 'index'])->name('follow-ups.index');
 
-Route::get('/bilas', function () {
-    return view('pages.bilas.index', ['title' => "Bila's"]);
-})->name('bilas.index');
+    Route::get('/teams', [TeamPageController::class, 'index'])->name('teams.index');
+    Route::get('/teams/{team}', [TeamPageController::class, 'show'])->name('teams.show');
+    Route::get('/teams/member/{teamMember}', [TeamPageController::class, 'member'])->name('teams.member');
 
-Route::get('/weekly', function () {
-    return view('pages.weekly.index', ['title' => 'Weekly Review']);
-})->name('weekly.index');
+    Route::get('/notes', [NotePageController::class, 'index'])->name('notes.index');
 
-Route::get('/settings', function () {
-    return view('pages.settings.index', ['title' => 'Settings']);
-})->name('settings.index');
+    Route::get('/bilas', [BilaPageController::class, 'index'])->name('bilas.index');
+    Route::get('/bilas/{bila}', [BilaPageController::class, 'show'])->name('bilas.show');
+
+    Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
+
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
+});
