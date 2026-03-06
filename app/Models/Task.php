@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Models\Traits\Filterable;
+use App\Models\Traits\HasFollowUp;
 use App\Models\Traits\HasSortOrder;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,6 +38,7 @@ class Task extends Model
 {
     use Filterable;
     use HasFactory;
+    use HasFollowUp;
     use HasSortOrder;
     use Searchable;
 
@@ -138,13 +140,4 @@ class Task extends Model
         return $this->belongsTo(TaskCategory::class);
     }
 
-    /**
-     * Get all follow-ups generated from this task.
-     *
-     * @return HasMany<FollowUp>
-     */
-    public function followUps(): HasMany
-    {
-        return $this->hasMany(FollowUp::class);
-    }
 }

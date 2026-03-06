@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Models\Traits;
 
+use App\Enums\FollowUpStatus;
 use App\Models\FollowUp;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Provides follow-up relationship and timeline scopes for Eloquent models.
+ * Provides follow-up relationship and timeline scopes for parent models (Task, TeamMember).
+ *
+ * Scopes filter the parent model based on the state of its related follow-ups
+ * using whereHas, so they work correctly on any model with a followUps() relation.
  */
 trait HasFollowUp
 {
     /**
      * Get all follow-ups related to this model.
      *
-     * @return HasMany<FollowUp>
+     * @return HasMany<FollowUp, $this>
      */
     public function followUps(): HasMany
     {
@@ -24,51 +28,59 @@ trait HasFollowUp
     }
 
     /**
-     * Scope to follow-ups that are past their due date.
+     * Scope to models that have at least one overdue, non-done follow-up.
      *
      * @param Builder $query
      * @return Builder
      */
-    public function scopeOverdue(Builder $query): Builder
+    public function scopeWithOverdueFollowUps(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', '<', now()->toDateString())
-            ->where('status', '!=', 'done');
+        return $query->whereHas('followUps', function (Builder $q): void {
+            $q->whereDate('follow_up_date', '<', now()->toDateString())
+                ->where('status', '!=', FollowUpStatus::Done);
+        });
     }
 
     /**
-     * Scope to follow-ups due today.
+     * Scope to models that have at least one follow-up due today and not done.
      *
      * @param Builder $query
      * @return Builder
      */
-    public function scopeDueToday(Builder $query): Builder
+    public function scopeWithFollowUpsDueToday(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', now()->toDateString())
-            ->where('status', '!=', 'done');
+        return $query->whereHas('followUps', function (Builder $q): void {
+            $q->whereDate('follow_up_date', now()->toDateString())
+                ->where('status', '!=', FollowUpStatus::Done);
+        });
     }
 
     /**
-     * Scope to follow-ups due within the current week (excluding today).
+     * Scope to models that have at least one follow-up due this week (excluding today) and not done.
      *
      * @param Builder $query
      * @return Builder
      */
-    public function scopeDueThisWeek(Builder $query): Builder
+    public function scopeWithFollowUpsDueThisWeek(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', '>', now()->toDateString())
-            ->whereDate('follow_up_date', '<=', now()->endOfWeek()->toDateString())
-            ->where('status', '!=', 'done');
+        return $query->whereHas('followUps', function (Builder $q): void {
+            $q->whereDate('follow_up_date', '>', now()->toDateString())
+                ->whereDate('follow_up_date', '<=', now()->endOfWeek()->toDateString())
+                ->where('status', '!=', FollowUpStatus::Done);
+        });
     }
 
     /**
-     * Scope to follow-ups due after the current week.
+     * Scope to models that have at least one follow-up due after this week and not done.
      *
      * @param Builder $query
      * @return Builder
      */
-    public function scopeUpcoming(Builder $query): Builder
+    public function scopeWithUpcomingFollowUps(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', '>', now()->endOfWeek()->toDateString())
-            ->where('status', '!=', 'done');
+        return $query->whereHas('followUps', function (Builder $q): void {
+            $q->whereDate('follow_up_date', '>', now()->endOfWeek()->toDateString())
+                ->where('status', '!=', FollowUpStatus::Done);
+        });
     }
 }

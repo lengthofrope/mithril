@@ -7,18 +7,14 @@ use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\TeamMember;
+
 /**
  * Tests for the HasFollowUp trait.
  *
  * The trait provides:
  *   - A followUps() hasMany relationship on the using model
- *   - Timeline scopes (overdue, dueToday, dueThisWeek, upcoming) intended for
- *     use on models that have follow_up_date and status columns (i.e. FollowUp
- *     itself, which owns its own equivalent scope definitions)
- *
- * The relationship is tested on Task (which uses HasFollowUp).
- * The scopes are exercised on FollowUp's own scope methods, which mirror the
- * trait implementation exactly.
+ *   - whereHas-based scopes that filter the parent model by the state of its
+ *     related follow-ups (withOverdueFollowUps, withFollowUpsDueToday, etc.)
  */
 describe('HasFollowUp', function (): void {
     describe('followUps() hasMany relationship', function (): void {
@@ -55,101 +51,119 @@ describe('HasFollowUp', function (): void {
         });
     });
 
-    describe('overdue scope (via FollowUp model)', function (): void {
-        it('returns follow-ups with a past date and non-done status', function (): void {
+    describe('withOverdueFollowUps scope', function (): void {
+        it('returns tasks that have at least one overdue non-done follow-up', function (): void {
+            $taskWithOverdue = Task::create(['title' => 'Has overdue']);
             FollowUp::create([
+                'task_id' => $taskWithOverdue->id,
                 'description' => 'Overdue',
                 'follow_up_date' => now()->subDay(),
                 'status' => FollowUpStatus::Open,
             ]);
+
+            $taskWithDone = Task::create(['title' => 'Has done overdue']);
             FollowUp::create([
+                'task_id' => $taskWithDone->id,
                 'description' => 'Overdue but done',
                 'follow_up_date' => now()->subDay(),
                 'status' => FollowUpStatus::Done,
             ]);
+
+            $taskWithFuture = Task::create(['title' => 'Has future']);
             FollowUp::create([
+                'task_id' => $taskWithFuture->id,
                 'description' => 'Future',
                 'follow_up_date' => now()->addDay(),
                 'status' => FollowUpStatus::Open,
             ]);
 
-            expect(FollowUp::overdue()->count())->toBe(1)
-                ->and(FollowUp::overdue()->first()->description)->toBe('Overdue');
+            $results = Task::withOverdueFollowUps()->get();
+
+            expect($results)->toHaveCount(1)
+                ->and($results->first()->title)->toBe('Has overdue');
         });
     });
 
-    describe('dueToday scope (via FollowUp model)', function (): void {
-        it('returns open follow-ups due today', function (): void {
+    describe('withFollowUpsDueToday scope', function (): void {
+        it('returns tasks that have at least one follow-up due today and not done', function (): void {
+            $taskToday = Task::create(['title' => 'Due today']);
             FollowUp::create([
+                'task_id' => $taskToday->id,
                 'description' => 'Today open',
                 'follow_up_date' => now()->toDateString(),
                 'status' => FollowUpStatus::Open,
             ]);
+
+            $taskTodayDone = Task::create(['title' => 'Due today but done']);
             FollowUp::create([
+                'task_id' => $taskTodayDone->id,
                 'description' => 'Today done',
                 'follow_up_date' => now()->toDateString(),
                 'status' => FollowUpStatus::Done,
             ]);
 
-            expect(FollowUp::dueToday()->count())->toBe(1)
-                ->and(FollowUp::dueToday()->first()->description)->toBe('Today open');
+            $results = Task::withFollowUpsDueToday()->get();
+
+            expect($results)->toHaveCount(1)
+                ->and($results->first()->title)->toBe('Due today');
         });
     });
 
-    describe('dueThisWeek scope (via FollowUp model)', function (): void {
-        it('returns open follow-ups after today and within this week', function (): void {
+    describe('withFollowUpsDueThisWeek scope', function (): void {
+        it('returns tasks with follow-ups after today and within this week', function (): void {
             $endOfWeek = now()->endOfWeek();
             $todayIsEndOfWeek = now()->isSameDay($endOfWeek);
 
-            // Use a mid-week date that is always after today and within the week,
-            // unless today is already the last day of the week.
-            $withinWeekDate = $todayIsEndOfWeek
-                ? $endOfWeek
-                : now()->addDay();
-
+            $taskThisWeek = Task::create(['title' => 'This week']);
+            $withinWeekDate = $todayIsEndOfWeek ? $endOfWeek : now()->addDay();
             FollowUp::create([
+                'task_id' => $taskThisWeek->id,
                 'description' => 'This week',
                 'follow_up_date' => $withinWeekDate,
                 'status' => FollowUpStatus::Open,
             ]);
+
+            $taskToday = Task::create(['title' => 'Today task']);
             FollowUp::create([
+                'task_id' => $taskToday->id,
                 'description' => 'Today',
                 'follow_up_date' => now()->toDateString(),
                 'status' => FollowUpStatus::Open,
             ]);
-            FollowUp::create([
-                'description' => 'Next week',
-                'follow_up_date' => now()->addWeeks(2),
-                'status' => FollowUpStatus::Open,
-            ]);
+
+            $results = Task::withFollowUpsDueThisWeek()->get();
 
             if ($todayIsEndOfWeek) {
-                // When today is end of week, no date qualifies as "this week after today"
-                expect(FollowUp::dueThisWeek()->count())->toBe(0);
+                expect($results)->toHaveCount(0);
             } else {
-                expect(FollowUp::dueThisWeek()->count())->toBe(1)
-                    ->and(FollowUp::dueThisWeek()->first()->description)->toBe('This week');
+                expect($results)->toHaveCount(1)
+                    ->and($results->first()->title)->toBe('This week');
             }
         });
     });
 
-    describe('upcoming scope (via FollowUp model)', function (): void {
-        it('returns open follow-ups due after the current week', function (): void {
-            $afterWeek = now()->endOfWeek()->addDay();
-
+    describe('withUpcomingFollowUps scope', function (): void {
+        it('returns tasks with follow-ups due after the current week', function (): void {
+            $taskUpcoming = Task::create(['title' => 'Upcoming task']);
             FollowUp::create([
+                'task_id' => $taskUpcoming->id,
                 'description' => 'Upcoming',
-                'follow_up_date' => $afterWeek,
+                'follow_up_date' => now()->endOfWeek()->addDay(),
                 'status' => FollowUpStatus::Open,
             ]);
+
+            $taskThisWeek = Task::create(['title' => 'This week task']);
             FollowUp::create([
+                'task_id' => $taskThisWeek->id,
                 'description' => 'This week',
                 'follow_up_date' => now()->endOfWeek(),
                 'status' => FollowUpStatus::Open,
             ]);
 
-            expect(FollowUp::upcoming()->count())->toBe(1)
-                ->and(FollowUp::upcoming()->first()->description)->toBe('Upcoming');
+            $results = Task::withUpcomingFollowUps()->get();
+
+            expect($results)->toHaveCount(1)
+                ->and($results->first()->title)->toBe('Upcoming task');
         });
     });
 });
