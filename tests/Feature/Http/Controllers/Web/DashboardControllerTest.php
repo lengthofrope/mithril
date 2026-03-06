@@ -78,10 +78,10 @@ test('counters open_tasks counts non-done tasks only', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['status' => TaskStatus::Open]);
-    Task::factory()->create(['status' => TaskStatus::InProgress]);
-    Task::factory()->create(['status' => TaskStatus::Waiting]);
-    Task::factory()->create(['status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::InProgress]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Waiting]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Done]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -92,9 +92,9 @@ test('counters urgent_tasks counts urgent non-done tasks only', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['priority' => Priority::Urgent, 'status' => TaskStatus::Open]);
-    Task::factory()->create(['priority' => Priority::Urgent, 'status' => TaskStatus::Done]);
-    Task::factory()->create(['priority' => Priority::Normal, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'priority' => Priority::Urgent, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'priority' => Priority::Urgent, 'status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'priority' => Priority::Normal, 'status' => TaskStatus::Open]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -105,8 +105,8 @@ test('counters overdue_follow_ups counts overdue non-done follow-ups', function 
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    FollowUp::factory()->create(['follow_up_date' => now()->subDays(2)]);
-    FollowUp::factory()->create(['follow_up_date' => now()->addDay()]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDays(2)]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->addDay()]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -117,8 +117,8 @@ test('counters today_follow_ups counts follow-ups due today', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    FollowUp::factory()->create(['follow_up_date' => now()->toDateString()]);
-    FollowUp::factory()->create(['follow_up_date' => now()->addDays(3)]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString()]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->addDays(3)]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -129,9 +129,9 @@ test('counters bilas_this_week counts bilas within the current week', function (
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Bila::factory()->create(['scheduled_date' => now()]);
-    Bila::factory()->create(['scheduled_date' => now()->addDay()]);
-    Bila::factory()->create(['scheduled_date' => now()->addWeeks(2)]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay()]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addWeeks(2)]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -142,9 +142,9 @@ test('todayTasks contains tasks with deadline today and not done', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['deadline' => now()->toDateString(), 'status' => TaskStatus::Open]);
-    Task::factory()->create(['deadline' => now()->toDateString(), 'status' => TaskStatus::Done]);
-    Task::factory()->create(['deadline' => now()->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now()->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now()->toDateString(), 'status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now()->addDay()->toDateString(), 'status' => TaskStatus::Open]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -155,9 +155,9 @@ test('todayFollowUps contains all overdue non-done follow-ups', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    FollowUp::factory()->create(['follow_up_date' => now()->subDays(3)]);
-    FollowUp::factory()->create(['follow_up_date' => now()->subDay()]);
-    FollowUp::factory()->create(['follow_up_date' => now()->addDay()]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDays(3)]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDay()]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->addDay()]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -168,8 +168,8 @@ test('todayBilas contains bilas scheduled for today', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Bila::factory()->create(['scheduled_date' => now()->toDateString()]);
-    Bila::factory()->create(['scheduled_date' => now()->addDay()->toDateString()]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->toDateString()]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay()->toDateString()]);
 
     $response = $this->actingAs($user)->get('/');
 

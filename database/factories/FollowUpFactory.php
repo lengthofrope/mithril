@@ -20,6 +20,7 @@ class FollowUpFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'task_id' => null,
             'team_member_id' => null,
             'description' => fake()->sentence(),

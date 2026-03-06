@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
+use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
 use App\Models\Traits\HasFollowUp;
 use App\Models\Traits\HasSortOrder;
@@ -36,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Task extends Model
 {
+    use BelongsToUser;
     use Filterable;
     use HasFactory;
     use HasFollowUp;
@@ -48,6 +50,7 @@ class Task extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'title',
         'description',
         'priority',

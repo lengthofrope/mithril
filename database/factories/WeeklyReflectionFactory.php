@@ -22,6 +22,7 @@ class WeeklyReflectionFactory extends Factory
         $weekEnd = (clone $weekStart)->modify('+6 days');
 
         return [
+            'user_id' => \App\Models\User::factory(),
             'week_start' => $weekStart->format('Y-m-d'),
             'week_end' => $weekEnd->format('Y-m-d'),
             'summary' => fake()->optional()->paragraph(),

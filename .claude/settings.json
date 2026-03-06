@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Read(//tmp/tailadmin-fresh/**)",
-      "Bash(php artisan test --filter=Feature)"
+      "Bash(php artisan test --filter=Feature)",
+      "Read(//home/bdekort/.claude/skills/adr-entry/**)",
+      "Bash(php artisan test)",
+      "Bash(php artisan test tests/Feature/Http/Controllers/Web/)"
     ]
   }
 }

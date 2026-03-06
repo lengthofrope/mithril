@@ -51,9 +51,9 @@ test('follow-up index groups overdue follow-ups correctly', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    FollowUp::factory()->create(['follow_up_date' => now()->subDays(2), 'status' => FollowUpStatus::Open]);
-    FollowUp::factory()->create(['follow_up_date' => now()->subDay(), 'status' => FollowUpStatus::Open]);
-    FollowUp::factory()->create(['follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDays(2), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDay(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Open]);
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
@@ -64,8 +64,8 @@ test('follow-up index groups today follow-ups correctly', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    FollowUp::factory()->create(['follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Open]);
-    FollowUp::factory()->create(['follow_up_date' => now()->subDay(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDay(), 'status' => FollowUpStatus::Open]);
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
@@ -79,8 +79,8 @@ test('follow-up index groups this week follow-ups correctly', function () {
     $withinWeek = now()->endOfWeek()->subDay();
     $afterWeek = now()->endOfWeek()->addDays(2);
 
-    FollowUp::factory()->create(['follow_up_date' => $withinWeek->toDateString(), 'status' => FollowUpStatus::Open]);
-    FollowUp::factory()->create(['follow_up_date' => $afterWeek->toDateString(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => $withinWeek->toDateString(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => $afterWeek->toDateString(), 'status' => FollowUpStatus::Open]);
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
@@ -92,8 +92,8 @@ test('follow-up index groups upcoming follow-ups correctly', function () {
     $user = User::factory()->create();
 
     $upcoming = now()->endOfWeek()->addDays(3);
-    FollowUp::factory()->create(['follow_up_date' => $upcoming->toDateString(), 'status' => FollowUpStatus::Open]);
-    FollowUp::factory()->create(['follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => $upcoming->toDateString(), 'status' => FollowUpStatus::Open]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Open]);
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
@@ -104,8 +104,8 @@ test('follow-up index excludes done follow-ups from all buckets', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    FollowUp::factory()->create(['follow_up_date' => now()->subDay(), 'status' => FollowUpStatus::Done]);
-    FollowUp::factory()->create(['follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Done]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDay(), 'status' => FollowUpStatus::Done]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString(), 'status' => FollowUpStatus::Done]);
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
@@ -116,14 +116,16 @@ test('follow-up index excludes done follow-ups from all buckets', function () {
 test('follow-up index filters by team_member_id when provided', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $member = TeamMember::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
 
     FollowUp::factory()->create([
+        'user_id' => $user->id,
         'follow_up_date' => now()->subDay(),
         'status' => FollowUpStatus::Open,
         'team_member_id' => $member->id,
     ]);
     FollowUp::factory()->create([
+        'user_id' => $user->id,
         'follow_up_date' => now()->subDay(),
         'status' => FollowUpStatus::Open,
         'team_member_id' => null,

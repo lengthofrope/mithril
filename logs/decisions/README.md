@@ -3,3 +3,4 @@
 | # | Tag | Title | Phase | Status | Date |
 |---|-----|-------|-------|--------|------|
 | 001 | backend, traits, eloquent | HasFollowUp trait redesign to whereHas-based scopes | 2 | Accepted | 2026-03-06 |
+| 002 | backend, multi-tenancy, eloquent, security | Multi-tenant user scoping for all core entities | 4 | Accepted | 2026-03-06 |

@@ -115,43 +115,49 @@ class ExportImportController extends Controller
     }
 
     /**
-     * Insert all records from the import payload.
+     * Insert all records from the import payload, stamping each row with the authenticated user's ID.
      *
      * @param array<string, list<array<string, mixed>>> $data
      * @return void
      */
     private function insertAll(array $data): void
     {
-        $this->insertIfPresent($data, 'teams', Team::class);
-        $this->insertIfPresent($data, 'team_members', TeamMember::class);
-        $this->insertIfPresent($data, 'task_categories', TaskCategory::class);
-        $this->insertIfPresent($data, 'task_groups', TaskGroup::class);
-        $this->insertIfPresent($data, 'tasks', Task::class);
-        $this->insertIfPresent($data, 'follow_ups', FollowUp::class);
-        $this->insertIfPresent($data, 'bilas', Bila::class);
-        $this->insertIfPresent($data, 'bila_prep_items', BilaPrepItem::class);
-        $this->insertIfPresent($data, 'agreements', Agreement::class);
-        $this->insertIfPresent($data, 'notes', Note::class);
-        $this->insertIfPresent($data, 'note_tags', NoteTag::class);
-        $this->insertIfPresent($data, 'weekly_reflections', WeeklyReflection::class);
+        $userId = auth()->id();
+
+        $this->insertIfPresent($data, 'teams', Team::class, $userId);
+        $this->insertIfPresent($data, 'team_members', TeamMember::class, $userId);
+        $this->insertIfPresent($data, 'task_categories', TaskCategory::class, $userId);
+        $this->insertIfPresent($data, 'task_groups', TaskGroup::class, $userId);
+        $this->insertIfPresent($data, 'tasks', Task::class, $userId);
+        $this->insertIfPresent($data, 'follow_ups', FollowUp::class, $userId);
+        $this->insertIfPresent($data, 'bilas', Bila::class, $userId);
+        $this->insertIfPresent($data, 'bila_prep_items', BilaPrepItem::class, $userId);
+        $this->insertIfPresent($data, 'agreements', Agreement::class, $userId);
+        $this->insertIfPresent($data, 'notes', Note::class, $userId);
+        $this->insertIfPresent($data, 'note_tags', NoteTag::class, $userId);
+        $this->insertIfPresent($data, 'weekly_reflections', WeeklyReflection::class, $userId);
     }
 
     /**
      * Insert records for a given model class if the key exists in the payload.
      *
+     * Each row is merged with the given user ID to enforce tenant ownership.
+     *
      * @param array<string, list<array<string, mixed>>> $data
      * @param string $key
      * @param class-string $modelClass
+     * @param int $userId
      * @return void
      */
-    private function insertIfPresent(array $data, string $key, string $modelClass): void
+    private function insertIfPresent(array $data, string $key, string $modelClass, int $userId): void
     {
         if (empty($data[$key])) {
             return;
         }
 
         foreach (array_chunk($data[$key], 500) as $chunk) {
-            DB::table((new $modelClass())->getTable())->insert($chunk);
+            $rows = array_map(fn (array $row) => array_merge($row, ['user_id' => $userId]), $chunk);
+            DB::table((new $modelClass())->getTable())->insert($rows);
         }
     }
 }

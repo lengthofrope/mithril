@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Note extends Model
 {
+    use BelongsToUser;
     use Filterable;
     use HasFactory;
     use Searchable;
@@ -35,6 +37,7 @@ class Note extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'title',
         'content',
         'team_id',

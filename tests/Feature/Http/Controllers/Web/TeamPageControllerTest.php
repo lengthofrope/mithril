@@ -41,7 +41,7 @@ test('team index renders the correct view', function () {
 test('team index passes teams to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    Team::factory()->count(3)->create();
+    Team::factory()->count(3)->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get('/teams');
 
@@ -52,8 +52,8 @@ test('team index passes teams to view', function () {
 test('team index includes member counts on teams', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $team = Team::factory()->create();
-    TeamMember::factory()->count(2)->create(['team_id' => $team->id]);
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    TeamMember::factory()->count(2)->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
     $response = $this->actingAs($user)->get('/teams');
 
@@ -64,7 +64,7 @@ test('team index includes member counts on teams', function () {
 test('team show returns 200 for authenticated user', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $team = Team::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get("/teams/{$team->id}");
 
@@ -83,7 +83,7 @@ test('team show redirects unauthenticated user to login', function () {
 test('team show renders the correct view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $team = Team::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get("/teams/{$team->id}");
 
@@ -93,8 +93,8 @@ test('team show renders the correct view', function () {
 test('team show passes team with members to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $team = Team::factory()->create();
-    TeamMember::factory()->count(2)->create(['team_id' => $team->id]);
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    TeamMember::factory()->count(2)->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
     $response = $this->actingAs($user)->get("/teams/{$team->id}");
 
@@ -116,7 +116,7 @@ test('team show returns 404 for non-existent team', function () {
 test('team member returns 200 for authenticated user', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $member = TeamMember::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get("/teams/member/{$member->id}");
 
@@ -135,7 +135,7 @@ test('team member redirects unauthenticated user to login', function () {
 test('team member renders the correct view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $member = TeamMember::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get("/teams/member/{$member->id}");
 
@@ -145,12 +145,12 @@ test('team member renders the correct view', function () {
 test('team member passes member with related data to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $member = TeamMember::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
 
-    Task::factory()->count(2)->create(['team_member_id' => $member->id]);
-    FollowUp::factory()->count(1)->create(['team_member_id' => $member->id]);
-    Bila::factory()->count(1)->create(['team_member_id' => $member->id]);
-    Agreement::factory()->count(1)->create(['team_member_id' => $member->id]);
+    Task::factory()->count(2)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    FollowUp::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    Bila::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    Agreement::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
     $response = $this->actingAs($user)->get("/teams/member/{$member->id}");
 

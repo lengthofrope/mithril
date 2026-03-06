@@ -20,6 +20,7 @@ class NoteTagFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'note_id' => Note::factory(),
             'tag' => fake()->word(),
         ];

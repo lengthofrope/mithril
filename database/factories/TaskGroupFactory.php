@@ -19,6 +19,7 @@ class TaskGroupFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'name' => fake()->words(2, true),
             'description' => fake()->optional()->sentence(),
             'color' => fake()->optional()->hexColor(),

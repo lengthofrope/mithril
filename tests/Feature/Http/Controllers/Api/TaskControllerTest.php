@@ -5,15 +5,17 @@ declare(strict_types=1);
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 test('index returns a successful response with success flag and data array', function () {
     /** @var \Tests\TestCase $this */
-    Task::factory()->count(3)->create();
+    $user = User::factory()->create();
+    Task::factory()->count(3)->create(['user_id' => $user->id]);
 
-    $response = $this->getJson('/api/v1/tasks');
+    $response = $this->actingAs($user)->getJson('/api/v1/tasks');
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -27,7 +29,9 @@ test('index returns a successful response with success flag and data array', fun
 
 test('index returns empty data array when no tasks exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->getJson('/api/v1/tasks');
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->getJson('/api/v1/tasks');
 
     $response->assertOk()
         ->assertJson([
@@ -38,11 +42,12 @@ test('index returns empty data array when no tasks exist', function () {
 
 test('index returns tasks ordered by sort_order', function () {
     /** @var \Tests\TestCase $this */
-    Task::factory()->create(['title' => 'Third', 'sort_order' => 3]);
-    Task::factory()->create(['title' => 'First', 'sort_order' => 1]);
-    Task::factory()->create(['title' => 'Second', 'sort_order' => 2]);
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Third', 'sort_order' => 3]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'First', 'sort_order' => 1]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Second', 'sort_order' => 2]);
 
-    $response = $this->getJson('/api/v1/tasks');
+    $response = $this->actingAs($user)->getJson('/api/v1/tasks');
 
     $response->assertOk();
 
@@ -52,13 +57,15 @@ test('index returns tasks ordered by sort_order', function () {
 
 test('store creates a new task and returns 201 with the created resource', function () {
     /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
     $payload = [
         'title' => 'Finish the report',
         'priority' => Priority::High->value,
         'status' => TaskStatus::Open->value,
     ];
 
-    $response = $this->postJson('/api/v1/tasks', $payload);
+    $response = $this->actingAs($user)->postJson('/api/v1/tasks', $payload);
 
     $response->assertStatus(201)
         ->assertJsonStructure([
@@ -78,7 +85,9 @@ test('store creates a new task and returns 201 with the created resource', funct
 
 test('store returns 422 with validation errors when title is missing', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/tasks', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/tasks', [
         'priority' => Priority::High->value,
     ]);
 
@@ -88,7 +97,9 @@ test('store returns 422 with validation errors when title is missing', function 
 
 test('store returns 422 when priority is not a valid enum value', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/tasks', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/tasks', [
         'title' => 'Test task',
         'priority' => 'critical',
     ]);
@@ -99,7 +110,9 @@ test('store returns 422 when priority is not a valid enum value', function () {
 
 test('store returns 422 when status is not a valid enum value', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/tasks', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/tasks', [
         'title' => 'Test task',
         'status' => 'unknown_status',
     ]);
@@ -110,6 +123,8 @@ test('store returns 422 when status is not a valid enum value', function () {
 
 test('store creates a task with all optional fields', function () {
     /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
     $payload = [
         'title' => 'Full task',
         'description' => 'A detailed description.',
@@ -119,7 +134,7 @@ test('store creates a task with all optional fields', function () {
         'sort_order' => 5,
     ];
 
-    $response = $this->postJson('/api/v1/tasks', $payload);
+    $response = $this->actingAs($user)->postJson('/api/v1/tasks', $payload);
 
     $response->assertStatus(201)
         ->assertJson(['success' => true]);
@@ -133,9 +148,10 @@ test('store creates a task with all optional fields', function () {
 
 test('update modifies an existing task and returns the updated resource', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create(['title' => 'Original title']);
+    $user = User::factory()->create();
+    $task = Task::factory()->create(['user_id' => $user->id, 'title' => 'Original title']);
 
-    $response = $this->putJson("/api/v1/tasks/{$task->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/tasks/{$task->id}", [
         'title' => 'Updated title',
         'priority' => Priority::Urgent->value,
     ]);
@@ -156,9 +172,10 @@ test('update modifies an existing task and returns the updated resource', functi
 
 test('update response includes saved_at timestamp', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create();
+    $user = User::factory()->create();
+    $task = Task::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->putJson("/api/v1/tasks/{$task->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/tasks/{$task->id}", [
         'title' => 'Updated title',
     ]);
 
@@ -169,7 +186,9 @@ test('update response includes saved_at timestamp', function () {
 
 test('update returns 404 when task does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->putJson('/api/v1/tasks/9999', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->putJson('/api/v1/tasks/9999', [
         'title' => 'Does not matter',
     ]);
 
@@ -178,9 +197,10 @@ test('update returns 404 when task does not exist', function () {
 
 test('destroy deletes a task and returns success message', function () {
     /** @var \Tests\TestCase $this */
-    $task = Task::factory()->create();
+    $user = User::factory()->create();
+    $task = Task::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->deleteJson("/api/v1/tasks/{$task->id}");
+    $response = $this->actingAs($user)->deleteJson("/api/v1/tasks/{$task->id}");
 
     $response->assertOk()
         ->assertJson([
@@ -193,7 +213,9 @@ test('destroy deletes a task and returns success message', function () {
 
 test('destroy returns 404 when task does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->deleteJson('/api/v1/tasks/9999');
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->deleteJson('/api/v1/tasks/9999');
 
     $response->assertNotFound();
 });

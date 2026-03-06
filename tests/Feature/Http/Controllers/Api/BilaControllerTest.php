@@ -3,16 +3,21 @@
 declare(strict_types=1);
 
 use App\Models\Bila;
+use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 test('index returns all bilas', function () {
     /** @var \Tests\TestCase $this */
-    Bila::factory()->count(2)->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    Bila::factory()->count(2)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
-    $response = $this->getJson('/api/v1/bilas');
+    $response = $this->actingAs($user)->getJson('/api/v1/bilas');
 
     $response->assertOk()
         ->assertJson(['success' => true]);
@@ -22,7 +27,9 @@ test('index returns all bilas', function () {
 
 test('store creates a new bila and returns 201', function () {
     /** @var \Tests\TestCase $this */
-    $member = TeamMember::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
     $payload = [
         'team_member_id' => $member->id,
@@ -30,7 +37,7 @@ test('store creates a new bila and returns 201', function () {
         'notes' => 'Prep notes for the meeting.',
     ];
 
-    $response = $this->postJson('/api/v1/bilas', $payload);
+    $response = $this->actingAs($user)->postJson('/api/v1/bilas', $payload);
 
     $response->assertStatus(201)
         ->assertJson([
@@ -48,7 +55,9 @@ test('store creates a new bila and returns 201', function () {
 
 test('store returns 422 when required fields are missing', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/bilas', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/bilas', [
         'notes' => 'Notes without required fields',
     ]);
 
@@ -58,7 +67,9 @@ test('store returns 422 when required fields are missing', function () {
 
 test('store returns 422 when team_member_id does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/bilas', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/bilas', [
         'team_member_id' => 9999,
         'scheduled_date' => '2026-03-20',
     ]);
@@ -69,9 +80,11 @@ test('store returns 422 when team_member_id does not exist', function () {
 
 test('store returns 422 when scheduled_date is not a valid date', function () {
     /** @var \Tests\TestCase $this */
-    $member = TeamMember::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
-    $response = $this->postJson('/api/v1/bilas', [
+    $response = $this->actingAs($user)->postJson('/api/v1/bilas', [
         'team_member_id' => $member->id,
         'scheduled_date' => 'not-a-date',
     ]);
@@ -82,9 +95,12 @@ test('store returns 422 when scheduled_date is not a valid date', function () {
 
 test('update modifies an existing bila', function () {
     /** @var \Tests\TestCase $this */
-    $bila = Bila::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
-    $response = $this->putJson("/api/v1/bilas/{$bila->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/bilas/{$bila->id}", [
         'team_member_id' => $bila->team_member_id,
         'scheduled_date' => '2026-04-01',
         'notes' => 'Updated notes',
@@ -101,9 +117,12 @@ test('update modifies an existing bila', function () {
 
 test('update response includes saved_at timestamp', function () {
     /** @var \Tests\TestCase $this */
-    $bila = Bila::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
-    $response = $this->putJson("/api/v1/bilas/{$bila->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/bilas/{$bila->id}", [
         'team_member_id' => $bila->team_member_id,
         'scheduled_date' => '2026-04-01',
     ]);
@@ -115,9 +134,11 @@ test('update response includes saved_at timestamp', function () {
 
 test('update returns 404 when bila does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $member = TeamMember::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
-    $response = $this->putJson('/api/v1/bilas/9999', [
+    $response = $this->actingAs($user)->putJson('/api/v1/bilas/9999', [
         'team_member_id' => $member->id,
         'scheduled_date' => '2026-04-01',
     ]);
@@ -127,9 +148,12 @@ test('update returns 404 when bila does not exist', function () {
 
 test('destroy deletes a bila', function () {
     /** @var \Tests\TestCase $this */
-    $bila = Bila::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
-    $response = $this->deleteJson("/api/v1/bilas/{$bila->id}");
+    $response = $this->actingAs($user)->deleteJson("/api/v1/bilas/{$bila->id}");
 
     $response->assertOk()
         ->assertJson([
@@ -142,7 +166,9 @@ test('destroy deletes a bila', function () {
 
 test('destroy returns 404 when bila does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->deleteJson('/api/v1/bilas/9999');
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->deleteJson('/api/v1/bilas/9999');
 
     $response->assertNotFound();
 });

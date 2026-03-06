@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Bila extends Model
 {
+    use BelongsToUser;
     use HasFactory;
 
     /**
@@ -29,6 +31,7 @@ class Bila extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'team_member_id',
         'scheduled_date',
         'notes',

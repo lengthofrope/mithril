@@ -19,6 +19,7 @@ class TeamFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'name' => fake()->company(),
             'description' => fake()->optional()->sentence(),
             'color' => fake()->optional()->hexColor(),

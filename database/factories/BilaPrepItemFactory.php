@@ -20,6 +20,7 @@ class BilaPrepItemFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'team_member_id' => TeamMember::factory(),
             'bila_id' => null,
             'content' => fake()->sentence(),

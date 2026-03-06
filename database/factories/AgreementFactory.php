@@ -20,6 +20,7 @@ class AgreementFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'team_member_id' => TeamMember::factory(),
             'description' => fake()->sentence(),
             'agreed_date' => fake()->dateTimeBetween('-1 year', 'now'),

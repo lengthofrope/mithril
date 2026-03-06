@@ -21,6 +21,7 @@ class TeamMemberFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'team_id' => Team::factory(),
             'name' => fake()->name(),
             'role' => fake()->optional()->jobTitle(),

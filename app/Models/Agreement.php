@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Agreement extends Model
 {
+    use BelongsToUser;
     use HasFactory;
     use Searchable;
 
@@ -31,6 +33,7 @@ class Agreement extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'team_member_id',
         'description',
         'agreed_date',

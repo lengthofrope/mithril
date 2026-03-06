@@ -60,10 +60,12 @@ test('weekly reflection weekStats includes completed tasks count this week', fun
     $user = User::factory()->create();
 
     Task::factory()->create([
+        'user_id' => $user->id,
         'status' => TaskStatus::Done,
         'updated_at' => now()->startOfWeek()->addDay(),
     ]);
     Task::factory()->create([
+        'user_id' => $user->id,
         'status' => TaskStatus::Done,
         'updated_at' => now()->subWeeks(2),
     ]);
@@ -78,9 +80,9 @@ test('weekly reflection weekStats includes open tasks count', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['status' => TaskStatus::Open]);
-    Task::factory()->create(['status' => TaskStatus::InProgress]);
-    Task::factory()->create(['status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::InProgress]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Done]);
 
     $response = $this->actingAs($user)->get('/weekly');
 
@@ -93,10 +95,12 @@ test('weekly reflection weekStats includes handled follow-ups count this week', 
     $user = User::factory()->create();
 
     FollowUp::factory()->create([
+        'user_id' => $user->id,
         'status' => FollowUpStatus::Done,
         'updated_at' => now()->startOfWeek()->addDay(),
     ]);
     FollowUp::factory()->create([
+        'user_id' => $user->id,
         'status' => FollowUpStatus::Done,
         'updated_at' => now()->subWeeks(2),
     ]);
@@ -112,6 +116,7 @@ test('weekly reflection shows current week reflection when it exists', function 
     $user = User::factory()->create();
 
     $reflection = WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
         'week_start' => now()->startOfWeek()->toDateString(),
         'week_end' => now()->endOfWeek()->toDateString(),
         'reflection' => 'This week was productive.',
@@ -141,11 +146,13 @@ test('weekly reflection returns past reflections in descending order', function 
     $user = User::factory()->create();
 
     $older = WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
         'week_start' => now()->subWeeks(2)->startOfWeek()->toDateString(),
         'week_end' => now()->subWeeks(2)->endOfWeek()->toDateString(),
     ]);
 
     $newer = WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
         'week_start' => now()->subWeek()->startOfWeek()->toDateString(),
         'week_end' => now()->subWeek()->endOfWeek()->toDateString(),
     ]);
@@ -162,6 +169,7 @@ test('weekly reflection does not include current week in past reflections', func
     $user = User::factory()->create();
 
     WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
         'week_start' => now()->startOfWeek()->toDateString(),
         'week_end' => now()->endOfWeek()->toDateString(),
     ]);

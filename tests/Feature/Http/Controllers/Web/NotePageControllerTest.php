@@ -49,7 +49,7 @@ test('notes index passes required view variables', function () {
 test('notes index returns all notes when no filters applied', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    Note::factory()->count(3)->create();
+    Note::factory()->count(3)->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get('/notes');
 
@@ -60,8 +60,8 @@ test('notes index returns pinned notes first', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Note::factory()->create(['title' => 'Unpinned Note', 'is_pinned' => false]);
-    Note::factory()->create(['title' => 'Pinned Note', 'is_pinned' => true]);
+    Note::factory()->create(['user_id' => $user->id, 'title' => 'Unpinned Note', 'is_pinned' => false]);
+    Note::factory()->create(['user_id' => $user->id, 'title' => 'Pinned Note', 'is_pinned' => true]);
 
     $response = $this->actingAs($user)->get('/notes');
 
@@ -73,8 +73,8 @@ test('notes index filters by search term', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Note::factory()->create(['title' => 'Laravel tips and tricks']);
-    Note::factory()->create(['title' => 'Completely unrelated topic']);
+    Note::factory()->create(['user_id' => $user->id, 'title' => 'Laravel tips and tricks']);
+    Note::factory()->create(['user_id' => $user->id, 'title' => 'Completely unrelated topic']);
 
     $response = $this->actingAs($user)->get('/notes?q=Laravel');
 
@@ -106,11 +106,11 @@ test('notes index filters by tag', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    $taggedNote = Note::factory()->create();
-    NoteTag::factory()->create(['note_id' => $taggedNote->id, 'tag' => 'backend']);
+    $taggedNote = Note::factory()->create(['user_id' => $user->id]);
+    NoteTag::factory()->create(['user_id' => $user->id, 'note_id' => $taggedNote->id, 'tag' => 'backend']);
 
-    $untaggedNote = Note::factory()->create();
-    NoteTag::factory()->create(['note_id' => $untaggedNote->id, 'tag' => 'frontend']);
+    $untaggedNote = Note::factory()->create(['user_id' => $user->id]);
+    NoteTag::factory()->create(['user_id' => $user->id, 'note_id' => $untaggedNote->id, 'tag' => 'frontend']);
 
     $response = $this->actingAs($user)->get('/notes?tag=backend');
 
@@ -124,8 +124,8 @@ test('notes index passes available tags to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    NoteTag::factory()->create(['tag' => 'alpha']);
-    NoteTag::factory()->create(['tag' => 'beta']);
+    NoteTag::factory()->create(['user_id' => $user->id, 'tag' => 'alpha']);
+    NoteTag::factory()->create(['user_id' => $user->id, 'tag' => 'beta']);
 
     $response = $this->actingAs($user)->get('/notes');
 
@@ -138,8 +138,8 @@ test('notes index available tags are distinct', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    NoteTag::factory()->create(['tag' => 'duplicate']);
-    NoteTag::factory()->create(['tag' => 'duplicate']);
+    NoteTag::factory()->create(['user_id' => $user->id, 'tag' => 'duplicate']);
+    NoteTag::factory()->create(['user_id' => $user->id, 'tag' => 'duplicate']);
 
     $response = $this->actingAs($user)->get('/notes');
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WeeklyReflection extends Model
 {
+    use BelongsToUser;
     use HasFactory;
 
     /**
@@ -28,6 +30,7 @@ class WeeklyReflection extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'week_start',
         'week_end',
         'summary',

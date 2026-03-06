@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Bila;
 use App\Models\BilaPrepItem;
+use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,9 +51,9 @@ test('bila index splits bilas into upcoming and past groups', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Bila::factory()->create(['scheduled_date' => now()->addDays(3)]);
-    Bila::factory()->create(['scheduled_date' => now()->toDateString()]);
-    Bila::factory()->create(['scheduled_date' => now()->subDays(2)]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDays(3)]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->toDateString()]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->subDays(2)]);
 
     $response = $this->actingAs($user)->get('/bilas');
 
@@ -63,10 +64,10 @@ test('bila index splits bilas into upcoming and past groups', function () {
 test('bila index filters by team_member_id when provided', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $member = TeamMember::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
 
-    Bila::factory()->create(['scheduled_date' => now()->addDay(), 'team_member_id' => $member->id]);
-    Bila::factory()->create(['scheduled_date' => now()->addDays(2)]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay(), 'team_member_id' => $member->id]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDays(2)]);
 
     $response = $this->actingAs($user)->get('/bilas?team_member_id=' . $member->id);
 
@@ -77,7 +78,9 @@ test('bila index filters by team_member_id when provided', function () {
 test('bila show returns 200 for authenticated user', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $bila = Bila::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
     $response = $this->actingAs($user)->get("/bilas/{$bila->id}");
 
@@ -96,7 +99,9 @@ test('bila show redirects unauthenticated user to login', function () {
 test('bila show renders the correct view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $bila = Bila::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
     $response = $this->actingAs($user)->get("/bilas/{$bila->id}");
 
@@ -106,8 +111,10 @@ test('bila show renders the correct view', function () {
 test('bila show passes bila with team member and prep items to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $bila = Bila::factory()->create();
-    BilaPrepItem::factory()->count(2)->create(['bila_id' => $bila->id]);
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    BilaPrepItem::factory()->count(2)->create(['user_id' => $user->id, 'bila_id' => $bila->id, 'team_member_id' => $member->id]);
 
     $response = $this->actingAs($user)->get("/bilas/{$bila->id}");
 
@@ -130,8 +137,8 @@ test('bila show returns 404 for non-existent bila', function () {
 test('bila show title includes team member name', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $member = TeamMember::factory()->create(['name' => 'Alice']);
-    $bila = Bila::factory()->create(['team_member_id' => $member->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'name' => 'Alice']);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
 
     $response = $this->actingAs($user)->get("/bilas/{$bila->id}");
 

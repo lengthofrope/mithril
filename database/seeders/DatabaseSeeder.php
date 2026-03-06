@@ -33,21 +33,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->createAdminUser();
-        [$teamAlpha, $teamBeta] = $this->createTeams();
-        $membersAlpha = $this->createTeamAlphaMembers($teamAlpha);
-        $membersBeta = $this->createTeamBetaMembers($teamBeta);
-        $categories = $this->createTaskCategories();
-        $groups = $this->createTaskGroups();
+        $user = $this->createAdminUser();
+        [$teamAlpha, $teamBeta] = $this->createTeams($user->id);
+        $membersAlpha = $this->createTeamAlphaMembers($teamAlpha, $user->id);
+        $membersBeta = $this->createTeamBetaMembers($teamBeta, $user->id);
+        $categories = $this->createTaskCategories($user->id);
+        $groups = $this->createTaskGroups($user->id);
 
         $allMembers = array_merge($membersAlpha, $membersBeta);
-        $tasks = $this->createTasks($teamAlpha, $teamBeta, $allMembers, $groups, $categories);
+        $tasks = $this->createTasks($teamAlpha, $teamBeta, $allMembers, $groups, $categories, $user->id);
 
-        $this->createFollowUps($tasks, $allMembers);
-        $this->createBilasWithPrepItems($allMembers);
-        $this->createAgreements($allMembers);
-        $this->createNotes($teamAlpha, $teamBeta, $allMembers);
-        $this->createWeeklyReflection();
+        $this->createFollowUps($tasks, $allMembers, $user->id);
+        $this->createBilasWithPrepItems($allMembers, $user->id);
+        $this->createAgreements($allMembers, $user->id);
+        $this->createNotes($teamAlpha, $teamBeta, $allMembers, $user->id);
+        $this->createWeeklyReflection($user->id);
     }
 
     /**
@@ -69,17 +69,20 @@ class DatabaseSeeder extends Seeder
     /**
      * Create two teams and return them.
      *
+     * @param int $userId
      * @return array{0: Team, 1: Team}
      */
-    private function createTeams(): array
+    private function createTeams(int $userId): array
     {
         $alpha = Team::create([
+            'user_id' => $userId,
             'name' => 'Team Alpha',
             'description' => 'Core product development team.',
             'color' => '#3b82f6',
         ]);
 
         $beta = Team::create([
+            'user_id' => $userId,
             'name' => 'Team Beta',
             'description' => 'Operations and infrastructure team.',
             'color' => '#10b981',
@@ -92,12 +95,14 @@ class DatabaseSeeder extends Seeder
      * Create members for Team Alpha.
      *
      * @param Team $team
+     * @param int $userId
      * @return list<TeamMember>
      */
-    private function createTeamAlphaMembers(Team $team): array
+    private function createTeamAlphaMembers(Team $team, int $userId): array
     {
         return [
             TeamMember::create([
+                'user_id' => $userId,
                 'team_id' => $team->id,
                 'name' => 'Sarah Johnson',
                 'role' => 'Frontend Developer',
@@ -107,6 +112,7 @@ class DatabaseSeeder extends Seeder
                 'next_bila_date' => now()->addDays(7)->toDateString(),
             ]),
             TeamMember::create([
+                'user_id' => $userId,
                 'team_id' => $team->id,
                 'name' => 'Marcus Chen',
                 'role' => 'Backend Developer',
@@ -116,6 +122,7 @@ class DatabaseSeeder extends Seeder
                 'next_bila_date' => now()->addDays(3)->toDateString(),
             ]),
             TeamMember::create([
+                'user_id' => $userId,
                 'team_id' => $team->id,
                 'name' => 'Priya Patel',
                 'role' => 'UX Designer',
@@ -125,6 +132,7 @@ class DatabaseSeeder extends Seeder
                 'next_bila_date' => now()->addDays(14)->toDateString(),
             ]),
             TeamMember::create([
+                'user_id' => $userId,
                 'team_id' => $team->id,
                 'name' => 'Tom Williams',
                 'role' => 'QA Engineer',
@@ -140,12 +148,14 @@ class DatabaseSeeder extends Seeder
      * Create members for Team Beta.
      *
      * @param Team $team
+     * @param int $userId
      * @return list<TeamMember>
      */
-    private function createTeamBetaMembers(Team $team): array
+    private function createTeamBetaMembers(Team $team, int $userId): array
     {
         return [
             TeamMember::create([
+                'user_id' => $userId,
                 'team_id' => $team->id,
                 'name' => 'Elena Vasquez',
                 'role' => 'DevOps Engineer',
@@ -155,6 +165,7 @@ class DatabaseSeeder extends Seeder
                 'next_bila_date' => now()->addDays(2)->toDateString(),
             ]),
             TeamMember::create([
+                'user_id' => $userId,
                 'team_id' => $team->id,
                 'name' => 'David Kim',
                 'role' => 'Data Engineer',
@@ -164,6 +175,7 @@ class DatabaseSeeder extends Seeder
                 'next_bila_date' => now()->addDays(10)->toDateString(),
             ]),
             TeamMember::create([
+                'user_id' => $userId,
                 'team_id' => $team->id,
                 'name' => 'Fatima Al-Hassan',
                 'role' => 'Systems Analyst',
@@ -178,14 +190,15 @@ class DatabaseSeeder extends Seeder
     /**
      * Create task categories and return them.
      *
+     * @param int $userId
      * @return list<TaskCategory>
      */
-    private function createTaskCategories(): array
+    private function createTaskCategories(int $userId): array
     {
         $names = ['Feature', 'Bug Fix', 'Tech Debt', 'Research', 'Documentation'];
 
         return array_map(
-            fn (string $name) => TaskCategory::create(['name' => $name]),
+            fn (string $name) => TaskCategory::create(['user_id' => $userId, 'name' => $name]),
             $names,
         );
     }
@@ -193,17 +206,20 @@ class DatabaseSeeder extends Seeder
     /**
      * Create task groups and return them.
      *
+     * @param int $userId
      * @return list<TaskGroup>
      */
-    private function createTaskGroups(): array
+    private function createTaskGroups(int $userId): array
     {
         return [
             TaskGroup::create([
+                'user_id' => $userId,
                 'name' => 'Q1 2026 Sprint',
                 'description' => 'First quarter sprint goals.',
                 'color' => '#8b5cf6',
             ]),
             TaskGroup::create([
+                'user_id' => $userId,
                 'name' => 'Infrastructure Upgrade',
                 'description' => 'Database and server migration tasks.',
                 'color' => '#f59e0b',
@@ -219,6 +235,7 @@ class DatabaseSeeder extends Seeder
      * @param list<TeamMember> $members
      * @param list<TaskGroup> $groups
      * @param list<TaskCategory> $categories
+     * @param int $userId
      * @return list<Task>
      */
     private function createTasks(
@@ -227,6 +244,7 @@ class DatabaseSeeder extends Seeder
         array $members,
         array $groups,
         array $categories,
+        int $userId,
     ): array {
         $taskData = [
             [
@@ -341,7 +359,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         return array_map(
-            fn (array $data) => Task::create($data),
+            fn (array $data) => Task::create(array_merge(['user_id' => $userId], $data)),
             $taskData,
         );
     }
@@ -351,9 +369,10 @@ class DatabaseSeeder extends Seeder
      *
      * @param list<Task> $tasks
      * @param list<TeamMember> $members
+     * @param int $userId
      * @return list<FollowUp>
      */
-    private function createFollowUps(array $tasks, array $members): array
+    private function createFollowUps(array $tasks, array $members, int $userId): array
     {
         $followUpData = [
             [
@@ -406,7 +425,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         return array_map(
-            fn (array $data) => FollowUp::create($data),
+            fn (array $data) => FollowUp::create(array_merge(['user_id' => $userId], $data)),
             $followUpData,
         );
     }
@@ -415,9 +434,10 @@ class DatabaseSeeder extends Seeder
      * Create bilas with prep items for a selection of members.
      *
      * @param list<TeamMember> $members
+     * @param int $userId
      * @return void
      */
-    private function createBilasWithPrepItems(array $members): void
+    private function createBilasWithPrepItems(array $members, int $userId): void
     {
         $bilaData = [
             [
@@ -462,6 +482,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($bilaData as $data) {
             $bila = Bila::create([
+                'user_id' => $userId,
                 'team_member_id' => $data['member']->id,
                 'scheduled_date' => $data['date'],
                 'notes' => $data['notes'],
@@ -469,6 +490,7 @@ class DatabaseSeeder extends Seeder
 
             foreach ($data['items'] as $itemData) {
                 BilaPrepItem::create([
+                    'user_id' => $userId,
                     'team_member_id' => $data['member']->id,
                     'bila_id' => $bila->id,
                     'content' => $itemData['content'],
@@ -482,9 +504,10 @@ class DatabaseSeeder extends Seeder
      * Create agreements for several team members.
      *
      * @param list<TeamMember> $members
+     * @param int $userId
      * @return void
      */
-    private function createAgreements(array $members): void
+    private function createAgreements(array $members, int $userId): void
     {
         $agreementData = [
             [
@@ -507,7 +530,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($agreementData as $data) {
-            Agreement::create($data);
+            Agreement::create(array_merge(['user_id' => $userId], $data));
         }
     }
 
@@ -517,9 +540,10 @@ class DatabaseSeeder extends Seeder
      * @param Team $teamAlpha
      * @param Team $teamBeta
      * @param list<TeamMember> $members
+     * @param int $userId
      * @return void
      */
-    private function createNotes(Team $teamAlpha, Team $teamBeta, array $members): void
+    private function createNotes(Team $teamAlpha, Team $teamBeta, array $members, int $userId): void
     {
         $noteData = [
             [
@@ -558,6 +582,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($noteData as $data) {
             $note = Note::create([
+                'user_id' => $userId,
                 'title' => $data['title'],
                 'content' => $data['content'],
                 'team_id' => $data['team_id'],
@@ -567,6 +592,7 @@ class DatabaseSeeder extends Seeder
 
             foreach ($data['tags'] as $tag) {
                 NoteTag::create([
+                    'user_id' => $userId,
                     'note_id' => $note->id,
                     'tag' => $tag,
                 ]);
@@ -577,11 +603,13 @@ class DatabaseSeeder extends Seeder
     /**
      * Create a weekly reflection for the current week.
      *
+     * @param int $userId
      * @return void
      */
-    private function createWeeklyReflection(): void
+    private function createWeeklyReflection(int $userId): void
     {
         WeeklyReflection::create([
+            'user_id' => $userId,
             'week_start' => now()->startOfWeek()->toDateString(),
             'week_end' => now()->endOfWeek()->toDateString(),
             'summary' => 'Focused on backend architecture setup and team onboarding. Most tasks are on track.',

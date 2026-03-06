@@ -7,7 +7,9 @@ use App\Models\BilaPrepItem;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\Traits\HasSortOrder;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 describe('BilaPrepItem model', function (): void {
     describe('traits', function (): void {
         it('uses the HasSortOrder trait', function (): void {
@@ -17,13 +19,15 @@ describe('BilaPrepItem model', function (): void {
 
     describe('fillable attributes', function (): void {
         it('allows mass assignment of all defined fields', function (): void {
-            $team = Team::create(['name' => 'Dev Team']);
-            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice']);
+            $user = User::factory()->create();
+            $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
+            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
 
             $item = BilaPrepItem::create([
                 'team_member_id' => $member->id,
                 'content' => 'Discuss Q3 goals',
                 'is_discussed' => true,
+                'user_id' => $user->id,
             ]);
 
             expect($item->content)->toBe('Discuss Q3 goals')
@@ -33,12 +37,14 @@ describe('BilaPrepItem model', function (): void {
 
     describe('casts', function (): void {
         it('casts is_discussed to boolean', function (): void {
-            $team = Team::create(['name' => 'Dev Team']);
-            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice']);
+            $user = User::factory()->create();
+            $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
+            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
             $item = BilaPrepItem::create([
                 'team_member_id' => $member->id,
                 'content' => 'Item',
                 'is_discussed' => true,
+                'user_id' => $user->id,
             ]);
 
             expect($item->fresh()->is_discussed)->toBeTrue();
@@ -47,22 +53,25 @@ describe('BilaPrepItem model', function (): void {
 
     describe('relationships', function (): void {
         it('belongs to a TeamMember', function (): void {
-            $team = Team::create(['name' => 'Dev Team']);
-            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice']);
-            $item = BilaPrepItem::create(['team_member_id' => $member->id, 'content' => 'Item']);
+            $user = User::factory()->create();
+            $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
+            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
+            $item = BilaPrepItem::create(['team_member_id' => $member->id, 'content' => 'Item', 'user_id' => $user->id]);
 
             expect($item->teamMember())->toBeInstanceOf(BelongsTo::class)
                 ->and($item->teamMember->id)->toBe($member->id);
         });
 
         it('belongs to a Bila', function (): void {
-            $team = Team::create(['name' => 'Dev Team']);
-            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice']);
-            $bila = Bila::create(['team_member_id' => $member->id, 'scheduled_date' => '2025-06-01']);
+            $user = User::factory()->create();
+            $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
+            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
+            $bila = Bila::create(['team_member_id' => $member->id, 'scheduled_date' => '2025-06-01', 'user_id' => $user->id]);
             $item = BilaPrepItem::create([
                 'team_member_id' => $member->id,
                 'bila_id' => $bila->id,
                 'content' => 'Item',
+                'user_id' => $user->id,
             ]);
 
             expect($item->bila())->toBeInstanceOf(BelongsTo::class)
@@ -70,9 +79,10 @@ describe('BilaPrepItem model', function (): void {
         });
 
         it('allows a null bila_id (prep item not yet linked to a bila)', function (): void {
-            $team = Team::create(['name' => 'Dev Team']);
-            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice']);
-            $item = BilaPrepItem::create(['team_member_id' => $member->id, 'content' => 'Unlinked item']);
+            $user = User::factory()->create();
+            $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
+            $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
+            $item = BilaPrepItem::create(['team_member_id' => $member->id, 'content' => 'Unlinked item', 'user_id' => $user->id]);
 
             expect($item->bila)->toBeNull();
         });

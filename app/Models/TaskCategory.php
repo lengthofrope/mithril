@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\HasSortOrder;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class TaskCategory extends Model
 {
+    use BelongsToUser;
     use HasFactory;
     use HasSortOrder;
     use Searchable;
@@ -31,6 +33,7 @@ class TaskCategory extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'name',
         'sort_order',
     ];

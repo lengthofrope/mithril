@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\MemberStatus;
+use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
 use App\Models\Traits\HasFollowUp;
 use App\Models\Traits\HasSortOrder;
@@ -33,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class TeamMember extends Model
 {
+    use BelongsToUser;
     use Filterable;
     use HasFactory;
     use HasFollowUp;
@@ -45,6 +47,7 @@ class TeamMember extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'team_id',
         'name',
         'role',

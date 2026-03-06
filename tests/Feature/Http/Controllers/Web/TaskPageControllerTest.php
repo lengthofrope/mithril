@@ -39,7 +39,7 @@ test('task index renders the correct view', function () {
 test('task index passes tasks to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    Task::factory()->count(3)->create();
+    Task::factory()->count(3)->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get('/tasks');
 
@@ -67,9 +67,9 @@ test('task index filters tasks by status', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['status' => TaskStatus::Open]);
-    Task::factory()->create(['status' => TaskStatus::Done]);
-    Task::factory()->create(['status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Done]);
 
     $response = $this->actingAs($user)->get('/tasks?status=' . TaskStatus::Done->value);
 
@@ -81,8 +81,8 @@ test('task index filters tasks by priority', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['priority' => Priority::Urgent]);
-    Task::factory()->create(['priority' => Priority::Normal]);
+    Task::factory()->create(['user_id' => $user->id, 'priority' => Priority::Urgent]);
+    Task::factory()->create(['user_id' => $user->id, 'priority' => Priority::Normal]);
 
     $response = $this->actingAs($user)->get('/tasks?priority=' . Priority::Urgent->value);
 
@@ -93,11 +93,11 @@ test('task index filters tasks by priority', function () {
 test('task index groups tasks by task group when group_by_task_group is set', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $group = TaskGroup::factory()->create();
+    $group = TaskGroup::factory()->create(['user_id' => $user->id]);
 
-    Task::factory()->create(['task_group_id' => $group->id]);
-    Task::factory()->create(['task_group_id' => $group->id]);
-    Task::factory()->create(['task_group_id' => null]);
+    Task::factory()->create(['user_id' => $user->id, 'task_group_id' => $group->id]);
+    Task::factory()->create(['user_id' => $user->id, 'task_group_id' => $group->id]);
+    Task::factory()->create(['user_id' => $user->id, 'task_group_id' => null]);
 
     $response = $this->actingAs($user)->get('/tasks?group_by_task_group=1');
 
@@ -110,7 +110,7 @@ test('task index groups tasks by task group when group_by_task_group is set', fu
 test('task index does not group tasks when group_by_task_group is not set', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    Task::factory()->count(3)->create();
+    Task::factory()->count(3)->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->get('/tasks');
 
@@ -159,9 +159,9 @@ test('task kanban passes all tasks to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['status' => TaskStatus::Open]);
-    Task::factory()->create(['status' => TaskStatus::Open]);
-    Task::factory()->create(['status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'status' => TaskStatus::Done]);
 
     $response = $this->actingAs($user)->get('/tasks/kanban');
 
@@ -182,8 +182,8 @@ test('task kanban filters tasks by priority', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    Task::factory()->create(['priority' => Priority::Urgent, 'status' => TaskStatus::Open]);
-    Task::factory()->create(['priority' => Priority::Normal, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'priority' => Priority::Urgent, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'priority' => Priority::Normal, 'status' => TaskStatus::Open]);
 
     $response = $this->actingAs($user)->get('/tasks/kanban?priority=' . Priority::Urgent->value);
 

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 use App\Enums\FollowUpStatus;
 use App\Models\FollowUp;
+use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 test('index returns all follow-ups', function () {
     /** @var \Tests\TestCase $this */
-    FollowUp::factory()->count(3)->create();
+    $user = User::factory()->create();
+    FollowUp::factory()->count(3)->create(['user_id' => $user->id]);
 
-    $response = $this->getJson('/api/v1/follow-ups');
+    $response = $this->actingAs($user)->getJson('/api/v1/follow-ups');
 
     $response->assertOk()
         ->assertJson(['success' => true]);
@@ -23,13 +26,15 @@ test('index returns all follow-ups', function () {
 
 test('store creates a new follow-up and returns 201', function () {
     /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
     $payload = [
         'description' => 'Check in on project status',
         'follow_up_date' => '2026-03-15',
         'status' => FollowUpStatus::Open->value,
     ];
 
-    $response = $this->postJson('/api/v1/follow-ups', $payload);
+    $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', $payload);
 
     $response->assertStatus(201)
         ->assertJson([
@@ -44,7 +49,9 @@ test('store creates a new follow-up and returns 201', function () {
 
 test('store returns 422 when description is missing', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/follow-ups', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', [
         'follow_up_date' => '2026-03-15',
     ]);
 
@@ -54,7 +61,9 @@ test('store returns 422 when description is missing', function () {
 
 test('store returns 422 when status is not a valid enum value', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/follow-ups', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', [
         'description' => 'Test',
         'status' => 'in_review',
     ]);
@@ -65,7 +74,9 @@ test('store returns 422 when status is not a valid enum value', function () {
 
 test('store returns 422 when team_member_id does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/follow-ups', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', [
         'description' => 'Test',
         'team_member_id' => 9999,
     ]);
@@ -76,9 +87,11 @@ test('store returns 422 when team_member_id does not exist', function () {
 
 test('store creates follow-up linked to existing team member', function () {
     /** @var \Tests\TestCase $this */
-    $member = TeamMember::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
-    $response = $this->postJson('/api/v1/follow-ups', [
+    $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', [
         'description' => 'Discuss performance',
         'team_member_id' => $member->id,
     ]);
@@ -93,9 +106,10 @@ test('store creates follow-up linked to existing team member', function () {
 
 test('update modifies an existing follow-up', function () {
     /** @var \Tests\TestCase $this */
-    $followUp = FollowUp::factory()->create(['description' => 'Old description']);
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create(['user_id' => $user->id, 'description' => 'Old description']);
 
-    $response = $this->putJson("/api/v1/follow-ups/{$followUp->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/follow-ups/{$followUp->id}", [
         'description' => 'Updated description',
     ]);
 
@@ -107,9 +121,10 @@ test('update modifies an existing follow-up', function () {
 
 test('update response includes saved_at timestamp', function () {
     /** @var \Tests\TestCase $this */
-    $followUp = FollowUp::factory()->create();
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->putJson("/api/v1/follow-ups/{$followUp->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/follow-ups/{$followUp->id}", [
         'description' => 'Updated',
     ]);
 
@@ -120,7 +135,9 @@ test('update response includes saved_at timestamp', function () {
 
 test('update returns 404 when follow-up does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->putJson('/api/v1/follow-ups/9999', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->putJson('/api/v1/follow-ups/9999', [
         'description' => 'Ghost',
     ]);
 
@@ -129,9 +146,10 @@ test('update returns 404 when follow-up does not exist', function () {
 
 test('destroy deletes a follow-up', function () {
     /** @var \Tests\TestCase $this */
-    $followUp = FollowUp::factory()->create();
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->deleteJson("/api/v1/follow-ups/{$followUp->id}");
+    $response = $this->actingAs($user)->deleteJson("/api/v1/follow-ups/{$followUp->id}");
 
     $response->assertOk()
         ->assertJson([
@@ -144,7 +162,9 @@ test('destroy deletes a follow-up', function () {
 
 test('destroy returns 404 when follow-up does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->deleteJson('/api/v1/follow-ups/9999');
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->deleteJson('/api/v1/follow-ups/9999');
 
     $response->assertNotFound();
 });

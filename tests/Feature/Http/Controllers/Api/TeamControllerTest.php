@@ -3,15 +3,17 @@
 declare(strict_types=1);
 
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 test('index returns a successful response with all teams', function () {
     /** @var \Tests\TestCase $this */
-    Team::factory()->count(2)->create();
+    $user = User::factory()->create();
+    Team::factory()->count(2)->create(['user_id' => $user->id]);
 
-    $response = $this->getJson('/api/v1/teams');
+    $response = $this->actingAs($user)->getJson('/api/v1/teams');
 
     $response->assertOk()
         ->assertJson(['success' => true]);
@@ -21,10 +23,11 @@ test('index returns a successful response with all teams', function () {
 
 test('index returns teams ordered by sort_order', function () {
     /** @var \Tests\TestCase $this */
-    Team::factory()->create(['name' => 'Backend', 'sort_order' => 2]);
-    Team::factory()->create(['name' => 'Frontend', 'sort_order' => 1]);
+    $user = User::factory()->create();
+    Team::factory()->create(['user_id' => $user->id, 'name' => 'Backend', 'sort_order' => 2]);
+    Team::factory()->create(['user_id' => $user->id, 'name' => 'Frontend', 'sort_order' => 1]);
 
-    $response = $this->getJson('/api/v1/teams');
+    $response = $this->actingAs($user)->getJson('/api/v1/teams');
 
     $response->assertOk();
 
@@ -35,13 +38,15 @@ test('index returns teams ordered by sort_order', function () {
 
 test('store creates a new team and returns 201', function () {
     /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
     $payload = [
         'name' => 'Engineering',
         'description' => 'Core engineering team',
         'color' => '#ff5733',
     ];
 
-    $response = $this->postJson('/api/v1/teams', $payload);
+    $response = $this->actingAs($user)->postJson('/api/v1/teams', $payload);
 
     $response->assertStatus(201)
         ->assertJson([
@@ -56,7 +61,9 @@ test('store creates a new team and returns 201', function () {
 
 test('store returns 422 when name is missing', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/teams', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/teams', [
         'description' => 'No name provided',
     ]);
 
@@ -66,7 +73,9 @@ test('store returns 422 when name is missing', function () {
 
 test('store returns 422 when name exceeds max length', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/teams', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/teams', [
         'name' => str_repeat('a', 256),
     ]);
 
@@ -76,9 +85,10 @@ test('store returns 422 when name exceeds max length', function () {
 
 test('update modifies an existing team', function () {
     /** @var \Tests\TestCase $this */
-    $team = Team::factory()->create(['name' => 'Old name']);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id, 'name' => 'Old name']);
 
-    $response = $this->putJson("/api/v1/teams/{$team->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/teams/{$team->id}", [
         'name' => 'New name',
     ]);
 
@@ -98,9 +108,10 @@ test('update modifies an existing team', function () {
 
 test('update response includes saved_at timestamp', function () {
     /** @var \Tests\TestCase $this */
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->putJson("/api/v1/teams/{$team->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/teams/{$team->id}", [
         'name' => 'Updated',
     ]);
 
@@ -111,16 +122,19 @@ test('update response includes saved_at timestamp', function () {
 
 test('update returns 404 when team does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->putJson('/api/v1/teams/9999', ['name' => 'Ghost']);
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->putJson('/api/v1/teams/9999', ['name' => 'Ghost']);
 
     $response->assertNotFound();
 });
 
 test('destroy deletes a team', function () {
     /** @var \Tests\TestCase $this */
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->deleteJson("/api/v1/teams/{$team->id}");
+    $response = $this->actingAs($user)->deleteJson("/api/v1/teams/{$team->id}");
 
     $response->assertOk()
         ->assertJson([
@@ -133,7 +147,9 @@ test('destroy deletes a team', function () {
 
 test('destroy returns 404 when team does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->deleteJson('/api/v1/teams/9999');
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->deleteJson('/api/v1/teams/9999');
 
     $response->assertNotFound();
 });

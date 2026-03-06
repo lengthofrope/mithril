@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
 use App\Models\Traits\HasSortOrder;
 use App\Models\Traits\Searchable;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Team extends Model
 {
+    use BelongsToUser;
     use Filterable;
     use HasFactory;
     use HasSortOrder;
@@ -35,6 +37,7 @@ class Team extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'name',
         'description',
         'color',

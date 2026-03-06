@@ -20,6 +20,7 @@ class BilaFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'team_member_id' => TeamMember::factory(),
             'scheduled_date' => fake()->dateTimeBetween('-1 month', '+1 month'),
             'notes' => fake()->optional()->paragraph(),
