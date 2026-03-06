@@ -600,29 +600,152 @@ push_subscriptions (voor web push)
 
 ## Gewenste output
 
-Lever een volledig werkend project op, gebouwd bovenop TailAdmin Laravel:
+Lever een volledig werkend project op, gebouwd bovenop TailAdmin Laravel.
 
-1. **TailAdmin setup:** clone het repo, verwijder overbodige demo-pagina's, pas de sidebar-navigatie aan naar onze secties, configureer MariaDB-verbinding.
-2. **Architectuur:** generieke traits (`HasSortOrder`, `Filterable`, `HasFollowUp`, `Searchable`), abstracte controller/service, en gestandaardiseerd API-response format — voordat je aan specifieke features begint.
-3. **TypeScript foundation:** gedeelde types (`types/api.ts`, `types/models.ts`), `api-client.ts` wrapper, en generieke Alpine-componenten (`AutoSaver`, `DragDropSortable`, `FilterManager`) — geregistreerd in TailAdmin's bestaande `app.js`.
-4. Complete Laravel backend: migraties, models (met traits en relaties), controllers (die de generieke logica hergebruiken), form requests, routes (web + API)
-5. Blade templates die TailAdmin's layout en componenten extenden, aangevuld met onze eigen componenten in de `tl/`-namespace
-6. PWA setup: manifest.json, service worker, offline fallback
-7. Push-notificatie systeem met Laravel Events + Scheduler
-8. Auto-save implementatie via het generieke `AutoSaver`-systeem
-9. Drag & drop via het generieke `DragDropSortable`-systeem
-10. Login-systeem met "onthoud mij"-cookie + optionele WebAuthn vingerafdruk
-11. Privétaken-functionaliteit met maskering in de UI via `privacyToggle`-component
-12. README met volledige installatie-instructies (incl. MariaDB setup, cron, VAPID keys)
-13. Database seeder met realistische voorbeelddata (2 teams, 6-8 teamleden, diverse taken/notities)
-14. Werkende zoekfunctie, filters, groepering, en sortering — allemaal via de generieke systemen
+### Bouwmethode: Claude Code Agent Teams
 
-Bouw het stap voor stap op:
-1. TailAdmin Laravel opzetten en sidebar/navigatie aanpassen
-2. Generieke architectuur (traits, services, TypeScript types en utilities)
-3. Authenticatie
-4. Kernfunctionaliteiten (teams, taken, opvolgingen) die de generieke architectuur gebruiken
-5. Notities/bila's
-6. PWA/notificaties
+Dit project wordt gebouwd met **Claude Code Agent Teams** — meerdere Claude-instanties die parallel werken, onderling communiceren, en coördineren via een gedeelde takenlijst.
 
-Laat bij elke stap zien hoe TailAdmin's bestaande componenten worden hergebruikt, hoe de generieke systemen worden ingezet, en waarom je bepaalde keuzes maakt.
+#### Vereisten vooraf
+- Claude Code geïnstalleerd (CLI of VS Code-extensie)
+- Agent Teams geactiveerd in `~/.claude/settings.json`:
+  ```json
+  {
+    "env": {
+      "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    }
+  }
+  ```
+- Optioneel: `tmux` geïnstalleerd voor per-agent terminal panelen (aanbevolen voor overzicht)
+
+#### CLAUDE.md voor het project
+
+Maak een `CLAUDE.md` in de project-root met de volgende inhoud. Dit is het gedeelde brein dat elke teammate automatisch laadt:
+
+```markdown
+# Team Lead Dashboard — Project Context
+
+## Stack
+- PHP 8.4+ / Laravel (laatste stabiele versie)
+- TailAdmin Laravel als basis (Blade + Alpine.js + Tailwind CSS + Vite)
+- MariaDB database
+- TypeScript (strict mode) voor frontend-logica
+- SortableJS voor drag & drop
+- Web Push API voor notificaties
+
+## Architectuurregels
+- ALLE herbruikbare PHP-logica in traits: HasSortOrder, Filterable, HasFollowUp, Searchable
+- ALLE herbruikbare frontend-logica als TypeScript Alpine.js-componenten in resources/js/components/
+- Eén generiek API-response format: { success, data, message?, saved_at? }
+- Geen "Opslaan"-knoppen — alles auto-save via debounced AJAX
+- Eigen Blade-componenten in resources/views/components/tl/ namespace
+- Gebruik TailAdmin's bestaande componenten en design-taal waar mogelijk
+
+## Bestandseigenaarschap (kritisch voor Agent Teams)
+- `backend-agent` bezit: app/, database/, routes/, config/
+- `frontend-agent` bezit: resources/views/, resources/css/
+- `typescript-agent` bezit: resources/js/
+- `pwa-agent` bezit: public/manifest.json, public/sw.js, PWA-gerelateerde bestanden
+- GEDEELD (voorzichtig): routes/web.php, routes/api.php (coördineer via berichten)
+
+## Verificatiecommando's
+- `php artisan test` — alle tests moeten slagen
+- `npx tsc --noEmit` — TypeScript moet compileren zonder fouten
+- `npm run build` — Vite build moet slagen
+- `php artisan migrate:fresh --seed` — migraties en seeders moeten werken
+
+## Database
+- MariaDB, migraties via Laravel
+- Zie datamodel in de prompt voor tabelstructuur
+```
+
+#### Team-samenstelling en taakverdeling
+
+Start het bouwproces met het volgende prompt aan Claude Code (de team lead):
+
+```
+Bouw het Team Lead Dashboard project. Gebruik Agent Teams met de volgende samenstelling:
+
+**Fase 1 — Foundation (sequentieel, door de lead zelf):**
+- Clone TailAdmin Laravel, verwijder demo-pagina's, pas sidebar aan
+- Configureer MariaDB in .env
+- Commit als baseline
+
+**Fase 2 — Architectuur (2 teammates, parallel):**
+
+Teammate "backend":
+- Maak alle Laravel migraties op basis van het datamodel
+- Maak alle Eloquent models met relaties
+- Maak de generieke traits: HasSortOrder, Filterable, HasFollowUp, Searchable
+- Maak de abstracte ResourceController en CrudService
+- Maak de generieke ReorderController en AutoSaveController
+- Maak Form Requests met partiële validatie
+- Maak de database seeder met 2 teams, 6-8 teamleden, taken, notities
+- Bestanden: app/, database/
+
+Teammate "typescript":
+- Maak types/api.ts en types/models.ts (spiegel de Laravel models)
+- Maak utils/api-client.ts (fetch wrapper met CSRF, error handling, retry)
+- Maak de generieke Alpine-componenten: auto-save-field.ts, auto-save-form.ts, sortable-list.ts, sortable-kanban.ts, filter-manager.ts, markdown-editor.ts, privacy-toggle.ts, confirm-dialog.ts
+- Registreer alles in app.ts
+- Bestanden: resources/js/
+
+Coördinatie: "typescript" moet de model-interfaces afstemmen op wat "backend" in de migraties definieert. Stuur elkaar berichten over veldnamen en types.
+
+**Fase 3 — Features (3 teammates, parallel):**
+
+Teammate "backend-features":
+- API-controllers voor teams, teamleden, taken, opvolgingen, bila's, afspraken, notities, weekreflecties
+- Routes (web.php + api.php)
+- Laravel Events: TaskStatusChanged, FollowUpDue, BilaScheduled
+- Zoekfunctionaliteit met FULLTEXT indexes
+- Data export/import endpoints
+- Bestanden: app/Http/, routes/
+
+Teammate "frontend-pages":
+- Blade templates voor alle pagina's: dashboard, taken (lijst + kanban), opvolgingen, teams, teamlid-profiel, notities, bila's, weekoverzicht, instellingen
+- Gebruik TailAdmin's bestaande layout en componenten
+- Bouw eigen Blade-componenten in tl/ namespace
+- Integreer de TypeScript Alpine-componenten via x-data attributen
+- Bestanden: resources/views/
+
+Teammate "auth-pwa":
+- Login-systeem met "onthoud mij"-cookie
+- Optionele WebAuthn vingerafdruk-registratie
+- PWA manifest.json en service worker
+- Push-notificatie setup (VAPID keys, subscription endpoints)
+- Laravel Scheduler voor notificatie-checks
+- Bestanden: auth-gerelateerde controllers, public/manifest.json, public/sw.js
+
+Coördinatie: "frontend-pages" heeft de routes van "backend-features" nodig. "backend-features" stuurt route-definities naar "frontend-pages" zodra ze klaar zijn. "auth-pwa" werkt onafhankelijk maar stuurt de auth-middleware naam naar de andere twee.
+
+**Fase 4 — Integratie (lead zelf):**
+- Verifieer dat alle onderdelen samenwerken
+- Run alle verificatiecommando's
+- Fix eventuele integratieproblemen
+- Schrijf de README met installatie-instructies
+- Commit en tag als v1.0
+```
+
+#### Tips voor Agent Teams bij dit project
+
+- **Bestandseigenaarschap is kritisch.** Twee agents die hetzelfde bestand bewerken leidt tot conflicten. De verdeling hierboven voorkomt dat.
+- **CLAUDE.md is het gedeelde brein.** Houd het up-to-date met architectuurbesluiten. Elke teammate leest het automatisch bij het starten.
+- **Houd teams klein.** 2-3 teammates per fase is optimaal. Meer teammates = meer coördinatie-overhead.
+- **Gebruik dependency-tracking.** Laat de lead taken definiëren met afhankelijkheden zodat agents niet beginnen voordat prerequisites klaar zijn.
+- **Verificatie na elke fase.** Run de verificatiecommando's voordat je aan de volgende fase begint.
+
+### Deliverables
+
+1. **TailAdmin setup:** aangepaste sidebar, MariaDB configuratie, opgeschoonde demo-pagina's
+2. **Architectuur:** generieke traits, abstracte controllers, TypeScript types en Alpine-componenten
+3. Complete Laravel backend: migraties, models, controllers, form requests, routes (web + API)
+4. Blade templates die TailAdmin's layout extenden, met eigen `tl/`-componenten
+5. PWA setup: manifest.json, service worker, offline fallback
+6. Push-notificatie systeem met Laravel Events + Scheduler
+7. Auto-save en drag & drop via de generieke TypeScript-systemen
+8. Login-systeem met "onthoud mij"-cookie + optionele WebAuthn
+9. Privétaken met maskering in de UI
+10. README met volledige installatie-instructies (incl. MariaDB, cron, VAPID keys, Agent Teams setup)
+11. Database seeder met realistische voorbeelddata
+12. Werkende zoekfunctie, filters, groepering, sortering, en drag & drop
