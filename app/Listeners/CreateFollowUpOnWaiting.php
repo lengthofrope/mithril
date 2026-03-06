@@ -37,6 +37,7 @@ class CreateFollowUpOnWaiting
         }
 
         FollowUp::create([
+            'user_id' => $event->task->user_id,
             'task_id' => $event->task->id,
             'team_member_id' => $event->task->team_member_id,
             'description' => $event->task->title,

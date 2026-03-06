@@ -5,15 +5,18 @@ declare(strict_types=1);
 use App\Enums\MemberStatus;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 test('index returns all team members', function () {
     /** @var \Tests\TestCase $this */
-    TeamMember::factory()->count(3)->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    TeamMember::factory()->count(3)->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
-    $response = $this->getJson('/api/v1/team-members');
+    $response = $this->actingAs($user)->getJson('/api/v1/team-members');
 
     $response->assertOk()
         ->assertJson(['success' => true]);
@@ -23,7 +26,8 @@ test('index returns all team members', function () {
 
 test('store creates a new team member and returns 201', function () {
     /** @var \Tests\TestCase $this */
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
 
     $payload = [
         'team_id' => $team->id,
@@ -34,7 +38,7 @@ test('store creates a new team member and returns 201', function () {
         'bila_interval_days' => 14,
     ];
 
-    $response = $this->postJson('/api/v1/team-members', $payload);
+    $response = $this->actingAs($user)->postJson('/api/v1/team-members', $payload);
 
     $response->assertStatus(201)
         ->assertJson([
@@ -52,7 +56,9 @@ test('store creates a new team member and returns 201', function () {
 
 test('store returns 422 when required fields are missing', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/team-members', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/team-members', [
         'role' => 'Developer',
     ]);
 
@@ -62,7 +68,9 @@ test('store returns 422 when required fields are missing', function () {
 
 test('store returns 422 when team_id does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->postJson('/api/v1/team-members', [
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/team-members', [
         'team_id' => 9999,
         'name' => 'John',
     ]);
@@ -73,9 +81,10 @@ test('store returns 422 when team_id does not exist', function () {
 
 test('store returns 422 when status is invalid', function () {
     /** @var \Tests\TestCase $this */
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->postJson('/api/v1/team-members', [
+    $response = $this->actingAs($user)->postJson('/api/v1/team-members', [
         'team_id' => $team->id,
         'name' => 'Jane',
         'status' => 'on_vacation',
@@ -87,9 +96,11 @@ test('store returns 422 when status is invalid', function () {
 
 test('update modifies an existing team member', function () {
     /** @var \Tests\TestCase $this */
-    $member = TeamMember::factory()->create(['name' => 'Old name']);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id, 'name' => 'Old name']);
 
-    $response = $this->putJson("/api/v1/team-members/{$member->id}", [
+    $response = $this->actingAs($user)->putJson("/api/v1/team-members/{$member->id}", [
         'team_id' => $member->team_id,
         'name' => 'New name',
     ]);
@@ -102,9 +113,11 @@ test('update modifies an existing team member', function () {
 
 test('destroy deletes a team member', function () {
     /** @var \Tests\TestCase $this */
-    $member = TeamMember::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
-    $response = $this->deleteJson("/api/v1/team-members/{$member->id}");
+    $response = $this->actingAs($user)->deleteJson("/api/v1/team-members/{$member->id}");
 
     $response->assertOk()
         ->assertJson([
@@ -117,7 +130,9 @@ test('destroy deletes a team member', function () {
 
 test('destroy returns 404 when team member does not exist', function () {
     /** @var \Tests\TestCase $this */
-    $response = $this->deleteJson('/api/v1/team-members/9999');
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->deleteJson('/api/v1/team-members/9999');
 
     $response->assertNotFound();
 });
