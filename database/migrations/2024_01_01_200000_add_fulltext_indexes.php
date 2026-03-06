@@ -20,6 +20,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement(
             'ALTER TABLE tasks ADD FULLTEXT INDEX ft_tasks_search (title, description)'
         );
@@ -44,6 +48,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('ALTER TABLE tasks DROP INDEX ft_tasks_search');
         DB::statement('ALTER TABLE notes DROP INDEX ft_notes_search');
         DB::statement('ALTER TABLE follow_ups DROP INDEX ft_follow_ups_search');

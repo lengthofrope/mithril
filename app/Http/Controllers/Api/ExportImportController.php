@@ -90,7 +90,10 @@ class ExportImportController extends Controller
      */
     private function truncateAllTables(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        match (DB::getDriverName()) {
+            'sqlite' => DB::statement('PRAGMA foreign_keys = OFF'),
+            default => DB::statement('SET FOREIGN_KEY_CHECKS=0'),
+        };
 
         NoteTag::truncate();
         Note::truncate();
@@ -105,7 +108,10 @@ class ExportImportController extends Controller
         Team::truncate();
         WeeklyReflection::truncate();
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        match (DB::getDriverName()) {
+            'sqlite' => DB::statement('PRAGMA foreign_keys = ON'),
+            default => DB::statement('SET FOREIGN_KEY_CHECKS=1'),
+        };
     }
 
     /**
