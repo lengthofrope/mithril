@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\MemberStatus;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Note;
@@ -11,6 +12,7 @@ use App\Models\Team;
 use App\Models\TeamMember;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -90,6 +92,93 @@ class TeamPageController extends Controller
             'memberAgreements' => $teamMember->agreements,
             'memberNotes' => $memberNotes,
         ]);
+    }
+
+    /**
+     * Store a newly created team.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'color' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        Team::create($validated);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Update an existing team.
+     *
+     * @param Request $request
+     * @param Team $team
+     * @return RedirectResponse
+     */
+    public function update(Request $request, Team $team): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'color' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $team->update($validated);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Delete a team and all its members.
+     *
+     * @param Team $team
+     * @return RedirectResponse
+     */
+    public function destroy(Team $team): RedirectResponse
+    {
+        $team->members()->delete();
+        $team->delete();
+
+        return redirect()->route('teams.index');
+    }
+
+    /**
+     * Store a new team member for the given team.
+     *
+     * @param Request $request
+     * @param Team $team
+     * @return RedirectResponse
+     */
+    public function storeMember(Request $request, Team $team): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'role' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+        ]);
+
+        $team->members()->create($validated);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Delete a team member and redirect to their team page.
+     *
+     * @param TeamMember $teamMember
+     * @return RedirectResponse
+     */
+    public function destroyMember(TeamMember $teamMember): RedirectResponse
+    {
+        $teamId = $teamMember->team_id;
+        $teamMember->delete();
+
+        return redirect()->route('teams.show', $teamId);
     }
 
     /**

@@ -7,7 +7,8 @@
       "Bash(php artisan test)",
       "Bash(php artisan test tests/Feature/Http/Controllers/Web/)",
       "Bash(npx tsc --noEmit)",
-      "Bash(pkill -f \"artisan serve\")"
+      "Bash(pkill -f \"artisan serve\")",
+      "Bash(php artisan test tests/Feature/Http/Controllers/Web/TeamCrudTest.php)"
     ]
   }
 }

@@ -47,7 +47,7 @@
             </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2" x-data="{ deleteOpen: false }">
             @if($member->next_bila_date)
                 <a
                     href="{{ route('bilas.create', ['member_id' => $member->id]) }}"
@@ -60,6 +60,58 @@
                     Schedule bila
                 </a>
             @endif
+
+            <button
+                type="button"
+                x-on:click="deleteOpen = true"
+                class="flex items-center gap-1.5 rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-500/10"
+                title="Remove member"
+            >
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Remove
+            </button>
+
+            {{-- Delete member confirmation modal --}}
+            <div
+                x-show="deleteOpen"
+                x-cloak
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                x-on:keydown.escape.window="deleteOpen = false"
+            >
+                <div
+                    class="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-900"
+                    x-on:click.outside="deleteOpen = false"
+                >
+                    <h2 class="mb-2 text-base font-semibold text-gray-900 dark:text-white">Remove member</h2>
+                    <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                        Are you sure you want to remove <strong>{{ $member->name }}</strong> from the team?
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <form method="POST" action="{{ route('teams.member.destroy', $member->id) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button
+                                type="submit"
+                                class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                            >
+                                Remove
+                            </button>
+                        </form>
+                        <button
+                            type="button"
+                            x-on:click="deleteOpen = false"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -40,8 +40,13 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/follow-ups/{followUp}/convert', [FollowUpPageController::class, 'convertToTask'])->name('follow-ups.convert');
 
     Route::get('/teams', [TeamPageController::class, 'index'])->name('teams.index');
-    Route::get('/teams/{team}', [TeamPageController::class, 'show'])->name('teams.show');
+    Route::post('/teams', [TeamPageController::class, 'store'])->name('teams.store');
     Route::get('/teams/member/{teamMember}', [TeamPageController::class, 'member'])->name('teams.member');
+    Route::delete('/teams/member/{teamMember}', [TeamPageController::class, 'destroyMember'])->name('teams.member.destroy');
+    Route::get('/teams/{team}', [TeamPageController::class, 'show'])->name('teams.show');
+    Route::patch('/teams/{team}', [TeamPageController::class, 'update'])->name('teams.update');
+    Route::delete('/teams/{team}', [TeamPageController::class, 'destroy'])->name('teams.destroy');
+    Route::post('/teams/{team}/members', [TeamPageController::class, 'storeMember'])->name('teams.members.store');
 
     Route::get('/notes', [NotePageController::class, 'index'])->name('notes.index');
     Route::post('/notes', [NotePageController::class, 'store'])->name('notes.store');
