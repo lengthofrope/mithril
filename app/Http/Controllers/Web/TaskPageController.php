@@ -59,11 +59,21 @@ class TaskPageController extends Controller
             $tasks = $query->get();
         }
 
-        $allGroups = TaskGroup::orderBySortOrder()->get();
+        $allGroups = TaskGroup::orderBySortOrder()
+            ->with(['tasks' => fn ($q) => $q->applyFilters($filters)->orderBySortOrder()->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])])
+            ->get();
+
+        $ungroupedTasks = Task::query()
+            ->whereNull('task_group_id')
+            ->applyFilters($filters)
+            ->orderBySortOrder()
+            ->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])
+            ->get();
 
         if ($request->ajax()) {
             return view('partials.tasks-list', [
                 'taskGroups' => $allGroups,
+                'ungroupedTasks' => $ungroupedTasks,
             ]);
         }
 
@@ -78,6 +88,7 @@ class TaskPageController extends Controller
             'groupByTaskGroup' => (bool) $groupById,
             'groups' => $allGroups,
             'taskGroups' => $allGroups,
+            'ungroupedTasks' => $ungroupedTasks,
             'statuses' => TaskStatus::cases(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
@@ -108,6 +119,22 @@ class TaskPageController extends Controller
         ]);
 
         return redirect()->back();
+    }
+
+    /**
+     * Display a single task detail page.
+     *
+     * @param Task $task
+     * @return View
+     */
+    public function show(Task $task): View
+    {
+        $task->load(['teamMember', 'taskGroup', 'taskCategory', 'team']);
+
+        return view('pages.tasks.show', [
+            'title' => $task->title,
+            'task' => $task,
+        ]);
     }
 
     /**

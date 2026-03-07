@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Note;
 use App\Models\NoteTag;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -52,5 +54,66 @@ class NotePageController extends Controller
             'searchTerm' => $searchTerm,
             'selectedTag' => $filterTag,
         ]);
+    }
+
+    /**
+     * Display a single note detail page.
+     *
+     * @param Note $note
+     * @return View
+     */
+    public function show(Note $note): View
+    {
+        $note->load(['tags', 'teamMember', 'team']);
+
+        return view('pages.notes.show', [
+            'title' => 'Note',
+            'note' => $note,
+        ]);
+    }
+
+    /**
+     * Store a new note.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'   => ['nullable', 'string', 'max:255'],
+            'content' => ['nullable', 'string'],
+        ]);
+
+        Note::create([
+            'user_id' => $request->user()->id,
+            'title'   => $validated['title'] ?? 'Untitled',
+            'content' => $validated['content'] ?? '',
+        ]);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Update a note (supports auto-save via AJAX).
+     *
+     * @param Request $request
+     * @param Note $note
+     * @return JsonResponse|RedirectResponse
+     */
+    public function update(Request $request, Note $note): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'   => ['sometimes', 'string', 'max:255'],
+            'content' => ['sometimes', 'string'],
+        ]);
+
+        $note->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'saved_at' => now()->toIso8601String()]);
+        }
+
+        return redirect()->back();
     }
 }

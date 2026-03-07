@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->middleware('auth:web')->group(function (): void {
+Route::prefix('v1')->middleware('auth:web')->as('api.')->group(function (): void {
     Route::apiResource('tasks', TaskController::class);
     Route::apiResource('teams', TeamController::class);
     Route::apiResource('team-members', TeamMemberController::class);

@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/tasks', [TaskPageController::class, 'index'])->name('tasks.index');
     Route::post('/tasks', [TaskPageController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/kanban', [TaskPageController::class, 'kanban'])->name('tasks.kanban');
+    Route::get('/tasks/{task}', [TaskPageController::class, 'show'])->name('tasks.show');
 
     Route::get('/follow-ups', [FollowUpPageController::class, 'index'])->name('follow-ups.index');
     Route::patch('/follow-ups/{followUp}/done', [FollowUpPageController::class, 'markDone'])->name('follow-ups.done');
@@ -43,6 +44,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/teams/member/{teamMember}', [TeamPageController::class, 'member'])->name('teams.member');
 
     Route::get('/notes', [NotePageController::class, 'index'])->name('notes.index');
+    Route::post('/notes', [NotePageController::class, 'store'])->name('notes.store');
+    Route::get('/notes/{note}', [NotePageController::class, 'show'])->name('notes.show');
+    Route::patch('/notes/{note}', [NotePageController::class, 'update'])->name('notes.update');
 
     Route::get('/bilas', [BilaPageController::class, 'index'])->name('bilas.index');
     Route::get('/bilas/create', [BilaPageController::class, 'create'])->name('bilas.create');
