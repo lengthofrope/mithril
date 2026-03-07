@@ -15,6 +15,36 @@ interface SortableKanbanConfig {
 }
 
 /**
+ * Maps status keys to their display labels and CSS classes (must match status-badge.blade.php).
+ */
+const statusStyles: Record<string, { label: string; colorClass: string }> = {
+    open:        { label: 'Open',        colorClass: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400' },
+    in_progress: { label: 'In Progress', colorClass: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400' },
+    waiting:     { label: 'Waiting',     colorClass: 'bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400' },
+    done:        { label: 'Done',        colorClass: 'bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-500' },
+};
+
+/**
+ * Updates the status badge inside a card element to reflect the new status.
+ */
+function updateStatusBadge(card: HTMLElement, status: string): void {
+    const badge = card.querySelector<HTMLElement>('[data-status-badge]');
+
+    if (badge === null) {
+        return;
+    }
+
+    const style = statusStyles[status];
+
+    if (style === undefined) {
+        return;
+    }
+
+    badge.className = `inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${style.colorClass}`;
+    badge.textContent = style.label;
+}
+
+/**
  * Reads the column status value stored on the column's container element.
  */
 function readColumnStatus(column: HTMLElement): string | null {
@@ -102,6 +132,10 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
                         [config.statusField]: toStatus,
                         ...payload,
                     });
+
+                    if (toStatus !== null) {
+                        updateStatusBadge(item, toStatus);
+                    }
                 }
             } catch (err) {
                 const apiError = err as ApiError;

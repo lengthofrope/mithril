@@ -22,6 +22,6 @@
     $label = $labelMap[$key] ?? ucfirst(str_replace('_', ' ', $key));
 @endphp
 
-<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium {{ $colorClass }}">
+<span data-status-badge class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium {{ $colorClass }}">
     {{ $label }}
 </span>
