@@ -64,6 +64,8 @@
                             :endpoint="route('reorder')"
                             :group="'tasks'"
                             :containerId="'group-tasks-' . $group->id"
+                            :moveEndpoint="route('tasks.move')"
+                            :groupId="$group->id"
                         >
                             @foreach($group->tasks->sortBy('sort_order') as $task)
                                 <x-tl.task-card :task="$task" :hideWhenDone="true" />
@@ -85,6 +87,8 @@
                     :endpoint="route('reorder')"
                     :group="'tasks'"
                     containerId="ungrouped-tasks"
+                    :moveEndpoint="route('tasks.move')"
+                    :groupId="0"
                 >
                     @foreach($ungroupedTasks->sortBy('sort_order') as $task)
                         <x-tl.task-card :task="$task" :hideWhenDone="true" />

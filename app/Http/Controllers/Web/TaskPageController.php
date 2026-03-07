@@ -199,9 +199,9 @@ class TaskPageController extends Controller
     }
 
     /**
-     * Move a task to a new kanban status column.
+     * Move a task to a new kanban status column or task group.
      *
-     * Accepts a task ID and the target status value.
+     * Accepts a task ID and either a target status value, a target task_group_id, or both.
      *
      * @param Request $request
      * @return JsonResponse
@@ -209,11 +209,26 @@ class TaskPageController extends Controller
     public function move(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'id'     => ['required', 'integer', 'exists:tasks,id'],
-            'status' => ['required', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
+            'id'             => ['required', 'integer', 'exists:tasks,id'],
+            'status'         => ['nullable', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
+            'task_group_id'  => ['nullable', 'integer', 'exists:task_groups,id'],
+            'clear_group'    => ['nullable', 'boolean'],
         ]);
 
-        Task::findOrFail($validated['id'])->update(['status' => $validated['status']]);
+        $task = Task::findOrFail($validated['id']);
+        $updates = [];
+
+        if (isset($validated['status'])) {
+            $updates['status'] = $validated['status'];
+        }
+
+        if (!empty($validated['clear_group'])) {
+            $updates['task_group_id'] = null;
+        } elseif (isset($validated['task_group_id'])) {
+            $updates['task_group_id'] = $validated['task_group_id'];
+        }
+
+        $task->update($updates);
 
         return response()->json(['success' => true]);
     }

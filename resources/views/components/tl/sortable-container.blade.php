@@ -3,6 +3,8 @@
     'endpoint',
     'group' => null,
     'containerId',
+    'moveEndpoint' => null,
+    'groupId' => null,
 ])
 
 <div
@@ -11,6 +13,7 @@
         modelType: '{{ $modelType }}',
         endpoint: '{{ $endpoint }}',
         @if($group) group: '{{ $group }}', @endif
+        @if($moveEndpoint) moveEndpoint: '{{ $moveEndpoint }}', @endif
     })"
 >
     <div
@@ -18,6 +21,7 @@
         class="space-y-2"
         role="list"
         aria-label="{{ ucfirst(str_replace('_', ' ', $modelType)) }} list"
+        @if($groupId !== null) data-group-id="{{ $groupId }}" @else data-group-id="" @endif
     >
         {{ $slot }}
     </div>

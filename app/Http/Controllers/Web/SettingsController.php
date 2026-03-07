@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -97,9 +96,9 @@ class SettingsController extends Controller
      * Create a new task group.
      *
      * @param Request $request
-     * @return JsonResponse
+     * @return RedirectResponse
      */
-    public function storeTaskGroup(Request $request): JsonResponse
+    public function storeTaskGroup(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -108,29 +107,29 @@ class SettingsController extends Controller
 
         TaskGroup::create($validated);
 
-        return response()->json(['success' => true]);
+        return redirect()->back();
     }
 
     /**
      * Delete a task group.
      *
      * @param TaskGroup $taskGroup
-     * @return JsonResponse
+     * @return RedirectResponse
      */
-    public function destroyTaskGroup(TaskGroup $taskGroup): JsonResponse
+    public function destroyTaskGroup(TaskGroup $taskGroup): RedirectResponse
     {
         $taskGroup->delete();
 
-        return response()->json(['success' => true]);
+        return redirect()->back();
     }
 
     /**
      * Create a new task category.
      *
      * @param Request $request
-     * @return JsonResponse
+     * @return RedirectResponse
      */
-    public function storeCategory(Request $request): JsonResponse
+    public function storeCategory(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:task_categories,name'],
@@ -138,19 +137,19 @@ class SettingsController extends Controller
 
         TaskCategory::create($validated);
 
-        return response()->json(['success' => true]);
+        return redirect()->back();
     }
 
     /**
      * Delete a task category.
      *
      * @param TaskCategory $taskCategory
-     * @return JsonResponse
+     * @return RedirectResponse
      */
-    public function destroyCategory(TaskCategory $taskCategory): JsonResponse
+    public function destroyCategory(TaskCategory $taskCategory): RedirectResponse
     {
         $taskCategory->delete();
 
-        return response()->json(['success' => true]);
+        return redirect()->back();
     }
 }
