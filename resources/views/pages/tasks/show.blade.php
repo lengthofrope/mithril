@@ -3,57 +3,115 @@
 @section('content')
     <x-common.page-breadcrumb pageTitle="{{ $task->title }}" />
 
+    @php
+        $taskEndpoint = '/api/v1/tasks/' . $task->id;
+    @endphp
+
     <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-        <div class="mb-4 flex items-center justify-between">
-            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
-                {{ $task->title }}
-            </h1>
-            <x-tl.priority-badge :priority="$task->priority" />
+        {{-- Title --}}
+        <div class="mb-6">
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="title"
+                :value="$task->title"
+                type="text"
+                label="Title"
+            />
         </div>
 
-        <dl class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <div>
-                <dt class="font-medium text-gray-500 dark:text-gray-400">Status</dt>
-                <dd class="mt-1"><x-tl.status-badge :status="$task->status" /></dd>
-            </div>
+        {{-- Row: Priority + Status --}}
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="priority"
+                :value="$task->priority instanceof \BackedEnum ? $task->priority->value : (string) $task->priority"
+                type="select"
+                label="Priority"
+                :options="$priorityOptions"
+            />
 
-            @if($task->teamMember)
-                <div>
-                    <dt class="font-medium text-gray-500 dark:text-gray-400">Assigned to</dt>
-                    <dd class="mt-1 text-gray-900 dark:text-white">{{ $task->teamMember->name }}</dd>
-                </div>
-            @endif
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="status"
+                :value="$task->status instanceof \BackedEnum ? $task->status->value : (string) $task->status"
+                type="select"
+                label="Status"
+                :options="$statusOptions"
+            />
+        </div>
 
-            @if($task->taskGroup)
-                <div>
-                    <dt class="font-medium text-gray-500 dark:text-gray-400">Group</dt>
-                    <dd class="mt-1 text-gray-900 dark:text-white">{{ $task->taskGroup->name }}</dd>
-                </div>
-            @endif
+        {{-- Row: Team + Member --}}
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="team_id"
+                :value="(string) ($task->team_id ?? '')"
+                type="select"
+                label="Team"
+                :options="array_merge([['value' => '', 'label' => '— None —']], $teamOptions)"
+            />
 
-            @if($task->taskCategory)
-                <div>
-                    <dt class="font-medium text-gray-500 dark:text-gray-400">Category</dt>
-                    <dd class="mt-1 text-gray-900 dark:text-white">{{ $task->taskCategory->name }}</dd>
-                </div>
-            @endif
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="team_member_id"
+                :value="(string) ($task->team_member_id ?? '')"
+                type="select"
+                label="Assigned to"
+                :options="array_merge([['value' => '', 'label' => '— None —']], $memberOptions)"
+            />
+        </div>
 
-            @if($task->deadline)
-                <div>
-                    <dt class="font-medium text-gray-500 dark:text-gray-400">Deadline</dt>
-                    <dd class="mt-1 text-gray-900 dark:text-white">{{ \Carbon\Carbon::parse($task->deadline)->format('d M Y') }}</dd>
-                </div>
-            @endif
-        </dl>
+        {{-- Row: Category + Group --}}
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="task_category_id"
+                :value="(string) ($task->task_category_id ?? '')"
+                type="select"
+                label="Category"
+                :options="array_merge([['value' => '', 'label' => '— None —']], $categoryOptions)"
+            />
 
-        @if($task->description)
-            <div class="mt-6 border-t border-gray-100 pt-4 dark:border-gray-800">
-                <h2 class="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Description</h2>
-                <div class="prose prose-sm dark:prose-invert max-w-none">
-                    {!! nl2br(e($task->description)) !!}
-                </div>
-            </div>
-        @endif
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="task_group_id"
+                :value="(string) ($task->task_group_id ?? '')"
+                type="select"
+                label="Group"
+                :options="array_merge([['value' => '', 'label' => '— None —']], $groupOptions)"
+            />
+        </div>
+
+        {{-- Row: Deadline + Private --}}
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="deadline"
+                :value="$task->deadline ? $task->deadline->format('Y-m-d') : ''"
+                type="date"
+                label="Deadline"
+            />
+
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="is_private"
+                :value="$task->is_private ? '1' : '0'"
+                type="select"
+                label="Private"
+                :options="[['value' => '0', 'label' => 'No'], ['value' => '1', 'label' => 'Yes']]"
+            />
+        </div>
+
+        {{-- Description --}}
+        <div>
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="description"
+                :value="$task->description ?? ''"
+                type="textarea"
+                label="Description"
+            />
+        </div>
     </div>
 
     <div class="mt-4">

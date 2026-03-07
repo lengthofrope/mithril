@@ -32,7 +32,7 @@ class TaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => [$this->isMethod('PATCH') || $this->isMethod('PUT') ? 'sometimes' : 'required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'priority' => ['nullable', Rule::enum(Priority::class)],
             'category' => ['nullable', 'string', 'max:100'],

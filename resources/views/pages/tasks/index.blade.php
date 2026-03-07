@@ -129,6 +129,34 @@
                             </select>
                         </div>
 
+                        <div>
+                            <label for="new-task-team" class="sr-only">Team</label>
+                            <select
+                                id="new-task-team"
+                                name="team_id"
+                                class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                            >
+                                <option value="">No team</option>
+                                @foreach($teamOptions as $opt)
+                                    <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="new-task-member" class="sr-only">Assigned to</label>
+                            <select
+                                id="new-task-member"
+                                name="team_member_id"
+                                class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                            >
+                                <option value="">No assignee</option>
+                                @foreach($memberOptions as $opt)
+                                    <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="flex items-center gap-2">
                             <button
                                 type="submit"

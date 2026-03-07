@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
@@ -106,16 +107,24 @@ class TaskPageController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title'         => ['required', 'string', 'max:255'],
-            'priority'      => ['nullable', 'string', 'in:urgent,high,normal,low'],
-            'task_group_id' => ['nullable', 'integer', 'exists:task_groups,id'],
+            'title'            => ['required', 'string', 'max:255'],
+            'priority'         => ['nullable', 'string', 'in:urgent,high,normal,low'],
+            'task_group_id'    => ['nullable', 'integer', 'exists:task_groups,id'],
+            'team_id'          => ['nullable', 'integer', 'exists:teams,id'],
+            'team_member_id'   => ['nullable', 'integer', 'exists:team_members,id'],
+            'task_category_id' => ['nullable', 'integer', 'exists:task_categories,id'],
+            'deadline'         => ['nullable', 'date'],
         ]);
 
         Task::create([
-            'user_id'       => $request->user()->id,
-            'title'         => $validated['title'],
-            'priority'      => $validated['priority'] ?? 'normal',
-            'task_group_id' => $validated['task_group_id'] ?? null,
+            'user_id'          => $request->user()->id,
+            'title'            => $validated['title'],
+            'priority'         => $validated['priority'] ?? 'normal',
+            'task_group_id'    => $validated['task_group_id'] ?? null,
+            'team_id'          => $validated['team_id'] ?? null,
+            'team_member_id'   => $validated['team_member_id'] ?? null,
+            'task_category_id' => $validated['task_category_id'] ?? null,
+            'deadline'         => $validated['deadline'] ?? null,
         ]);
 
         return redirect()->back();
@@ -131,9 +140,20 @@ class TaskPageController extends Controller
     {
         $task->load(['teamMember', 'taskGroup', 'taskCategory', 'team']);
 
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
+        $allCategories = TaskCategory::all();
+        $allGroups = TaskGroup::orderBySortOrder()->get();
+
         return view('pages.tasks.show', [
             'title' => $task->title,
             'task' => $task,
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name])->all(),
+            'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => (string) $c->id, 'label' => $c->name])->all(),
+            'groupOptions' => $allGroups->map(fn (TaskGroup $g) => ['value' => (string) $g->id, 'label' => $g->name])->all(),
+            'priorityOptions' => collect(Priority::cases())->map(fn (Priority $p) => ['value' => $p->value, 'label' => ucfirst($p->value)])->all(),
+            'statusOptions' => collect(TaskStatus::cases())->map(fn (TaskStatus $s) => ['value' => $s->value, 'label' => ucfirst(str_replace('_', ' ', $s->value))])->all(),
         ]);
     }
 
