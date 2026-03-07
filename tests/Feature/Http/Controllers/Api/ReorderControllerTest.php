@@ -21,7 +21,7 @@ test('reorder successfully updates sort_order on tasks', function () {
     $taskC = Task::factory()->create(['user_id' => $this->user->id,'sort_order' => 3]);
 
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
         'items' => [
             ['id' => $taskA->id, 'sort_order' => 3],
             ['id' => $taskB->id, 'sort_order' => 1],
@@ -46,7 +46,7 @@ test('reorder successfully updates sort_order on teams', function () {
     $teamB = Team::factory()->create(['user_id' => $this->user->id,'sort_order' => 2]);
 
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'team',
+        'model_type' => 'team',
         'items' => [
             ['id' => $teamA->id, 'sort_order' => 2],
             ['id' => $teamB->id, 'sort_order' => 1],
@@ -63,7 +63,7 @@ test('reorder successfully updates sort_order on teams', function () {
 test('reorder returns 422 when model key is unknown', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'unknown_model',
+        'model_type' => 'unknown_model',
         'items' => [
             ['id' => 1, 'sort_order' => 1],
         ],
@@ -79,7 +79,7 @@ test('reorder returns 422 when model key is unknown', function () {
 test('reorder error response always has success false and null data', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'not_in_map',
+        'model_type' => 'not_in_map',
         'items' => [
             ['id' => 1, 'sort_order' => 1],
         ],
@@ -101,13 +101,13 @@ test('reorder returns 422 validation error when model field is missing', functio
     ]);
 
     $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['model']);
+        ->assertJsonValidationErrors(['model_type']);
 });
 
 test('reorder returns 422 validation error when items array is empty', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
         'items' => [],
     ]);
 
@@ -118,7 +118,7 @@ test('reorder returns 422 validation error when items array is empty', function 
 test('reorder returns 422 validation error when items is missing', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
     ]);
 
     $response->assertUnprocessable()
@@ -128,7 +128,7 @@ test('reorder returns 422 validation error when items is missing', function () {
 test('reorder returns 422 validation error when item id is missing', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
         'items' => [
             ['sort_order' => 1],
         ],
@@ -141,7 +141,7 @@ test('reorder returns 422 validation error when item id is missing', function ()
 test('reorder returns 422 validation error when item sort_order is missing', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
         'items' => [
             ['id' => 1],
         ],
@@ -154,7 +154,7 @@ test('reorder returns 422 validation error when item sort_order is missing', fun
 test('reorder returns 422 validation error when sort_order is negative', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
         'items' => [
             ['id' => 1, 'sort_order' => -1],
         ],
@@ -167,7 +167,7 @@ test('reorder returns 422 validation error when sort_order is negative', functio
 test('reorder returns 422 validation error when item id is zero', function () {
     /** @var \Tests\TestCase $this */
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
         'items' => [
             ['id' => 0, 'sort_order' => 1],
         ],
@@ -182,7 +182,7 @@ test('reorder response data is null on success', function () {
     $task = Task::factory()->create(['user_id' => $this->user->id,'sort_order' => 1]);
 
     $response = $this->postJson('/api/v1/reorder', [
-        'model' => 'task',
+        'model_type' => 'task',
         'items' => [
             ['id' => $task->id, 'sort_order' => 5],
         ],

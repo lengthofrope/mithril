@@ -29,7 +29,7 @@ class ReorderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'model' => ['required', 'string', 'alpha_dash'],
+            'model_type' => ['required', 'string', 'alpha_dash'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer', 'min:1'],
             'items.*.sort_order' => ['required', 'integer', 'min:0'],

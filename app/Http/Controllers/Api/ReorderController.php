@@ -12,7 +12,7 @@ use Illuminate\Http\JsonResponse;
 /**
  * Generic controller for reordering any model that uses the HasSortOrder trait.
  *
- * Accepts { model: "task", items: [{id: int, sort_order: int}] }
+ * Accepts { model_type: "task", items: [{id: int, sort_order: int}] }
  * and delegates to the model's static reorder() method.
  */
 class ReorderController extends Controller
@@ -41,7 +41,7 @@ class ReorderController extends Controller
      */
     public function __invoke(ReorderRequest $request): JsonResponse
     {
-        $modelKey = $request->validated('model');
+        $modelKey = $request->validated('model_type');
         $items = $request->validated('items');
 
         if (!isset($this->modelMap[$modelKey])) {

@@ -205,11 +205,11 @@ class TaskPageController extends Controller
     public function move(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'task_id' => ['required', 'integer', 'exists:tasks,id'],
-            'status'  => ['required', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
+            'id'     => ['required', 'integer', 'exists:tasks,id'],
+            'status' => ['required', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
         ]);
 
-        Task::findOrFail($validated['task_id'])->update(['status' => $validated['status']]);
+        Task::findOrFail($validated['id'])->update(['status' => $validated['status']]);
 
         return response()->json(['success' => true]);
     }

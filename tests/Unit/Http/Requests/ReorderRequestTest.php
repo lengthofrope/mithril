@@ -10,7 +10,7 @@ test('reorder request rules method returns expected rule keys', function () {
     $rules = $request->rules();
 
     expect($rules)->toHaveKeys([
-        'model',
+        'model_type',
         'items',
         'items.*.id',
         'items.*.sort_order',
@@ -26,7 +26,7 @@ test('reorder request is authorized', function () {
 test('reorder request passes with valid data', function () {
     $validator = Validator::make(
         [
-            'model' => 'task',
+            'model_type' => 'task',
             'items' => [
                 ['id' => 1, 'sort_order' => 0],
                 ['id' => 2, 'sort_order' => 1],
@@ -49,12 +49,12 @@ test('reorder request fails when model is missing', function () {
     );
 
     expect($validator->fails())->toBeTrue();
-    expect($validator->errors()->has('model'))->toBeTrue();
+    expect($validator->errors()->has('model_type'))->toBeTrue();
 });
 
 test('reorder request fails when items array is missing', function () {
     $validator = Validator::make(
-        ['model' => 'task'],
+        ['model_type' => 'task'],
         (new ReorderRequest())->rules()
     );
 
@@ -64,7 +64,7 @@ test('reorder request fails when items array is missing', function () {
 
 test('reorder request fails when items array is empty', function () {
     $validator = Validator::make(
-        ['model' => 'task', 'items' => []],
+        ['model_type' => 'task', 'items' => []],
         (new ReorderRequest())->rules()
     );
 
@@ -74,7 +74,7 @@ test('reorder request fails when items array is empty', function () {
 
 test('reorder request fails when items is not an array', function () {
     $validator = Validator::make(
-        ['model' => 'task', 'items' => 'not-an-array'],
+        ['model_type' => 'task', 'items' => 'not-an-array'],
         (new ReorderRequest())->rules()
     );
 
@@ -85,7 +85,7 @@ test('reorder request fails when items is not an array', function () {
 test('reorder request fails when item id is missing', function () {
     $validator = Validator::make(
         [
-            'model' => 'task',
+            'model_type' => 'task',
             'items' => [
                 ['sort_order' => 0],
             ],
@@ -100,7 +100,7 @@ test('reorder request fails when item id is missing', function () {
 test('reorder request fails when item sort_order is missing', function () {
     $validator = Validator::make(
         [
-            'model' => 'task',
+            'model_type' => 'task',
             'items' => [
                 ['id' => 1],
             ],
@@ -115,7 +115,7 @@ test('reorder request fails when item sort_order is missing', function () {
 test('reorder request fails when item id is zero', function () {
     $validator = Validator::make(
         [
-            'model' => 'task',
+            'model_type' => 'task',
             'items' => [
                 ['id' => 0, 'sort_order' => 0],
             ],
@@ -130,7 +130,7 @@ test('reorder request fails when item id is zero', function () {
 test('reorder request fails when item sort_order is negative', function () {
     $validator = Validator::make(
         [
-            'model' => 'task',
+            'model_type' => 'task',
             'items' => [
                 ['id' => 1, 'sort_order' => -1],
             ],
@@ -145,7 +145,7 @@ test('reorder request fails when item sort_order is negative', function () {
 test('reorder request passes when sort_order is zero', function () {
     $validator = Validator::make(
         [
-            'model' => 'task',
+            'model_type' => 'task',
             'items' => [
                 ['id' => 1, 'sort_order' => 0],
             ],
@@ -159,7 +159,7 @@ test('reorder request passes when sort_order is zero', function () {
 test('reorder request fails when model contains disallowed characters', function () {
     $validator = Validator::make(
         [
-            'model' => 'task model',
+            'model_type' => 'task model',
             'items' => [
                 ['id' => 1, 'sort_order' => 0],
             ],
@@ -168,13 +168,13 @@ test('reorder request fails when model contains disallowed characters', function
     );
 
     expect($validator->fails())->toBeTrue();
-    expect($validator->errors()->has('model'))->toBeTrue();
+    expect($validator->errors()->has('model_type'))->toBeTrue();
 });
 
 test('reorder request validates multiple items independently', function () {
     $validator = Validator::make(
         [
-            'model' => 'task',
+            'model_type' => 'task',
             'items' => [
                 ['id' => 1, 'sort_order' => 0],
                 ['id' => 2, 'sort_order' => 1],
