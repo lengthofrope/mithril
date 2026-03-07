@@ -25,6 +25,8 @@ Alpine.data('markdownEditor', markdownEditor as Parameters<typeof Alpine.data>[1
 Alpine.data('privacyToggle', privacyToggle as Parameters<typeof Alpine.data>[1]);
 Alpine.data('confirmDialog', confirmDialog as Parameters<typeof Alpine.data>[1]);
 
+Alpine.store('taskList', { showCompleted: false });
+
 window.Alpine = Alpine;
 
 Alpine.start();

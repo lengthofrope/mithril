@@ -1,8 +1,17 @@
-@props(['task'])
+@props(['task', 'hideWhenDone' => false])
+
+@php
+    $statusValue = $task->status instanceof \BackedEnum ? $task->status->value : $task->status;
+@endphp
 
 <div
     data-id="{{ $task->id }}"
+    data-status="{{ $statusValue }}"
     role="listitem"
+    @if($hideWhenDone)
+        x-data
+        x-show="'{{ $statusValue }}' !== 'done' || $store.taskList.showCompleted"
+    @endif
     class="group relative flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
 >
     {{-- Drag handle --}}

@@ -155,6 +155,10 @@ class TaskPageController extends Controller
 
         $tasks = Task::query()
             ->applyFilters($filters)
+            ->where(function ($query): void {
+                $query->where('status', '!=', TaskStatus::Done)
+                    ->orWhere('updated_at', '>=', now()->subWeek());
+            })
             ->orderBySortOrder()
             ->with(['teamMember', 'taskCategory'])
             ->get();
