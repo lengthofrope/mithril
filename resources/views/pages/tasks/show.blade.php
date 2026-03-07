@@ -8,21 +8,13 @@
             <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
                 {{ $task->title }}
             </h1>
-            <span class="rounded-full px-3 py-1 text-xs font-medium
-                @if($task->priority === 'urgent') bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400
-                @elseif($task->priority === 'high') bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400
-                @elseif($task->priority === 'low') bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400
-                @else bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400
-                @endif
-            ">
-                {{ ucfirst($task->priority ?? 'normal') }}
-            </span>
+            <x-tl.priority-badge :priority="$task->priority" />
         </div>
 
         <dl class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
                 <dt class="font-medium text-gray-500 dark:text-gray-400">Status</dt>
-                <dd class="mt-1 text-gray-900 dark:text-white">{{ ucfirst(str_replace('_', ' ', $task->status ?? 'open')) }}</dd>
+                <dd class="mt-1"><x-tl.status-badge :status="$task->status" /></dd>
             </div>
 
             @if($task->teamMember)
