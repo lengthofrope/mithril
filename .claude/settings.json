@@ -5,7 +5,9 @@
       "Bash(php artisan test --filter=Feature)",
       "Read(//home/bdekort/.claude/skills/adr-entry/**)",
       "Bash(php artisan test)",
-      "Bash(php artisan test tests/Feature/Http/Controllers/Web/)"
+      "Bash(php artisan test tests/Feature/Http/Controllers/Web/)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(pkill -f \"artisan serve\")"
     ]
   }
 }

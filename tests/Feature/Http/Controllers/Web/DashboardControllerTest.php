@@ -9,6 +9,7 @@ use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
@@ -127,6 +128,7 @@ test('counters today_follow_ups counts follow-ups due today', function () {
 
 test('counters bilas_this_week counts bilas within the current week', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::create(2026, 3, 4, 10, 0, 0)); // Wednesday
     $user = User::factory()->create();
 
     Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()]);

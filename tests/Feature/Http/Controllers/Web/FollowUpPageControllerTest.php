@@ -7,6 +7,7 @@ use App\Models\FollowUp;
 use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
@@ -74,6 +75,7 @@ test('follow-up index groups today follow-ups correctly', function () {
 
 test('follow-up index groups this week follow-ups correctly', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::create(2026, 3, 4, 10, 0, 0)); // Wednesday
     $user = User::factory()->create();
 
     $withinWeek = now()->endOfWeek()->subDay();
