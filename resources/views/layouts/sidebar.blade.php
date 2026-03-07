@@ -109,7 +109,8 @@
                                                 'menu-item-active' : 'menu-item-inactive',
                                                 !$store.sidebar.isExpanded && !$store.sidebar.isHovered ?
                                                 'xl:justify-center' : 'xl:justify-start'
-                                            ]">
+                                            ]"
+                                            x-bind:title="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? '{{ $item['name'] }}' : ''">
 
                                             <!-- Icon -->
                                             <span :class="isSubmenuOpen({{ $groupIndex }}, {{ $itemIndex }}) ?
@@ -186,7 +187,8 @@
                                                 (!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ?
                                                 'xl:justify-center' :
                                                 'justify-start'
-                                            ]">
+                                            ]"
+                                            x-bind:title="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? '{{ $item['name'] }}' : ''">
 
                                             <!-- Icon -->
                                             <span

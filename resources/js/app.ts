@@ -9,6 +9,7 @@ import { filterManager } from './components/filter-manager';
 import { markdownEditor } from './components/markdown-editor';
 import { privacyToggle } from './components/privacy-toggle';
 import { confirmDialog } from './components/confirm-dialog';
+import { keyboardShortcuts } from './components/keyboard-shortcuts';
 
 declare global {
     interface Window {
@@ -24,6 +25,7 @@ Alpine.data('filterManager', filterManager as Parameters<typeof Alpine.data>[1])
 Alpine.data('markdownEditor', markdownEditor as Parameters<typeof Alpine.data>[1]);
 Alpine.data('privacyToggle', privacyToggle as Parameters<typeof Alpine.data>[1]);
 Alpine.data('confirmDialog', confirmDialog as Parameters<typeof Alpine.data>[1]);
+Alpine.data('keyboardShortcuts', keyboardShortcuts as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

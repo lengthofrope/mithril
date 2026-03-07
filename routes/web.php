@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
 
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
@@ -68,6 +69,9 @@ Route::middleware('auth')->group(function (): void {
 
     Route::post('/categories', [SettingsController::class, 'storeCategory'])->name('categories.store');
     Route::delete('/categories/{taskCategory}', [SettingsController::class, 'destroyCategory'])->name('categories.destroy');
+
+    Route::post('/task-groups', [SettingsController::class, 'storeTaskGroup'])->name('task-groups.store');
+    Route::delete('/task-groups/{taskGroup}', [SettingsController::class, 'destroyTaskGroup'])->name('task-groups.destroy');
 
     Route::post('/prep-items', [BilaPageController::class, 'storePrepItem'])->name('prep-items.store');
     Route::patch('/prep-items/{bilaPrepItem}', [BilaPageController::class, 'updatePrepItem'])->name('prep-items.update');

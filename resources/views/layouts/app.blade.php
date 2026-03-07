@@ -23,12 +23,11 @@
             Alpine.store('theme', {
                 init() {
                     const savedTheme = localStorage.getItem('theme');
-                    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' :
-                        'light';
-                    this.theme = savedTheme || systemTheme;
+                    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    this.theme = savedTheme ?? (systemTheme === 'light' ? 'light' : 'dark');
                     this.updateTheme();
                 },
-                theme: 'light',
+                theme: 'dark',
                 toggle() {
                     this.theme = this.theme === 'light' ? 'dark' : 'light';
                     localStorage.setItem('theme', this.theme);
@@ -83,7 +82,7 @@
         (function() {
             var savedTheme = localStorage.getItem('theme');
             var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            if ((savedTheme || systemTheme) === 'dark') {
+            if (savedTheme === 'dark' || (!savedTheme && systemTheme !== 'light')) {
                 document.documentElement.classList.add('dark');
             }
         })();
@@ -110,6 +109,7 @@
     {{-- preloader end --}}
 
     <div class="min-h-screen xl:flex">
+        <div x-data="keyboardShortcuts()" class="hidden" aria-hidden="true"></div>
         @include('layouts.backdrop')
         @include('layouts.sidebar')
 

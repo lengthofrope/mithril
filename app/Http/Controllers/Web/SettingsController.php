@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\TaskCategory;
+use App\Models\TaskGroup;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -35,7 +36,6 @@ class SettingsController extends Controller
             'title' => 'Settings',
             'user' => $user,
             'pushEnabled' => (bool) ($user->push_enabled ?? false),
-            'categories' => TaskCategory::orderBySortOrder()->get(),
         ]);
     }
 
@@ -76,6 +76,52 @@ class SettingsController extends Controller
         $user->save();
 
         return redirect()->route('settings.index')->with('status', 'Profile updated successfully.');
+    }
+
+    /**
+     * Display the task settings sub-page with categories and groups.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function tasks(Request $request): View
+    {
+        return view('pages.settings.tasks', [
+            'title' => 'Task Settings',
+            'categories' => TaskCategory::orderBySortOrder()->get(),
+            'groups' => TaskGroup::orderBySortOrder()->get(),
+        ]);
+    }
+
+    /**
+     * Create a new task group.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function storeTaskGroup(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'color' => ['nullable', 'string', 'max:7'],
+        ]);
+
+        TaskGroup::create($validated);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete a task group.
+     *
+     * @param TaskGroup $taskGroup
+     * @return JsonResponse
+     */
+    public function destroyTaskGroup(TaskGroup $taskGroup): JsonResponse
+    {
+        $taskGroup->delete();
+
+        return response()->json(['success' => true]);
     }
 
     /**
