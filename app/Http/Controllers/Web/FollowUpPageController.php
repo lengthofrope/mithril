@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Models\TeamMember;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -23,6 +24,8 @@ class FollowUpPageController extends Controller
 {
     /**
      * Display all follow-ups grouped by their timeline category.
+     *
+     * Returns only the follow-ups-list partial for AJAX requests (used by filterManager).
      *
      * @param Request $request
      * @return View
@@ -55,17 +58,25 @@ class FollowUpPageController extends Controller
             ->orderBy('follow_up_date')
             ->get();
 
+        $sections = [
+            'overdue' => $overdue,
+            'today' => $today,
+            'thisWeek' => $thisWeek,
+            'upcoming' => $upcoming,
+        ];
+
+        if ($request->ajax()) {
+            return view('partials.follow-ups-list', [
+                'sections' => $sections,
+            ]);
+        }
+
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
 
         return view('pages.follow-ups.index', [
             'title' => 'Follow-ups',
-            'sections' => [
-                'overdue' => $overdue,
-                'today' => $today,
-                'thisWeek' => $thisWeek,
-                'upcoming' => $upcoming,
-            ],
+            'sections' => $sections,
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
             'selectedTeamMemberId' => $teamMemberId,
@@ -75,24 +86,33 @@ class FollowUpPageController extends Controller
     /**
      * Mark a follow-up as done.
      *
+     * Returns JSON for AJAX requests, redirects back otherwise.
+     *
+     * @param Request $request
      * @param FollowUp $followUp
-     * @return JsonResponse
+     * @return JsonResponse|RedirectResponse
      */
-    public function markDone(FollowUp $followUp): JsonResponse
+    public function markDone(Request $request, FollowUp $followUp): JsonResponse|RedirectResponse
     {
         $followUp->update(['status' => FollowUpStatus::Done]);
 
-        return response()->json(['success' => true]);
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back();
     }
 
     /**
      * Snooze a follow-up by a number of days.
      *
+     * Returns JSON for AJAX requests, redirects back otherwise.
+     *
      * @param Request $request
      * @param FollowUp $followUp
-     * @return JsonResponse
+     * @return JsonResponse|RedirectResponse
      */
-    public function snooze(Request $request, FollowUp $followUp): JsonResponse
+    public function snooze(Request $request, FollowUp $followUp): JsonResponse|RedirectResponse
     {
         $request->validate(['days' => ['required', 'integer', 'min:1']]);
 
@@ -100,24 +120,36 @@ class FollowUpPageController extends Controller
             'follow_up_date' => now()->addDays((int) $request->input('days'))->toDateString(),
         ]);
 
-        return response()->json(['success' => true]);
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back();
     }
 
     /**
      * Convert a follow-up into a new task.
      *
+     * Returns JSON for AJAX requests, redirects back otherwise.
+     *
+     * @param Request $request
      * @param FollowUp $followUp
-     * @return JsonResponse
+     * @return JsonResponse|RedirectResponse
      */
-    public function convertToTask(FollowUp $followUp): JsonResponse
+    public function convertToTask(Request $request, FollowUp $followUp): JsonResponse|RedirectResponse
     {
         Task::create([
+            'user_id' => $request->user()->id,
             'title' => $followUp->description,
             'team_member_id' => $followUp->team_member_id,
         ]);
 
         $followUp->update(['status' => FollowUpStatus::Done]);
 
-        return response()->json(['success' => true]);
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back();
     }
 }

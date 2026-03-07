@@ -190,3 +190,77 @@ test('task kanban filters tasks by priority', function () {
     $response->assertOk();
     expect($response->viewData('tasks'))->toHaveCount(1);
 });
+
+test('task store creates a new task and redirects back', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->from('/tasks')
+        ->post('/tasks', [
+            'title' => 'Test task from form',
+            'priority' => 'normal',
+        ]);
+
+    $response->assertRedirect('/tasks');
+    $this->assertDatabaseHas('tasks', [
+        'user_id' => $user->id,
+        'title' => 'Test task from form',
+        'priority' => 'normal',
+    ]);
+});
+
+test('task store requires a title', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->from('/tasks')
+        ->post('/tasks', [
+            'priority' => 'normal',
+        ]);
+
+    $response->assertRedirect('/tasks');
+    $response->assertSessionHasErrors('title');
+});
+
+test('task store accepts optional task_group_id', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $group = TaskGroup::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)
+        ->from('/tasks')
+        ->post('/tasks', [
+            'title' => 'Grouped task',
+            'priority' => 'high',
+            'task_group_id' => $group->id,
+        ]);
+
+    $response->assertRedirect('/tasks');
+    $this->assertDatabaseHas('tasks', [
+        'title' => 'Grouped task',
+        'task_group_id' => $group->id,
+    ]);
+});
+
+test('task store redirects unauthenticated user to login', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->post('/tasks', ['title' => 'Test']);
+
+    $response->assertRedirect('/login');
+});
+
+test('task index returns only the partial for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->get('/tasks?status=open', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertDontSee('<!DOCTYPE html');
+});

@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/tasks', [TaskPageController::class, 'index'])->name('tasks.index');
+    Route::post('/tasks', [TaskPageController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/kanban', [TaskPageController::class, 'kanban'])->name('tasks.kanban');
 
     Route::get('/follow-ups', [FollowUpPageController::class, 'index'])->name('follow-ups.index');

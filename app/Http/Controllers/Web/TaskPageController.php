@@ -13,7 +13,9 @@ use App\Models\Team;
 use App\Models\TeamMember;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * Handles task list and kanban page rendering.
@@ -25,6 +27,8 @@ class TaskPageController extends Controller
 {
     /**
      * Display the task list view with optional filters applied.
+     *
+     * Returns only the tasks-list partial for AJAX requests (used by filterManager).
      *
      * @param Request $request
      * @return View
@@ -55,9 +59,16 @@ class TaskPageController extends Controller
             $tasks = $query->get();
         }
 
+        $allGroups = TaskGroup::orderBySortOrder()->get();
+
+        if ($request->ajax()) {
+            return view('partials.tasks-list', [
+                'taskGroups' => $allGroups,
+            ]);
+        }
+
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
-        $allGroups = TaskGroup::orderBySortOrder()->get();
         $allCategories = TaskCategory::all();
 
         return view('pages.tasks.index', [
@@ -73,6 +84,30 @@ class TaskPageController extends Controller
             'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => $c->id, 'label' => $c->name])->all(),
             'groupOptions' => $allGroups->map(fn (TaskGroup $g) => ['value' => $g->id, 'label' => $g->name])->all(),
         ]);
+    }
+
+    /**
+     * Store a new task from the quick-add or inline form.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'         => ['required', 'string', 'max:255'],
+            'priority'      => ['nullable', 'string', 'in:urgent,high,normal,low'],
+            'task_group_id' => ['nullable', 'integer', 'exists:task_groups,id'],
+        ]);
+
+        Task::create([
+            'user_id'       => $request->user()->id,
+            'title'         => $validated['title'],
+            'priority'      => $validated['priority'] ?? 'normal',
+            'task_group_id' => $validated['task_group_id'] ?? null,
+        ]);
+
+        return redirect()->back();
     }
 
     /**
