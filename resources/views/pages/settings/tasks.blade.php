@@ -12,6 +12,9 @@
             </div>
 
             <div class="p-5">
+                <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                    Categories classify the <strong class="font-medium text-gray-700 dark:text-gray-300">type</strong> of work a task represents, such as "Bug", "HR" or "Improvement". A task can have one category. Categories are shared across all groups and views.
+                </p>
                 <x-tl.sortable-container
                     modelType="task_category"
                     :endpoint="route('reorder')"
@@ -107,6 +110,9 @@
             </div>
 
             <div class="p-5">
+                <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                    Groups bundle tasks into <strong class="font-medium text-gray-700 dark:text-gray-300">projects or workstreams</strong>, such as "Sprint 12", "Q2 Goals" or "Onboarding". Tasks can be dragged between groups in the list view. A task without a group appears under "Ungrouped".
+                </p>
                 <x-tl.sortable-container
                     modelType="task_group"
                     :endpoint="route('reorder')"
