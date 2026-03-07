@@ -48,7 +48,7 @@ function updateStatusBadge(card: HTMLElement, status: string): void {
  * Reads the column status value stored on the column's container element.
  */
 function readColumnStatus(column: HTMLElement): string | null {
-    return column.dataset['status'] ?? null;
+    return column.dataset['kanbanStatus'] ?? null;
 }
 
 /**
@@ -71,7 +71,7 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
                 return;
             }
 
-            const columns = container.querySelectorAll<HTMLElement>('[data-status]');
+            const columns = container.querySelectorAll<HTMLElement>('[data-kanban-status]');
             const self = this;
 
             columns.forEach((column) => {
@@ -100,7 +100,7 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
             const fromStatus = readColumnStatus(fromColumn);
             const toStatus = readColumnStatus(toColumn);
 
-            const sortOrder = Array.from(toColumn.querySelectorAll<HTMLElement>('[data-id]'))
+            const sortOrder = Array.from(toColumn.querySelectorAll<HTMLElement>(':scope > [data-id]'))
                 .findIndex((el) => el.dataset['id'] === item.dataset['id']);
 
             this.isMoving = true;
@@ -109,7 +109,7 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
             try {
                 if (fromStatus === toStatus) {
                     const items: ReorderItem[] = Array.from(
-                        toColumn.querySelectorAll<HTMLElement>('[data-id]'),
+                        toColumn.querySelectorAll<HTMLElement>(':scope > [data-id]'),
                     ).map((el, index) => ({
                         id: Number(el.dataset['id']),
                         sort_order: index,

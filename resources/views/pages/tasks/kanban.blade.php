@@ -82,15 +82,13 @@
                         </div>
 
                         <div
-                            data-status="{{ $column['status'] }}"
+                            data-kanban-status="{{ $column['status'] }}"
                             class="flex flex-col gap-2 p-3 min-h-32"
                             role="list"
                             aria-label="{{ $column['label'] }} tasks"
                         >
                             @foreach($columnTasks as $task)
-                                <div data-id="{{ $task->id }}" role="listitem">
-                                    <x-tl.task-card :task="$task" />
-                                </div>
+                                <x-tl.task-card :task="$task" />
                             @endforeach
                         </div>
                     </div>
