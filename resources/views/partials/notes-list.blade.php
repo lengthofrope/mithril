@@ -44,7 +44,7 @@
                         class="cursor-pointer"
                     >
                         <p class="line-clamp-3 text-xs text-gray-500 dark:text-gray-400">
-                            {{ $note->content ? strip_tags($note->content) : 'Click to add content…' }}
+                            {{ $note->content ? strip_tags(Str::markdown($note->content)) : 'Click to add content…' }}
                         </p>
                     </div>
 

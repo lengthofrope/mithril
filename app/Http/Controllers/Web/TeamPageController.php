@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Note;
 use App\Models\Team;
@@ -29,6 +30,7 @@ class TeamPageController extends Controller
     {
         $teams = Team::query()
             ->withCount('members')
+            ->withCount(['tasks as open_tasks_count' => fn ($q) => $q->where('status', '!=', TaskStatus::Done)])
             ->orderBySortOrder()
             ->get();
 

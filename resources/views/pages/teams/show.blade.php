@@ -53,7 +53,7 @@
             @endphp
 
             <a
-                href="{{ route('teams.member', [$team->id, $member->id]) }}"
+                href="{{ route('teams.member', $member->id) }}"
                 class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
             >
                 <div class="relative shrink-0">

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\TaskStatus;
 use App\Models\Agreement;
 use App\Models\Bila;
 use App\Models\FollowUp;
@@ -59,6 +60,33 @@ test('team index includes member counts on teams', function () {
 
     $team = $response->viewData('teams')->first();
     expect($team->members_count)->toBe(2);
+});
+
+test('team index includes open tasks count per team', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+
+    Task::factory()->create(['user_id' => $user->id, 'team_id' => $team->id, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'team_id' => $team->id, 'status' => TaskStatus::InProgress]);
+    Task::factory()->create(['user_id' => $user->id, 'team_id' => $team->id, 'status' => TaskStatus::Done]);
+
+    $response = $this->actingAs($user)->get('/teams');
+
+    $viewTeam = $response->viewData('teams')->first();
+    expect($viewTeam->open_tasks_count)->toBe(2);
+});
+
+test('team show member links use correct URL format', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+
+    $response = $this->actingAs($user)->get("/teams/{$team->id}");
+
+    $response->assertSee("/teams/member/{$member->id}");
+    $response->assertDontSee("/teams/member/{$team->id}?{$member->id}");
 });
 
 test('team show returns 200 for authenticated user', function () {

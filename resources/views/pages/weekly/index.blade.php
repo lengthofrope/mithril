@@ -12,7 +12,7 @@
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
                     This week's summary
                     <span class="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
-                        {{ $currentReflection->week_start }} – {{ $currentReflection->week_end }}
+                        {{ \Carbon\Carbon::parse($currentReflection->week_start)->format('d M Y') }} – {{ \Carbon\Carbon::parse($currentReflection->week_end)->format('d M Y') }}
                     </span>
                 </h2>
             </div>

@@ -131,6 +131,20 @@ Tested on 2026-03-07 with seeded data, navigating all pages at 1440x900 viewport
 
 ---
 
+## Missing Features
+
+### 23. No interface for managing task groups
+- **Where:** Settings page / Tasks section
+- **What:** The `TaskGroup` model exists (name, description, color, sort_order) and tasks can be assigned to groups, but there is no UI to create, edit, rename, recolor, reorder, or delete task groups
+- **Expected:** A settings sub-page (`/settings/tasks`) with full CRUD for task groups (similar to how categories are managed: inline add form, drag-to-reorder, delete with confirmation)
+
+### 24. Move task category management to settings sub-page
+- **Where:** Settings page (`/settings`)
+- **What:** Task category management currently lives on the main settings page alongside appearance, push notifications, and data export/import. It should be moved to a dedicated settings sub-page together with task group management.
+- **Expected:** A `/settings/tasks` sub-page containing both "Task categories" (existing, moved from main settings) and "Task groups" (new). The main settings page gets a link/card pointing to this sub-page.
+
+---
+
 ## Summary
 
 | Priority | Count | Categories |
@@ -139,3 +153,4 @@ Tested on 2026-03-07 with seeded data, navigating all pages at 1440x900 viewport
 | High | 6 | All internal links point to API endpoints instead of web routes |
 | Medium | 5 | Missing ungrouped tasks, wrong counts, broken member links, raw dates/markdown |
 | Low | 6 | Theming, user name, search bar, tooltips, missing detail page, keyboard shortcuts |
+| Feature  | 2 | Task group CRUD, settings sub-page for task configuration |

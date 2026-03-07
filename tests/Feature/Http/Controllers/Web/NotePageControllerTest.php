@@ -155,3 +155,20 @@ test('notes index passes selected tag to view', function () {
 
     expect($response->viewData('selectedTag'))->toBe('myTag');
 });
+
+test('notes index strips markdown syntax from preview text', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Note::factory()->create([
+        'user_id' => $user->id,
+        'content' => '# Working Agreements',
+    ]);
+
+    $response = $this->actingAs($user)->get('/notes');
+
+    $html = $response->getContent();
+    preg_match('/<p class="line-clamp-3[^"]*">\s*(.*?)\s*<\/p>/s', $html, $matches);
+    expect($matches)->not->toBeEmpty();
+    expect(trim($matches[1]))->not->toContain('# Working');
+    expect(trim($matches[1]))->toContain('Working Agreements');
+});

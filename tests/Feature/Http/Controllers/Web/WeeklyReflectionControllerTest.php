@@ -164,6 +164,18 @@ test('weekly reflection returns past reflections in descending order', function 
     expect($past->first()->id)->toBe($newer->id);
 });
 
+test('weekly reflection current week dates are formatted without timestamps', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/weekly');
+
+    $response->assertDontSee('00:00:00');
+    $current = $response->viewData('currentReflection');
+    $formattedStart = \Carbon\Carbon::parse($current->week_start)->format('d M Y');
+    $response->assertSee($formattedStart);
+});
+
 test('weekly reflection does not include current week in past reflections', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
