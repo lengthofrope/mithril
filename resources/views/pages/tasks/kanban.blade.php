@@ -45,6 +45,7 @@
                 containerSelector: '#kanban-board',
                 modelType: 'task',
                 endpoint: '{{ route('tasks.move') }}',
+                reorderEndpoint: '{{ route('reorder') }}',
                 statusField: 'status',
             })"
         >

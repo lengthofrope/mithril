@@ -1,6 +1,6 @@
 import Sortable from 'sortablejs';
 import { apiClient } from '../utils/api-client';
-import type { MoveItem } from '../types/api';
+import type { MoveItem, ReorderItem } from '../types/api';
 import type { ApiError } from '../types/api';
 
 /**
@@ -10,6 +10,7 @@ interface SortableKanbanConfig {
     containerSelector: string;
     modelType: string;
     endpoint: string;
+    reorderEndpoint: string;
     statusField: string;
 }
 
@@ -72,26 +73,36 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
             const sortOrder = Array.from(toColumn.querySelectorAll<HTMLElement>('[data-id]'))
                 .findIndex((el) => el.dataset['id'] === item.dataset['id']);
 
-            if (fromStatus === toStatus) {
-                return;
-            }
-
-            const payload: MoveItem = {
-                id,
-                from_group: fromStatus !== null ? Number(fromStatus) : null,
-                to_group: toStatus !== null ? Number(toStatus) : null,
-                sort_order: sortOrder,
-            };
-
             this.isMoving = true;
             this.hasMoveError = false;
 
             try {
-                await apiClient.post(config.endpoint, {
-                    model_type: config.modelType,
-                    [config.statusField]: toStatus,
-                    ...payload,
-                });
+                if (fromStatus === toStatus) {
+                    const items: ReorderItem[] = Array.from(
+                        toColumn.querySelectorAll<HTMLElement>('[data-id]'),
+                    ).map((el, index) => ({
+                        id: Number(el.dataset['id']),
+                        sort_order: index,
+                    }));
+
+                    await apiClient.post(config.reorderEndpoint, {
+                        model_type: config.modelType,
+                        items,
+                    });
+                } else {
+                    const payload: MoveItem = {
+                        id,
+                        from_group: fromStatus !== null ? Number(fromStatus) : null,
+                        to_group: toStatus !== null ? Number(toStatus) : null,
+                        sort_order: sortOrder,
+                    };
+
+                    await apiClient.post(config.endpoint, {
+                        model_type: config.modelType,
+                        [config.statusField]: toStatus,
+                        ...payload,
+                    });
+                }
             } catch (err) {
                 const apiError = err as ApiError;
                 console.error('[sortableKanban] Move failed:', apiError.message);
