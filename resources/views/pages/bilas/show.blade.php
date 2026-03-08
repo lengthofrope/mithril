@@ -4,7 +4,7 @@
     <x-common.page-breadcrumb pageTitle="Bila — {{ isset($bila->member) ? $bila->member->name : 'Details' }}" />
 
     {{-- Member info + date --}}
-    <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.06]">
         @if(isset($bila->member) && $bila->member)
             <x-tl.team-member-avatar :member="$bila->member" size="lg" />
             <div class="flex-1 min-w-0">
@@ -58,7 +58,7 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         {{-- Prep items --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
             <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Prep items</h2>
 
@@ -157,7 +157,7 @@
         </div>
 
         {{-- Notes --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Notes</h2>
             </div>

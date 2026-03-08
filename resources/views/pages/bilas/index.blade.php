@@ -12,7 +12,7 @@
                 @foreach($upcomingBilas as $bila)
                     <a
                         href="{{ route('bilas.show', $bila->id) }}"
-                        class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
+                        class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.06] dark:hover:border-gray-700"
                     >
                         @if(isset($bila->member) && $bila->member)
                             <x-tl.team-member-avatar :member="$bila->member" size="md" />
@@ -62,7 +62,7 @@
                 @foreach($pastBilas as $bila)
                     <a
                         href="{{ route('bilas.show', $bila->id) }}"
-                        class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
+                        class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.06] dark:hover:border-gray-700"
                     >
                         @if(isset($bila->member) && $bila->member)
                             <x-tl.team-member-avatar :member="$bila->member" size="sm" />

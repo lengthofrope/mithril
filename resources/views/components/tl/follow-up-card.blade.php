@@ -19,7 +19,7 @@
 @endphp
 
 <div
-    class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]"
+    class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.06]"
     role="listitem"
 >
     <div class="flex items-start justify-between gap-3">

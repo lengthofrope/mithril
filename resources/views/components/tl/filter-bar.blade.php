@@ -10,7 +10,7 @@
         resultsSelector: '{{ $resultsSelector }}',
         filters: @js($filters),
     })"
-    class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]"
+    class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.06]"
 >
     <div class="flex flex-wrap items-end gap-3">
         @foreach($filters as $filter)

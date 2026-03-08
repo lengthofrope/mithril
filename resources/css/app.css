@@ -43,8 +43,8 @@
 
   --color-current: currentColor;
   --color-transparent: transparent;
-  --color-white: #ffffff;
-  --color-black: #101828;
+  --color-white: #f8f7f4;
+  --color-black: #1d1f25;
 
   --color-brand-25: #f2f7ff;
   --color-brand-50: #ecf3ff;
@@ -72,19 +72,19 @@
   --color-blue-light-900: #0b4a6f;
   --color-blue-light-950: #062c41;
 
-  --color-gray-25: #fcfcfd;
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f2f4f7;
-  --color-gray-200: #e4e7ec;
-  --color-gray-300: #d0d5dd;
-  --color-gray-400: #98a2b3;
-  --color-gray-500: #667085;
-  --color-gray-600: #475467;
-  --color-gray-700: #344054;
-  --color-gray-800: #1d2939;
-  --color-gray-900: #101828;
-  --color-gray-950: #0c111d;
-  --color-gray-dark: #1a2231;
+  --color-gray-25: #f6f5f1;
+  --color-gray-50: #edecea;
+  --color-gray-100: #e2e1de;
+  --color-gray-200: #d2d1cf;
+  --color-gray-300: #b8b7b5;
+  --color-gray-400: #8e8d8b;
+  --color-gray-500: #62656f;
+  --color-gray-600: #474a56;
+  --color-gray-700: #363840;
+  --color-gray-800: #262830;
+  --color-gray-900: #1d1f25;
+  --color-gray-950: #16171c;
+  --color-gray-dark: #222329;
 
   --color-orange-25: #fffaf5;
   --color-orange-50: #fff6ed;
@@ -149,7 +149,7 @@
   --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
   --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08),
     0px 8px 8px -4px rgba(16, 24, 40, 0.03);
-  --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
+  --shadow-datepicker: -5px 0 0 #222329, 5px 0 0 #222329;
   --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
   --shadow-slider-navigation: 0px 1px 2px 0px rgba(16, 24, 40, 0.1),
     0px 1px 3px 0px rgba(16, 24, 40, 0.1);
@@ -299,7 +299,7 @@
   }
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #344054;
+  background-color: #363840;
 }
 @layer utilities {
   /* For Remove Date Icon */
@@ -441,7 +441,7 @@
   @apply mt-2 !rounded-xl bg-black !p-5 !border !border-transparent dark:!border-white/5 !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
 }
 .flatpickr-time input {
-  background-color: #f9fafb !important;
+  background-color: #edecea !important;
 }
 .flatpickr-months .flatpickr-prev-month:hover svg,
 .flatpickr-months .flatpickr-next-month:hover svg {
@@ -494,8 +494,8 @@ span.flatpickr-weekday,
 }
 .flatpickr-day.inRange {
   box-shadow:
-    -5px 0 0 #f9fafb,
-    5px 0 0 #f9fafb !important;
+    -5px 0 0 #edecea,
+    5px 0 0 #edecea !important;
   @apply dark:!shadow-datepicker;
 }
 .flatpickr-day.inRange,
@@ -810,7 +810,7 @@ span.flatpickr-weekday,
 code[class*='language-'],
 pre[class*='language-'] {
   text-shadow: none;
-  color: #344054;
+  color: #363840;
   overflow: hidden !important;
   font-size: 14px;
   margin: 0;
@@ -858,7 +858,7 @@ pre[class*='language-'] {
   color: #a31615;
 }
 .token.punctuation {
-  color: #344054;
+  color: #363840;
 }
 .dark .token.punctuation {
   color: #98a2b3;

@@ -6,7 +6,7 @@
     <div class="space-y-6 max-w-2xl">
 
         {{-- Theme --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Appearance</h2>
             </div>
@@ -39,7 +39,7 @@
         </div>
 
         {{-- Push notifications --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Push notifications</h2>
             </div>
@@ -74,7 +74,7 @@
         </div>
 
         {{-- Task configuration --}}
-        <a href="{{ route('settings.tasks') }}" class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700">
+        <a href="{{ route('settings.tasks') }}" class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.06] dark:hover:border-gray-700">
             <div>
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Task configuration</h2>
                 <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Manage task categories and groups</p>
@@ -85,7 +85,7 @@
         </a>
 
         {{-- Data export --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Data</h2>
             </div>
