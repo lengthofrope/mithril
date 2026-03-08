@@ -1,14 +1,15 @@
 import { apiClient } from '../utils/api-client';
-import type { ChartType, DataSource } from '../types/models';
+import type { ChartType, DataSource, TimeRange } from '../types/models';
 import type { ApiError } from '../types/api';
 
 /**
- * A single available data source with its display label and permitted chart types.
+ * A single available data source with its display label, permitted chart types, and time-series flag.
  */
 interface DataSourceOption {
     value: DataSource;
     label: string;
     allowedChartTypes: ChartType[];
+    isTimeSeries: boolean;
 }
 
 /**
@@ -37,14 +38,18 @@ interface WidgetConfiguratorComponent {
     selectedSource: DataSource | '';
     selectedChartType: ChartType | '';
     selectedColumnSpan: number;
+    selectedTimeRange: TimeRange;
     showOnAnalytics: boolean;
     showOnDashboard: boolean;
     availableChartTypes: ChartType[];
+    isTimeSeriesSelected: boolean;
+    dataSources: DataSourceOption[];
     open(): void;
     close(): void;
     onSourceChange(): void;
     save(): Promise<void>;
     readonly columnSpanOptions: ColumnSpanOption[];
+    readonly filteredDataSources: DataSourceOption[];
 }
 
 /**
@@ -60,9 +65,11 @@ function widgetConfigurator(config: WidgetConfiguratorConfig): Record<string, un
         selectedSource: '' as DataSource | '',
         selectedChartType: '' as ChartType | '',
         selectedColumnSpan: 1,
+        selectedTimeRange: '30d' as TimeRange,
         showOnAnalytics: true,
         showOnDashboard: false,
         availableChartTypes: [] as ChartType[],
+        isTimeSeriesSelected: false,
         dataSources: config.dataSources,
 
         /**
@@ -74,9 +81,11 @@ function widgetConfigurator(config: WidgetConfiguratorConfig): Record<string, un
             this.selectedSource = '';
             this.selectedChartType = '';
             this.selectedColumnSpan = 1;
+            this.selectedTimeRange = '30d';
             this.showOnAnalytics = true;
             this.showOnDashboard = false;
             this.availableChartTypes = [];
+            this.isTimeSeriesSelected = false;
             this.isOpen = true;
         },
 
@@ -97,11 +106,13 @@ function widgetConfigurator(config: WidgetConfiguratorConfig): Record<string, un
             if (found === undefined) {
                 this.availableChartTypes = [];
                 this.selectedChartType = '';
+                this.isTimeSeriesSelected = false;
                 return;
             }
 
             this.availableChartTypes = found.allowedChartTypes;
             this.selectedChartType = found.allowedChartTypes[0] ?? '';
+            this.isTimeSeriesSelected = found.isTimeSeries;
         },
 
         /**
@@ -112,13 +123,19 @@ function widgetConfigurator(config: WidgetConfiguratorConfig): Record<string, un
             this.hasError = false;
 
             try {
-                await apiClient.post(config.storeEndpoint, {
+                const payload: Record<string, unknown> = {
                     data_source: this.selectedSource,
                     chart_type: this.selectedChartType,
                     column_span: this.selectedColumnSpan,
                     show_on_analytics: this.showOnAnalytics,
                     show_on_dashboard: this.showOnDashboard,
-                });
+                };
+
+                if (this.isTimeSeriesSelected) {
+                    payload['time_range'] = this.selectedTimeRange;
+                }
+
+                await apiClient.post(config.storeEndpoint, payload);
 
                 window.location.reload();
             } catch (err) {

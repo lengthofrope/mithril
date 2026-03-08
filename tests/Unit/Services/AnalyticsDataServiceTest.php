@@ -31,10 +31,25 @@ afterEach(function (): void {
 
 describe('AnalyticsDataService', function (): void {
     describe('resolve dispatcher', function (): void {
-        it('returns ChartData for every DataSource case', function (): void {
+        it('returns ChartData for every point-in-time DataSource case', function (): void {
             foreach (DataSource::cases() as $source) {
+                if ($source->isTimeSeries()) {
+                    continue;
+                }
+
                 $result = $this->service->resolve($source);
                 expect($result)->toBeInstanceOf(ChartData::class);
+            }
+        });
+
+        it('throws for time-series DataSource cases', function (): void {
+            foreach (DataSource::cases() as $source) {
+                if (! $source->isTimeSeries()) {
+                    continue;
+                }
+
+                expect(fn () => $this->service->resolve($source))
+                    ->toThrow(\InvalidArgumentException::class);
             }
         });
     });

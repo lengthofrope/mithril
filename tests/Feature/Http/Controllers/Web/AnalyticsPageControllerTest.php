@@ -141,6 +141,140 @@ test('widget data validates sources contain only valid DataSource values', funct
         ->assertJsonValidationErrors(['sources.0']);
 });
 
+test('widget data returns chart data for a time-series source', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->getJson('/analytics/widget-data?sources[]=' . DataSource::TasksOverTime->value);
+
+    $response->assertOk()
+        ->assertJsonStructure([
+            'success',
+            'data' => [
+                'sources' => [
+                    DataSource::TasksOverTime->value => ['labels', 'series', 'colors'],
+                ],
+            ],
+        ]);
+});
+
+test('widget data time-series source returns named series with data arrays', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->getJson('/analytics/widget-data?sources[]=' . DataSource::TasksOverTime->value);
+
+    $response->assertOk();
+    $series = $response->json('data.sources.' . DataSource::TasksOverTime->value . '.series');
+
+    expect($series)->toBeArray()->toHaveCount(4);
+    expect($series[0])->toHaveKeys(['name', 'data']);
+});
+
+test('widget data accepts time_range parameter for time-series source', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->getJson(
+        '/analytics/widget-data?sources[]=' . DataSource::TasksOverTime->value . '&time_range=7d'
+    );
+
+    $response->assertOk();
+    $labels = $response->json('data.sources.' . DataSource::TasksOverTime->value . '.labels');
+
+    expect($labels)->toHaveCount(7);
+});
+
+test('widget data defaults to 30d time range when not specified', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->getJson(
+        '/analytics/widget-data?sources[]=' . DataSource::TasksOverTime->value
+    );
+
+    $response->assertOk();
+    $labels = $response->json('data.sources.' . DataSource::TasksOverTime->value . '.labels');
+
+    expect($labels)->toHaveCount(30);
+});
+
+test('widget data validates time_range must be a valid value', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->getJson(
+        '/analytics/widget-data?sources[]=' . DataSource::TasksOverTime->value . '&time_range=999d'
+    );
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['time_range']);
+});
+
+test('widget data can mix point-in-time and time-series sources', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->getJson(
+        '/analytics/widget-data?sources[]=' . DataSource::TasksByStatus->value
+        . '&sources[]=' . DataSource::TasksOverTime->value
+    );
+
+    $response->assertOk();
+    $sources = $response->json('data.sources');
+
+    expect($sources)->toHaveKey(DataSource::TasksByStatus->value);
+    expect($sources)->toHaveKey(DataSource::TasksOverTime->value);
+
+    $pointInTime = $sources[DataSource::TasksByStatus->value];
+    expect($pointInTime['series'])->toBeArray();
+
+    $timeSeries = $sources[DataSource::TasksOverTime->value];
+    expect($timeSeries['series'])->toBeArray();
+    expect($timeSeries['series'][0])->toHaveKeys(['name', 'data']);
+});
+
+test('store creates a time-series widget with time_range', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->postJson('/analytics/widgets', [
+        'data_source' => DataSource::TasksOverTime->value,
+        'chart_type'  => ChartType::Line->value,
+        'column_span' => 2,
+        'time_range'  => '7d',
+    ]);
+
+    $response->assertStatus(201);
+
+    $this->assertDatabaseHas('analytics_widgets', [
+        'user_id'     => $this->user->id,
+        'data_source' => DataSource::TasksOverTime->value,
+        'chart_type'  => ChartType::Line->value,
+        'time_range'  => '7d',
+    ]);
+});
+
+test('update persists time_range change', function () {
+    /** @var \Tests\TestCase $this */
+    $widget = AnalyticsWidget::factory()->create([
+        'user_id'     => $this->user->id,
+        'data_source' => DataSource::TasksOverTime,
+        'chart_type'  => ChartType::Line,
+        'time_range'  => '30d',
+    ]);
+
+    $response = $this->patchJson("/analytics/widgets/{$widget->id}", [
+        'time_range' => '90d',
+    ]);
+
+    $response->assertOk();
+
+    $this->assertDatabaseHas('analytics_widgets', [
+        'id'         => $widget->id,
+        'time_range' => '90d',
+    ]);
+});
+
+test('store validates time_range must be a valid value', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->postJson('/analytics/widgets', [
+        'data_source' => DataSource::TasksOverTime->value,
+        'chart_type'  => ChartType::Line->value,
+        'column_span' => 2,
+        'time_range'  => '999d',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['time_range']);
+});
+
 // ---------------------------------------------------------------------------
 // store
 // ---------------------------------------------------------------------------

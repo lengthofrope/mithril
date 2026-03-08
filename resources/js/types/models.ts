@@ -162,7 +162,7 @@ interface WeeklyReflection {
 /**
  * Available chart types for analytics widgets.
  */
-type ChartType = 'donut' | 'bar' | 'bar_horizontal' | 'stacked_bar';
+type ChartType = 'donut' | 'bar' | 'bar_horizontal' | 'stacked_bar' | 'line';
 
 /**
  * Available data sources for analytics widgets.
@@ -175,7 +175,15 @@ type DataSource =
     | 'tasks_by_member'
     | 'tasks_by_deadline'
     | 'follow_ups_by_status'
-    | 'follow_ups_by_urgency';
+    | 'follow_ups_by_urgency'
+    | 'tasks_over_time'
+    | 'task_activity'
+    | 'follow_ups_over_time';
+
+/**
+ * Time range options for time-series widgets.
+ */
+type TimeRange = '7d' | '30d' | '90d';
 
 /**
  * Mirrors the `analytics_widgets` Eloquent model.
@@ -190,10 +198,11 @@ interface AnalyticsWidget {
     show_on_dashboard: boolean;
     sort_order_analytics: number;
     sort_order_dashboard: number;
+    time_range: TimeRange | null;
 }
 
 /**
- * Chart data response from the analytics widget-data endpoint.
+ * Chart data response from the analytics widget-data endpoint (point-in-time).
  */
 interface ChartData {
     labels: string[];
@@ -201,5 +210,14 @@ interface ChartData {
     colors: string[];
 }
 
-export type { Priority, TaskStatus, FollowUpStatus, MemberStatus, ChartType, DataSource };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData };
+/**
+ * Chart data response from the analytics widget-data endpoint (time-series).
+ */
+interface TimeSeriesChartData {
+    labels: string[];
+    series: Array<{ name: string; data: number[] }>;
+    colors: string[];
+}
+
+export type { Priority, TaskStatus, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData };

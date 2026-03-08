@@ -18,7 +18,8 @@
         dataSource: '{{ $widget->data_source->value }}',
         dataEndpoint: '{{ route('analytics.widget-data') }}',
         updateEndpoint: '{{ route('analytics.widgets.update', $widget) }}',
-        title: '{{ $displayTitle }}'
+        title: '{{ $displayTitle }}',
+        timeRange: {{ $widget->time_range ? "'" . $widget->time_range . "'" : 'null' }}
     })"
 >
     {{-- Header --}}

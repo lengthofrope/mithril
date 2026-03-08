@@ -5,10 +5,10 @@ declare(strict_types=1);
 use App\Enums\ChartType;
 use App\Enums\DataSource;
 
-test('data source enum has exactly 8 cases', function () {
+test('data source enum has exactly 11 cases', function () {
     $cases = DataSource::cases();
 
-    expect($cases)->toHaveCount(8);
+    expect($cases)->toHaveCount(11);
 
     $names = array_map(fn ($case) => $case->name, $cases);
     expect($names)->toContain('TasksByStatus')
@@ -18,7 +18,10 @@ test('data source enum has exactly 8 cases', function () {
         ->toContain('TasksByMember')
         ->toContain('TasksByDeadline')
         ->toContain('FollowUpsByStatus')
-        ->toContain('FollowUpsByUrgency');
+        ->toContain('FollowUpsByUrgency')
+        ->toContain('TasksOverTime')
+        ->toContain('TaskActivity')
+        ->toContain('FollowUpsOverTime');
 });
 
 test('data source case tasks by status has correct string value', function () {
@@ -166,4 +169,50 @@ test('data source tasks by deadline does not allow donut chart type', function (
 
 test('data source follow ups by urgency does not allow donut chart type', function () {
     expect(DataSource::FollowUpsByUrgency->allowedChartTypes())->not->toContain(ChartType::Donut);
+});
+
+test('data source tasks over time has correct string value', function () {
+    expect(DataSource::TasksOverTime->value)->toBe('tasks_over_time');
+});
+
+test('data source task activity has correct string value', function () {
+    expect(DataSource::TaskActivity->value)->toBe('task_activity');
+});
+
+test('data source follow ups over time has correct string value', function () {
+    expect(DataSource::FollowUpsOverTime->value)->toBe('follow_ups_over_time');
+});
+
+test('data source tasks over time label', function () {
+    expect(DataSource::TasksOverTime->label())->toBe('Tasks Over Time');
+});
+
+test('data source task activity label', function () {
+    expect(DataSource::TaskActivity->label())->toBe('Task Activity');
+});
+
+test('data source follow ups over time label', function () {
+    expect(DataSource::FollowUpsOverTime->label())->toBe('Follow-ups Over Time');
+});
+
+test('data source time-series sources only allow line chart type', function () {
+    $timeSeriesSources = [DataSource::TasksOverTime, DataSource::TaskActivity, DataSource::FollowUpsOverTime];
+
+    foreach ($timeSeriesSources as $source) {
+        $allowed = $source->allowedChartTypes();
+        expect($allowed)->toHaveCount(1)
+            ->and($allowed[0])->toBe(ChartType::Line);
+    }
+});
+
+test('data source isTimeSeries returns true for time-series sources', function () {
+    expect(DataSource::TasksOverTime->isTimeSeries())->toBeTrue();
+    expect(DataSource::TaskActivity->isTimeSeries())->toBeTrue();
+    expect(DataSource::FollowUpsOverTime->isTimeSeries())->toBeTrue();
+});
+
+test('data source isTimeSeries returns false for point-in-time sources', function () {
+    expect(DataSource::TasksByStatus->isTimeSeries())->toBeFalse();
+    expect(DataSource::TasksByPriority->isTimeSeries())->toBeFalse();
+    expect(DataSource::TasksByCategory->isTimeSeries())->toBeFalse();
 });

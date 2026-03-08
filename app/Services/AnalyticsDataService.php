@@ -47,6 +47,12 @@ class AnalyticsDataService
      */
     public function resolve(DataSource $source): ChartData
     {
+        if ($source->isTimeSeries()) {
+            throw new \InvalidArgumentException(
+                "Time-series source \"{$source->value}\" must be resolved via AnalyticsSnapshotService."
+            );
+        }
+
         return match ($source) {
             DataSource::TasksByStatus    => $this->tasksByStatus(),
             DataSource::TasksByPriority  => $this->tasksByPriority(),
@@ -56,6 +62,7 @@ class AnalyticsDataService
             DataSource::TasksByDeadline  => $this->tasksByDeadline(),
             DataSource::FollowUpsByStatus  => $this->followUpsByStatus(),
             DataSource::FollowUpsByUrgency => $this->followUpsByUrgency(),
+            default => throw new \InvalidArgumentException("Unhandled source: {$source->value}"),
         };
     }
 

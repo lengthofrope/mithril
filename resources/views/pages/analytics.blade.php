@@ -71,6 +71,7 @@
                 'value' => $ds->value,
                 'label' => $ds->label(),
                 'allowedChartTypes' => collect($ds->allowedChartTypes())->map(fn($ct) => $ct->value)->values()->all(),
+                'isTimeSeries' => $ds->isTimeSeries(),
             ])->values()->all())
         })"
         @open-widget-configurator.window="open()"
@@ -134,6 +135,24 @@
                             <option :value="ct" x-text="ct.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></option>
                         </template>
                     </select>
+                </div>
+
+                {{-- Time range (only for time-series sources) --}}
+                <div x-show="isTimeSeriesSelected" x-cloak class="mb-4">
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Time Range</label>
+                    <div class="flex gap-2">
+                        <template x-for="range in [{value: '7d', label: '7 days'}, {value: '30d', label: '30 days'}, {value: '90d', label: '90 days'}]" :key="range.value">
+                            <button
+                                type="button"
+                                @click="selectedTimeRange = range.value"
+                                :class="selectedTimeRange === range.value
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+                                class="rounded-lg border px-3 py-1.5 text-sm font-medium transition"
+                                x-text="range.label"
+                            ></button>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Column span --}}

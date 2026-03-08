@@ -1,6 +1,6 @@
 import ApexCharts from 'apexcharts';
 import { apiClient } from '../utils/api-client';
-import type { ChartType, DataSource, ChartData } from '../types/models';
+import type { ChartType, DataSource, ChartData, TimeSeriesChartData, TimeRange } from '../types/models';
 import type { ApiError } from '../types/api';
 
 /**
@@ -13,13 +13,19 @@ interface AnalyticsChartConfig {
     dataEndpoint: string;
     updateEndpoint: string;
     title: string;
+    timeRange: TimeRange | null;
 }
+
+/**
+ * Union type for chart data — either point-in-time or time-series.
+ */
+type AnyChartData = ChartData | TimeSeriesChartData;
 
 /**
  * Response envelope for the analytics data endpoint.
  */
 interface ChartDataResponse {
-    sources: Record<string, ChartData>;
+    sources: Record<string, AnyChartData>;
 }
 
 /**
@@ -30,7 +36,7 @@ interface AnalyticsChartComponent {
     hasError: boolean;
     chartInstance: ApexCharts | null;
     init(): void;
-    renderChart(data: ChartData): void;
+    renderChart(data: AnyChartData): void;
     updateChartType(newType: ChartType): Promise<void>;
     destroy(): void;
     $refs: { chart: HTMLElement };
@@ -45,9 +51,19 @@ function readThemeMode(): 'light' | 'dark' {
 }
 
 /**
+ * Type guard to check if chart data is time-series (multi-series with named series).
+ */
+function isTimeSeriesData(data: AnyChartData): data is TimeSeriesChartData {
+    return Array.isArray(data.series) &&
+        data.series.length > 0 &&
+        typeof data.series[0] === 'object' &&
+        'name' in (data.series[0] as Record<string, unknown>);
+}
+
+/**
  * Builds ApexCharts options for the given chart type and data.
  */
-function buildChartOptions(chartType: ChartType, data: ChartData): ApexCharts.ApexOptions {
+function buildChartOptions(chartType: ChartType, data: AnyChartData): ApexCharts.ApexOptions {
     const mode = readThemeMode();
 
     const base: ApexCharts.ApexOptions = {
@@ -74,6 +90,56 @@ function buildChartOptions(chartType: ChartType, data: ChartData): ApexCharts.Ap
         ],
     };
 
+    if (chartType === 'line' && isTimeSeriesData(data)) {
+        return {
+            ...base,
+            chart: {
+                ...base.chart,
+                type: 'line',
+            },
+            series: data.series,
+            xaxis: {
+                categories: data.labels,
+                labels: {
+                    rotate: -45,
+                    formatter: (value: string): string => {
+                        const date = new Date(value);
+                        return `${date.getDate()}/${date.getMonth() + 1}`;
+                    },
+                },
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 2,
+            },
+            markers: {
+                size: 0,
+                hover: {
+                    size: 5,
+                },
+            },
+            tooltip: {
+                x: {
+                    formatter: (val: number, opts?: { w: { globals: { categoryLabels: string[] } } }): string => {
+                        const label = opts?.w?.globals?.categoryLabels?.[val - 1] ?? '';
+
+                        if (label === '') {
+                            return String(val);
+                        }
+
+                        const date = new Date(label);
+
+                        return date.toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                        });
+                    },
+                },
+            },
+        };
+    }
+
     if (chartType === 'donut') {
         return {
             ...base,
@@ -81,12 +147,12 @@ function buildChartOptions(chartType: ChartType, data: ChartData): ApexCharts.Ap
                 ...base.chart,
                 type: 'donut',
             },
-            series: data.series,
+            series: data.series as number[],
             labels: data.labels,
         };
     }
 
-    const seriesData = [{ name: 'Count', data: data.series }];
+    const seriesData = [{ name: 'Count', data: data.series as number[] }];
     const xaxis: ApexCharts.ApexOptions['xaxis'] = { categories: data.labels };
 
     if (chartType === 'bar_horizontal') {
@@ -140,6 +206,19 @@ function buildChartOptions(chartType: ChartType, data: ChartData): ApexCharts.Ap
 }
 
 /**
+ * Builds the query string for the data endpoint, including time range for time-series sources.
+ */
+function buildDataUrl(config: AnalyticsChartConfig): string {
+    let url = `${config.dataEndpoint}?sources[]=${config.dataSource}`;
+
+    if (config.timeRange !== null) {
+        url += `&time_range=${config.timeRange}`;
+    }
+
+    return url;
+}
+
+/**
  * Alpine.js component that renders an ApexCharts chart for an analytics widget.
  * Fetches data from the configured endpoint on mount, renders the chart, and
  * observes dark mode changes to update the chart theme without a full re-render.
@@ -172,9 +251,7 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
             });
 
             try {
-                const response = await apiClient.get<ChartDataResponse>(
-                    `${config.dataEndpoint}?sources[]=${config.dataSource}`,
-                );
+                const response = await apiClient.get<ChartDataResponse>(buildDataUrl(config));
 
                 const data = response.data.sources[config.dataSource];
 
@@ -199,7 +276,7 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
         /**
          * Creates and mounts an ApexCharts instance into the `chart` ref element.
          */
-        renderChart(this: AnalyticsChartComponent, data: ChartData): void {
+        renderChart(this: AnalyticsChartComponent, data: AnyChartData): void {
             if (this.chartInstance !== null) {
                 this.chartInstance.destroy();
                 this.chartInstance = null;
@@ -227,9 +304,7 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
 
             try {
                 const [response] = await Promise.all([
-                    apiClient.get<ChartDataResponse>(
-                        `${config.dataEndpoint}?sources[]=${config.dataSource}`,
-                    ),
+                    apiClient.get<ChartDataResponse>(buildDataUrl(config)),
                     apiClient.patch(config.updateEndpoint, { chart_type: newType }),
                 ]);
 

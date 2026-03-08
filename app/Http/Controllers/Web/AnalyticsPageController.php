@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\AnalyticsWidget;
 use App\Services\AnalyticsDataService;
+use App\Services\AnalyticsSnapshotService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,26 +46,39 @@ class AnalyticsPageController extends Controller
      * Return aggregated chart data for one or more data sources.
      *
      * Accepts a `sources[]` query parameter containing valid DataSource values.
+     * Time-series sources additionally accept a `time_range` parameter.
      * Each resolved source is keyed by its string value in the response payload.
      *
-     * @param Request             $request
-     * @param AnalyticsDataService $service
+     * @param Request                  $request
+     * @param AnalyticsDataService     $dataService
+     * @param AnalyticsSnapshotService $snapshotService
      * @return JsonResponse
      */
-    public function widgetData(Request $request, AnalyticsDataService $service): JsonResponse
-    {
+    public function widgetData(
+        Request $request,
+        AnalyticsDataService $dataService,
+        AnalyticsSnapshotService $snapshotService,
+    ): JsonResponse {
         $validSourceValues = array_column(DataSource::cases(), 'value');
 
         $validated = $request->validate([
-            'sources'   => ['required', 'array', 'min:1'],
-            'sources.*' => ['required', 'string', Rule::in($validSourceValues)],
+            'sources'    => ['required', 'array', 'min:1'],
+            'sources.*'  => ['required', 'string', Rule::in($validSourceValues)],
+            'time_range' => ['nullable', 'string', Rule::in(['7d', '30d', '90d'])],
         ]);
 
-        $result = [];
+        $timeRange = $validated['time_range'] ?? '30d';
+        $userId    = $request->user()->id;
+        $result    = [];
 
         foreach ($validated['sources'] as $sourceKey) {
-            $source    = DataSource::from($sourceKey);
-            $chartData = $service->resolve($source);
+            $source = DataSource::from($sourceKey);
+
+            if ($source->isTimeSeries()) {
+                $chartData = $this->resolveTimeSeries($snapshotService, $source, $userId, $timeRange);
+            } else {
+                $chartData = $dataService->resolve($source);
+            }
 
             $result[$sourceKey] = [
                 'labels' => $chartData->labels,
@@ -97,6 +111,7 @@ class AnalyticsPageController extends Controller
             'column_span'        => ['required', 'integer', 'between:1,3'],
             'show_on_analytics'  => ['boolean'],
             'show_on_dashboard'  => ['boolean'],
+            'time_range'         => ['nullable', 'string', Rule::in(['7d', '30d', '90d'])],
         ]);
 
         $nextAnalyticsOrder = (AnalyticsWidget::query()->max('sort_order_analytics') ?? 0) + 1;
@@ -133,6 +148,7 @@ class AnalyticsPageController extends Controller
             'column_span'        => ['sometimes', 'integer', 'between:1,3'],
             'show_on_analytics'  => ['sometimes', 'boolean'],
             'show_on_dashboard'  => ['sometimes', 'boolean'],
+            'time_range'         => ['sometimes', 'nullable', 'string', Rule::in(['7d', '30d', '90d'])],
         ]);
 
         $analyticsWidget->update($validated);
@@ -151,5 +167,27 @@ class AnalyticsPageController extends Controller
         $analyticsWidget->delete();
 
         return $this->successResponse(null);
+    }
+
+    /**
+     * Resolve a time-series data source to its chart data via the snapshot service.
+     *
+     * @param AnalyticsSnapshotService $service
+     * @param DataSource               $source
+     * @param int                      $userId
+     * @param string                   $timeRange
+     * @return \App\DataTransferObjects\TimeSeriesChartData
+     */
+    private function resolveTimeSeries(
+        AnalyticsSnapshotService $service,
+        DataSource $source,
+        int $userId,
+        string $timeRange,
+    ): \App\DataTransferObjects\TimeSeriesChartData {
+        return match ($source) {
+            DataSource::TasksOverTime     => $service->tasksOverTime($userId, $timeRange),
+            DataSource::TaskActivity      => $service->taskActivity($userId, $timeRange),
+            DataSource::FollowUpsOverTime => $service->followUpsOverTime($userId, $timeRange),
+        };
     }
 }

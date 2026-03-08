@@ -50,6 +50,7 @@ class AnalyticsWidget extends Model
         'show_on_dashboard',
         'sort_order_analytics',
         'sort_order_dashboard',
+        'time_range',
     ];
 
     /**

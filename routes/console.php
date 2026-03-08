@@ -72,3 +72,8 @@ Schedule::call(function (): void {
         }
     }
 })->dailyAt('08:00')->name('notify.task-deadlines')->withoutOverlapping();
+
+Schedule::command('analytics:snapshot')
+    ->dailyAt('00:15')
+    ->name('analytics.daily-snapshot')
+    ->withoutOverlapping();
