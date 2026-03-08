@@ -220,4 +220,28 @@
             </div>
         </div>
     </div>
+
+    {{-- Analytics widgets --}}
+    @if(isset($dashboardWidgets) && $dashboardWidgets->isNotEmpty())
+        <div class="mt-8" x-data="analyticsBoard({ context: 'dashboard', reorderEndpoint: '{{ route('reorder') }}', widgetEndpoint: '{{ route('analytics.widgets.store') }}' })">
+            <h2 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Analytics</h2>
+            <div
+                x-ref="widgetGrid"
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+            >
+                @foreach($dashboardWidgets as $widget)
+                    <x-tl.analytics-widget :widget="$widget" context="dashboard" />
+                @endforeach
+            </div>
+
+            <div
+                x-show="hasReorderError"
+                x-cloak
+                class="mt-2 text-xs text-red-600 dark:text-red-400"
+                aria-live="assertive"
+            >
+                Failed to save new order. Please try again.
+            </div>
+        </div>
+    @endif
 @endsection

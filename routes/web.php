@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\FollowUpPageController;
@@ -81,6 +82,12 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/prep-items', [BilaPageController::class, 'storePrepItem'])->name('prep-items.store');
     Route::patch('/prep-items/{bilaPrepItem}', [BilaPageController::class, 'updatePrepItem'])->name('prep-items.update');
     Route::delete('/prep-items/{bilaPrepItem}', [BilaPageController::class, 'destroyPrepItem'])->name('prep-items.destroy');
+
+    Route::get('/analytics', [AnalyticsPageController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/widget-data', [AnalyticsPageController::class, 'widgetData'])->name('analytics.widget-data');
+    Route::post('/analytics/widgets', [AnalyticsPageController::class, 'store'])->name('analytics.widgets.store');
+    Route::patch('/analytics/widgets/{analyticsWidget}', [AnalyticsPageController::class, 'update'])->name('analytics.widgets.update');
+    Route::delete('/analytics/widgets/{analyticsWidget}', [AnalyticsPageController::class, 'destroy'])->name('analytics.widgets.destroy');
 
     Route::post('/reorder', ReorderController::class)->name('reorder');
 

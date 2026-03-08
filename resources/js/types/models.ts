@@ -159,5 +159,47 @@ interface WeeklyReflection {
     reflection: string | null;
 }
 
-export type { Priority, TaskStatus, FollowUpStatus, MemberStatus };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection };
+/**
+ * Available chart types for analytics widgets.
+ */
+type ChartType = 'donut' | 'bar' | 'bar_horizontal' | 'stacked_bar';
+
+/**
+ * Available data sources for analytics widgets.
+ */
+type DataSource =
+    | 'tasks_by_status'
+    | 'tasks_by_priority'
+    | 'tasks_by_category'
+    | 'tasks_by_group'
+    | 'tasks_by_member'
+    | 'tasks_by_deadline'
+    | 'follow_ups_by_status'
+    | 'follow_ups_by_urgency';
+
+/**
+ * Mirrors the `analytics_widgets` Eloquent model.
+ */
+interface AnalyticsWidget {
+    id: number;
+    data_source: DataSource;
+    chart_type: ChartType;
+    title: string | null;
+    column_span: number;
+    show_on_analytics: boolean;
+    show_on_dashboard: boolean;
+    sort_order_analytics: number;
+    sort_order_dashboard: number;
+}
+
+/**
+ * Chart data response from the analytics widget-data endpoint.
+ */
+interface ChartData {
+    labels: string[];
+    series: number[];
+    colors: string[];
+}
+
+export type { Priority, TaskStatus, FollowUpStatus, MemberStatus, ChartType, DataSource };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData };

@@ -1,0 +1,69 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Enums;
+
+/**
+ * Available analytics data sources for dashboard widgets.
+ */
+enum DataSource: string
+{
+    case TasksByStatus = 'tasks_by_status';
+    case TasksByPriority = 'tasks_by_priority';
+    case TasksByCategory = 'tasks_by_category';
+    case TasksByGroup = 'tasks_by_group';
+    case TasksByMember = 'tasks_by_member';
+    case TasksByDeadline = 'tasks_by_deadline';
+    case FollowUpsByStatus = 'follow_ups_by_status';
+    case FollowUpsByUrgency = 'follow_ups_by_urgency';
+
+    /**
+     * Returns the human-readable display label for this data source.
+     *
+     * @return string
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::TasksByStatus   => 'Tasks by Status',
+            self::TasksByPriority => 'Tasks by Priority',
+            self::TasksByCategory => 'Tasks by Category',
+            self::TasksByGroup    => 'Tasks by Group',
+            self::TasksByMember   => 'Tasks by Team Member',
+            self::TasksByDeadline => 'Deadline Overview',
+            self::FollowUpsByStatus  => 'Follow-ups by Status',
+            self::FollowUpsByUrgency => 'Follow-ups by Urgency',
+        };
+    }
+
+    /**
+     * Returns the chart types that are valid for this data source.
+     *
+     * @return ChartType[]
+     */
+    public function allowedChartTypes(): array
+    {
+        return match ($this) {
+            self::TasksByStatus,
+            self::TasksByPriority,
+            self::TasksByCategory,
+            self::TasksByGroup,
+            self::FollowUpsByStatus => [
+                ChartType::Donut,
+                ChartType::Bar,
+                ChartType::BarHorizontal,
+            ],
+            self::TasksByMember => [
+                ChartType::Bar,
+                ChartType::BarHorizontal,
+            ],
+            self::TasksByDeadline,
+            self::FollowUpsByUrgency => [
+                ChartType::Bar,
+                ChartType::BarHorizontal,
+                ChartType::StackedBar,
+            ],
+        };
+    }
+}

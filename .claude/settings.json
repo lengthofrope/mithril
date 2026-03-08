@@ -2,15 +2,10 @@
   "permissions": {
     "allow": [
       "Read(//tmp/tailadmin-fresh/**)",
-      "Bash(php artisan test --filter=Feature)",
+      "Bash(php artisan test *)",
       "Read(//home/bdekort/.claude/skills/adr-entry/**)",
-      "Bash(php artisan test)",
-      "Bash(php artisan test tests/Feature/Http/Controllers/Web/)",
       "Bash(npx tsc --noEmit)",
-      "Bash(pkill -f \"artisan serve\")",
-      "Bash(php artisan test tests/Feature/Http/Controllers/Web/TeamCrudTest.php)",
-      "Bash(php artisan test tests/Feature/Http/Controllers/Web/TaskAssignmentTest.php)",
-      "Bash(php artisan test --filter=Task)"
+      "Bash(pkill -f \"artisan serve\")"
     ]
   }
 }

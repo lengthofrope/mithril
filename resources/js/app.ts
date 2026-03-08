@@ -10,6 +10,9 @@ import { markdownEditor } from './components/markdown-editor';
 import { privacyToggle } from './components/privacy-toggle';
 import { confirmDialog } from './components/confirm-dialog';
 import { keyboardShortcuts } from './components/keyboard-shortcuts';
+import { analyticsChart } from './components/analytics-chart';
+import { analyticsBoard } from './components/analytics-board';
+import { widgetConfigurator } from './components/widget-configurator';
 
 declare global {
     interface Window {
@@ -26,6 +29,9 @@ Alpine.data('markdownEditor', markdownEditor as Parameters<typeof Alpine.data>[1
 Alpine.data('privacyToggle', privacyToggle as Parameters<typeof Alpine.data>[1]);
 Alpine.data('confirmDialog', confirmDialog as Parameters<typeof Alpine.data>[1]);
 Alpine.data('keyboardShortcuts', keyboardShortcuts as Parameters<typeof Alpine.data>[1]);
+Alpine.data('analyticsChart', analyticsChart as Parameters<typeof Alpine.data>[1]);
+Alpine.data('analyticsBoard', analyticsBoard as Parameters<typeof Alpine.data>[1]);
+Alpine.data('widgetConfigurator', widgetConfigurator as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

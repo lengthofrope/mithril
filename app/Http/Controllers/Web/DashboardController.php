@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
+use App\Models\AnalyticsWidget;
 use App\Models\Bila;
 use App\Models\FollowUp;
 use App\Models\Task;
@@ -32,6 +33,7 @@ class DashboardController extends Controller
         $greeting = $this->resolveGreeting();
         $counters = $this->buildStats();
         $today = $this->buildTodaySection();
+        $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
         return view('pages.dashboard', [
             'title' => 'Dashboard',
@@ -40,6 +42,7 @@ class DashboardController extends Controller
             'todayTasks' => $today['tasks_due_today'],
             'todayFollowUps' => $today['overdue_follow_ups'],
             'todayBilas' => $today['bilas_today'],
+            'dashboardWidgets' => $dashboardWidgets,
         ]);
     }
 
