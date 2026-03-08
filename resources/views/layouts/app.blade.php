@@ -11,6 +11,12 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4f46e5">
 
+    <!-- Fonts (non-blocking) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
 
@@ -91,7 +97,7 @@
 </head>
 
 <body
-    x-data="{ 'loaded': true}"
+    x-data
     x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;
     const checkMobile = () => {
         if (window.innerWidth < 1280) {
@@ -104,16 +110,14 @@
     };
     window.addEventListener('resize', checkMobile);">
 
-    {{-- preloader --}}
-    <x-common.preloader/>
-    {{-- preloader end --}}
 
     <div class="min-h-screen xl:flex">
         <div x-data="keyboardShortcuts()" class="hidden" aria-hidden="true"></div>
         @include('layouts.backdrop')
         @include('layouts.sidebar')
 
-        <div class="flex-1 transition-all duration-300 ease-in-out"
+        <div class="flex-1"
+            x-init="requestAnimationFrame(() => $el.classList.add('transition-all', 'duration-300', 'ease-in-out'))"
             :class="{
                 'xl:ml-[290px]': $store.sidebar.isExpanded || $store.sidebar.isHovered,
                 'xl:ml-[90px]': !$store.sidebar.isExpanded && !$store.sidebar.isHovered,
