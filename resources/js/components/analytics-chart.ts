@@ -110,7 +110,7 @@ function buildChartOptions(chartType: ChartType, data: AnyChartData): ApexCharts
                     rotate: -45,
                     formatter: (value: string): string => {
                         const date = new Date(value);
-                        return `${date.getDate()}/${date.getMonth() + 1}`;
+                        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
                     },
                 },
             },
@@ -126,14 +126,14 @@ function buildChartOptions(chartType: ChartType, data: AnyChartData): ApexCharts
             },
             tooltip: {
                 x: {
-                    formatter: (val: number, opts?: { w: { globals: { categoryLabels: string[] } } }): string => {
-                        const label = opts?.w?.globals?.categoryLabels?.[val - 1] ?? '';
+                    formatter: (val: number): string => {
+                        const isoLabel = data.labels[val - 1] ?? '';
 
-                        if (label === '') {
+                        if (isoLabel === '') {
                             return String(val);
                         }
 
-                        const date = new Date(label);
+                        const date = new Date(isoLabel);
 
                         return date.toLocaleDateString('en-GB', {
                             day: 'numeric',
