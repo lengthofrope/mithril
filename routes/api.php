@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\AgreementController;
 use App\Http\Controllers\Api\AutoSaveController;
-use App\Http\Controllers\Api\PushSubscriptionController;
+
 use App\Http\Controllers\Api\BilaController;
 use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\FollowUpController;
@@ -33,6 +33,4 @@ Route::prefix('v1')->middleware('auth:web')->as('api.')->group(function (): void
     Route::get('export', [ExportImportController::class, 'export']);
     Route::post('import', [ExportImportController::class, 'import']);
 
-    Route::post('push/subscribe', [PushSubscriptionController::class, 'store']);
-    Route::delete('push/unsubscribe', [PushSubscriptionController::class, 'destroy']);
 });

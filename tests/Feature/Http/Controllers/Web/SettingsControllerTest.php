@@ -195,30 +195,3 @@ test('settings updateProfile does not change password when current_password is e
     $user->refresh();
     expect(Hash::check('unchanged-password', $user->password))->toBeTrue();
 });
-
-test('settings updateProfile sets push_enabled to false when not sent', function () {
-    /** @var \Tests\TestCase $this */
-    $user = User::factory()->create(['push_enabled' => true]);
-
-    $this->actingAs($user)->patch('/settings/profile', [
-        'name' => $user->name,
-        'email' => $user->email,
-        'theme_preference' => 'light',
-    ]);
-
-    $this->assertDatabaseHas('users', ['id' => $user->id, 'push_enabled' => false]);
-});
-
-test('settings updateProfile sets push_enabled to true when sent', function () {
-    /** @var \Tests\TestCase $this */
-    $user = User::factory()->create(['push_enabled' => false]);
-
-    $this->actingAs($user)->patch('/settings/profile', [
-        'name' => $user->name,
-        'email' => $user->email,
-        'theme_preference' => 'light',
-        'push_enabled' => true,
-    ]);
-
-    $this->assertDatabaseHas('users', ['id' => $user->id, 'push_enabled' => true]);
-});

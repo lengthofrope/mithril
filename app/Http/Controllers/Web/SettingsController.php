@@ -17,7 +17,7 @@ use Illuminate\Validation\Rules\Password;
 /**
  * Handles the settings page rendering and profile update actions.
  *
- * Manages theme preference, push notification toggle, and profile details.
+ * Manages theme preference and profile details.
  */
 class SettingsController extends Controller
 {
@@ -34,7 +34,6 @@ class SettingsController extends Controller
         return view('pages.settings.index', [
             'title' => 'Settings',
             'user' => $user,
-            'pushEnabled' => (bool) ($user->push_enabled ?? false),
         ]);
     }
 
@@ -52,7 +51,6 @@ class SettingsController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'theme_preference' => ['required', 'string', 'in:light,dark'],
-            'push_enabled' => ['boolean'],
             'current_password' => ['nullable', 'string'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
@@ -66,7 +64,6 @@ class SettingsController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->theme_preference = $validated['theme_preference'];
-        $user->push_enabled = (bool) ($validated['push_enabled'] ?? false);
 
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);

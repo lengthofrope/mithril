@@ -38,41 +38,6 @@
             </div>
         </div>
 
-        {{-- Push notifications --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Push notifications</h2>
-            </div>
-            <div class="p-5">
-                <div
-                    x-data="{ enabled: @js($pushEnabled ?? false), loading: false }"
-                    class="flex items-center justify-between"
-                >
-                    <div>
-                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">Enable push notifications</p>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                            Receive reminders for follow-ups and scheduled bilas
-                        </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        x-on:click="enabled = !enabled"
-                        x-bind:aria-checked="enabled"
-                        role="switch"
-                        class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition"
-                        x-bind:class="enabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'"
-                        aria-label="Toggle push notifications"
-                    >
-                        <span
-                            class="inline-block h-4 w-4 rounded-full bg-white shadow transition"
-                            x-bind:class="enabled ? 'translate-x-6' : 'translate-x-1'"
-                        ></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
         {{-- Task configuration --}}
         <a href="{{ route('settings.tasks') }}" class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700">
             <div>

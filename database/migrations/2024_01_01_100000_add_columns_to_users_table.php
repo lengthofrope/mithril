@@ -18,7 +18,6 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table): void {
             $table->string('theme_preference', 20)->default('light')->after('remember_token');
-            $table->boolean('push_enabled')->default(false)->after('theme_preference');
         });
     }
 
@@ -28,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table): void {
-            $table->dropColumn(['theme_preference', 'push_enabled']);
+            $table->dropColumn(['theme_preference']);
         });
     }
 };
