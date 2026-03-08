@@ -11,7 +11,7 @@
             :filters="[
                 ['field' => 'search', 'type' => 'search', 'label' => 'Search'],
                 ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
-                ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions],
+                ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
                 ['field' => 'category', 'type' => 'select', 'label' => 'Category', 'options' => $categoryOptions],
                 ['field' => 'status', 'type' => 'select', 'label' => 'Status', 'options' => [
                     ['value' => 'open', 'label' => 'Open'],

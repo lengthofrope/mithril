@@ -40,25 +40,60 @@
             />
         </div>
 
-        {{-- Row: Team + Member --}}
-        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <x-tl.auto-save-field
-                :endpoint="$taskEndpoint"
-                field="team_id"
-                :value="(string) ($task->team_id ?? '')"
-                type="select"
-                label="Team"
-                :options="array_merge([['value' => '', 'label' => '— None —']], $teamOptions)"
-            />
+        {{-- Row: Team + Member (linked filtering) --}}
+        <div
+            class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
+            x-data="{
+                allMembers: @js($memberOptions),
+                selectedTeamId: @js((string) ($task->team_id ?? '')),
+                get filteredMemberOptions() {
+                    const filtered = this.selectedTeamId
+                        ? this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId))
+                        : this.allMembers;
+                    return [{ value: '', label: '— None —' }, ...filtered];
+                },
+            }"
+        >
+            {{-- Team select --}}
+            <div
+                x-data="autoSaveField({ endpoint: @js($taskEndpoint), field: 'team_id' })"
+                x-init="value = @js((string) ($task->team_id ?? ''))"
+                x-effect="selectedTeamId = value"
+                class="flex flex-col gap-1.5"
+            >
+                <label for="asf-team_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Team</label>
+                <select
+                    id="asf-team_id"
+                    name="team_id"
+                    x-model="value"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                >
+                    @foreach(array_merge([['value' => '', 'label' => '— None —']], $teamOptions) as $option)
+                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                    @endforeach
+                </select>
+                <x-tl.auto-save-status />
+            </div>
 
-            <x-tl.auto-save-field
-                :endpoint="$taskEndpoint"
-                field="team_member_id"
-                :value="(string) ($task->team_member_id ?? '')"
-                type="select"
-                label="Assigned to"
-                :options="array_merge([['value' => '', 'label' => '— None —']], $memberOptions)"
-            />
+            {{-- Member select (filtered by team) --}}
+            <div
+                x-data="autoSaveField({ endpoint: @js($taskEndpoint), field: 'team_member_id' })"
+                x-init="value = @js((string) ($task->team_member_id ?? ''))"
+                class="flex flex-col gap-1.5"
+            >
+                <label for="asf-team_member_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Assigned to</label>
+                <select
+                    id="asf-team_member_id"
+                    name="team_member_id"
+                    x-model="value"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                >
+                    <template x-for="opt in filteredMemberOptions" :key="opt.value">
+                        <option :value="opt.value" x-text="opt.label"></option>
+                    </template>
+                </select>
+                <x-tl.auto-save-status />
+            </div>
         </div>
 
         {{-- Row: Category + Group --}}

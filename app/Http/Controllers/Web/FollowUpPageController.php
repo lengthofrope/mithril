@@ -78,7 +78,7 @@ class FollowUpPageController extends Controller
             'title' => 'Follow-ups',
             'sections' => $sections,
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
-            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
             'selectedTeamMemberId' => $teamMemberId,
         ]);
     }

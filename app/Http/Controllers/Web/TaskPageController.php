@@ -92,7 +92,7 @@ class TaskPageController extends Controller
             'ungroupedTasks' => $ungroupedTasks,
             'statuses' => TaskStatus::cases(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
-            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
             'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => $c->id, 'label' => $c->name])->all(),
             'groupOptions' => $allGroups->map(fn (TaskGroup $g) => ['value' => $g->id, 'label' => $g->name])->all(),
         ]);
@@ -149,7 +149,7 @@ class TaskPageController extends Controller
             'title' => $task->title,
             'task' => $task,
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
-            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name, 'team_id' => (string) $m->team_id])->all(),
             'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => (string) $c->id, 'label' => $c->name])->all(),
             'groupOptions' => $allGroups->map(fn (TaskGroup $g) => ['value' => (string) $g->id, 'label' => $g->name])->all(),
             'priorityOptions' => collect(Priority::cases())->map(fn (Priority $p) => ['value' => $p->value, 'label' => ucfirst($p->value)])->all(),
@@ -194,7 +194,7 @@ class TaskPageController extends Controller
             'filters' => $filters,
             'statuses' => TaskStatus::cases(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
-            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
             'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => $c->id, 'label' => $c->name])->all(),
             'groups' => $allGroups,
         ]);

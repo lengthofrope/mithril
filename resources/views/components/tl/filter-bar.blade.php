@@ -49,6 +49,18 @@
                         <span class="text-sm text-gray-700 dark:text-gray-300">{{ $filter['label'] }}</span>
                     </div>
 
+                @elseif($filter['type'] === 'select' && !empty($filter['linked_to']))
+                    <select
+                        id="filter-{{ $filter['field'] }}"
+                        x-model="filterState['{{ $filter['field'] }}']"
+                        class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                    >
+                        <option value="">All</option>
+                        <template x-for="opt in @js($filter['options'] ?? []).filter(o => !filterState['{{ $filter['linked_to'] }}'] || String(o.{{ $filter['linked_to'] }}) === String(filterState['{{ $filter['linked_to'] }}']))" :key="opt.value">
+                            <option :value="opt.value" x-text="opt.label"></option>
+                        </template>
+                    </select>
+
                 @elseif($filter['type'] === 'select')
                     <select
                         id="filter-{{ $filter['field'] }}"
