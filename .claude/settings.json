@@ -9,7 +9,8 @@
       "Bash(npx tsc --noEmit)",
       "Bash(pkill -f \"artisan serve\")",
       "Bash(php artisan test tests/Feature/Http/Controllers/Web/TeamCrudTest.php)",
-      "Bash(php artisan test tests/Feature/Http/Controllers/Web/TaskAssignmentTest.php)"
+      "Bash(php artisan test tests/Feature/Http/Controllers/Web/TaskAssignmentTest.php)",
+      "Bash(php artisan test --filter=Task)"
     ]
   }
 }
