@@ -17,6 +17,9 @@ enum DataSource: string
     case TasksByDeadline = 'tasks_by_deadline';
     case FollowUpsByStatus = 'follow_ups_by_status';
     case FollowUpsByUrgency = 'follow_ups_by_urgency';
+    case TasksOverTime = 'tasks_over_time';
+    case TaskActivity = 'task_activity';
+    case FollowUpsOverTime = 'follow_ups_over_time';
 
     /**
      * Returns the human-readable display label for this data source.
@@ -34,6 +37,9 @@ enum DataSource: string
             self::TasksByDeadline => 'Deadline Overview',
             self::FollowUpsByStatus  => 'Follow-ups by Status',
             self::FollowUpsByUrgency => 'Follow-ups by Urgency',
+            self::TasksOverTime      => 'Tasks Over Time',
+            self::TaskActivity       => 'Task Activity',
+            self::FollowUpsOverTime  => 'Follow-ups Over Time',
         };
     }
 
@@ -64,6 +70,26 @@ enum DataSource: string
                 ChartType::BarHorizontal,
                 ChartType::StackedBar,
             ],
+            self::TasksOverTime,
+            self::TaskActivity,
+            self::FollowUpsOverTime => [
+                ChartType::Line,
+            ],
+        };
+    }
+
+    /**
+     * Returns whether this data source produces time-series data.
+     *
+     * @return bool
+     */
+    public function isTimeSeries(): bool
+    {
+        return match ($this) {
+            self::TasksOverTime,
+            self::TaskActivity,
+            self::FollowUpsOverTime => true,
+            default => false,
         };
     }
 }

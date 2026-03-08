@@ -13,4 +13,5 @@ enum ChartType: string
     case Bar = 'bar';
     case BarHorizontal = 'bar_horizontal';
     case StackedBar = 'stacked_bar';
+    case Line = 'line';
 }
