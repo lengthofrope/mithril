@@ -1,5 +1,6 @@
 import Sortable from 'sortablejs';
 import { apiClient } from '../utils/api-client';
+import { registerDoubleClickNavigation } from '../utils/double-click-navigation';
 import type { ReorderItem } from '../types/api';
 import type { ApiError } from '../types/api';
 
@@ -53,6 +54,7 @@ function collectReorderItems(container: HTMLElement): ReorderItem[] {
  * Alpine.js component that wraps SortableJS to enable drag-and-drop reordering.
  * Sends updated sort order to the backend via POST after each drop.
  * Supports cross-list drag using an optional group name and move endpoint.
+ * Items with a data-href attribute support double-click navigation.
  */
 function sortableList(config: SortableListConfig): Record<string, unknown> {
     return {
@@ -83,6 +85,8 @@ function sortableList(config: SortableListConfig): Record<string, unknown> {
                     }
                 },
             });
+
+            registerDoubleClickNavigation(container);
         },
 
         /**

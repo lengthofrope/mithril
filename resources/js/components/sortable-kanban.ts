@@ -1,5 +1,6 @@
 import Sortable from 'sortablejs';
 import { apiClient } from '../utils/api-client';
+import { registerDoubleClickNavigation } from '../utils/double-click-navigation';
 import type { MoveItem, ReorderItem } from '../types/api';
 import type { ApiError } from '../types/api';
 
@@ -82,6 +83,8 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
                         void self.handleMove(event);
                     },
                 });
+
+                registerDoubleClickNavigation(column);
             });
         },
 

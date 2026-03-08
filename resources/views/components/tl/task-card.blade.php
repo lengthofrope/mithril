@@ -7,6 +7,7 @@
 <div
     data-id="{{ $task->id }}"
     data-status="{{ $statusValue }}"
+    data-href="{{ route('tasks.show', $task->id) }}"
     role="listitem"
     @if($hideWhenDone)
         x-data
