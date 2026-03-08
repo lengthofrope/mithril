@@ -6,7 +6,7 @@
     {{-- Team header --}}
     <div
         x-data="{ editOpen: false, deleteOpen: false }"
-        class="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.06]"
+        class="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]"
     >
         <div
             class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-white text-lg font-bold"
@@ -270,7 +270,7 @@
 
             <a
                 href="{{ route('teams.member', $member->id) }}"
-                class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.06] dark:hover:border-gray-700"
+                class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
             >
                 <div class="relative shrink-0">
                     <x-tl.team-member-avatar :member="$member" size="lg" />

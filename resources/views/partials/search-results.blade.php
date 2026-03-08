@@ -60,7 +60,7 @@
                     @foreach($results['notes'] as $note)
                         <a
                             href="{{ route('notes.show', $note->id) }}"
-                            class="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.06] dark:hover:border-gray-700"
+                            class="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
                         >
                             <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ $note->title }}</h3>
                             @if($note->content)
@@ -84,7 +84,7 @@
                     @foreach($results['members'] as $member)
                         <a
                             href="{{ route('teams.member', [$member->team_id, $member->id]) }}"
-                            class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.06] dark:hover:border-gray-700"
+                            class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
                         >
                             <x-tl.team-member-avatar :member="$member" size="md" />
                             <div class="min-w-0 flex-1">

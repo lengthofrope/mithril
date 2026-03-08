@@ -71,7 +71,7 @@
     </div>
 
     {{-- Quick-add task form --}}
-    <div class="mb-8 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.06]">
+    <div class="mb-8 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
         <h2 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Quick-add task</h2>
         <form
             method="POST"
@@ -122,7 +122,7 @@
 
         {{-- Tasks due today --}}
         <div class="xl:col-span-1">
-            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
                         Tasks due today
@@ -148,7 +148,7 @@
 
         {{-- Follow-ups needing attention --}}
         <div class="xl:col-span-1">
-            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
                         Follow-ups needing attention
@@ -174,7 +174,7 @@
 
         {{-- Bilas today --}}
         <div class="xl:col-span-1">
-            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
                         Bilas today

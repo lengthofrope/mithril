@@ -64,28 +64,34 @@
                 ] as $column)
                     @php
                         $columnTasks = $tasks->where('status', $column['status']);
-                        $headerColorMap = [
-                            'blue'   => 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-900/50',
-                            'yellow' => 'text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-500/10 border-yellow-200 dark:border-yellow-900/50',
-                            'orange' => 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-900/50',
-                            'green'  => 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-900/50',
+                        $statusColorMap = [
+                            'blue'   => 'bg-blue-500',
+                            'yellow' => 'bg-yellow-500',
+                            'orange' => 'bg-orange-500',
+                            'green'  => 'bg-green-500',
                         ];
-                        $headerColor = $headerColorMap[$column['color']];
+                        $dotColor = $statusColorMap[$column['color']];
                     @endphp
 
-                    <div class="flex flex-col rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
-                        <div class="flex items-center justify-between rounded-t-xl border-b border-gray-200 px-4 py-3 dark:border-gray-800">
-                            <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
-                                {{ $column['label'] }}
-                            </h2>
-                            <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $headerColor }}">
-                                {{ $columnTasks->count() }}
-                            </span>
+                    <div class="flex flex-col rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div class="flex items-center justify-between px-5 py-3">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="inline-block h-3 w-3 rounded-full {{ $dotColor }}"
+                                    aria-hidden="true"
+                                ></span>
+                                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
+                                    {{ $column['label'] }}
+                                </h2>
+                                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                                    {{ $columnTasks->count() }}
+                                </span>
+                            </div>
                         </div>
 
                         <div
                             data-kanban-status="{{ $column['status'] }}"
-                            class="flex flex-col gap-2 p-3 min-h-32"
+                            class="flex flex-col gap-2 border-t border-gray-100 p-3 min-h-32 dark:border-gray-800"
                             role="list"
                             aria-label="{{ $column['label'] }} tasks"
                         >

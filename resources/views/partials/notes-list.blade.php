@@ -17,7 +17,7 @@
                     autoSaveField({ endpoint: '{{ route('notes.update', ['note' => '__ID__']) }}'.replace('__ID__', '{{ $note->id }}'), field: 'content' })
                 )"
                 x-init="content = @js($note->content ?? ''); value = content;"
-                class="flex flex-col rounded-xl border bg-white dark:bg-white/[0.06] {{ $note->is_pinned ? 'border-yellow-300 dark:border-yellow-700/50' : 'border-gray-200 dark:border-gray-800' }}"
+                class="flex flex-col rounded-xl border bg-white dark:bg-white/[0.03] {{ $note->is_pinned ? 'border-yellow-300 dark:border-yellow-700/50' : 'border-gray-200 dark:border-gray-800' }}"
             >
                 {{-- Note header --}}
                 <div class="flex items-start justify-between gap-2 p-4 pb-2">

@@ -4,7 +4,7 @@
     <x-common.page-breadcrumb pageTitle="{{ $member->name }}" />
 
     {{-- Member header --}}
-    <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.06]">
+    <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
         @php
             $statusColorMap = [
                 'available'           => 'bg-green-500',
@@ -203,7 +203,7 @@
                 @forelse($memberBilas as $bila)
                     <div
                         x-data="{ expanded: false }"
-                        class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]"
+                        class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                     >
                         <button
                             type="button"
@@ -261,7 +261,7 @@
         >
             <div class="space-y-3">
                 @forelse($memberAgreements as $agreement)
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.06]">
+                    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
                         <p class="text-sm text-gray-800 dark:text-white/90">
                             {{ $agreement->description }}
                         </p>
@@ -289,7 +289,7 @@
         >
             <div class="space-y-3">
                 @forelse($memberNotes as $note)
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.06]">
+                    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
                         <div class="flex items-start justify-between gap-3">
                             <h3 class="text-sm font-medium text-gray-800 dark:text-white/90">
                                 {{ $note->title }}

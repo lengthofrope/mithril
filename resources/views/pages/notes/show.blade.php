@@ -3,7 +3,7 @@
 @section('content')
     <x-common.page-breadcrumb pageTitle="Note" />
 
-    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.06]">
+    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
         <h1 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
             {{ $note->title ?? 'Untitled' }}
         </h1>

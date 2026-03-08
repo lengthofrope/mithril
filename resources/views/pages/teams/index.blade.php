@@ -87,7 +87,7 @@
         @forelse($teams as $team)
             <a
                 href="{{ route('teams.show', $team->id) }}"
-                class="group relative flex flex-col gap-4 overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-white/[0.06] dark:hover:border-gray-700"
+                class="group relative flex flex-col gap-4 overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
             >
                 {{-- Color accent bar --}}
                 <div

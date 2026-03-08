@@ -6,7 +6,7 @@
     <div class="space-y-6 max-w-2xl">
 
         {{-- Task categories --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Task categories</h2>
             </div>
@@ -104,7 +104,7 @@
         </div>
 
         {{-- Task groups --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Task groups</h2>
             </div>

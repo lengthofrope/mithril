@@ -7,7 +7,7 @@
         $taskEndpoint = '/api/v1/tasks/' . $task->id;
     @endphp
 
-    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.06]">
+    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
         {{-- Title --}}
         <div class="mb-6">
             <x-tl.auto-save-field

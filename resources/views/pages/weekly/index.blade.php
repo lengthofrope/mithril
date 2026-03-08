@@ -7,7 +7,7 @@
     <div class="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
 
         {{-- Auto-generated summary --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
                     This week's summary
@@ -50,7 +50,7 @@
         </div>
 
         {{-- Reflection text area --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
                     My reflection
@@ -138,7 +138,7 @@
                 @foreach($pastReflections as $pastReflection)
                     <div
                         x-data="{ expanded: false }"
-                        class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]"
+                        class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                     >
                         <button
                             type="button"

@@ -20,7 +20,7 @@
             @if($group->tasks->isNotEmpty())
                 <div
                     x-data="{ collapsed: false }"
-                    class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]"
+                    class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                 >
                     {{-- Group header --}}
                     <button
@@ -78,7 +78,7 @@
 
         {{-- Ungrouped tasks --}}
         @if($hasUngrouped)
-            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.06]">
+            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="border-b border-gray-100 px-5 py-3 dark:border-gray-800">
                     <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">Ungrouped</span>
                 </div>

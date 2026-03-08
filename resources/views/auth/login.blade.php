@@ -39,7 +39,7 @@
                 </p>
             </div>
 
-            <div class="rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm dark:border-gray-800 dark:bg-white/[0.06] sm:px-8">
+            <div class="rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] sm:px-8">
 
                 @if ($errors->any())
                     <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-900/20" role="alert" aria-live="polite">
@@ -66,7 +66,7 @@
                                 required
                                 autocomplete="email"
                                 autofocus
-                                class="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-white/[0.06] dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-500 @error('email') border-red-400 focus:border-red-500 focus:ring-red-500 @enderror"
+                                class="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-white/[0.03] dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-500 @error('email') border-red-400 focus:border-red-500 focus:ring-red-500 @enderror"
                                 placeholder="you@example.com"
                                 aria-describedby="{{ $errors->has('email') ? 'email-error' : null }}"
                                 aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"
@@ -86,7 +86,7 @@
                                 name="password"
                                 required
                                 autocomplete="current-password"
-                                class="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-white/[0.06] dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-500 @error('password') border-red-400 focus:border-red-500 focus:ring-red-500 @enderror"
+                                class="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-white/[0.03] dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-500 @error('password') border-red-400 focus:border-red-500 focus:ring-red-500 @enderror"
                                 placeholder="••••••••"
                                 aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"
                             >
@@ -101,7 +101,7 @@
                                 type="checkbox"
                                 name="remember"
                                 {{ old('remember') ? 'checked' : '' }}
-                                class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700 dark:bg-white/[0.06]"
+                                class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700 dark:bg-white/[0.03]"
                             >
                             <label for="remember" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                                 Remember me
