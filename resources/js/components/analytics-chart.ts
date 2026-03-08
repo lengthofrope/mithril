@@ -11,6 +11,7 @@ interface AnalyticsChartConfig {
     chartType: ChartType;
     dataSource: DataSource;
     dataEndpoint: string;
+    updateEndpoint: string;
     title: string;
 }
 
@@ -225,9 +226,12 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
             this.hasError = false;
 
             try {
-                const response = await apiClient.get<ChartDataResponse>(
-                    `${config.dataEndpoint}?sources[]=${config.dataSource}`,
-                );
+                const [response] = await Promise.all([
+                    apiClient.get<ChartDataResponse>(
+                        `${config.dataEndpoint}?sources[]=${config.dataSource}`,
+                    ),
+                    apiClient.patch(config.updateEndpoint, { chart_type: newType }),
+                ]);
 
                 const data = response.data.sources[config.dataSource];
 

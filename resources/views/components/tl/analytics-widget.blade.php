@@ -17,6 +17,7 @@
         chartType: '{{ $widget->chart_type->value }}',
         dataSource: '{{ $widget->data_source->value }}',
         dataEndpoint: '{{ route('analytics.widget-data') }}',
+        updateEndpoint: '{{ route('analytics.widgets.update', $widget) }}',
         title: '{{ $displayTitle }}'
     })"
 >
