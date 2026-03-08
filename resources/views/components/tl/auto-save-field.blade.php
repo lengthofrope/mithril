@@ -9,7 +9,7 @@
 
 <div
     x-data="autoSaveField({ endpoint: '{{ $endpoint }}', field: '{{ $field }}' })"
-    x-init="value = {{ json_encode($value) }}"
+    x-init="value = @js($value)"
     class="flex flex-col gap-1.5"
 >
     @if($label)

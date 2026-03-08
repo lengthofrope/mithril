@@ -6,8 +6,8 @@
 
 <div
     x-data="confirmDialog({
-        title: {{ json_encode($title) }},
-        message: {{ json_encode($message) }},
+        title: @js($title),
+        message: @js($message),
         onConfirm() {
             const form = document.getElementById('confirm-form-{{ $triggerId }}');
             if (form) form.submit();

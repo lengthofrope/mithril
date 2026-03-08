@@ -168,7 +168,7 @@
                     markdownEditor({ field: 'notes' }),
                     autoSaveField({ endpoint: '{{ route('bilas.update', $bila->id) }}', field: 'notes' })
                 )"
-                x-init="content = {{ json_encode($bila->notes ?? '') }}; value = content;"
+                x-init="content = @js($bila->notes ?? ''); value = content;"
             >
                 {{-- Editor/preview toggle --}}
                 <div class="mb-3 flex items-center gap-2">

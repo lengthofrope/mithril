@@ -16,7 +16,7 @@
                     markdownEditor({ field: 'content' }),
                     autoSaveField({ endpoint: '{{ route('notes.update', ['note' => '__ID__']) }}'.replace('__ID__', '{{ $note->id }}'), field: 'content' })
                 )"
-                x-init="content = {{ json_encode($note->content ?? '') }}; value = content;"
+                x-init="content = @js($note->content ?? ''); value = content;"
                 class="flex flex-col rounded-xl border bg-white dark:bg-white/[0.03] {{ $note->is_pinned ? 'border-yellow-300 dark:border-yellow-700/50' : 'border-gray-200 dark:border-gray-800' }}"
             >
                 {{-- Note header --}}

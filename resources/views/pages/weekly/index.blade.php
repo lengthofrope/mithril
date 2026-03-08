@@ -66,7 +66,7 @@
                         field: 'reflection'
                     })
                 )"
-                x-init="content = {{ json_encode($currentReflection->reflection ?? '') }}; value = content;"
+                x-init="content = @js($currentReflection->reflection ?? ''); value = content;"
             >
                 <div class="mb-3 flex items-center gap-2">
                     <button

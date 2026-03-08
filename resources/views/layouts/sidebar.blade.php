@@ -110,7 +110,7 @@
                                                 !$store.sidebar.isExpanded && !$store.sidebar.isHovered ?
                                                 'xl:justify-center' : 'xl:justify-start'
                                             ]"
-                                            x-bind:title="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? '{{ $item['name'] }}' : ''">
+                                            x-bind:title="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? @js($item['name']) : ''">
 
                                             <!-- Icon -->
                                             <span :class="isSubmenuOpen({{ $groupIndex }}, {{ $itemIndex }}) ?
@@ -188,7 +188,7 @@
                                                 'xl:justify-center' :
                                                 'justify-start'
                                             ]"
-                                            x-bind:title="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? '{{ $item['name'] }}' : ''">
+                                            x-bind:title="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? @js($item['name']) : ''">
 
                                             <!-- Icon -->
                                             <span
