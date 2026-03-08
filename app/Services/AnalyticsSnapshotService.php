@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DataTransferObjects\TimeSeriesChartData;
+use App\Enums\FollowUpStatus;
+use App\Enums\TaskStatus;
 use App\Models\AnalyticsSnapshot;
+use App\Models\FollowUp;
+use App\Models\Task;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -148,6 +152,7 @@ class AnalyticsSnapshotService
      * Query the analytics_snapshots table for a set of metrics within the date range.
      *
      * Returns a collection keyed by "metric|date" for O(1) lookups.
+     * Today's values are always computed live from the actual models, overriding any snapshot row.
      *
      * @param int             $userId    User to filter by.
      * @param string          $timeRange One of '7d', '30d', or '90d'.
@@ -158,12 +163,78 @@ class AnalyticsSnapshotService
     {
         [$startDate, $endDate] = $this->resolveDateRange($timeRange);
 
-        return AnalyticsSnapshot::withoutGlobalScopes()
+        $rows = AnalyticsSnapshot::withoutGlobalScopes()
             ->where('user_id', $userId)
             ->whereBetween('snapshot_date', [$startDate, $endDate])
             ->whereIn('metric', $metrics)
             ->get(['metric', 'snapshot_date', 'value'])
             ->keyBy(fn ($row): string => $row->metric . '|' . $row->snapshot_date->toDateString());
+
+        $today     = Carbon::today()->toDateString();
+        $liveData  = $this->computeLiveMetrics($userId, $metrics);
+
+        foreach ($liveData as $metric => $value) {
+            $rows[$metric . '|' . $today] = (object) [
+                'metric'        => $metric,
+                'snapshot_date' => $today,
+                'value'         => $value,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Compute current metric values live from the Task and FollowUp models.
+     *
+     * Only computes metrics that are present in the requested list.
+     *
+     * @param int           $userId  The user to count for.
+     * @param list<string>  $metrics The metric keys to compute.
+     * @return array<string, int>
+     */
+    private function computeLiveMetrics(int $userId, array $metrics): array
+    {
+        $requested = array_flip($metrics);
+        $live      = [];
+
+        $taskBase     = Task::withoutGlobalScopes()->where('user_id', $userId);
+        $followUpBase = FollowUp::withoutGlobalScopes()->where('user_id', $userId);
+
+        $taskMetrics = [
+            'tasks_status_open'        => TaskStatus::Open,
+            'tasks_status_in_progress' => TaskStatus::InProgress,
+            'tasks_status_waiting'     => TaskStatus::Waiting,
+            'tasks_status_done'        => TaskStatus::Done,
+        ];
+
+        foreach ($taskMetrics as $metric => $status) {
+            if (isset($requested[$metric])) {
+                $live[$metric] = (clone $taskBase)->where('status', $status->value)->count();
+            }
+        }
+
+        if (isset($requested['tasks_total'])) {
+            $live['tasks_total'] = (clone $taskBase)->count();
+        }
+
+        $followUpMetrics = [
+            'follow_ups_status_open'    => FollowUpStatus::Open,
+            'follow_ups_status_snoozed' => FollowUpStatus::Snoozed,
+            'follow_ups_status_done'    => FollowUpStatus::Done,
+        ];
+
+        foreach ($followUpMetrics as $metric => $status) {
+            if (isset($requested[$metric])) {
+                $live[$metric] = (clone $followUpBase)->where('status', $status->value)->count();
+            }
+        }
+
+        if (isset($requested['follow_ups_total'])) {
+            $live['follow_ups_total'] = (clone $followUpBase)->count();
+        }
+
+        return $live;
     }
 
     /**

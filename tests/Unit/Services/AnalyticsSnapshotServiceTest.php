@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use App\DataTransferObjects\TimeSeriesChartData;
+use App\Enums\FollowUpStatus;
+use App\Enums\TaskStatus;
 use App\Models\AnalyticsSnapshot;
+use App\Models\FollowUp;
+use App\Models\Task;
 use App\Models\User;
 use App\Services\AnalyticsSnapshotService;
 use Illuminate\Support\Carbon;
@@ -210,6 +214,125 @@ describe('AnalyticsSnapshotService', function (): void {
             $result = $this->service->tasksOverTime($this->user->id, 'invalid');
 
             expect($result->labels)->toHaveCount(30);
+        });
+    });
+
+    describe('live data for today', function (): void {
+        it('uses live task counts for today instead of snapshot data', function (): void {
+            Task::factory()->count(3)->create([
+                'user_id' => $this->user->id,
+                'status'  => TaskStatus::Open,
+            ]);
+            Task::factory()->count(2)->create([
+                'user_id' => $this->user->id,
+                'status'  => TaskStatus::Done,
+            ]);
+
+            $result = $this->service->tasksOverTime($this->user->id, '7d');
+
+            $todayIndex = array_search('2026-03-08', $result->labels);
+            expect($todayIndex)->not->toBeFalse();
+
+            $openSeries = $result->series[0]['data'];
+            $doneSeries = $result->series[3]['data'];
+            expect($openSeries[$todayIndex])->toBe(3);
+            expect($doneSeries[$todayIndex])->toBe(2);
+        });
+
+        it('uses live follow-up counts for today instead of snapshot data', function (): void {
+            FollowUp::factory()->count(4)->create([
+                'user_id' => $this->user->id,
+                'status'  => FollowUpStatus::Open,
+            ]);
+            FollowUp::factory()->create([
+                'user_id' => $this->user->id,
+                'status'  => FollowUpStatus::Snoozed,
+            ]);
+
+            $result = $this->service->followUpsOverTime($this->user->id, '7d');
+
+            $todayIndex = array_search('2026-03-08', $result->labels);
+            expect($todayIndex)->not->toBeFalse();
+
+            $openSeries    = $result->series[0]['data'];
+            $snoozedSeries = $result->series[1]['data'];
+            expect($openSeries[$todayIndex])->toBe(4);
+            expect($snoozedSeries[$todayIndex])->toBe(1);
+        });
+
+        it('prefers live data over stale snapshot for today', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-08',
+                'metric'        => 'tasks_status_open',
+                'value'         => 99,
+            ]);
+
+            Task::factory()->count(2)->create([
+                'user_id' => $this->user->id,
+                'status'  => TaskStatus::Open,
+            ]);
+
+            $result = $this->service->tasksOverTime($this->user->id, '7d');
+
+            $todayIndex = array_search('2026-03-08', $result->labels);
+            $openSeries = $result->series[0]['data'];
+            expect($openSeries[$todayIndex])->toBe(2);
+        });
+
+        it('uses live data for taskActivity today delta', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-07',
+                'metric'        => 'tasks_total',
+                'value'         => 5,
+            ]);
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-07',
+                'metric'        => 'tasks_status_done',
+                'value'         => 1,
+            ]);
+
+            Task::factory()->count(8)->create([
+                'user_id' => $this->user->id,
+                'status'  => TaskStatus::Open,
+            ]);
+            Task::factory()->count(3)->create([
+                'user_id' => $this->user->id,
+                'status'  => TaskStatus::Done,
+            ]);
+
+            $result = $this->service->taskActivity($this->user->id, '7d');
+
+            $todayIndex      = array_search('2026-03-08', $result->labels);
+            $createdSeries   = $result->series[0]['data'];
+            $completedSeries = $result->series[1]['data'];
+
+            // Total tasks = 11 (8 open + 3 done), yesterday total = 5, delta = 6
+            expect($createdSeries[$todayIndex])->toBe(6);
+            // Done tasks = 3, yesterday done = 1, delta = 2
+            expect($completedSeries[$todayIndex])->toBe(2);
+        });
+
+        it('does not affect historical snapshot data', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-05',
+                'metric'        => 'tasks_status_open',
+                'value'         => 10,
+            ]);
+
+            Task::factory()->count(2)->create([
+                'user_id' => $this->user->id,
+                'status'  => TaskStatus::Open,
+            ]);
+
+            $result = $this->service->tasksOverTime($this->user->id, '7d');
+
+            $historicalIndex = array_search('2026-03-05', $result->labels);
+            $openSeries     = $result->series[0]['data'];
+            expect($openSeries[$historicalIndex])->toBe(10);
         });
     });
 });
