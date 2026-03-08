@@ -63,6 +63,7 @@ function widgetConfigurator(config: WidgetConfiguratorConfig): Record<string, un
         showOnAnalytics: true,
         showOnDashboard: false,
         availableChartTypes: [] as ChartType[],
+        dataSources: config.dataSources,
 
         /**
          * Resets all form fields to their defaults and opens the configurator modal.

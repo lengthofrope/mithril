@@ -113,7 +113,7 @@
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                     >
                         <option value="">Select a data source...</option>
-                        <template x-for="source in $data._config.dataSources" :key="source.value">
+                        <template x-for="source in dataSources" :key="source.value">
                             <option :value="source.value" x-text="source.label"></option>
                         </template>
                     </select>
