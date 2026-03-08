@@ -147,12 +147,14 @@ describe('AnalyticsSnapshotService', function (): void {
         it('clamps negative deltas to zero', function (): void {
             AnalyticsSnapshot::factory()->create(['user_id' => $this->user->id, 'snapshot_date' => '2026-03-04', 'metric' => 'tasks_total', 'value' => 10]);
             AnalyticsSnapshot::factory()->create(['user_id' => $this->user->id, 'snapshot_date' => '2026-03-05', 'metric' => 'tasks_total', 'value' => 8]);
+            AnalyticsSnapshot::factory()->create(['user_id' => $this->user->id, 'snapshot_date' => '2026-03-06', 'metric' => 'tasks_total', 'value' => 12]);
 
             $result = $this->service->taskActivity($this->user->id, '7d');
 
             $createdSeries = $result->series[0]['data'];
             $dayIndex5     = array_search('2026-03-05', $result->labels);
 
+            expect($dayIndex5)->not->toBeFalse();
             expect($createdSeries[$dayIndex5])->toBe(0);
         });
 

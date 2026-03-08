@@ -71,6 +71,12 @@ function buildChartOptions(chartType: ChartType, data: AnyChartData): ApexCharts
         chart: {
             height: 300,
             background: 'transparent',
+            toolbar: {
+                show: false,
+            },
+            zoom: {
+                enabled: false,
+            },
         },
         theme: {
             mode,

@@ -78,7 +78,7 @@ class AnalyticsSnapshotService
             $colors[] = $meta['color'];
         }
 
-        return new TimeSeriesChartData(labels: $labels, series: $series, colors: $colors);
+        return $this->trimToDataRange(new TimeSeriesChartData(labels: $labels, series: $series, colors: $colors));
     }
 
     /**
@@ -105,14 +105,14 @@ class AnalyticsSnapshotService
         $created   = $this->computeDeltas($totals);
         $completed = $this->computeDeltas($doneTotal);
 
-        return new TimeSeriesChartData(
+        return $this->trimToDataRange(new TimeSeriesChartData(
             labels: $labels,
             series: [
                 ['name' => 'Created',   'data' => $created],
                 ['name' => 'Completed', 'data' => $completed],
             ],
             colors: ['#3b82f6', '#22c55e'],
-        );
+        ));
     }
 
     /**
@@ -141,7 +141,7 @@ class AnalyticsSnapshotService
             $colors[] = $meta['color'];
         }
 
-        return new TimeSeriesChartData(labels: $labels, series: $series, colors: $colors);
+        return $this->trimToDataRange(new TimeSeriesChartData(labels: $labels, series: $series, colors: $colors));
     }
 
     /**
@@ -229,6 +229,57 @@ class AnalyticsSnapshotService
         }
 
         return $deltas;
+    }
+
+    /**
+     * Trim a TimeSeriesChartData to only include dates that have at least one non-zero value across all series.
+     *
+     * Returns the original data unchanged if no data exists or if all dates have data.
+     *
+     * @param TimeSeriesChartData $data The full-range chart data.
+     * @return TimeSeriesChartData Trimmed chart data covering only dates with actual values.
+     */
+    private function trimToDataRange(TimeSeriesChartData $data): TimeSeriesChartData
+    {
+        if (empty($data->labels) || empty($data->series)) {
+            return $data;
+        }
+
+        $firstIndex = null;
+        $lastIndex  = null;
+        $labelCount = count($data->labels);
+
+        for ($i = 0; $i < $labelCount; $i++) {
+            foreach ($data->series as $series) {
+                if (($series['data'][$i] ?? 0) !== 0) {
+                    $firstIndex ??= $i;
+                    $lastIndex = $i;
+                }
+            }
+        }
+
+        if ($firstIndex === null) {
+            return $data;
+        }
+
+        $startIndex = max(0, $firstIndex - 1);
+
+        if ($startIndex === 0 && $lastIndex === $labelCount - 1) {
+            return $data;
+        }
+
+        $length = $lastIndex - $startIndex + 1;
+        $labels = array_slice($data->labels, $startIndex, $length);
+
+        $series = array_map(
+            fn (array $s): array => [
+                'name' => $s['name'],
+                'data' => array_values(array_slice($s['data'], $startIndex, $length)),
+            ],
+            $data->series,
+        );
+
+        return new TimeSeriesChartData(labels: $labels, series: $series, colors: $data->colors);
     }
 
     /**
