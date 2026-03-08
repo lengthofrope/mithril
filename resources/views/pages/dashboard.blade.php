@@ -223,7 +223,7 @@
 
     {{-- Analytics widgets --}}
     @if(isset($dashboardWidgets) && $dashboardWidgets->isNotEmpty())
-        <div class="mt-8" x-data="analyticsBoard({ context: 'dashboard', reorderEndpoint: '{{ route('reorder') }}', widgetEndpoint: '{{ route('analytics.widgets.store') }}' })">
+        <div class="mt-8" x-data="analyticsBoard({ context: 'dashboard', reorderEndpoint: '{{ route('reorder') }}', widgetEndpoint: '{{ route('analytics.widgets.store') }}' })" @delete-widget.window="deleteWidget($event.detail.widgetId)">
             <h2 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Analytics</h2>
             <div
                 x-ref="widgetGrid"

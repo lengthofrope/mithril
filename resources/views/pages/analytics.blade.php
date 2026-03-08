@@ -30,6 +30,7 @@
             reorderEndpoint: '{{ route('reorder') }}',
             widgetEndpoint: '{{ route('analytics.widgets.store') }}'
         })"
+        @delete-widget.window="deleteWidget($event.detail.widgetId)"
     >
         @if($widgets->isEmpty())
             <div class="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center dark:border-gray-700 dark:bg-white/[0.03]">
