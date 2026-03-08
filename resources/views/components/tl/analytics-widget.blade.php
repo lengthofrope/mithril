@@ -98,24 +98,31 @@
     </div>
 
     {{-- Chart area --}}
-    <div class="px-5 py-4">
-        {{-- Loading skeleton --}}
-        <div x-show="isLoading" class="flex h-64 items-center justify-center">
+    <div class="relative px-5 py-4">
+        {{-- Loading skeleton (overlays chart container) --}}
+        <div
+            x-show="isLoading"
+            class="absolute inset-0 z-10 flex items-center justify-center bg-white dark:bg-white/[0.03]"
+        >
             <svg class="h-8 w-8 animate-spin text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
             </svg>
         </div>
 
-        {{-- Error state --}}
-        <div x-show="hasError" x-cloak class="flex h-64 flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+        {{-- Error state (overlays chart container) --}}
+        <div
+            x-show="hasError"
+            x-cloak
+            class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white text-gray-400 dark:bg-white/[0.03] dark:text-gray-500"
+        >
             <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
             <p class="mt-2 text-sm">Failed to load chart data.</p>
         </div>
 
-        {{-- Chart container --}}
-        <div x-ref="chart" x-show="!isLoading && !hasError" class="min-h-64"></div>
+        {{-- Chart container (always visible so ApexCharts can measure dimensions) --}}
+        <div x-ref="chart" class="min-h-64"></div>
     </div>
 </div>

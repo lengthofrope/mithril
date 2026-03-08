@@ -33,6 +33,7 @@ interface AnalyticsChartComponent {
     updateChartType(newType: ChartType): Promise<void>;
     destroy(): void;
     $refs: { chart: HTMLElement };
+    $nextTick(callback: () => void): void;
 }
 
 /**
@@ -51,6 +52,7 @@ function buildChartOptions(chartType: ChartType, data: ChartData): ApexCharts.Ap
     const base: ApexCharts.ApexOptions = {
         colors: data.colors,
         chart: {
+            height: 300,
             background: 'transparent',
         },
         theme: {
@@ -177,15 +179,18 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
 
                 if (data === undefined) {
                     this.hasError = true;
+                    this.isLoading = false;
                     return;
                 }
 
-                this.renderChart(data);
+                this.isLoading = false;
+                this.$nextTick(() => {
+                    this.renderChart(data);
+                });
             } catch (err) {
                 const apiError = err as ApiError;
                 console.error('[analyticsChart] Data fetch failed:', apiError.message);
                 this.hasError = true;
-            } finally {
                 this.isLoading = false;
             }
         },
@@ -228,15 +233,18 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
 
                 if (data === undefined) {
                     this.hasError = true;
+                    this.isLoading = false;
                     return;
                 }
 
-                this.renderChart(data);
+                this.isLoading = false;
+                this.$nextTick(() => {
+                    this.renderChart(data);
+                });
             } catch (err) {
                 const apiError = err as ApiError;
                 console.error('[analyticsChart] Chart type update failed:', apiError.message);
                 this.hasError = true;
-            } finally {
                 this.isLoading = false;
             }
         },
