@@ -185,6 +185,8 @@ class TaskPageController extends Controller
 
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
+        $allCategories = TaskCategory::all();
+        $allGroups = TaskGroup::orderBySortOrder()->get();
 
         return view('pages.tasks.kanban', [
             'title' => 'Kanban',
@@ -193,6 +195,8 @@ class TaskPageController extends Controller
             'statuses' => TaskStatus::cases(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name])->all(),
+            'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => $c->id, 'label' => $c->name])->all(),
+            'groups' => $allGroups,
         ]);
     }
 

@@ -23,8 +23,8 @@
         />
     </div>
 
-    {{-- View switcher --}}
-    <div class="mb-4 flex items-center justify-end">
+    {{-- View switcher + new task --}}
+    <div class="mb-4 flex items-center justify-end gap-2">
         <a
             href="{{ route('tasks.index') }}"
             class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800"
@@ -36,6 +36,8 @@
             </svg>
             List view
         </a>
+
+        @include('partials.task-create-modal')
     </div>
 
     {{-- Kanban board --}}
