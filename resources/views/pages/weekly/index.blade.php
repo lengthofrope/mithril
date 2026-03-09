@@ -6,7 +6,7 @@
     {{-- Current week --}}
     <div class="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-        {{-- Auto-generated summary --}}
+        {{-- Auto-generated summary + charts --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
@@ -18,32 +18,70 @@
             </div>
 
             <div class="p-5">
-                @if($currentReflection->summary)
-                    <x-tl.markdown-content :content="$currentReflection->summary" />
-                @else
-                    <p class="text-sm text-gray-400 dark:text-gray-500 italic">
-                        No activity recorded yet this week.
-                    </p>
-                @endif
-
-                <div class="mt-4 grid grid-cols-3 gap-3">
-                    <div class="rounded-lg bg-green-50 p-3 text-center dark:bg-green-500/10">
-                        <p class="text-xl font-semibold text-green-700 dark:text-green-400">
+                {{-- Stat counters --}}
+                <div class="mb-5 grid grid-cols-5 gap-2">
+                    <div class="rounded-lg bg-green-50 p-2.5 text-center dark:bg-green-500/10">
+                        <p class="text-lg font-semibold text-green-700 dark:text-green-400">
                             {{ $weekStats['tasks_completed'] ?? 0 }}
                         </p>
-                        <p class="text-xs text-green-600 dark:text-green-500">Tasks completed</p>
+                        <p class="text-[0.65rem] leading-tight text-green-600 dark:text-green-500">Tasks done</p>
                     </div>
-                    <div class="rounded-lg bg-orange-50 p-3 text-center dark:bg-orange-500/10">
-                        <p class="text-xl font-semibold text-orange-700 dark:text-orange-400">
+                    <div class="rounded-lg bg-orange-50 p-2.5 text-center dark:bg-orange-500/10">
+                        <p class="text-lg font-semibold text-orange-700 dark:text-orange-400">
                             {{ $weekStats['tasks_open'] ?? 0 }}
                         </p>
-                        <p class="text-xs text-orange-600 dark:text-orange-500">Still open</p>
+                        <p class="text-[0.65rem] leading-tight text-orange-600 dark:text-orange-500">Still open</p>
                     </div>
-                    <div class="rounded-lg bg-blue-50 p-3 text-center dark:bg-blue-500/10">
-                        <p class="text-xl font-semibold text-blue-700 dark:text-blue-400">
+                    <div class="rounded-lg bg-blue-50 p-2.5 text-center dark:bg-blue-500/10">
+                        <p class="text-lg font-semibold text-blue-700 dark:text-blue-400">
                             {{ $weekStats['follow_ups_handled'] ?? 0 }}
                         </p>
-                        <p class="text-xs text-blue-600 dark:text-blue-500">Follow-ups handled</p>
+                        <p class="text-[0.65rem] leading-tight text-blue-600 dark:text-blue-500">Follow-ups</p>
+                    </div>
+                    <div class="rounded-lg bg-purple-50 p-2.5 text-center dark:bg-purple-500/10">
+                        <p class="text-lg font-semibold text-purple-700 dark:text-purple-400">
+                            {{ $weekStats['bilas_held'] ?? 0 }}
+                        </p>
+                        <p class="text-[0.65rem] leading-tight text-purple-600 dark:text-purple-500">Bilas</p>
+                    </div>
+                    <div class="rounded-lg bg-teal-50 p-2.5 text-center dark:bg-teal-500/10">
+                        <p class="text-lg font-semibold text-teal-700 dark:text-teal-400">
+                            {{ $weekStats['notes_written'] ?? 0 }}
+                        </p>
+                        <p class="text-[0.65rem] leading-tight text-teal-600 dark:text-teal-500">Notes</p>
+                    </div>
+                </div>
+
+                {{-- Charts --}}
+                <div class="grid grid-cols-2 gap-4">
+                    {{-- Task status donut --}}
+                    <div>
+                        <h3 class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Task status</h3>
+                        <div
+                            x-data="weeklyChart({
+                                chartType: 'donut',
+                                labels: @js($chartData['donut']['labels']),
+                                series: @js($chartData['donut']['series']),
+                                colors: @js($chartData['donut']['colors'])
+                            })"
+                        >
+                            <div x-ref="chart"></div>
+                        </div>
+                    </div>
+
+                    {{-- Activity breakdown bar --}}
+                    <div>
+                        <h3 class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Activity breakdown</h3>
+                        <div
+                            x-data="weeklyChart({
+                                chartType: 'bar_horizontal',
+                                labels: @js($chartData['bar']['labels']),
+                                series: @js($chartData['bar']['series']),
+                                colors: @js($chartData['bar']['colors'])
+                            })"
+                        >
+                            <div x-ref="chart"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -117,7 +155,7 @@
         <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">Past weeks</h2>
 
         {{-- Add past reflection --}}
-        <div x-data="{ open: false }">
+        <div x-data="{ open: false }" class="relative">
             <button
                 type="button"
                 x-on:click="open = !open"

@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Web;
 use App\Enums\TaskStatus;
 use App\Enums\FollowUpStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Bila;
 use App\Models\FollowUp;
+use App\Models\Note;
 use App\Models\Task;
 use App\Models\WeeklyReflection;
 use Illuminate\Contracts\View\View;
@@ -17,10 +19,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 /**
- * Handles weekly reflection CRUD and auto-generated summaries.
+ * Handles weekly reflection CRUD, auto-generated summaries, and chart data.
  */
 class WeeklyReflectionController extends Controller
 {
+    /**
+     * Colour palette consistent with the analytics dashboard.
+     *
+     * @var list<string>
+     */
+    private const PALETTE = [
+        '#22c55e', // green  — completed / done
+        '#f59e0b', // amber  — open / pending
+        '#3b82f6', // blue   — follow-ups
+        '#a855f7', // purple — bilas
+        '#14b8a6', // teal   — notes
+    ];
+
     /**
      * Display the weekly reflection index with the current week's summary and past entries.
      *
@@ -57,7 +72,10 @@ class WeeklyReflectionController extends Controller
                 'tasks_completed' => $summaryData['completed_tasks_count'],
                 'tasks_open' => $summaryData['open_tasks_count'],
                 'follow_ups_handled' => $summaryData['handled_follow_ups_count'],
+                'bilas_held' => $summaryData['bilas_held_count'],
+                'notes_written' => $summaryData['notes_written_count'],
             ],
+            'chartData' => $this->buildChartData($summaryData),
             'pastReflections' => $pastReflections,
         ]);
     }
@@ -123,7 +141,7 @@ class WeeklyReflectionController extends Controller
     }
 
     /**
-     * Build an auto-generated summary of this week's activity.
+     * Build weekly activity data including tasks, follow-ups, bilas, and notes.
      *
      * @param Carbon $weekStart
      * @param Carbon $weekEnd
@@ -151,6 +169,16 @@ class WeeklyReflectionController extends Controller
             ->whereNot('status', FollowUpStatus::Done->value)
             ->get();
 
+        $bilasHeld = Bila::query()
+            ->where('is_done', true)
+            ->whereBetween('updated_at', [$weekStart, $weekEnd])
+            ->with('teamMember')
+            ->get();
+
+        $notesWritten = Note::query()
+            ->whereBetween('created_at', [$weekStart, $weekEnd])
+            ->get();
+
         return [
             'completed_tasks' => $completedTasks,
             'completed_tasks_count' => $completedTasks->count(),
@@ -158,6 +186,44 @@ class WeeklyReflectionController extends Controller
             'handled_follow_ups' => $handledFollowUps,
             'handled_follow_ups_count' => $handledFollowUps->count(),
             'open_follow_ups_count' => $openFollowUps->count(),
+            'bilas_held' => $bilasHeld,
+            'bilas_held_count' => $bilasHeld->count(),
+            'notes_written_count' => $notesWritten->count(),
+        ];
+    }
+
+    /**
+     * Build chart data arrays for the donut and horizontal bar charts.
+     *
+     * @param array<string, mixed> $summaryData
+     * @return array<string, array<string, mixed>>
+     */
+    private function buildChartData(array $summaryData): array
+    {
+        return [
+            'donut' => [
+                'labels' => ['Completed', 'Open'],
+                'series' => [
+                    $summaryData['completed_tasks_count'],
+                    $summaryData['open_tasks_count'],
+                ],
+                'colors' => [self::PALETTE[0], self::PALETTE[1]],
+            ],
+            'bar' => [
+                'labels' => ['Tasks done', 'Follow-ups', 'Bilas', 'Notes'],
+                'series' => [
+                    $summaryData['completed_tasks_count'],
+                    $summaryData['handled_follow_ups_count'],
+                    $summaryData['bilas_held_count'],
+                    $summaryData['notes_written_count'],
+                ],
+                'colors' => [
+                    self::PALETTE[0],
+                    self::PALETTE[2],
+                    self::PALETTE[3],
+                    self::PALETTE[4],
+                ],
+            ],
         ];
     }
 
@@ -175,6 +241,8 @@ class WeeklyReflectionController extends Controller
         $open = $summaryData['open_tasks_count'];
         $followUps = $summaryData['handled_follow_ups_count'];
         $openFollowUps = $summaryData['open_follow_ups_count'];
+        $bilas = $summaryData['bilas_held_count'];
+        $notes = $summaryData['notes_written_count'];
 
         $lines[] = "**{$completed}** " . ($completed === 1 ? 'task' : 'tasks') . " completed this week.";
         $lines[] = "**{$open}** " . ($open === 1 ? 'task' : 'tasks') . " still open.";
@@ -182,6 +250,14 @@ class WeeklyReflectionController extends Controller
 
         if ($openFollowUps > 0) {
             $lines[] = "**{$openFollowUps}** follow-" . ($openFollowUps === 1 ? 'up' : 'ups') . " still pending.";
+        }
+
+        if ($bilas > 0) {
+            $lines[] = "**{$bilas}** " . ($bilas === 1 ? 'bila' : 'bilas') . " held.";
+        }
+
+        if ($notes > 0) {
+            $lines[] = "**{$notes}** " . ($notes === 1 ? 'note' : 'notes') . " written.";
         }
 
         if ($summaryData['completed_tasks']->isNotEmpty()) {
@@ -204,11 +280,24 @@ class WeeklyReflectionController extends Controller
             $lines[] = '### Follow-ups handled';
 
             foreach ($summaryData['handled_follow_ups'] as $followUp) {
-                $label = $followUp->subject;
+                $label = $followUp->description;
 
                 if ($followUp->teamMember) {
                     $label .= " ({$followUp->teamMember->name})";
                 }
+
+                $lines[] = "- {$label}";
+            }
+        }
+
+        if ($summaryData['bilas_held']->isNotEmpty()) {
+            $lines[] = '';
+            $lines[] = '### Bilas held';
+
+            foreach ($summaryData['bilas_held'] as $bila) {
+                $label = $bila->teamMember
+                    ? $bila->teamMember->name
+                    : 'Bila';
 
                 $lines[] = "- {$label}";
             }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Enums\FollowUpStatus;
 use App\Enums\TaskStatus;
+use App\Models\Bila;
 use App\Models\FollowUp;
+use App\Models\Note;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\WeeklyReflection;
@@ -52,7 +54,10 @@ test('weekly reflection index passes required view variables', function () {
         'tasks_completed',
         'tasks_open',
         'follow_ups_handled',
+        'bilas_held',
+        'notes_written',
     ]);
+    $response->assertViewHas('chartData');
 });
 
 test('weekly reflection weekStats includes completed tasks count this week', function () {
@@ -109,6 +114,101 @@ test('weekly reflection weekStats includes handled follow-ups count this week', 
 
     $weekStats = $response->viewData('weekStats');
     expect($weekStats['follow_ups_handled'])->toBe(1);
+});
+
+test('weekly reflection weekStats includes bilas held this week', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Bila::factory()->create([
+        'user_id' => $user->id,
+        'is_done' => true,
+        'updated_at' => now()->startOfWeek()->addDay(),
+    ]);
+    Bila::factory()->create([
+        'user_id' => $user->id,
+        'is_done' => true,
+        'updated_at' => now()->subWeeks(2),
+    ]);
+    Bila::factory()->create([
+        'user_id' => $user->id,
+        'is_done' => false,
+    ]);
+
+    $response = $this->actingAs($user)->get('/weekly');
+
+    $weekStats = $response->viewData('weekStats');
+    expect($weekStats['bilas_held'])->toBe(1);
+});
+
+test('weekly reflection weekStats includes notes written this week', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Note::factory()->create([
+        'user_id' => $user->id,
+        'created_at' => now()->startOfWeek()->addDay(),
+    ]);
+    Note::factory()->create([
+        'user_id' => $user->id,
+        'created_at' => now()->subWeeks(2),
+    ]);
+
+    $response = $this->actingAs($user)->get('/weekly');
+
+    $weekStats = $response->viewData('weekStats');
+    expect($weekStats['notes_written'])->toBe(1);
+});
+
+test('weekly reflection passes chart data with donut and bar datasets', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Task::factory()->count(3)->create([
+        'user_id' => $user->id,
+        'status' => TaskStatus::Done,
+        'updated_at' => now()->startOfWeek()->addDay(),
+    ]);
+    Task::factory()->count(2)->create([
+        'user_id' => $user->id,
+        'status' => TaskStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)->get('/weekly');
+
+    $chartData = $response->viewData('chartData');
+    expect($chartData)->toHaveKeys(['donut', 'bar']);
+
+    expect($chartData['donut'])->toHaveKeys(['labels', 'series', 'colors']);
+    expect($chartData['donut']['labels'])->toContain('Completed');
+    expect($chartData['donut']['series'])->toBeArray();
+
+    expect($chartData['bar'])->toHaveKeys(['labels', 'series', 'colors']);
+    expect($chartData['bar']['labels'])->toBeArray();
+    expect($chartData['bar']['series'])->toBeArray();
+});
+
+test('weekly reflection summary includes notes and bilas info', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Note::factory()->count(2)->create([
+        'user_id' => $user->id,
+        'created_at' => now()->startOfWeek()->addDay(),
+    ]);
+    Bila::factory()->create([
+        'user_id' => $user->id,
+        'is_done' => true,
+        'updated_at' => now()->startOfWeek()->addDay(),
+    ]);
+
+    $response = $this->actingAs($user)->get('/weekly');
+
+    $current = $response->viewData('currentReflection');
+    expect($current->summary)->toContain('2');
+    expect($current->summary)->toContain('note');
+    expect($current->summary)->toContain('1');
+    expect($current->summary)->toContain('bila');
 });
 
 test('weekly reflection shows current week reflection when it exists', function () {
