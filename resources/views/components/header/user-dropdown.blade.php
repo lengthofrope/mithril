@@ -13,8 +13,8 @@
         @click.prevent="toggleDropdown()"
         type="button"
     >
-        <span class="mr-3 flex items-center justify-center rounded-full h-11 w-11 bg-brand-500 text-white font-semibold text-sm flex-shrink-0">
-            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+        <span class="mr-3 flex-shrink-0">
+            <x-tl.user-avatar :user="auth()->user()" size="md" />
         </span>
 
        <span class="block mr-1 font-medium text-theme-sm">{{ auth()->user()->name }}</span>
@@ -63,7 +63,7 @@
                                 fill="currentColor"
                             />
                         </svg>',
-                        'path' => 'profile',
+                        'path' => '/profile',
                     ],
                     [
                         'text' => 'Settings',

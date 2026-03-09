@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\BilaPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\FollowUpPageController;
 use App\Http\Controllers\Web\NotePageController;
+use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\TaskPageController;
 use App\Http\Controllers\Web\TeamPageController;
@@ -62,6 +63,11 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/bilas/{bila}', [BilaPageController::class, 'show'])->name('bilas.show');
 
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
+
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
