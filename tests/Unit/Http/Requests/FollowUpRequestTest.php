@@ -38,14 +38,25 @@ test('follow up request passes with valid required data', function () {
     expect($validator->passes())->toBeTrue();
 });
 
-test('follow up request fails when description is missing', function () {
+test('follow up request fails when description is missing on store', function () {
+    $request = FollowUpRequest::create('/api/v1/follow-ups', 'POST');
     $validator = Validator::make(
         [],
-        (new FollowUpRequest())->rules()
+        $request->rules()
     );
 
     expect($validator->fails())->toBeTrue();
     expect($validator->errors()->has('description'))->toBeTrue();
+});
+
+test('follow up request allows missing description on update', function () {
+    $request = FollowUpRequest::create('/api/v1/follow-ups/1', 'PATCH');
+    $validator = Validator::make(
+        ['status' => 'open'],
+        $request->rules()
+    );
+
+    expect($validator->passes())->toBeTrue();
 });
 
 test('follow up request fails when status has invalid value', function () {

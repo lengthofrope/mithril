@@ -46,10 +46,12 @@ class FollowUpRequest extends FormRequest
      */
     public function rules(): array
     {
+        $descriptionRule = $this->isMethod('POST') ? 'required' : 'sometimes';
+
         return [
             'task_id' => ['nullable', 'integer', 'exists:tasks,id'],
             'team_member_id' => ['nullable', 'integer', 'exists:team_members,id'],
-            'description' => ['required', 'string'],
+            'description' => [$descriptionRule, 'string'],
             'waiting_on' => ['nullable', 'string', 'max:255'],
             'follow_up_date' => ['nullable', 'date'],
             'snoozed_until' => ['nullable', 'date'],

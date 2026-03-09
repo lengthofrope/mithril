@@ -180,7 +180,7 @@ test('team member passes member with related data to view', function () {
     Task::factory()->count(2)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
     FollowUp::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
     Bila::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
-    Agreement::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    Agreement::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id, 'follow_up_date' => null]);
 
     $response = $this->actingAs($user)->get("/teams/member/{$member->id}");
 

@@ -133,6 +133,44 @@ test('update response includes saved_at timestamp', function () {
     expect($response->json('saved_at'))->not->toBeNull();
 });
 
+test('update allows partial patch with only status', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Keep this',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)->patchJson("/api/v1/follow-ups/{$followUp->id}", [
+        'status' => FollowUpStatus::Done->value,
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    expect($response->json('data.status'))->toBe(FollowUpStatus::Done->value);
+    expect($response->json('data.description'))->toBe('Keep this');
+});
+
+test('update allows partial patch with only follow_up_date', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Original',
+    ]);
+
+    $response = $this->actingAs($user)->patchJson("/api/v1/follow-ups/{$followUp->id}", [
+        'follow_up_date' => '2026-04-15',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    expect($response->json('data.follow_up_date'))->toContain('2026-04-15');
+});
+
 test('update returns 404 when follow-up does not exist', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
