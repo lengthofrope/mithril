@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Bila;
+use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\Team;
@@ -185,6 +186,39 @@ test('kanban produces tasks sub-crumb', function () {
     expect($crumbs)->toHaveCount(3)
         ->and($crumbs[1])->toBe(['label' => 'Tasks', 'url' => route('tasks.index')])
         ->and($crumbs[2])->toBe(['label' => 'Kanban', 'url' => null]);
+});
+
+test('follow-up show without member produces three crumbs', function () {
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $this->user->id,
+        'team_member_id' => null,
+    ]);
+
+    $crumbs = $this->builder->forFollowUp($followUp)->build();
+
+    expect($crumbs)->toHaveCount(3)
+        ->and($crumbs[0])->toBe(['label' => 'Home', 'url' => '/'])
+        ->and($crumbs[1])->toBe(['label' => 'Follow-ups', 'url' => route('follow-ups.index')])
+        ->and($crumbs[2])->toBe(['label' => $followUp->description, 'url' => null]);
+});
+
+test('follow-up show with team member produces full hierarchy', function () {
+    $team = Team::factory()->create(['user_id' => $this->user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $this->user->id]);
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $this->user->id,
+        'team_member_id' => $member->id,
+    ]);
+    $followUp->load(['teamMember.team']);
+
+    $crumbs = $this->builder->forFollowUp($followUp)->build();
+
+    expect($crumbs)->toHaveCount(5)
+        ->and($crumbs[0])->toBe(['label' => 'Home', 'url' => '/'])
+        ->and($crumbs[1])->toBe(['label' => 'Teams', 'url' => route('teams.index')])
+        ->and($crumbs[2])->toBe(['label' => $team->name, 'url' => route('teams.show', $team)])
+        ->and($crumbs[3])->toBe(['label' => $member->name, 'url' => route('teams.member', $member)])
+        ->and($crumbs[4])->toBe(['label' => $followUp->description, 'url' => null]);
 });
 
 test('last crumb always has null url', function () {

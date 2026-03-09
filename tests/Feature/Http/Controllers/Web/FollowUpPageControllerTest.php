@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\FollowUpStatus;
 use App\Models\FollowUp;
+use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -364,4 +365,64 @@ test('destroy prevents deleting another users follow-up', function () {
 
     $response->assertNotFound();
     $this->assertDatabaseHas('follow_ups', ['id' => $followUp->id]);
+});
+
+test('follow-up index filters by team_id via team members', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create(['user_id' => $user->id]);
+    $teamB = Team::factory()->create(['user_id' => $user->id]);
+    $memberA = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamA->id]);
+    $memberB = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamB->id]);
+
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'team_member_id' => $memberA->id,
+        'follow_up_date' => now()->subDay(),
+        'status' => FollowUpStatus::Open,
+    ]);
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'team_member_id' => $memberB->id,
+        'follow_up_date' => now()->subDay(),
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)->get('/follow-ups?team_id=' . $teamA->id);
+
+    expect($response->viewData('sections')['overdue'])->toHaveCount(1);
+    expect($response->viewData('sections')['overdue']->first()->team_member_id)->toBe($memberA->id);
+});
+
+test('show returns 200 for authenticated user with own follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)->get("/follow-ups/{$followUp->id}");
+
+    $response->assertOk();
+    $response->assertViewIs('pages.follow-ups.show');
+    $response->assertViewHas('followUp');
+    $response->assertViewHas('breadcrumbs');
+    $response->assertViewHas('statusOptions');
+    $response->assertViewHas('teamOptions');
+    $response->assertViewHas('memberOptions');
+});
+
+test('show returns 404 for another users follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $otherUser->id,
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)->get("/follow-ups/{$followUp->id}");
+
+    $response->assertNotFound();
 });

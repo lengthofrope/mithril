@@ -108,10 +108,7 @@ class FollowUpPageController extends Controller
         return view('pages.follow-ups.show', [
             'title' => $followUp->description,
             'followUp' => $followUp,
-            'breadcrumbs' => (new BreadcrumbBuilder())
-                ->forPage('Follow-ups', route('follow-ups.index'))
-                ->addCrumb($followUp->description)
-                ->build(),
+            'breadcrumbs' => (new BreadcrumbBuilder())->forFollowUp($followUp)->build(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name, 'team_id' => (string) $m->team_id])->all(),
             'statusOptions' => array_map(

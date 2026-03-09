@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Bila;
+use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\Team;
@@ -75,6 +76,29 @@ class BreadcrumbBuilder
         }
 
         $this->crumbs[] = ['label' => $task->title, 'url' => null];
+
+        return $this;
+    }
+
+    /**
+     * Build breadcrumbs for a follow-up detail page.
+     *
+     * Routes through team/member hierarchy when the follow-up is linked to a member.
+     *
+     * @param FollowUp $followUp
+     * @return self
+     */
+    public function forFollowUp(FollowUp $followUp): self
+    {
+        $this->crumbs = [['label' => 'Home', 'url' => '/']];
+
+        if ($followUp->team_member_id && $followUp->teamMember) {
+            $this->addTeamMemberChain($followUp->teamMember, linked: true);
+        } else {
+            $this->crumbs[] = ['label' => 'Follow-ups', 'url' => route('follow-ups.index')];
+        }
+
+        $this->crumbs[] = ['label' => $followUp->description, 'url' => null];
 
         return $this;
     }

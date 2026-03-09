@@ -19,158 +19,46 @@
 @endphp
 
 <div
-    x-data="{
-        editing: false,
-        description: @js($followUp->description),
-        waitingOn: @js($followUp->waiting_on ?? ''),
-        followUpDate: @js($followUp->follow_up_date?->format('Y-m-d') ?? ''),
-        status: 'idle',
-        deleteConfirm: false,
-        async save() {
-            this.status = 'saving';
-            try {
-                const response = await fetch('/api/v1/follow-ups/{{ $followUp->id }}', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        description: this.description,
-                        waiting_on: this.waitingOn || null,
-                        follow_up_date: this.followUpDate || null,
-                    }),
-                });
-                if (response.ok) {
-                    this.status = 'saved';
-                    this.editing = false;
-                } else {
-                    this.status = 'error';
-                }
-            } catch {
-                this.status = 'error';
-            }
-        },
-    }"
     class="group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
     role="listitem"
 >
-    {{-- View mode --}}
-    <div x-show="!editing">
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0 flex-1 cursor-pointer" x-on:click="editing = true" title="Click to edit">
-                <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                    {{ $followUp->description }}
-                </p>
-
-                @if($followUp->waiting_on)
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Waiting on: <span class="font-medium text-gray-700 dark:text-gray-300">{{ $followUp->waiting_on }}</span>
-                    </p>
-                @endif
-            </div>
-
-            <div class="flex shrink-0 items-center gap-2">
-                <span class="text-xs font-medium {{ $dateColorClass }}">
-                    {{ $dateLabel }}
-                </span>
-
-                {{-- Edit button (visible on hover) --}}
-                <button
-                    type="button"
-                    x-on:click="editing = true"
-                    class="rounded p-1 text-gray-400 opacity-0 transition hover:text-gray-600 group-hover:opacity-100 dark:hover:text-gray-300"
-                    title="Edit"
-                >
-                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        @if($followUp->teamMember)
-            <p class="text-xs text-gray-400 dark:text-gray-500">
-                {{ $followUp->teamMember->name }}
+    <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                {{ $followUp->description }}
             </p>
-        @endif
-    </div>
 
-    {{-- Edit mode --}}
-    <div x-show="editing" x-cloak>
-        <div class="space-y-2">
-            <div>
-                <label for="edit-description-{{ $followUp->id }}" class="sr-only">Description</label>
-                <input
-                    id="edit-description-{{ $followUp->id }}"
-                    type="text"
-                    x-model="description"
-                    x-on:keydown.enter="save()"
-                    x-on:keydown.escape="editing = false"
-                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
-                    placeholder="Description…"
-                >
-            </div>
+            @if($followUp->waiting_on)
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Waiting on: <span class="font-medium text-gray-700 dark:text-gray-300">{{ $followUp->waiting_on }}</span>
+                </p>
+            @endif
 
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="edit-waiting-{{ $followUp->id }}" class="sr-only">Waiting on</label>
-                    <input
-                        id="edit-waiting-{{ $followUp->id }}"
-                        type="text"
-                        x-model="waitingOn"
-                        x-on:keydown.enter="save()"
-                        x-on:keydown.escape="editing = false"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
-                        placeholder="Waiting on…"
-                    >
-                </div>
+            @if($followUp->teamMember)
+                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    {{ $followUp->teamMember->name }}
+                </p>
+            @endif
+        </div>
 
-                <div>
-                    <label for="edit-date-{{ $followUp->id }}" class="sr-only">Follow-up date</label>
-                    <input
-                        id="edit-date-{{ $followUp->id }}"
-                        type="date"
-                        x-model="followUpDate"
-                        x-on:keydown.escape="editing = false"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
-                    >
-                </div>
-            </div>
+        <div class="flex shrink-0 items-center gap-2">
+            <span class="text-xs font-medium {{ $dateColorClass }}">
+                {{ $dateLabel }}
+            </span>
 
-            <div class="flex items-center gap-2">
-                <button
-                    type="button"
-                    x-on:click="save()"
-                    class="rounded-lg bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-700"
-                >
-                    Save
-                </button>
-                <button
-                    type="button"
-                    x-on:click="editing = false"
-                    class="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
-                >
-                    Cancel
-                </button>
-                <span
-                    x-show="status === 'saved'"
-                    x-transition
-                    class="text-xs text-green-600 dark:text-green-400"
-                >Saved</span>
-                <span
-                    x-show="status === 'error'"
-                    x-transition
-                    class="text-xs text-red-600 dark:text-red-400"
-                >Error saving</span>
-            </div>
+            <a
+                href="{{ route('follow-ups.show', $followUp->id) }}"
+                class="rounded p-1 text-gray-400 opacity-0 transition hover:text-blue-600 group-hover:opacity-100 dark:hover:text-blue-400"
+                title="Edit"
+            >
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </a>
         </div>
     </div>
 
-    {{-- Actions --}}
-    <div x-show="!editing" class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
         <form
             method="POST"
             action="{{ route('follow-ups.done', $followUp->id) }}"
@@ -247,49 +135,5 @@
                 Convert to task
             </button>
         </form>
-
-        {{-- Delete button --}}
-        <div x-data="{ confirmDelete: false }" class="relative ml-auto">
-            <button
-                type="button"
-                x-on:click="confirmDelete = true"
-                class="flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 opacity-0 transition hover:bg-red-100 group-hover:opacity-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                title="Delete"
-            >
-                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                Delete
-            </button>
-
-            <div
-                x-show="confirmDelete"
-                x-cloak
-                x-on:click.outside="confirmDelete = false"
-                x-on:keydown.escape.window="confirmDelete = false"
-                class="absolute right-0 top-full z-10 mt-1 w-52 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900"
-            >
-                <p class="mb-2 text-xs text-gray-600 dark:text-gray-400">Delete this follow-up?</p>
-                <div class="flex items-center gap-2">
-                    <form method="POST" action="{{ route('follow-ups.destroy', $followUp->id) }}" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button
-                            type="submit"
-                            class="rounded-lg bg-red-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-red-700"
-                        >
-                            Delete
-                        </button>
-                    </form>
-                    <button
-                        type="button"
-                        x-on:click="confirmDelete = false"
-                        class="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
