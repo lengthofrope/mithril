@@ -75,10 +75,11 @@ class DashboardController extends Controller
             ->count();
         $overdueFollowUpCount = FollowUp::overdue()->count();
         $todayFollowUpCount = FollowUp::dueToday()->count();
-        $upcomingBilaCount = Bila::whereBetween(
-            'scheduled_date',
-            [now()->startOfWeek()->toDateString(), now()->endOfWeek()->toDateString()]
-        )->count();
+        $upcomingBilaCount = Bila::where('is_done', false)
+            ->whereBetween(
+                'scheduled_date',
+                [now()->startOfWeek()->toDateString(), now()->endOfWeek()->toDateString()]
+            )->count();
 
         return [
             'open_tasks' => $openTaskCount,
@@ -107,7 +108,8 @@ class DashboardController extends Controller
             ->orderBy('follow_up_date')
             ->get();
 
-        $bilasToday = Bila::whereDate('scheduled_date', now()->toDateString())
+        $bilasToday = Bila::where('is_done', false)
+            ->whereDate('scheduled_date', now()->toDateString())
             ->with(['teamMember', 'prepItems'])
             ->orderBy('scheduled_date')
             ->get();

@@ -278,9 +278,16 @@
                     </button>
                 </form>
             @else
-                <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
-                    Done
-                </span>
+                <form method="POST" action="{{ route('bilas.undone', $bila->id) }}" class="inline">
+                    @csrf
+                    @method('PATCH')
+                    <button
+                        type="submit"
+                        class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20"
+                    >
+                        Undo done
+                    </button>
+                </form>
             @endif
 
             <form method="POST" action="{{ route('bilas.destroy', $bila->id) }}" class="inline">

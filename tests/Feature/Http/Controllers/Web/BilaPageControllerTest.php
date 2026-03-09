@@ -385,6 +385,48 @@ test('mark done prevents marking another users bila', function () {
     $response->assertNotFound();
 });
 
+test('undo done sets is_done back to false', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id, 'is_done' => true]);
+
+    $response = $this->actingAs($user)
+        ->patch("/bilas/{$bila->id}/undone");
+
+    $response->assertRedirect();
+    expect($bila->fresh()->is_done)->toBeFalse();
+});
+
+test('undo done returns JSON for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id, 'is_done' => true]);
+
+    $response = $this->actingAs($user)
+        ->patch(
+            "/bilas/{$bila->id}/undone",
+            [],
+            ['X-Requested-With' => 'XMLHttpRequest', 'Accept' => 'application/json'],
+        );
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    expect($bila->fresh()->is_done)->toBeFalse();
+});
+
+test('undo done prevents undoing another users bila', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $bila = Bila::factory()->create(['user_id' => $otherUser->id, 'is_done' => true]);
+
+    $response = $this->actingAs($user)->patch("/bilas/{$bila->id}/undone");
+
+    $response->assertNotFound();
+});
+
 test('bila index excludes done bilas from upcoming', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();

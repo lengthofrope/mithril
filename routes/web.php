@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/bilas', [BilaPageController::class, 'store'])->name('bilas.store');
     Route::get('/bilas/{bila}', [BilaPageController::class, 'show'])->name('bilas.show');
     Route::patch('/bilas/{bila}/done', [BilaPageController::class, 'markDone'])->name('bilas.done');
+    Route::patch('/bilas/{bila}/undone', [BilaPageController::class, 'undoDone'])->name('bilas.undone');
     Route::delete('/bilas/{bila}', [BilaPageController::class, 'destroy'])->name('bilas.destroy');
 
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');

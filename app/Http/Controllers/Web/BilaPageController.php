@@ -172,6 +172,24 @@ class BilaPageController extends Controller
     }
 
     /**
+     * Revert a bila's done status back to not done.
+     *
+     * @param Request $request
+     * @param Bila $bila
+     * @return JsonResponse|RedirectResponse
+     */
+    public function undoDone(Request $request, Bila $bila): JsonResponse|RedirectResponse
+    {
+        $bila->update(['is_done' => false]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back();
+    }
+
+    /**
      * Delete a bila and redirect to the index.
      *
      * @param Request $request

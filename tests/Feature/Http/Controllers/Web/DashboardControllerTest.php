@@ -178,6 +178,31 @@ test('todayBilas contains bilas scheduled for today', function () {
     expect($response->viewData('todayBilas'))->toHaveCount(1);
 });
 
+test('counters bilas_this_week excludes done bilas', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::create(2026, 3, 4, 10, 0, 0)); // Wednesday
+    $user = User::factory()->create();
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay(), 'is_done' => true]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('counters')['bilas_this_week'])->toBe(1);
+});
+
+test('todayBilas excludes done bilas', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->toDateString(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->toDateString(), 'is_done' => true]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('todayBilas'))->toHaveCount(1);
+});
+
 test('dashboard counters are zero when no data exists', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
