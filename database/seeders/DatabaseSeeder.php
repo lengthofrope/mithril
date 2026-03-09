@@ -22,6 +22,7 @@ use App\Models\TeamMember;
 use App\Models\User;
 use App\Models\WeeklyReflection;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Seeds the database with representative sample data for development and testing.
@@ -33,21 +34,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = $this->createAdminUser();
-        [$teamAlpha, $teamBeta] = $this->createTeams($user->id);
-        $membersAlpha = $this->createTeamAlphaMembers($teamAlpha, $user->id);
-        $membersBeta = $this->createTeamBetaMembers($teamBeta, $user->id);
-        $categories = $this->createTaskCategories($user->id);
-        $groups = $this->createTaskGroups($user->id);
+        $admin = $this->createAdminUser();
+        $bas = $this->createBasUser();
+
+        // Seed real team data for Bas
+        $basTeams = $this->createBasTeams($bas->id);
+        $basMembers = $this->createBasTeamMembers($basTeams, $bas->id);
+
+        // Seed sample data for admin user
+        [$teamAlpha, $teamBeta] = $this->createTeams($admin->id);
+        $membersAlpha = $this->createTeamAlphaMembers($teamAlpha, $admin->id);
+        $membersBeta = $this->createTeamBetaMembers($teamBeta, $admin->id);
+        $categories = $this->createTaskCategories($admin->id);
+        $groups = $this->createTaskGroups($admin->id);
 
         $allMembers = array_merge($membersAlpha, $membersBeta);
-        $tasks = $this->createTasks($teamAlpha, $teamBeta, $allMembers, $groups, $categories, $user->id);
+        $tasks = $this->createTasks($teamAlpha, $teamBeta, $allMembers, $groups, $categories, $admin->id);
 
-        $this->createFollowUps($tasks, $allMembers, $user->id);
-        $this->createBilasWithPrepItems($allMembers, $user->id);
-        $this->createAgreements($allMembers, $user->id);
-        $this->createNotes($teamAlpha, $teamBeta, $allMembers, $user->id);
-        $this->createWeeklyReflection($user->id);
+        $this->createFollowUps($tasks, $allMembers, $admin->id);
+        $this->createBilasWithPrepItems($allMembers, $admin->id);
+        $this->createAgreements($allMembers, $admin->id);
+        $this->createNotes($teamAlpha, $teamBeta, $allMembers, $admin->id);
+        $this->createWeeklyReflection($admin->id);
     }
 
     /**
@@ -62,8 +70,116 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@teamlead.test',
             'password' => 'password',
             'theme_preference' => 'dark',
-            'push_enabled' => false,
         ]);
+    }
+
+    /**
+     * Create the Bas de Kort user with real credentials.
+     *
+     * @return User
+     */
+    private function createBasUser(): User
+    {
+        $user = User::create([
+            'name' => 'Bas de Kort',
+            'email' => 'bas.dekort@proudnerds.com',
+            'password' => 'temporary',
+            'theme_preference' => 'dark',
+        ]);
+
+        DB::table('users')
+            ->where('id', $user->id)
+            ->update(['password' => '$2y$12$slEBkFyynKvLmvqHwRanKOpP42T1YxKmNsDIg9YgnrzNUUYU8JV/i']);
+
+        return $user->fresh();
+    }
+
+    /**
+     * Create teams for Bas de Kort.
+     *
+     * @param int $userId
+     * @return array<string, Team>
+     */
+    private function createBasTeams(int $userId): array
+    {
+        $teams = [];
+
+        $teams['houston'] = Team::create([
+            'user_id' => $userId,
+            'name' => 'Houston',
+            'description' => 'WordPress Team',
+            'color' => '#3b82f6',
+            'sort_order' => 1,
+        ]);
+
+        $teams['go_eve'] = Team::create([
+            'user_id' => $userId,
+            'name' => 'Go-EVE',
+            'description' => 'Platform team',
+            'color' => '#3bf761',
+            'sort_order' => 2,
+        ]);
+
+        $teams['cupertino'] = Team::create([
+            'user_id' => $userId,
+            'name' => 'Cupertino',
+            'description' => 'TYPO3 Team',
+            'color' => '#f9a124',
+            'sort_order' => 3,
+        ]);
+
+        $teams['facilitair'] = Team::create([
+            'user_id' => $userId,
+            'name' => 'Facilitair',
+            'description' => null,
+            'color' => '#fe2020',
+            'sort_order' => 4,
+        ]);
+
+        return $teams;
+    }
+
+    /**
+     * Create team members for Bas de Kort's teams.
+     *
+     * @param array<string, Team> $teams
+     * @param int $userId
+     * @return list<TeamMember>
+     */
+    private function createBasTeamMembers(array $teams, int $userId): array
+    {
+        $membersData = [
+            ['team' => 'houston', 'name' => 'Dionne Weijtens', 'role' => 'Medior Frontend Developer', 'email' => 'dionne.weijtens@proudnerds.com', 'sort_order' => 1],
+            ['team' => 'houston', 'name' => 'Merel van Raaij-Staal', 'role' => 'Senior Fullstack Developer', 'email' => 'merel.vanraaij-staal@proudnerds.com', 'sort_order' => 2],
+            ['team' => 'houston', 'name' => 'Bart Klein Reesink', 'role' => 'Medior Backend Developer', 'email' => 'bart.kleinreesink@proudnerds.com', 'sort_order' => 3],
+            ['team' => 'houston', 'name' => 'Robine Gussinklo', 'role' => 'Product Owner', 'email' => 'robine.gussinklo@proudnerds.com', 'sort_order' => 4],
+            ['team' => 'houston', 'name' => 'Kayleigh Wijnsouw', 'role' => 'Junior tester', 'email' => 'kayleigh.wijnsouw@proudnerds.com', 'sort_order' => 5],
+            ['team' => 'cupertino', 'name' => 'Emile Blume', 'role' => 'Senior Frontend Developer', 'email' => 'emile.blume@proudnerds.com', 'sort_order' => 6],
+            ['team' => 'cupertino', 'name' => 'Jacco van der Post', 'role' => 'Senior Backend Developer', 'email' => 'jacco.vanderpost@proudnerds.com', 'sort_order' => 7],
+            ['team' => 'facilitair', 'name' => 'Bouchra El Kamili', 'role' => 'Facilitair', 'email' => 'bouchra.elkamili@proudnerds.com', 'sort_order' => 8],
+            ['team' => 'go_eve', 'name' => 'Lieske Merkus-Bakker', 'role' => 'Product Owner', 'email' => 'lieske.merkus-bakker@proudnerds.com', 'sort_order' => 9],
+            ['team' => 'go_eve', 'name' => 'Lex Raijmakers', 'role' => 'Senior Frontend Developer', 'email' => 'lex.raijmakers@proudnerds.com', 'sort_order' => 10],
+            ['team' => 'go_eve', 'name' => 'Michele Ongaro', 'role' => 'Senior Backend Developer', 'email' => 'michele.ongaro@proudnerds.com', 'sort_order' => 11],
+            ['team' => 'go_eve', 'name' => 'Tamara Moerkens', 'role' => 'Medior Frontend Developer', 'email' => 'tamara.moerkens@proudnerds.com', 'sort_order' => 12],
+            ['team' => 'go_eve', 'name' => 'Luuk Marschalk', 'role' => 'Medior Frontend Developer', 'email' => 'luuk.marschalk@proudnerds.com', 'sort_order' => 13],
+            ['team' => 'go_eve', 'name' => 'Marco Beijen', 'role' => 'Medior Backend Developer', 'email' => 'marco.beijen@proudnerds.com', 'sort_order' => 14],
+            ['team' => 'go_eve', 'name' => 'Tina Thalis', 'role' => 'Senior Test Engineer', 'email' => 'tina.thalis@proudnerds.com', 'sort_order' => 15],
+            ['team' => 'go_eve', 'name' => 'Gijsbert van Everdingen', 'role' => 'Medior Frontend Developer', 'email' => 'gijsbert.vaneverdingen@proudnerds.com', 'sort_order' => 16],
+        ];
+
+        return array_map(
+            fn (array $data) => TeamMember::create([
+                'user_id' => $userId,
+                'team_id' => $teams[$data['team']]->id,
+                'name' => $data['name'],
+                'role' => $data['role'],
+                'email' => $data['email'],
+                'status' => MemberStatus::Available,
+                'bila_interval_days' => 14,
+                'sort_order' => $data['sort_order'],
+            ]),
+            $membersData,
+        );
     }
 
     /**
