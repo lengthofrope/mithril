@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Searchable;
+use App\Observers\AgreementObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
+#[ObservedBy(AgreementObserver::class)]
 class Agreement extends Model
 {
     use BelongsToUser;
