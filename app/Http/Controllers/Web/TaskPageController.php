@@ -12,6 +12,7 @@ use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -138,7 +139,7 @@ class TaskPageController extends Controller
      */
     public function show(Task $task): View
     {
-        $task->load(['teamMember', 'taskGroup', 'taskCategory', 'team']);
+        $task->load(['teamMember.team', 'taskGroup', 'taskCategory', 'team']);
 
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
@@ -148,6 +149,7 @@ class TaskPageController extends Controller
         return view('pages.tasks.show', [
             'title' => $task->title,
             'task' => $task,
+            'breadcrumbs' => (new BreadcrumbBuilder())->forTask($task)->build(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name, 'team_id' => (string) $m->team_id])->all(),
             'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => (string) $c->id, 'label' => $c->name])->all(),
@@ -190,6 +192,7 @@ class TaskPageController extends Controller
 
         return view('pages.tasks.kanban', [
             'title' => 'Kanban',
+            'breadcrumbs' => (new BreadcrumbBuilder())->forPage('Tasks', route('tasks.index'))->addCrumb('Kanban')->build(),
             'tasks' => $tasks,
             'filters' => $filters,
             'statuses' => TaskStatus::cases(),

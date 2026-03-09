@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="{{ $task->title }}" />
+    <x-common.page-breadcrumb :items="$breadcrumbs" />
 
     @php
         $taskEndpoint = '/api/v1/tasks/' . $task->id;

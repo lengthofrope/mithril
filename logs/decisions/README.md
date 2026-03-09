@@ -7,3 +7,4 @@
 | 003 | backend, routing, api | Prefix all API route names with `api.` | 4 | Accepted | 2026-03-07 |
 | 004 | frontend, backend, apexcharts, analytics, widgets | Analytics dashboard implementation | Analytics | Accepted | 2026-03-08 |
 | 005 | backend, frontend, analytics, snapshots, line-charts | Time-series line charts via daily analytics snapshots | Analytics | Accepted | 2026-03-08 |
+| 006 | frontend, backend, navigation, breadcrumbs | Contextual hierarchical breadcrumbs | UI | Accepted | 2026-03-09 |

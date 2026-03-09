@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Tasks — Kanban" />
+    <x-common.page-breadcrumb :items="$breadcrumbs" />
 
     {{-- Filter bar --}}
     <div class="mb-6">

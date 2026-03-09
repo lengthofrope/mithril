@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Bila — {{ isset($bila->member) ? $bila->member->name : 'Details' }}" />
+    <x-common.page-breadcrumb :items="$breadcrumbs" />
 
     {{-- Member info + date --}}
     <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">

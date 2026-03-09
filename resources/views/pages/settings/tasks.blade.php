@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Task Settings" />
+    <x-common.page-breadcrumb :items="$breadcrumbs" />
 
     <div class="space-y-6 max-w-2xl">
 

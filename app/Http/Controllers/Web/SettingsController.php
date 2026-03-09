@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
+use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -84,6 +85,7 @@ class SettingsController extends Controller
     {
         return view('pages.settings.tasks', [
             'title' => 'Task Settings',
+            'breadcrumbs' => (new BreadcrumbBuilder())->forPage('Settings', route('settings.index'))->addCrumb('Task Settings')->build(),
             'categories' => TaskCategory::orderBySortOrder()->get(),
             'groups' => TaskGroup::orderBySortOrder()->get(),
         ]);

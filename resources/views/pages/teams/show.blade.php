@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="{{ $team->name }}" />
+    <x-common.page-breadcrumb :items="$breadcrumbs" />
 
     {{-- Team header --}}
     <div

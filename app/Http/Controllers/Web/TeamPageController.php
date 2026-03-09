@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Note;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -57,6 +58,7 @@ class TeamPageController extends Controller
         return view('pages.teams.show', [
             'title' => $team->name,
             'team' => $team,
+            'breadcrumbs' => (new BreadcrumbBuilder())->forTeam($team)->build(),
         ]);
     }
 
@@ -86,6 +88,7 @@ class TeamPageController extends Controller
         return view('pages.teams.member', [
             'title' => $teamMember->name,
             'member' => $teamMember,
+            'breadcrumbs' => (new BreadcrumbBuilder())->forTeamMember($teamMember)->build(),
             'memberTasks' => $teamMember->tasks,
             'memberFollowUps' => $teamMember->followUps,
             'memberBilas' => $teamMember->bilas,

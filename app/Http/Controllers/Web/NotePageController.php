@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Note;
 use App\Models\NoteTag;
+use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -64,11 +65,12 @@ class NotePageController extends Controller
      */
     public function show(Note $note): View
     {
-        $note->load(['tags', 'teamMember', 'team']);
+        $note->load(['tags', 'teamMember.team', 'team']);
 
         return view('pages.notes.show', [
-            'title' => 'Note',
+            'title' => $note->title,
             'note' => $note,
+            'breadcrumbs' => (new BreadcrumbBuilder())->forNote($note)->build(),
         ]);
     }
 

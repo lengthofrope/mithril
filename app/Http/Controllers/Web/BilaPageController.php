@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Bila;
 use App\Models\BilaPrepItem;
+use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -75,7 +76,7 @@ class BilaPageController extends Controller
      */
     public function show(Bila $bila): View
     {
-        $bila->load(['teamMember', 'prepItems']);
+        $bila->load(['teamMember.team', 'prepItems']);
         $bila->setRelation('member', $bila->teamMember);
 
         $previousBila = Bila::query()
@@ -93,6 +94,7 @@ class BilaPageController extends Controller
         return view('pages.bilas.show', [
             'title' => 'Bila — ' . $bila->teamMember->name,
             'bila' => $bila,
+            'breadcrumbs' => (new BreadcrumbBuilder())->forBila($bila)->build(),
             'previousBila' => $previousBila,
             'nextBila' => $nextBila,
         ]);
