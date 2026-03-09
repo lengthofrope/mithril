@@ -10,6 +10,7 @@ use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -32,11 +33,16 @@ class FollowUpPageController extends Controller
      */
     public function index(Request $request): View
     {
+        $teamId = $request->get('team_id');
         $teamMemberId = $request->get('team_member_id');
-
         $search = $request->get('search');
 
+        $memberIdsForTeam = $teamId
+            ? TeamMember::where('team_id', $teamId)->pluck('id')
+            : null;
+
         $baseQuery = fn () => FollowUp::query()
+            ->when($memberIdsForTeam, fn ($q) => $q->whereIn('team_member_id', $memberIdsForTeam))
             ->when($teamMemberId, fn ($q) => $q->where('team_member_id', $teamMemberId))
             ->when($search, fn ($q) => $q->search($search))
             ->with(['teamMember', 'task']);
@@ -83,6 +89,35 @@ class FollowUpPageController extends Controller
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
             'selectedTeamMemberId' => $teamMemberId,
+        ]);
+    }
+
+    /**
+     * Display the follow-up detail/edit page.
+     *
+     * @param FollowUp $followUp
+     * @return View
+     */
+    public function show(FollowUp $followUp): View
+    {
+        $followUp->load(['teamMember.team', 'task']);
+
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
+
+        return view('pages.follow-ups.show', [
+            'title' => $followUp->description,
+            'followUp' => $followUp,
+            'breadcrumbs' => (new BreadcrumbBuilder())
+                ->forPage('Follow-ups', route('follow-ups.index'))
+                ->addCrumb($followUp->description)
+                ->build(),
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name, 'team_id' => (string) $m->team_id])->all(),
+            'statusOptions' => array_map(
+                fn (FollowUpStatus $s) => ['value' => $s->value, 'label' => ucfirst($s->value)],
+                FollowUpStatus::cases(),
+            ),
         ]);
     }
 

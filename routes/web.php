@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/follow-ups', [FollowUpPageController::class, 'index'])->name('follow-ups.index');
     Route::post('/follow-ups', [FollowUpPageController::class, 'store'])->name('follow-ups.store');
+    Route::get('/follow-ups/{followUp}', [FollowUpPageController::class, 'show'])->name('follow-ups.show');
     Route::patch('/follow-ups/{followUp}/done', [FollowUpPageController::class, 'markDone'])->name('follow-ups.done');
     Route::patch('/follow-ups/{followUp}/snooze', [FollowUpPageController::class, 'snooze'])->name('follow-ups.snooze');
     Route::post('/follow-ups/{followUp}/convert', [FollowUpPageController::class, 'convertToTask'])->name('follow-ups.convert');
