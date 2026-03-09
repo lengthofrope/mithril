@@ -85,6 +85,8 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/bilas/{bila}', [BilaPageController::class, 'update'])->name('bilas.update');
 
     Route::patch('/members/{teamMember}', [TeamPageController::class, 'updateMember'])->name('members.update');
+    Route::post('/members/{teamMember}/avatar', [TeamPageController::class, 'uploadMemberAvatar'])->name('members.avatar.upload');
+    Route::delete('/members/{teamMember}/avatar', [TeamPageController::class, 'deleteMemberAvatar'])->name('members.avatar.delete');
 
     Route::patch('/weekly/{weeklyReflection}', [WeeklyReflectionController::class, 'update'])->name('weekly.update');
 

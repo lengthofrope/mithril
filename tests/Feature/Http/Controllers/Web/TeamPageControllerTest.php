@@ -11,6 +11,8 @@ use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -203,4 +205,129 @@ test('team member returns 404 for non-existent member', function () {
     $response = $this->actingAs($user)->get('/teams/member/9999');
 
     $response->assertNotFound();
+});
+
+test('upload member avatar stores file and updates avatar_path', function () {
+    /** @var \Tests\TestCase $this */
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    $file = UploadedFile::fake()->image('photo.jpg', 200, 200);
+
+    $response = $this->actingAs($user)->post(
+        route('members.avatar.upload', $member),
+        ['avatar' => $file]
+    );
+
+    $response->assertRedirect();
+
+    $member->refresh();
+    expect($member->avatar_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($member->avatar_path);
+});
+
+test('upload member avatar deletes previous avatar file', function () {
+    /** @var \Tests\TestCase $this */
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'avatar_path' => 'member-avatars/old.jpg']);
+
+    Storage::disk('public')->put('member-avatars/old.jpg', 'old content');
+
+    $file = UploadedFile::fake()->image('new-photo.jpg', 200, 200);
+
+    $this->actingAs($user)->post(
+        route('members.avatar.upload', $member),
+        ['avatar' => $file]
+    );
+
+    Storage::disk('public')->assertMissing('member-avatars/old.jpg');
+
+    $member->refresh();
+    expect($member->avatar_path)->not->toBe('member-avatars/old.jpg');
+});
+
+test('upload member avatar validates file is an image', function () {
+    /** @var \Tests\TestCase $this */
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    $file = UploadedFile::fake()->create('document.pdf', 500, 'application/pdf');
+
+    $response = $this->actingAs($user)->post(
+        route('members.avatar.upload', $member),
+        ['avatar' => $file]
+    );
+
+    $response->assertSessionHasErrors('avatar');
+});
+
+test('upload member avatar validates max file size', function () {
+    /** @var \Tests\TestCase $this */
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    $file = UploadedFile::fake()->image('huge.jpg')->size(3000);
+
+    $response = $this->actingAs($user)->post(
+        route('members.avatar.upload', $member),
+        ['avatar' => $file]
+    );
+
+    $response->assertSessionHasErrors('avatar');
+});
+
+test('upload member avatar requires a file', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->post(
+        route('members.avatar.upload', $member),
+        []
+    );
+
+    $response->assertSessionHasErrors('avatar');
+});
+
+test('delete member avatar removes file and clears avatar_path', function () {
+    /** @var \Tests\TestCase $this */
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'avatar_path' => 'member-avatars/photo.jpg']);
+
+    Storage::disk('public')->put('member-avatars/photo.jpg', 'content');
+
+    $response = $this->actingAs($user)->delete(
+        route('members.avatar.delete', $member)
+    );
+
+    $response->assertRedirect();
+
+    $member->refresh();
+    expect($member->avatar_path)->toBeNull();
+    Storage::disk('public')->assertMissing('member-avatars/photo.jpg');
+});
+
+test('delete member avatar is a no-op when no avatar exists', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'avatar_path' => null]);
+
+    $response = $this->actingAs($user)->delete(
+        route('members.avatar.delete', $member)
+    );
+
+    $response->assertRedirect();
+
+    $member->refresh();
+    expect($member->avatar_path)->toBeNull();
 });

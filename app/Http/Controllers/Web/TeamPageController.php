@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Handles team and team member page rendering.
@@ -182,6 +183,46 @@ class TeamPageController extends Controller
         $teamMember->delete();
 
         return redirect()->route('teams.show', $teamId);
+    }
+
+    /**
+     * Upload and store a new avatar for a team member.
+     *
+     * @param Request $request
+     * @param TeamMember $teamMember
+     * @return RedirectResponse
+     */
+    public function uploadMemberAvatar(Request $request, TeamMember $teamMember): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'max:2048'],
+        ]);
+
+        if ($teamMember->avatar_path) {
+            Storage::disk('public')->delete($teamMember->avatar_path);
+        }
+
+        $path = $request->file('avatar')->store('member-avatars', 'public');
+
+        $teamMember->update(['avatar_path' => $path]);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Remove the avatar for a team member.
+     *
+     * @param TeamMember $teamMember
+     * @return RedirectResponse
+     */
+    public function deleteMemberAvatar(TeamMember $teamMember): RedirectResponse
+    {
+        if ($teamMember->avatar_path) {
+            Storage::disk('public')->delete($teamMember->avatar_path);
+            $teamMember->update(['avatar_path' => null]);
+        }
+
+        return redirect()->back();
     }
 
     /**

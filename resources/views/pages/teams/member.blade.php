@@ -21,12 +21,89 @@
             $statusLabel = $statusLabelMap[$statusKey] ?? ucfirst($statusKey);
         @endphp
 
-        <div class="relative shrink-0">
-            <x-tl.team-member-avatar :member="$member" size="xl" />
+        <div class="relative shrink-0" x-data="{ showAvatarMenu: false }">
+            <button
+                type="button"
+                class="group relative rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                x-on:click="showAvatarMenu = !showAvatarMenu"
+                title="Change profile photo"
+            >
+                <x-tl.team-member-avatar :member="$member" size="xl" />
+                <span class="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition group-hover:bg-black/40">
+                    <svg class="h-5 w-5 text-white opacity-0 transition group-hover:opacity-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </span>
+            </button>
             <span
                 class="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white dark:border-gray-900 {{ $statusColor }}"
                 title="{{ $statusLabel }}"
             ></span>
+
+            {{-- Avatar upload/remove dropdown --}}
+            <div
+                x-show="showAvatarMenu"
+                x-cloak
+                x-on:click.outside="showAvatarMenu = false"
+                x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="absolute left-0 top-full z-10 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900"
+            >
+                <form
+                    method="POST"
+                    action="{{ route('members.avatar.upload', $member) }}"
+                    enctype="multipart/form-data"
+                >
+                    @csrf
+                    <label
+                        for="member-avatar-upload"
+                        class="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Upload photo
+                    </label>
+                    <input
+                        id="member-avatar-upload"
+                        type="file"
+                        name="avatar"
+                        accept="image/*"
+                        required
+                        class="sr-only"
+                        x-data
+                        x-on:change="$el.closest('form').submit()"
+                    >
+                </form>
+
+                @if($member->avatar_path)
+                    <form method="POST" action="{{ route('members.avatar.delete', $member) }}">
+                        @csrf
+                        @method('DELETE')
+                        <button
+                            type="submit"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                        >
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            Remove photo
+                        </button>
+                    </form>
+                @endif
+
+                <p class="border-t border-gray-100 px-4 py-2 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+                    JPG, PNG or GIF. Max 2MB.
+                </p>
+            </div>
+
+            @error('avatar')
+                <p class="absolute left-0 top-full mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
         </div>
 
         <div class="flex-1 min-w-0">
