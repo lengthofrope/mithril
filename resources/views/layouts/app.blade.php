@@ -145,10 +145,18 @@
     }
 
     document.addEventListener('click', function(e) {
-        var link = e.target.closest('a');
-        if (!link) return;
-        sessionStorage.setItem('click-x', (e.clientX / window.innerWidth * 100).toFixed(1) + '%');
-        sessionStorage.setItem('click-y', (e.clientY / window.innerHeight * 100).toFixed(1) + '%');
+        var x = e.clientX;
+        var y = e.clientY;
+        if (!x && !y) {
+            var btn = e.target.closest('button, a, [type="submit"]');
+            if (btn) {
+                var rect = btn.getBoundingClientRect();
+                x = rect.left + rect.width / 2;
+                y = rect.top + rect.height / 2;
+            }
+        }
+        sessionStorage.setItem('click-x', (x / window.innerWidth * 100).toFixed(1) + '%');
+        sessionStorage.setItem('click-y', (y / window.innerHeight * 100).toFixed(1) + '%');
     });
 
     window.addEventListener('pagereveal', function(e) {

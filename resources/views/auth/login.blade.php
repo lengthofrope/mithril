@@ -126,4 +126,29 @@
 
 </body>
 
+<script>
+    document.addEventListener('click', function(e) {
+        var x = e.clientX;
+        var y = e.clientY;
+        if (!x && !y) {
+            var btn = e.target.closest('button, a, [type="submit"]');
+            if (btn) {
+                var rect = btn.getBoundingClientRect();
+                x = rect.left + rect.width / 2;
+                y = rect.top + rect.height / 2;
+            }
+        }
+        sessionStorage.setItem('click-x', (x / window.innerWidth * 100).toFixed(1) + '%');
+        sessionStorage.setItem('click-y', (y / window.innerHeight * 100).toFixed(1) + '%');
+    });
+
+    window.addEventListener('pagereveal', function(e) {
+        if (!e.viewTransition) return;
+        var x = sessionStorage.getItem('click-x') || '50%';
+        var y = sessionStorage.getItem('click-y') || '50%';
+        document.documentElement.style.setProperty('--click-x', x);
+        document.documentElement.style.setProperty('--click-y', y);
+    });
+</script>
+
 </html>
