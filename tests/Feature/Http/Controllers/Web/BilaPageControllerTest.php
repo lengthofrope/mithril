@@ -325,3 +325,86 @@ test('destroy prep item returns JSON response', function () {
     $response->assertJson(['success' => true]);
     $this->assertDatabaseMissing('bila_prep_items', ['id' => $prepItem->id]);
 });
+
+test('bila index filters by team_id through team member relationship', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create(['user_id' => $user->id]);
+    $teamB = Team::factory()->create(['user_id' => $user->id]);
+    $memberA = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamA->id]);
+    $memberB = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamB->id]);
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay(), 'team_member_id' => $memberA->id]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDays(2), 'team_member_id' => $memberB->id]);
+
+    $response = $this->actingAs($user)->get('/bilas?team_id=' . $teamA->id);
+
+    expect($response->viewData('upcomingBilas'))->toHaveCount(1);
+    expect($response->viewData('upcomingBilas')->first()->team_member_id)->toBe($memberA->id);
+});
+
+test('mark done sets is_done to true', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id, 'is_done' => false]);
+
+    $response = $this->actingAs($user)
+        ->patch("/bilas/{$bila->id}/done");
+
+    $response->assertRedirect();
+    expect($bila->fresh()->is_done)->toBeTrue();
+});
+
+test('mark done returns JSON for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id, 'is_done' => false]);
+
+    $response = $this->actingAs($user)
+        ->patch(
+            "/bilas/{$bila->id}/done",
+            [],
+            ['X-Requested-With' => 'XMLHttpRequest', 'Accept' => 'application/json'],
+        );
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    expect($bila->fresh()->is_done)->toBeTrue();
+});
+
+test('mark done prevents marking another users bila', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $bila = Bila::factory()->create(['user_id' => $otherUser->id]);
+
+    $response = $this->actingAs($user)->patch("/bilas/{$bila->id}/done");
+
+    $response->assertNotFound();
+});
+
+test('bila index excludes done bilas from upcoming', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDays(2), 'is_done' => true]);
+
+    $response = $this->actingAs($user)->get('/bilas');
+
+    expect($response->viewData('upcomingBilas'))->toHaveCount(1);
+});
+
+test('bila index shows done bilas in past section', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay(), 'is_done' => true]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->subDay()]);
+
+    $response = $this->actingAs($user)->get('/bilas');
+
+    expect($response->viewData('pastBilas'))->toHaveCount(2);
+});

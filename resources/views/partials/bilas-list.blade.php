@@ -72,6 +72,12 @@
                         </div>
                     @endif
 
+                    @if($bila->is_done)
+                        <span class="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
+                            Done
+                        </span>
+                    @endif
+
                     <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">
                         {{ $bila->scheduled_date->format('d M Y') }}
                     </span>

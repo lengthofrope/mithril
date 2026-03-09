@@ -106,6 +106,7 @@ interface Bila {
     team_member_id: number;
     scheduled_date: string;
     notes: string | null;
+    is_done: boolean;
     created_at: string;
     updated_at: string;
 }

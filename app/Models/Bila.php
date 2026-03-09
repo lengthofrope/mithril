@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $team_member_id
  * @property \Illuminate\Support\Carbon $scheduled_date
  * @property string|null $notes
+ * @property bool $is_done
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -35,6 +36,7 @@ class Bila extends Model
         'team_member_id',
         'scheduled_date',
         'notes',
+        'is_done',
     ];
 
     /**
@@ -46,6 +48,7 @@ class Bila extends Model
     {
         return [
             'scheduled_date' => 'date',
+            'is_done' => 'boolean',
         ];
     }
 

@@ -265,7 +265,24 @@
             &larr; Back to bilas
         </a>
 
-        <div class="ml-auto">
+        <div class="ml-auto flex items-center gap-2">
+            @if(!$bila->is_done)
+                <form method="POST" action="{{ route('bilas.done', $bila->id) }}" class="inline">
+                    @csrf
+                    @method('PATCH')
+                    <button
+                        type="submit"
+                        class="rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-100 dark:border-green-700/50 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20"
+                    >
+                        Mark as done
+                    </button>
+                </form>
+            @else
+                <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
+                    Done
+                </span>
+            @endif
+
             <form method="POST" action="{{ route('bilas.destroy', $bila->id) }}" class="inline">
                 @csrf
                 @method('DELETE')

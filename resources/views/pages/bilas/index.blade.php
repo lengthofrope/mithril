@@ -9,6 +9,7 @@
             :endpoint="route('bilas.index')"
             results-selector="#bilas-results"
             :filters="[
+                ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
                 ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
             ]"
         />

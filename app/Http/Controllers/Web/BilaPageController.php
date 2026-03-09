@@ -35,19 +35,25 @@ class BilaPageController extends Controller
     public function index(Request $request): View
     {
         $teamMemberId = $request->get('team_member_id');
+        $teamId = $request->get('team_id');
 
         $baseQuery = fn () => Bila::query()
             ->when($teamMemberId, fn ($q) => $q->where('team_member_id', $teamMemberId))
+            ->when($teamId, fn ($q) => $q->whereHas('teamMember', fn ($sub) => $sub->where('team_id', $teamId)))
             ->with(['teamMember', 'prepItems']);
 
         $upcomingBilas = $baseQuery()
+            ->where('is_done', false)
             ->whereDate('scheduled_date', '>=', now()->toDateString())
             ->orderBy('scheduled_date')
             ->get()
             ->each(fn (Bila $bila) => $bila->setRelation('member', $bila->teamMember));
 
         $pastBilas = $baseQuery()
-            ->whereDate('scheduled_date', '<', now()->toDateString())
+            ->where(fn ($q) => $q
+                ->where('is_done', true)
+                ->orWhereDate('scheduled_date', '<', now()->toDateString())
+            )
             ->orderByDesc('scheduled_date')
             ->get()
             ->each(fn (Bila $bila) => $bila->setRelation('member', $bila->teamMember));
@@ -145,6 +151,24 @@ class BilaPageController extends Controller
         $bila->update($validated);
 
         return response()->json(['success' => true, 'saved_at' => now()->toIso8601String()]);
+    }
+
+    /**
+     * Mark a bila as done.
+     *
+     * @param Request $request
+     * @param Bila $bila
+     * @return JsonResponse|RedirectResponse
+     */
+    public function markDone(Request $request, Bila $bila): JsonResponse|RedirectResponse
+    {
+        $bila->update(['is_done' => true]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back();
     }
 
     /**
