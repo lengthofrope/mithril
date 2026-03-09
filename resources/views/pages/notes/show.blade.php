@@ -3,13 +3,104 @@
 @section('content')
     <x-common.page-breadcrumb :items="$breadcrumbs" />
 
-    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-        <h1 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            {{ $note->title ?? 'Untitled' }}
-        </h1>
+    @php
+        $noteEndpoint = '/api/v1/notes/' . $note->id;
+    @endphp
 
+    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+        {{-- Title --}}
+        <div class="mb-6">
+            <x-tl.auto-save-field
+                :endpoint="$noteEndpoint"
+                field="title"
+                :value="$note->title"
+                type="text"
+                label="Title"
+            />
+        </div>
+
+        {{-- Row: Team + Member (linked filtering) --}}
+        <div
+            class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
+            x-data="{
+                allMembers: @js($memberOptions),
+                selectedTeamId: @js((string) ($note->team_id ?? '')),
+                get filteredMemberOptions() {
+                    return this.selectedTeamId
+                        ? this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId))
+                        : this.allMembers;
+                },
+            }"
+        >
+            {{-- Team select --}}
+            <div
+                x-data="autoSaveField({ endpoint: @js($noteEndpoint), field: 'team_id' })"
+                x-init="value = @js((string) ($note->team_id ?? ''))"
+                x-effect="selectedTeamId = value"
+                class="flex flex-col gap-1.5"
+            >
+                <label for="asf-team_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Team</label>
+                <select
+                    id="asf-team_id"
+                    name="team_id"
+                    x-model="value"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                >
+                    @foreach(array_merge([['value' => '', 'label' => '— None —']], $teamOptions) as $option)
+                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                    @endforeach
+                </select>
+                <x-tl.auto-save-status />
+            </div>
+
+            {{-- Member select (filtered by team) --}}
+            <div
+                x-data="autoSaveField({ endpoint: @js($noteEndpoint), field: 'team_member_id' })"
+                x-init="$nextTick(() => { value = @js((string) ($note->team_member_id ?? '')); })"
+                class="flex flex-col gap-1.5"
+            >
+                <label for="asf-team_member_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Team member</label>
+                <select
+                    id="asf-team_member_id"
+                    name="team_member_id"
+                    x-model="value"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                >
+                    <option value="">— None —</option>
+                    <template x-for="opt in filteredMemberOptions" :key="opt.value">
+                        <option :value="opt.value" x-text="opt.label"></option>
+                    </template>
+                </select>
+                <x-tl.auto-save-status />
+            </div>
+        </div>
+
+        {{-- Pinned --}}
+        <div class="mb-6">
+            <x-tl.auto-save-field
+                :endpoint="$noteEndpoint"
+                field="is_pinned"
+                :value="$note->is_pinned ? '1' : '0'"
+                type="select"
+                label="Pinned"
+                :options="[['value' => '0', 'label' => 'No'], ['value' => '1', 'label' => 'Yes']]"
+            />
+        </div>
+
+        {{-- Content (markdown) --}}
+        <div>
+            <x-tl.auto-save-field
+                :endpoint="$noteEndpoint"
+                field="content"
+                :value="$note->content ?? ''"
+                type="textarea"
+                label="Content"
+            />
+        </div>
+
+        {{-- Tags (read-only display) --}}
         @if($note->tags->isNotEmpty())
-            <div class="mb-4 flex flex-wrap gap-2">
+            <div class="mt-4 flex flex-wrap gap-2">
                 @foreach($note->tags as $tag)
                     <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                         {{ $tag->tag }}
@@ -17,22 +108,29 @@
                 @endforeach
             </div>
         @endif
-
-        <div class="prose prose-sm dark:prose-invert max-w-none">
-            {!! nl2br(e($note->content)) !!}
-        </div>
-
-        <p class="mt-6 text-xs text-gray-400 dark:text-gray-500">
-            Last updated {{ $note->updated_at->diffForHumans() }}
-        </p>
     </div>
 
-    <div class="mt-4">
+    {{-- Actions --}}
+    <div class="mt-4 flex items-center gap-3">
         <a
             href="{{ route('notes.index') }}"
             class="text-sm text-blue-600 hover:underline dark:text-blue-400"
         >
             &larr; Back to notes
         </a>
+
+        <div class="ml-auto">
+            <form method="POST" action="{{ route('notes.destroy', $note->id) }}" class="inline">
+                @csrf
+                @method('DELETE')
+                <button
+                    type="submit"
+                    onclick="return confirm('Delete this note?')"
+                    class="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                >
+                    Delete note
+                </button>
+            </form>
+        </div>
     </div>
 @endsection

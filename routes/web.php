@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/notes', [NotePageController::class, 'store'])->name('notes.store');
     Route::get('/notes/{note}', [NotePageController::class, 'show'])->name('notes.show');
     Route::patch('/notes/{note}', [NotePageController::class, 'update'])->name('notes.update');
+    Route::delete('/notes/{note}', [NotePageController::class, 'destroy'])->name('notes.destroy');
 
     Route::get('/bilas', [BilaPageController::class, 'index'])->name('bilas.index');
     Route::get('/bilas/create', [BilaPageController::class, 'create'])->name('bilas.create');

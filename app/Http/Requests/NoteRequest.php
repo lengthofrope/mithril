@@ -22,6 +22,22 @@ class NoteRequest extends FormRequest
     }
 
     /**
+     * Convert empty strings to null for nullable foreign key fields.
+     *
+     * @return void
+     */
+    protected function prepareForValidation(): void
+    {
+        $nullableFields = ['team_id', 'team_member_id'];
+
+        foreach ($nullableFields as $field) {
+            if ($this->has($field) && $this->input($field) === '') {
+                $this->merge([$field => null]);
+            }
+        }
+    }
+
+    /**
      * Get the validation rules for note creation and update.
      *
      * @return array<string, mixed>
@@ -29,7 +45,7 @@ class NoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => [$this->isMethod('PATCH') || $this->isMethod('PUT') ? 'sometimes' : 'required', 'string', 'max:255'],
             'content' => ['nullable', 'string'],
             'team_id' => ['nullable', 'integer', 'exists:teams,id'],
             'team_member_id' => ['nullable', 'integer', 'exists:team_members,id'],

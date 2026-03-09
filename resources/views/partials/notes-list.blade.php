@@ -21,19 +21,33 @@
             >
                 {{-- Note header --}}
                 <div class="flex items-start justify-between gap-2 p-4 pb-2">
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 min-w-0">
                         @if($note->is_pinned)
                             <svg class="h-3.5 w-3.5 shrink-0 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-label="Pinned">
                                 <path d="M17.5 2.5l4 4-7 7 1 5-7-7-5.5 5.5L2 16l5.5-5.5-7-7 5 1 7-7z"/>
                             </svg>
                         @endif
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        <a
+                            href="{{ route('notes.show', $note) }}"
+                            class="truncate text-sm font-semibold text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+                        >
                             {{ $note->title }}
-                        </h3>
+                        </a>
                     </div>
-                    <span class="shrink-0 text-xs text-gray-400 dark:text-gray-500">
-                        {{ \Carbon\Carbon::parse($note->updated_at)->format('d M') }}
-                    </span>
+                    <div class="flex shrink-0 items-center gap-2">
+                        <span class="text-xs text-gray-400 dark:text-gray-500">
+                            {{ \Carbon\Carbon::parse($note->updated_at)->format('d M') }}
+                        </span>
+                        <a
+                            href="{{ route('notes.show', $note) }}"
+                            class="text-gray-400 transition hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400"
+                            aria-label="Open {{ $note->title }}"
+                        >
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
 
                 {{-- Expandable editor --}}
@@ -106,11 +120,11 @@
                 </div>
 
                 {{-- Tags --}}
-                @if(is_array($note->tags) && count($note->tags) > 0)
+                @if($note->tags->isNotEmpty())
                     <div class="flex flex-wrap items-center gap-1 border-t border-gray-100 px-4 py-2 dark:border-gray-800">
                         @foreach($note->tags as $tag)
                             <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-white/5 dark:text-gray-400">
-                                {{ $tag }}
+                                {{ $tag->tag }}
                             </span>
                         @endforeach
                     </div>

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\Note;
 use App\Models\NoteTag;
+use App\Models\Team;
+use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -42,8 +44,8 @@ test('notes index passes required view variables', function () {
 
     $response->assertViewHas('notes');
     $response->assertViewHas('allTags');
-    $response->assertViewHas('searchTerm');
-    $response->assertViewHas('selectedTag');
+    $response->assertViewHas('teamOptions');
+    $response->assertViewHas('memberOptions');
 });
 
 test('notes index returns all notes when no filters applied', function () {
@@ -76,30 +78,12 @@ test('notes index filters by search term', function () {
     Note::factory()->create(['user_id' => $user->id, 'title' => 'Laravel tips and tricks']);
     Note::factory()->create(['user_id' => $user->id, 'title' => 'Completely unrelated topic']);
 
-    $response = $this->actingAs($user)->get('/notes?q=Laravel');
+    $response = $this->actingAs($user)->get('/notes?search=Laravel');
 
     $response->assertOk();
     $notes = $response->viewData('notes');
     expect($notes)->toHaveCount(1);
     expect($notes->first()->title)->toBe('Laravel tips and tricks');
-});
-
-test('notes index returns empty search term variable when no q param', function () {
-    /** @var \Tests\TestCase $this */
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->get('/notes');
-
-    expect($response->viewData('searchTerm'))->toBe('');
-});
-
-test('notes index passes search term to view', function () {
-    /** @var \Tests\TestCase $this */
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->get('/notes?q=hello');
-
-    expect($response->viewData('searchTerm'))->toBe('hello');
 });
 
 test('notes index filters by tag', function () {
@@ -118,6 +102,37 @@ test('notes index filters by tag', function () {
     $notes = $response->viewData('notes');
     expect($notes)->toHaveCount(1);
     expect($notes->first()->id)->toBe($taggedNote->id);
+});
+
+test('notes index filters by team_id', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create(['user_id' => $user->id]);
+    $teamB = Team::factory()->create(['user_id' => $user->id]);
+
+    Note::factory()->create(['user_id' => $user->id, 'team_id' => $teamA->id]);
+    Note::factory()->create(['user_id' => $user->id, 'team_id' => $teamB->id]);
+
+    $response = $this->actingAs($user)->get('/notes?team_id=' . $teamA->id);
+
+    $notes = $response->viewData('notes');
+    expect($notes)->toHaveCount(1);
+    expect($notes->first()->team_id)->toBe($teamA->id);
+});
+
+test('notes index filters by team_member_id', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    Note::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    Note::factory()->create(['user_id' => $user->id, 'team_member_id' => null]);
+
+    $response = $this->actingAs($user)->get('/notes?team_member_id=' . $member->id);
+
+    $notes = $response->viewData('notes');
+    expect($notes)->toHaveCount(1);
+    expect($notes->first()->team_member_id)->toBe($member->id);
 });
 
 test('notes index passes available tags to view', function () {
@@ -147,13 +162,18 @@ test('notes index available tags are distinct', function () {
     expect($tags->filter(fn ($t) => $t === 'duplicate'))->toHaveCount(1);
 });
 
-test('notes index passes selected tag to view', function () {
+test('notes index returns only the partial for AJAX requests', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/notes?tag=myTag');
+    $response = $this->actingAs($user)
+        ->get('/notes', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
 
-    expect($response->viewData('selectedTag'))->toBe('myTag');
+    $response->assertOk();
+    $response->assertDontSee('<!DOCTYPE html');
 });
 
 test('notes index strips markdown syntax from preview text', function () {
@@ -171,4 +191,123 @@ test('notes index strips markdown syntax from preview text', function () {
     expect($matches)->not->toBeEmpty();
     expect(trim($matches[1]))->not->toContain('# Working');
     expect(trim($matches[1]))->toContain('Working Agreements');
+});
+
+test('store creates a new note and redirects', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->from('/notes')
+        ->post('/notes', [
+            'title' => 'My new note',
+        ]);
+
+    $response->assertRedirect('/notes');
+    $this->assertDatabaseHas('notes', [
+        'user_id' => $user->id,
+        'title' => 'My new note',
+    ]);
+});
+
+test('store accepts team_id and team_member_id', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+
+    $this->actingAs($user)->post('/notes', [
+        'title' => 'Team note',
+        'team_id' => $team->id,
+        'team_member_id' => $member->id,
+    ]);
+
+    $this->assertDatabaseHas('notes', [
+        'title' => 'Team note',
+        'team_id' => $team->id,
+        'team_member_id' => $member->id,
+    ]);
+});
+
+test('store defaults title to Untitled when empty', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/notes', [
+        'title' => '',
+    ]);
+
+    $this->assertDatabaseHas('notes', [
+        'user_id' => $user->id,
+        'title' => 'Untitled',
+    ]);
+});
+
+test('show returns 200 for authenticated user with own note', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $note = Note::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get("/notes/{$note->id}");
+
+    $response->assertOk();
+    $response->assertViewIs('pages.notes.show');
+    $response->assertViewHas('note');
+    $response->assertViewHas('breadcrumbs');
+    $response->assertViewHas('teamOptions');
+    $response->assertViewHas('memberOptions');
+});
+
+test('show returns 404 for another users note', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $note = Note::factory()->create(['user_id' => $otherUser->id]);
+
+    $response = $this->actingAs($user)->get("/notes/{$note->id}");
+
+    $response->assertNotFound();
+});
+
+test('destroy deletes a note and redirects', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $note = Note::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)
+        ->from('/notes')
+        ->delete("/notes/{$note->id}");
+
+    $response->assertRedirect('/notes');
+    $this->assertDatabaseMissing('notes', ['id' => $note->id]);
+});
+
+test('destroy returns JSON for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $note = Note::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)
+        ->delete(
+            "/notes/{$note->id}",
+            [],
+            ['X-Requested-With' => 'XMLHttpRequest', 'Accept' => 'application/json'],
+        );
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    $this->assertDatabaseMissing('notes', ['id' => $note->id]);
+});
+
+test('destroy prevents deleting another users note', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $note = Note::factory()->create(['user_id' => $otherUser->id]);
+
+    $response = $this->actingAs($user)
+        ->delete("/notes/{$note->id}");
+
+    $response->assertNotFound();
+    $this->assertDatabaseHas('notes', ['id' => $note->id]);
 });
