@@ -143,6 +143,21 @@
             navigator.serviceWorker.register('/sw.js').catch(function() {});
         });
     }
+
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest('a');
+        if (!link) return;
+        sessionStorage.setItem('click-x', (e.clientX / window.innerWidth * 100).toFixed(1) + '%');
+        sessionStorage.setItem('click-y', (e.clientY / window.innerHeight * 100).toFixed(1) + '%');
+    });
+
+    window.addEventListener('pagereveal', function(e) {
+        if (!e.viewTransition) return;
+        var x = sessionStorage.getItem('click-x') || '50%';
+        var y = sessionStorage.getItem('click-y') || '50%';
+        document.documentElement.style.setProperty('--click-x', x);
+        document.documentElement.style.setProperty('--click-y', y);
+    });
 </script>
 
 </html>

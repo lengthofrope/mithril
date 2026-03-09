@@ -879,3 +879,22 @@ pre[class*='language-'] {
     margin-right: -60px !important;
   }
 }
+
+/* Page transitions (CSS View Transitions API) */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  z-index: -1;
+}
+
+::view-transition-new(root) {
+  animation: circle-reveal 0.35s ease-out;
+}
+
+@keyframes circle-reveal {
+  from { clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%)); }
+  to { clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%)); }
+}
