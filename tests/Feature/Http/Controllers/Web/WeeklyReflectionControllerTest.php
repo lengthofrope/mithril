@@ -176,6 +176,25 @@ test('weekly reflection current week dates are formatted without timestamps', fu
     $response->assertSee($formattedStart);
 });
 
+test('weekly reflection index works when another user already has a reflection for the same week', function () {
+    /** @var \Tests\TestCase $this */
+    $userA = User::factory()->create();
+    $userB = User::factory()->create();
+
+    WeeklyReflection::factory()->create([
+        'user_id' => $userA->id,
+        'week_start' => now()->startOfWeek()->toDateString(),
+        'week_end' => now()->endOfWeek()->toDateString(),
+    ]);
+
+    $response = $this->actingAs($userB)->get('/weekly');
+
+    $response->assertOk();
+    $current = $response->viewData('currentReflection');
+    expect($current)->not->toBeNull();
+    expect($current->user_id)->toBe($userB->id);
+});
+
 test('weekly reflection does not include current week in past reflections', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();

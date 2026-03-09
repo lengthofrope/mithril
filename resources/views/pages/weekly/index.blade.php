@@ -22,7 +22,7 @@
                     <x-tl.markdown-content :content="$currentReflection->summary" />
                 @else
                     <p class="text-sm text-gray-400 dark:text-gray-500 italic">
-                        Summary is being generated…
+                        No summary yet — check back at the end of the week.
                     </p>
                 @endif
 
