@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Events\BilaScheduled;
 use App\Http\Controllers\Controller;
 use App\Models\Bila;
 use App\Models\BilaPrepItem;
+use App\Models\Team;
+use App\Models\TeamMember;
 use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +26,8 @@ class BilaPageController extends Controller
 {
     /**
      * Display all bilas split into upcoming and past groups.
+     *
+     * Returns only the bilas-list partial for AJAX requests (used by filterManager).
      *
      * @param Request $request
      * @return View
@@ -47,24 +52,47 @@ class BilaPageController extends Controller
             ->get()
             ->each(fn (Bila $bila) => $bila->setRelation('member', $bila->teamMember));
 
+        if ($request->ajax()) {
+            return view('partials.bilas-list', [
+                'upcomingBilas' => $upcomingBilas,
+                'pastBilas' => $pastBilas,
+            ]);
+        }
+
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
+
         return view('pages.bilas.index', [
             'title' => "Bila's",
             'upcomingBilas' => $upcomingBilas,
             'pastBilas' => $pastBilas,
             'selectedTeamMemberId' => $teamMemberId,
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
         ]);
     }
 
     /**
-     * Show the create bila form.
-     *
-     * Redirects to the bila index as the dedicated create view is not yet available.
+     * Store a new bila and fire the scheduling event.
      *
      * @param Request $request
      * @return RedirectResponse
      */
-    public function create(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
+        $validated = $request->validate([
+            'team_member_id' => ['required', 'integer', 'exists:team_members,id'],
+            'scheduled_date' => ['required', 'date'],
+        ]);
+
+        $bila = Bila::create([
+            'user_id'        => $request->user()->id,
+            'team_member_id' => $validated['team_member_id'],
+            'scheduled_date' => $validated['scheduled_date'],
+        ]);
+
+        BilaScheduled::dispatch($bila);
+
         return redirect()->route('bilas.index');
     }
 
@@ -116,7 +144,25 @@ class BilaPageController extends Controller
 
         $bila->update($validated);
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'saved_at' => now()->toIso8601String()]);
+    }
+
+    /**
+     * Delete a bila and redirect to the index.
+     *
+     * @param Request $request
+     * @param Bila $bila
+     * @return JsonResponse|RedirectResponse
+     */
+    public function destroy(Request $request, Bila $bila): JsonResponse|RedirectResponse
+    {
+        $bila->delete();
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('bilas.index');
     }
 
     /**

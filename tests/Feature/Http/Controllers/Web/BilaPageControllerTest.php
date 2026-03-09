@@ -8,6 +8,7 @@ use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
@@ -143,4 +144,184 @@ test('bila show title includes team member name', function () {
     $response = $this->actingAs($user)->get("/bilas/{$bila->id}");
 
     $response->assertViewHas('title', 'Bila — Alice');
+});
+
+test('bila index passes team and member options to view', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Team::factory()->create(['user_id' => $user->id]);
+    TeamMember::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get('/bilas');
+
+    $response->assertViewHas('teamOptions');
+    $response->assertViewHas('memberOptions');
+});
+
+test('bila index returns only the partial for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->get('/bilas', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertDontSee('<!DOCTYPE html');
+});
+
+test('store creates a new bila and redirects', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)
+        ->from('/bilas')
+        ->post('/bilas', [
+            'team_member_id' => $member->id,
+            'scheduled_date' => now()->addDays(7)->toDateString(),
+        ]);
+
+    $response->assertRedirect('/bilas');
+    $this->assertDatabaseHas('bilas', [
+        'user_id' => $user->id,
+        'team_member_id' => $member->id,
+    ]);
+});
+
+test('store validates required fields', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->from('/bilas')
+        ->post('/bilas', []);
+
+    $response->assertSessionHasErrors(['team_member_id', 'scheduled_date']);
+});
+
+test('store fires BilaScheduled event', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    Event::fake([App\Events\BilaScheduled::class]);
+
+    $this->actingAs($user)->post('/bilas', [
+        'team_member_id' => $member->id,
+        'scheduled_date' => now()->addDays(7)->toDateString(),
+    ]);
+
+    Event::assertDispatched(App\Events\BilaScheduled::class);
+});
+
+test('destroy deletes a bila and redirects', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+
+    $response = $this->actingAs($user)
+        ->from("/bilas/{$bila->id}")
+        ->delete("/bilas/{$bila->id}");
+
+    $response->assertRedirect('/bilas');
+    $this->assertDatabaseMissing('bilas', ['id' => $bila->id]);
+});
+
+test('destroy returns JSON for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+
+    $response = $this->actingAs($user)
+        ->delete(
+            "/bilas/{$bila->id}",
+            [],
+            ['X-Requested-With' => 'XMLHttpRequest', 'Accept' => 'application/json'],
+        );
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    $this->assertDatabaseMissing('bilas', ['id' => $bila->id]);
+});
+
+test('destroy prevents deleting another users bila', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $bila = Bila::factory()->create(['user_id' => $otherUser->id]);
+
+    $response = $this->actingAs($user)->delete("/bilas/{$bila->id}");
+
+    $response->assertNotFound();
+    $this->assertDatabaseHas('bilas', ['id' => $bila->id]);
+});
+
+test('destroy cascades to prep items', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    BilaPrepItem::factory()->create(['user_id' => $user->id, 'bila_id' => $bila->id, 'team_member_id' => $member->id]);
+
+    $this->actingAs($user)->delete("/bilas/{$bila->id}");
+
+    $this->assertDatabaseMissing('bila_prep_items', ['bila_id' => $bila->id]);
+});
+
+test('store prep item returns JSON response', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $bila = Bila::factory()->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+
+    $response = $this->actingAs($user)
+        ->postJson('/prep-items', [
+            'team_member_id' => $member->id,
+            'bila_id' => $bila->id,
+            'content' => 'Discuss project timeline',
+        ]);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    $this->assertDatabaseHas('bila_prep_items', ['content' => 'Discuss project timeline']);
+});
+
+test('update prep item toggles is_discussed via JSON', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $prepItem = BilaPrepItem::factory()->create([
+        'user_id' => $user->id,
+        'team_member_id' => $member->id,
+        'is_discussed' => false,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->patchJson("/prep-items/{$prepItem->id}", ['is_discussed' => true]);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    expect($prepItem->fresh()->is_discussed)->toBeTrue();
+});
+
+test('destroy prep item returns JSON response', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+    $prepItem = BilaPrepItem::factory()->create([
+        'user_id' => $user->id,
+        'team_member_id' => $member->id,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->deleteJson("/prep-items/{$prepItem->id}");
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    $this->assertDatabaseMissing('bila_prep_items', ['id' => $prepItem->id]);
 });

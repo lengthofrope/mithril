@@ -1,0 +1,110 @@
+{{-- Schedule bila modal --}}
+<div
+    x-data="{
+        addOpen: false,
+        selectedTeamId: '',
+        allMembers: @js($memberOptions),
+        get filteredMembers() {
+            if (!this.selectedTeamId) return this.allMembers;
+            return this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId));
+        },
+    }"
+>
+    <button
+        type="button"
+        x-on:click="addOpen = !addOpen"
+        class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
+    >
+        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Schedule bila
+    </button>
+
+    <div
+        x-show="addOpen"
+        x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        x-on:keydown.escape.window="addOpen = false"
+    >
+        <div
+            class="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-900"
+            x-on:click.outside="addOpen = false"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+        >
+            <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">Schedule a new bila</h2>
+            <form method="POST" action="{{ route('bilas.store') }}">
+                @csrf
+                <div class="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="new-bila-team" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team</label>
+                        <select
+                            id="new-bila-team"
+                            x-model="selectedTeamId"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                            <option value="">All teams</option>
+                            @foreach($teamOptions as $opt)
+                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="new-bila-member" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team member <span class="text-red-500">*</span></label>
+                        <select
+                            id="new-bila-member"
+                            name="team_member_id"
+                            required
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                            <option value="">Select member…</option>
+                            <template x-for="member in filteredMembers" :key="member.value">
+                                <option :value="member.value" x-text="member.label"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="new-bila-date" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Scheduled date <span class="text-red-500">*</span></label>
+                    <input
+                        id="new-bila-date"
+                        type="date"
+                        name="scheduled_date"
+                        required
+                        value="{{ now()->addDays(7)->toDateString() }}"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                    >
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button
+                        type="submit"
+                        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Schedule
+                    </button>
+                    <button
+                        type="button"
+                        x-on:click="addOpen = false"
+                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

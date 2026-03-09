@@ -60,8 +60,9 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/notes/{note}', [NotePageController::class, 'destroy'])->name('notes.destroy');
 
     Route::get('/bilas', [BilaPageController::class, 'index'])->name('bilas.index');
-    Route::get('/bilas/create', [BilaPageController::class, 'create'])->name('bilas.create');
+    Route::post('/bilas', [BilaPageController::class, 'store'])->name('bilas.store');
     Route::get('/bilas/{bila}', [BilaPageController::class, 'show'])->name('bilas.show');
+    Route::delete('/bilas/{bila}', [BilaPageController::class, 'destroy'])->name('bilas.destroy');
 
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
 

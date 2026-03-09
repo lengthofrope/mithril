@@ -5,14 +5,14 @@
 
     {{-- Member info + date --}}
     <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-        @if(isset($bila->member) && $bila->member)
-            <x-tl.team-member-avatar :member="$bila->member" size="lg" />
+        @if($bila->teamMember)
+            <x-tl.team-member-avatar :member="$bila->teamMember" size="lg" />
             <div class="flex-1 min-w-0">
                 <h1 class="text-base font-semibold text-gray-900 dark:text-white">
-                    {{ $bila->member->name }}
+                    {{ $bila->teamMember->name }}
                 </h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ $bila->member->role }}
+                    {{ $bila->teamMember->role }}
                 </p>
             </div>
         @endif
@@ -21,7 +21,13 @@
             <svg class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            {{ \Carbon\Carbon::parse($bila->scheduled_date)->format('l, d F Y') }}
+            <x-tl.auto-save-field
+                :endpoint="route('bilas.update', $bila->id)"
+                field="scheduled_date"
+                :value="$bila->scheduled_date->toDateString()"
+                type="date"
+                label=""
+            />
         </div>
     </div>
 
@@ -58,12 +64,61 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         {{-- Prep items --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div
+            class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+            x-data="{
+                async addPrepItem(event) {
+                    const form = event.target;
+                    const formData = new FormData(form);
+
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(Object.fromEntries(formData)),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                },
+                async toggleDiscussed(url, isDiscussed) {
+                    await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ is_discussed: isDiscussed }),
+                    });
+
+                    window.location.reload();
+                },
+                async deletePrepItem(url) {
+                    await fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    window.location.reload();
+                },
+            }"
+        >
             <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Prep items</h2>
 
-                <form method="POST" action="{{ route('prep-items.store') }}" class="flex items-center gap-2">
-                    @csrf
+                <form
+                    action="{{ route('prep-items.store') }}"
+                    class="flex items-center gap-2"
+                    x-on:submit.prevent="addPrepItem($event)"
+                >
                     <input type="hidden" name="bila_id" value="{{ $bila->id }}">
                     <input type="hidden" name="team_member_id" value="{{ $bila->team_member_id }}">
                     <label for="new-prep-item" class="sr-only">New prep item</label>
@@ -111,42 +166,28 @@
                             </svg>
                         </button>
 
-                        <form
-                            method="POST"
-                            action="{{ route('prep-items.update', $prepItem->id) }}"
-                            class="flex items-center gap-2 flex-1 min-w-0"
+                        <input
+                            type="checkbox"
+                            @checked($prepItem->is_discussed)
+                            x-on:change="toggleDiscussed('{{ route('prep-items.update', $prepItem->id) }}', $el.checked)"
+                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
+                            aria-label="{{ $prepItem->content }}"
                         >
-                            @csrf
-                            @method('PATCH')
-                            <input
-                                type="checkbox"
-                                name="is_discussed"
-                                value="1"
-                                x-data
-                                x-on:change="$el.closest('form').submit()"
-                                @checked($prepItem->is_discussed)
-                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
-                                aria-label="{{ $prepItem->content }}"
-                            >
-                        </form>
 
                         <span class="flex-1 text-sm text-gray-800 dark:text-white/90 {{ $prepItem->is_discussed ? 'line-through text-gray-400 dark:text-gray-500' : '' }}">
                             {{ $prepItem->content }}
                         </span>
 
-                        <form method="POST" action="{{ route('prep-items.destroy', $prepItem->id) }}" class="shrink-0">
-                            @csrf
-                            @method('DELETE')
-                            <button
-                                type="submit"
-                                class="rounded p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
-                                aria-label="Remove prep item"
-                            >
-                                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                            </button>
-                        </form>
+                        <button
+                            type="button"
+                            x-on:click="deletePrepItem('{{ route('prep-items.destroy', $prepItem->id) }}')"
+                            class="shrink-0 rounded p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+                            aria-label="Remove prep item"
+                        >
+                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
                     </div>
                 @empty
                     <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
@@ -210,25 +251,32 @@
                     class="prose prose-sm max-w-none min-h-32 text-gray-700 dark:prose-invert dark:text-gray-300"
                 ></div>
 
-                <div class="mt-2 flex h-4 items-center" aria-live="polite" aria-atomic="true">
-                    <span x-show="status === 'saving'" x-cloak class="flex items-center gap-1 text-xs text-gray-400">
-                        <svg class="h-3 w-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                        </svg>
-                        Saving…
-                    </span>
-                    <span x-show="status === 'saved'" x-cloak class="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                        <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        Saved
-                    </span>
-                    <span x-show="status === 'error'" x-cloak class="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                        Failed to save
-                    </span>
-                </div>
+                <x-tl.auto-save-status />
             </div>
+        </div>
+    </div>
+
+    {{-- Actions --}}
+    <div class="mt-4 flex items-center gap-3">
+        <a
+            href="{{ route('bilas.index') }}"
+            class="text-sm text-blue-600 hover:underline dark:text-blue-400"
+        >
+            &larr; Back to bilas
+        </a>
+
+        <div class="ml-auto">
+            <form method="POST" action="{{ route('bilas.destroy', $bila->id) }}" class="inline">
+                @csrf
+                @method('DELETE')
+                <button
+                    type="submit"
+                    onclick="return confirm('Delete this bila?')"
+                    class="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                >
+                    Delete bila
+                </button>
+            </form>
         </div>
     </div>
 @endsection
