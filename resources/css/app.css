@@ -886,15 +886,24 @@ pre[class*='language-'] {
 }
 
 ::view-transition-old(root) {
+  z-index: 1;
+  animation:
+    circle-collapse 0.4s cubic-bezier(0.4, 0, 0, 1) forwards,
+    blur-out 0.2s ease-in 0.2s forwards;
+  filter: drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.15));
+}
+
+::view-transition-new(root) {
   animation: none;
   z-index: -1;
 }
 
-::view-transition-new(root) {
-  animation: circle-reveal 0.35s ease-out;
+@keyframes circle-collapse {
+  from { clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%)); }
+  to { clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%)); }
 }
 
-@keyframes circle-reveal {
-  from { clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%)); }
-  to { clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%)); }
+@keyframes blur-out {
+  from { filter: blur(0); }
+  to { filter: blur(0.125rem); }
 }
