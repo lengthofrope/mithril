@@ -32,7 +32,7 @@
             @endforeach
             @endforeach
         },
-        toggleSubmenu(groupIndex, itemIndex) {
+        toggleSubmenu(groupIndex, itemIndex, firstSubItemPath = null) {
             const key = groupIndex + '-' + itemIndex;
             const newState = !this.openSubmenus[key];
 
@@ -42,6 +42,10 @@
             }
 
             this.openSubmenus[key] = newState;
+
+            if (newState && firstSubItemPath) {
+                window.location.href = firstSubItemPath;
+            }
         },
         isSubmenuOpen(groupIndex, itemIndex) {
             const key = groupIndex + '-' + itemIndex;
@@ -103,7 +107,7 @@
                                 <li>
                                     @if (isset($item['subItems']))
                                         <!-- Menu Item with Submenu -->
-                                        <button @click="toggleSubmenu({{ $groupIndex }}, {{ $itemIndex }})"
+                                        <button @click="toggleSubmenu({{ $groupIndex }}, {{ $itemIndex }}, '{{ $item['subItems'][0]['path'] }}')"
                                             class="menu-item group w-full"
                                             :class="[
                                                 isSubmenuOpen({{ $groupIndex }}, {{ $itemIndex }}) ?
