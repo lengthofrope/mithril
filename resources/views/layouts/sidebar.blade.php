@@ -18,18 +18,20 @@
         },
         initializeActiveMenus() {
             const currentPath = '{{ $currentPath }}';
+            const pathname = window.location.pathname;
 
             @foreach ($menuGroups as $groupIndex => $menuGroup)
                 @foreach ($menuGroup['items'] as $itemIndex => $item)
                     @if (isset($item['subItems']))
-                        // Check if any submenu item matches current path
                         @foreach ($item['subItems'] as $subItem)
                             if (currentPath === '{{ ltrim($subItem['path'], '/') }}' ||
-                                window.location.pathname === '{{ $subItem['path'] }}') {
+                                pathname === '{{ $subItem['path'] }}' ||
+                                pathname.startsWith('{{ $subItem['path'] }}/')) {
                                 this.openSubmenus['{{ $groupIndex }}-{{ $itemIndex }}'] = true;
-                            } @endforeach
-            @endif
-            @endforeach
+                            }
+                        @endforeach
+                    @endif
+                @endforeach
             @endforeach
         },
         toggleSubmenu(groupIndex, itemIndex, firstSubItemPath = null) {
