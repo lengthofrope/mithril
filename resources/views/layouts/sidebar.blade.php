@@ -8,7 +8,7 @@
 @endphp
 
 <aside id="sidebar"
-    class="fixed flex flex-col mt-0 top-0 px-5 left-0 bg-gray-25 dark:bg-white/[0.03] dark:border-gray-700 text-gray-900 h-screen z-99999 border-r border-gray-200"
+    class="fixed flex flex-col mt-0 top-0 px-5 left-0 bg-gray-25 dark:bg-gray-800 dark:border-gray-700 text-gray-900 h-screen z-99999 border-r border-gray-200"
     x-init="requestAnimationFrame(() => $el.classList.add('transition-all', 'duration-300', 'ease-in-out'))"
     x-data="{
         openSubmenus: {},
