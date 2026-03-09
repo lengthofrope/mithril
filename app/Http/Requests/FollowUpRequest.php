@@ -24,6 +24,22 @@ class FollowUpRequest extends FormRequest
     }
 
     /**
+     * Convert empty strings to null for nullable foreign key fields.
+     *
+     * @return void
+     */
+    protected function prepareForValidation(): void
+    {
+        $nullableFields = ['task_id', 'team_member_id'];
+
+        foreach ($nullableFields as $field) {
+            if ($this->has($field) && $this->input($field) === '') {
+                $this->merge([$field => null]);
+            }
+        }
+    }
+
+    /**
      * Get the validation rules for follow-up creation and update.
      *
      * @return array<string, mixed>

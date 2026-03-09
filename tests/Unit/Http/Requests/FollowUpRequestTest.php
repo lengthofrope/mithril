@@ -142,6 +142,36 @@ test('follow up request passes when all optional fields are null', function () {
     expect($validator->passes())->toBeTrue();
 });
 
+test('follow up request converts empty string foreign keys to null via prepareForValidation', function () {
+    $request = new FollowUpRequest();
+    $request->merge([
+        'description' => 'Test',
+        'task_id' => '',
+        'team_member_id' => '',
+    ]);
+
+    $reflection = new ReflectionMethod($request, 'prepareForValidation');
+    $reflection->invoke($request);
+
+    expect($request->input('task_id'))->toBeNull();
+    expect($request->input('team_member_id'))->toBeNull();
+});
+
+test('follow up request preserves valid foreign key values via prepareForValidation', function () {
+    $request = new FollowUpRequest();
+    $request->merge([
+        'description' => 'Test',
+        'task_id' => 5,
+        'team_member_id' => 3,
+    ]);
+
+    $reflection = new ReflectionMethod($request, 'prepareForValidation');
+    $reflection->invoke($request);
+
+    expect($request->input('task_id'))->toBe(5);
+    expect($request->input('team_member_id'))->toBe(3);
+});
+
 test('follow up request fails when waiting_on exceeds max length', function () {
     $validator = Validator::make(
         ['description' => 'Some description', 'waiting_on' => str_repeat('a', 256)],
