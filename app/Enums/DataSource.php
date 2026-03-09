@@ -14,6 +14,7 @@ enum DataSource: string
     case TasksByCategory = 'tasks_by_category';
     case TasksByGroup = 'tasks_by_group';
     case TasksByMember = 'tasks_by_member';
+    case TasksByTeam = 'tasks_by_team';
     case TasksByDeadline = 'tasks_by_deadline';
     case FollowUpsByStatus = 'follow_ups_by_status';
     case FollowUpsByUrgency = 'follow_ups_by_urgency';
@@ -34,6 +35,7 @@ enum DataSource: string
             self::TasksByCategory => 'Tasks by Category',
             self::TasksByGroup    => 'Tasks by Group',
             self::TasksByMember   => 'Tasks by Team Member',
+            self::TasksByTeam     => 'Tasks by Team',
             self::TasksByDeadline => 'Deadline Overview',
             self::FollowUpsByStatus  => 'Follow-ups by Status',
             self::FollowUpsByUrgency => 'Follow-ups by Urgency',
@@ -55,6 +57,7 @@ enum DataSource: string
             self::TasksByPriority,
             self::TasksByCategory,
             self::TasksByGroup,
+            self::TasksByTeam,
             self::FollowUpsByStatus => [
                 ChartType::Donut,
                 ChartType::Bar,

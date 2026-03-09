@@ -5,10 +5,10 @@ declare(strict_types=1);
 use App\Enums\ChartType;
 use App\Enums\DataSource;
 
-test('data source enum has exactly 11 cases', function () {
+test('data source enum has exactly 12 cases', function () {
     $cases = DataSource::cases();
 
-    expect($cases)->toHaveCount(11);
+    expect($cases)->toHaveCount(12);
 
     $names = array_map(fn ($case) => $case->name, $cases);
     expect($names)->toContain('TasksByStatus')
@@ -16,6 +16,7 @@ test('data source enum has exactly 11 cases', function () {
         ->toContain('TasksByCategory')
         ->toContain('TasksByGroup')
         ->toContain('TasksByMember')
+        ->toContain('TasksByTeam')
         ->toContain('TasksByDeadline')
         ->toContain('FollowUpsByStatus')
         ->toContain('FollowUpsByUrgency')
@@ -215,4 +216,22 @@ test('data source isTimeSeries returns false for point-in-time sources', functio
     expect(DataSource::TasksByStatus->isTimeSeries())->toBeFalse();
     expect(DataSource::TasksByPriority->isTimeSeries())->toBeFalse();
     expect(DataSource::TasksByCategory->isTimeSeries())->toBeFalse();
+    expect(DataSource::TasksByTeam->isTimeSeries())->toBeFalse();
+});
+
+test('data source tasks by team has correct string value', function () {
+    expect(DataSource::TasksByTeam->value)->toBe('tasks_by_team');
+});
+
+test('data source label returns Tasks by Team for tasks by team', function () {
+    expect(DataSource::TasksByTeam->label())->toBe('Tasks by Team');
+});
+
+test('data source tasks by team allows donut bar and bar horizontal chart types', function () {
+    $allowed = DataSource::TasksByTeam->allowedChartTypes();
+
+    expect($allowed)->toContain(ChartType::Donut)
+        ->toContain(ChartType::Bar)
+        ->toContain(ChartType::BarHorizontal)
+        ->toHaveCount(3);
 });

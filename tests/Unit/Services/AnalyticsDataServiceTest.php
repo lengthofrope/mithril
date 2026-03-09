@@ -310,6 +310,83 @@ describe('AnalyticsDataService', function (): void {
         });
     });
 
+    describe('tasksByTeam', function (): void {
+        it('groups tasks by team name', function (): void {
+            $team = Team::create(['name' => 'Alpha', 'user_id' => $this->user->id, 'color' => '#3b82f6']);
+            Task::factory()->create(['user_id' => $this->user->id, 'team_id' => $team->id, 'status' => TaskStatus::Open]);
+
+            $result = $this->service->resolve(DataSource::TasksByTeam);
+
+            expect($result->labels)->toContain('Alpha');
+        });
+
+        it('counts tasks assigned directly to team', function (): void {
+            $team = Team::create(['name' => 'Alpha', 'user_id' => $this->user->id, 'color' => '#3b82f6']);
+            Task::factory()->count(3)->create(['user_id' => $this->user->id, 'team_id' => $team->id, 'status' => TaskStatus::Open]);
+
+            $result = $this->service->resolve(DataSource::TasksByTeam);
+
+            $index = array_search('Alpha', $result->labels);
+            expect($result->series[$index])->toBe(3);
+        });
+
+        it('counts tasks assigned to team members of that team', function (): void {
+            $team   = Team::create(['name' => 'Alpha', 'user_id' => $this->user->id, 'color' => '#3b82f6']);
+            $member = TeamMember::create(['name' => 'Alice', 'team_id' => $team->id, 'user_id' => $this->user->id]);
+            Task::factory()->create(['user_id' => $this->user->id, 'team_id' => null, 'team_member_id' => $member->id, 'status' => TaskStatus::Open]);
+
+            $result = $this->service->resolve(DataSource::TasksByTeam);
+
+            $index = array_search('Alpha', $result->labels);
+            expect($result->series[$index])->toBe(1);
+        });
+
+        it('does not double count tasks with both team_id and team_member_id on same team', function (): void {
+            $team   = Team::create(['name' => 'Alpha', 'user_id' => $this->user->id, 'color' => '#3b82f6']);
+            $member = TeamMember::create(['name' => 'Alice', 'team_id' => $team->id, 'user_id' => $this->user->id]);
+            Task::factory()->create([
+                'user_id'        => $this->user->id,
+                'team_id'        => $team->id,
+                'team_member_id' => $member->id,
+                'status'         => TaskStatus::Open,
+            ]);
+
+            $result = $this->service->resolve(DataSource::TasksByTeam);
+
+            $index = array_search('Alpha', $result->labels);
+            expect($result->series[$index])->toBe(1);
+        });
+
+        it('uses team colors from the database', function (): void {
+            $team = Team::create(['name' => 'Alpha', 'user_id' => $this->user->id, 'color' => '#ff0000']);
+            Task::factory()->create(['user_id' => $this->user->id, 'team_id' => $team->id, 'status' => TaskStatus::Open]);
+
+            $result = $this->service->resolve(DataSource::TasksByTeam);
+
+            $index = array_search('Alpha', $result->labels);
+            expect($result->colors[$index])->toBe('#ff0000');
+        });
+
+        it('labels unassigned tasks as Unassigned with grey color', function (): void {
+            Task::factory()->create(['user_id' => $this->user->id, 'team_id' => null, 'team_member_id' => null, 'status' => TaskStatus::Open]);
+
+            $result = $this->service->resolve(DataSource::TasksByTeam);
+
+            $index = array_search('Unassigned', $result->labels);
+            expect($index)->not->toBeFalse();
+            expect($result->colors[$index])->toBe('#9ca3af');
+        });
+
+        it('excludes done tasks', function (): void {
+            $team = Team::create(['name' => 'Alpha', 'user_id' => $this->user->id, 'color' => '#3b82f6']);
+            Task::factory()->create(['user_id' => $this->user->id, 'team_id' => $team->id, 'status' => TaskStatus::Done]);
+
+            $result = $this->service->resolve(DataSource::TasksByTeam);
+
+            expect($result->labels)->not->toContain('Alpha');
+        });
+    });
+
     describe('followUpsByUrgency', function (): void {
         it('returns four fixed labels', function (): void {
             $result = $this->service->resolve(DataSource::FollowUpsByUrgency);

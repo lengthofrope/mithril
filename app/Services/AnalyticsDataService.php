@@ -13,6 +13,7 @@ use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
+use App\Models\Team;
 use App\Models\TeamMember;
 
 /**
@@ -59,6 +60,7 @@ class AnalyticsDataService
             DataSource::TasksByCategory  => $this->tasksByCategory(),
             DataSource::TasksByGroup     => $this->tasksByGroup(),
             DataSource::TasksByMember    => $this->tasksByMember(),
+            DataSource::TasksByTeam      => $this->tasksByTeam(),
             DataSource::TasksByDeadline  => $this->tasksByDeadline(),
             DataSource::FollowUpsByStatus  => $this->followUpsByStatus(),
             DataSource::FollowUpsByUrgency => $this->followUpsByUrgency(),
@@ -238,6 +240,67 @@ class AnalyticsDataService
             $labels[] = $label;
             $series[] = (int) $row->total;
             $colors[] = self::PALETTE[$index % $paletteCount];
+        }
+
+        return new ChartData(labels: $labels, series: $series, colors: $colors);
+    }
+
+    /**
+     * Aggregate non-done tasks grouped by team.
+     *
+     * A task belongs to a team when it is directly assigned via team_id, or
+     * when it is assigned to a team member belonging to that team. Tasks
+     * matching both conditions on the same team are counted only once.
+     * Tasks without a team or team member are labeled "Unassigned".
+     *
+     * @return ChartData Labels derived from team names plus a fallback.
+     */
+    private function tasksByTeam(): ChartData
+    {
+        $tasks = Task::query()
+            ->where('status', '!=', TaskStatus::Done->value)
+            ->get(['id', 'team_id', 'team_member_id']);
+
+        $teams   = Team::query()->get(['id', 'name', 'color'])->keyBy('id');
+        $members = TeamMember::query()->pluck('team_id', 'id');
+
+        $counts = [];
+        $unassigned = 0;
+
+        foreach ($tasks as $task) {
+            $teamId = $task->team_id;
+
+            if ($teamId === null && $task->team_member_id !== null) {
+                $teamId = $members[$task->team_member_id] ?? null;
+            }
+
+            if ($teamId === null) {
+                $unassigned++;
+            } else {
+                $counts[$teamId] = ($counts[$teamId] ?? 0) + 1;
+            }
+        }
+
+        $labels = [];
+        $series = [];
+        $colors = [];
+
+        foreach ($counts as $teamId => $count) {
+            if (isset($teams[$teamId])) {
+                $labels[] = $teams[$teamId]->name;
+                $colors[] = $teams[$teamId]->color ?? '#9ca3af';
+            } else {
+                $labels[] = 'Unknown Team';
+                $colors[] = '#9ca3af';
+            }
+
+            $series[] = $count;
+        }
+
+        if ($unassigned > 0) {
+            $labels[] = 'Unassigned';
+            $series[] = $unassigned;
+            $colors[] = '#9ca3af';
         }
 
         return new ChartData(labels: $labels, series: $series, colors: $colors);
