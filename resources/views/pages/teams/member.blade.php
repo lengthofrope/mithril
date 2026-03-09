@@ -332,25 +332,221 @@
             x-cloak
             role="tabpanel"
             aria-label="Agreements"
+            x-data="agreementManager({ teamMemberId: {{ $member->id }}, agreements: {{ $memberAgreements->toJson() }} })"
         >
-            <div class="space-y-3">
-                @forelse($memberAgreements as $agreement)
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
-                        <p class="text-sm text-gray-800 dark:text-white/90">
-                            {{ $agreement->description }}
-                        </p>
-                        <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                            <span>Agreed: {{ \Carbon\Carbon::parse($agreement->agreed_date)->format('d M Y') }}</span>
-                            @if($agreement->follow_up_date)
-                                <span>Follow-up: {{ \Carbon\Carbon::parse($agreement->follow_up_date)->format('d M Y') }}</span>
-                            @endif
+            {{-- Add agreement button --}}
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Agreements
+                    <span class="ml-1 text-xs text-gray-400" x-text="'(' + agreements.length + ')'"></span>
+                </h3>
+                <button
+                    type="button"
+                    x-on:click="openAddForm()"
+                    x-show="!isAdding && editingId === null"
+                    class="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
+                >
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add agreement
+                </button>
+            </div>
+
+            {{-- Add form --}}
+            <div x-show="isAdding" x-cloak class="mb-4 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-900/10">
+                <form x-on:submit.prevent="submitForm()">
+                    <div class="space-y-3">
+                        <div>
+                            <label for="agreement-description" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                Description
+                            </label>
+                            <textarea
+                                id="agreement-description"
+                                x-model="form.description"
+                                rows="2"
+                                required
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                                placeholder="What was agreed upon?"
+                            ></textarea>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <div class="flex-1" style="min-width: 10rem">
+                                <label for="agreement-agreed-date" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                    Agreed date
+                                </label>
+                                <input
+                                    id="agreement-agreed-date"
+                                    type="date"
+                                    x-model="form.agreed_date"
+                                    required
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                >
+                            </div>
+                            <div class="flex-1" style="min-width: 10rem">
+                                <label for="agreement-follow-up-date" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                    Follow-up date (optional)
+                                </label>
+                                <input
+                                    id="agreement-follow-up-date"
+                                    type="date"
+                                    x-model="form.follow_up_date"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                >
+                            </div>
                         </div>
                     </div>
-                @empty
-                    <p class="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                        No agreements recorded.
-                    </p>
-                @endforelse
+                    <div class="mt-3 flex items-center gap-2">
+                        <button
+                            type="submit"
+                            x-bind:disabled="isSubmitting || !form.description || !form.agreed_date"
+                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50 dark:hover:bg-blue-500"
+                        >
+                            <span x-show="!isSubmitting">Save</span>
+                            <span x-show="isSubmitting" x-cloak>Saving&hellip;</span>
+                        </button>
+                        <button
+                            type="button"
+                            x-on:click="closeForm()"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Agreement list --}}
+            <div class="space-y-3">
+                <template x-for="agreement in agreements" x-bind:key="agreement.id">
+                    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+                        {{-- View mode --}}
+                        <div x-show="editingId !== agreement.id">
+                            <div class="flex items-start justify-between gap-3">
+                                <p class="text-sm text-gray-800 dark:text-white/90" x-text="agreement.description"></p>
+                                <div class="flex shrink-0 items-center gap-1">
+                                    <button
+                                        type="button"
+                                        x-on:click="startEdit(agreement.id)"
+                                        class="rounded p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                                        title="Edit agreement"
+                                    >
+                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-on:click="deleteConfirmId = agreement.id"
+                                        class="rounded p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                        title="Delete agreement"
+                                        aria-label="Delete agreement"
+                                    >
+                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                <span x-text="'Agreed: ' + formatDate(agreement.agreed_date)"></span>
+                                <span x-show="agreement.follow_up_date" x-text="'Follow-up: ' + formatDate(agreement.follow_up_date ?? '')"></span>
+                            </div>
+
+                            {{-- Delete confirmation --}}
+                            <div
+                                x-show="deleteConfirmId === agreement.id"
+                                x-cloak
+                                class="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/10"
+                            >
+                                <p class="flex-1 text-xs text-red-700 dark:text-red-400">Delete this agreement?</p>
+                                <button
+                                    type="button"
+                                    x-on:click="deleteAgreement(agreement.id)"
+                                    class="rounded-lg bg-red-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-red-700"
+                                >
+                                    Delete
+                                </button>
+                                <button
+                                    type="button"
+                                    x-on:click="deleteConfirmId = null"
+                                    class="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Edit mode --}}
+                        <div x-show="editingId === agreement.id" x-cloak>
+                            <form x-on:submit.prevent="submitForm()">
+                                <div class="space-y-3">
+                                    <div>
+                                        <label x-bind:for="'edit-desc-' + agreement.id" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                            Description
+                                        </label>
+                                        <textarea
+                                            x-bind:id="'edit-desc-' + agreement.id"
+                                            x-model="form.description"
+                                            rows="2"
+                                            required
+                                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                                        ></textarea>
+                                    </div>
+                                    <div class="flex flex-wrap gap-3">
+                                        <div class="flex-1" style="min-width: 10rem">
+                                            <label x-bind:for="'edit-date-' + agreement.id" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                Agreed date
+                                            </label>
+                                            <input
+                                                x-bind:id="'edit-date-' + agreement.id"
+                                                type="date"
+                                                x-model="form.agreed_date"
+                                                required
+                                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                            >
+                                        </div>
+                                        <div class="flex-1" style="min-width: 10rem">
+                                            <label x-bind:for="'edit-followup-' + agreement.id" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                Follow-up date (optional)
+                                            </label>
+                                            <input
+                                                x-bind:id="'edit-followup-' + agreement.id"
+                                                type="date"
+                                                x-model="form.follow_up_date"
+                                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex items-center gap-2">
+                                    <button
+                                        type="submit"
+                                        x-bind:disabled="isSubmitting || !form.description || !form.agreed_date"
+                                        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50 dark:hover:bg-blue-500"
+                                    >
+                                        <span x-show="!isSubmitting">Update</span>
+                                        <span x-show="isSubmitting" x-cloak>Saving&hellip;</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-on:click="closeForm()"
+                                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </template>
+
+                <p
+                    x-show="agreements.length === 0"
+                    class="py-6 text-center text-sm text-gray-400 dark:text-gray-500"
+                >
+                    No agreements recorded.
+                </p>
             </div>
         </div>
 
