@@ -67,6 +67,8 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/bilas/{bila}', [BilaPageController::class, 'destroy'])->name('bilas.destroy');
 
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
+    Route::post('/weekly', [WeeklyReflectionController::class, 'store'])->name('weekly.store');
+    Route::delete('/weekly/{weeklyReflection}', [WeeklyReflectionController::class, 'destroy'])->name('weekly.destroy');
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

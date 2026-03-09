@@ -195,6 +195,167 @@ test('weekly reflection index works when another user already has a reflection f
     expect($current->user_id)->toBe($userB->id);
 });
 
+test('weekly reflection auto-generates summary on index when summary is null', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    Task::factory()->count(3)->create([
+        'user_id' => $user->id,
+        'status' => TaskStatus::Done,
+        'updated_at' => now()->startOfWeek()->addDay(),
+    ]);
+    Task::factory()->count(2)->create([
+        'user_id' => $user->id,
+        'status' => TaskStatus::Open,
+    ]);
+    FollowUp::factory()->count(1)->create([
+        'user_id' => $user->id,
+        'status' => FollowUpStatus::Done,
+        'updated_at' => now()->startOfWeek()->addDay(),
+    ]);
+
+    $response = $this->actingAs($user)->get('/weekly');
+
+    $current = $response->viewData('currentReflection');
+    expect($current->summary)->not->toBeNull();
+    expect($current->summary)->toContain('3');
+    expect($current->summary)->toContain('2');
+});
+
+test('weekly reflection regenerates summary on every visit for current week', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $reflection = WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
+        'week_start' => now()->startOfWeek()->toDateString(),
+        'week_end' => now()->endOfWeek()->toDateString(),
+        'summary' => 'Stale summary',
+    ]);
+
+    Task::factory()->count(5)->create([
+        'user_id' => $user->id,
+        'status' => TaskStatus::Done,
+        'updated_at' => now()->startOfWeek()->addDay(),
+    ]);
+
+    $this->actingAs($user)->get('/weekly');
+
+    $fresh = $reflection->fresh();
+    expect($fresh->summary)->not->toBe('Stale summary');
+    expect($fresh->summary)->toContain('5');
+});
+
+test('weekly reflection store creates a new reflection for a past week', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $weekStart = now()->subWeeks(2)->startOfWeek()->toDateString();
+
+    $response = $this->actingAs($user)->post('/weekly', [
+        'week_start' => $weekStart,
+    ]);
+
+    $response->assertRedirect(route('weekly.index'));
+    $this->assertDatabaseHas('weekly_reflections', [
+        'user_id' => $user->id,
+        'week_start' => $weekStart . ' 00:00:00',
+    ]);
+});
+
+test('weekly reflection store does not create duplicate for same week', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $weekStart = now()->subWeek()->startOfWeek()->toDateString();
+
+    WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
+        'week_start' => $weekStart,
+        'week_end' => now()->subWeek()->endOfWeek()->toDateString(),
+    ]);
+
+    $response = $this->actingAs($user)->post('/weekly', [
+        'week_start' => $weekStart,
+    ]);
+
+    $response->assertRedirect(route('weekly.index'));
+    $this->assertDatabaseCount('weekly_reflections', 1);
+});
+
+test('weekly reflection store requires a valid week_start date', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/weekly', [
+        'week_start' => 'not-a-date',
+    ]);
+
+    $response->assertSessionHasErrors('week_start');
+});
+
+test('weekly reflection store rejects future week_start dates', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/weekly', [
+        'week_start' => now()->addWeeks(2)->startOfWeek()->toDateString(),
+    ]);
+
+    $response->assertSessionHasErrors('week_start');
+});
+
+test('weekly reflection destroy deletes a reflection', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $reflection = WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
+        'week_start' => now()->subWeek()->startOfWeek()->toDateString(),
+        'week_end' => now()->subWeek()->endOfWeek()->toDateString(),
+    ]);
+
+    $response = $this->actingAs($user)->delete("/weekly/{$reflection->id}");
+
+    $response->assertRedirect(route('weekly.index'));
+    $this->assertDatabaseMissing('weekly_reflections', ['id' => $reflection->id]);
+});
+
+test('weekly reflection destroy via ajax returns json', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $reflection = WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
+        'week_start' => now()->subWeek()->startOfWeek()->toDateString(),
+        'week_end' => now()->subWeek()->endOfWeek()->toDateString(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->deleteJson("/weekly/{$reflection->id}");
+
+    $response->assertOk()->assertJson(['success' => true]);
+    $this->assertDatabaseMissing('weekly_reflections', ['id' => $reflection->id]);
+});
+
+test('weekly reflection update supports editing past reflection text', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $reflection = WeeklyReflection::factory()->create([
+        'user_id' => $user->id,
+        'week_start' => now()->subWeek()->startOfWeek()->toDateString(),
+        'week_end' => now()->subWeek()->endOfWeek()->toDateString(),
+        'reflection' => 'Old text',
+    ]);
+
+    $response = $this->actingAs($user)
+        ->patchJson("/weekly/{$reflection->id}", ['reflection' => 'Updated text']);
+
+    $response->assertOk();
+    expect($reflection->fresh()->reflection)->toBe('Updated text');
+});
+
 test('weekly reflection does not include current week in past reflections', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();

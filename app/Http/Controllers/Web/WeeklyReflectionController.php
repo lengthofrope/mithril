@@ -12,13 +12,12 @@ use App\Models\Task;
 use App\Models\WeeklyReflection;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 /**
- * Handles the weekly reflection page rendering.
- *
- * Auto-generates a summary for the current week and loads past reflections.
+ * Handles weekly reflection CRUD and auto-generated summaries.
  */
 class WeeklyReflectionController extends Controller
 {
@@ -40,6 +39,10 @@ class WeeklyReflectionController extends Controller
 
         $summaryData = $this->buildWeeklySummary($weekStart, $weekEnd);
 
+        $currentReflection->update([
+            'summary' => $this->generateSummaryText($summaryData),
+        ]);
+
         $pastReflections = WeeklyReflection::query()
             ->whereDate('week_start', '<', $weekStart->toDateString())
             ->orderByDesc('week_start')
@@ -60,6 +63,29 @@ class WeeklyReflectionController extends Controller
     }
 
     /**
+     * Store a new weekly reflection for a past week.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'week_start' => ['required', 'date', 'before_or_equal:today'],
+        ]);
+
+        $weekStart = Carbon::parse($validated['week_start'])->startOfWeek();
+        $weekEnd = $weekStart->copy()->endOfWeek();
+
+        WeeklyReflection::firstOrCreate(
+            ['week_start' => $weekStart],
+            ['week_end' => $weekEnd]
+        );
+
+        return redirect()->route('weekly.index');
+    }
+
+    /**
      * Update the reflection text on a weekly reflection record.
      *
      * @param Request $request
@@ -76,6 +102,24 @@ class WeeklyReflectionController extends Controller
         $weeklyReflection->update($validated);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete a weekly reflection.
+     *
+     * @param Request $request
+     * @param WeeklyReflection $weeklyReflection
+     * @return JsonResponse|RedirectResponse
+     */
+    public function destroy(Request $request, WeeklyReflection $weeklyReflection): JsonResponse|RedirectResponse
+    {
+        $weeklyReflection->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('weekly.index');
     }
 
     /**
@@ -115,5 +159,61 @@ class WeeklyReflectionController extends Controller
             'handled_follow_ups_count' => $handledFollowUps->count(),
             'open_follow_ups_count' => $openFollowUps->count(),
         ];
+    }
+
+    /**
+     * Generate a markdown summary text from the week's activity data.
+     *
+     * @param array<string, mixed> $summaryData
+     * @return string
+     */
+    private function generateSummaryText(array $summaryData): string
+    {
+        $lines = [];
+
+        $completed = $summaryData['completed_tasks_count'];
+        $open = $summaryData['open_tasks_count'];
+        $followUps = $summaryData['handled_follow_ups_count'];
+        $openFollowUps = $summaryData['open_follow_ups_count'];
+
+        $lines[] = "**{$completed}** " . ($completed === 1 ? 'task' : 'tasks') . " completed this week.";
+        $lines[] = "**{$open}** " . ($open === 1 ? 'task' : 'tasks') . " still open.";
+        $lines[] = "**{$followUps}** follow-" . ($followUps === 1 ? 'up' : 'ups') . " handled.";
+
+        if ($openFollowUps > 0) {
+            $lines[] = "**{$openFollowUps}** follow-" . ($openFollowUps === 1 ? 'up' : 'ups') . " still pending.";
+        }
+
+        if ($summaryData['completed_tasks']->isNotEmpty()) {
+            $lines[] = '';
+            $lines[] = '### Completed';
+
+            foreach ($summaryData['completed_tasks'] as $task) {
+                $label = $task->title;
+
+                if ($task->teamMember) {
+                    $label .= " ({$task->teamMember->name})";
+                }
+
+                $lines[] = "- {$label}";
+            }
+        }
+
+        if ($summaryData['handled_follow_ups']->isNotEmpty()) {
+            $lines[] = '';
+            $lines[] = '### Follow-ups handled';
+
+            foreach ($summaryData['handled_follow_ups'] as $followUp) {
+                $label = $followUp->subject;
+
+                if ($followUp->teamMember) {
+                    $label .= " ({$followUp->teamMember->name})";
+                }
+
+                $lines[] = "- {$label}";
+            }
+        }
+
+        return implode("\n", $lines);
     }
 }
