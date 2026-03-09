@@ -163,6 +163,22 @@ test('profile update returns error when current password is wrong', function () 
     $response->assertSessionHasErrors(['current_password']);
 });
 
+test('profile update requires current password when setting new password', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create(['password' => Hash::make('original-password')]);
+
+    $response = $this->actingAs($user)->patch('/profile', [
+        'name' => $user->name,
+        'email' => $user->email,
+        'password' => 'new-password-123',
+        'password_confirmation' => 'new-password-123',
+    ]);
+
+    $response->assertSessionHasErrors(['current_password']);
+    $user->refresh();
+    expect(Hash::check('original-password', $user->password))->toBeTrue();
+});
+
 test('profile update does not change password when fields are empty', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create(['password' => Hash::make('unchanged-password')]);
