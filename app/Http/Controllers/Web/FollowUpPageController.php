@@ -34,8 +34,11 @@ class FollowUpPageController extends Controller
     {
         $teamMemberId = $request->get('team_member_id');
 
+        $search = $request->get('search');
+
         $baseQuery = fn () => FollowUp::query()
             ->when($teamMemberId, fn ($q) => $q->where('team_member_id', $teamMemberId))
+            ->when($search, fn ($q) => $q->search($search))
             ->with(['teamMember', 'task']);
 
         $overdue = $baseQuery()
@@ -61,8 +64,8 @@ class FollowUpPageController extends Controller
         $sections = [
             'overdue' => $overdue,
             'today' => $today,
-            'thisWeek' => $thisWeek,
-            'upcoming' => $upcoming,
+            'this_week' => $thisWeek,
+            'later' => $upcoming,
         ];
 
         if ($request->ajax()) {
@@ -81,6 +84,51 @@ class FollowUpPageController extends Controller
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
             'selectedTeamMemberId' => $teamMemberId,
         ]);
+    }
+
+    /**
+     * Store a new follow-up from the create modal.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'description'    => ['required', 'string'],
+            'team_member_id' => ['nullable', 'integer', 'exists:team_members,id'],
+            'waiting_on'     => ['nullable', 'string', 'max:255'],
+            'follow_up_date' => ['nullable', 'date'],
+        ]);
+
+        FollowUp::create([
+            'user_id'        => $request->user()->id,
+            'description'    => $validated['description'],
+            'team_member_id' => $validated['team_member_id'] ?? null,
+            'waiting_on'     => $validated['waiting_on'] ?? null,
+            'follow_up_date' => $validated['follow_up_date'] ?? now()->toDateString(),
+            'status'         => FollowUpStatus::Open->value,
+        ]);
+
+        return redirect()->route('follow-ups.index');
+    }
+
+    /**
+     * Delete a follow-up.
+     *
+     * @param Request $request
+     * @param FollowUp $followUp
+     * @return JsonResponse|RedirectResponse
+     */
+    public function destroy(Request $request, FollowUp $followUp): JsonResponse|RedirectResponse
+    {
+        $followUp->delete();
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('follow-ups.index');
     }
 
     /**

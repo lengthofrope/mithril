@@ -36,9 +36,11 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/tasks/{task}', [TaskPageController::class, 'show'])->name('tasks.show');
 
     Route::get('/follow-ups', [FollowUpPageController::class, 'index'])->name('follow-ups.index');
+    Route::post('/follow-ups', [FollowUpPageController::class, 'store'])->name('follow-ups.store');
     Route::patch('/follow-ups/{followUp}/done', [FollowUpPageController::class, 'markDone'])->name('follow-ups.done');
     Route::patch('/follow-ups/{followUp}/snooze', [FollowUpPageController::class, 'snooze'])->name('follow-ups.snooze');
     Route::post('/follow-ups/{followUp}/convert', [FollowUpPageController::class, 'convertToTask'])->name('follow-ups.convert');
+    Route::delete('/follow-ups/{followUp}', [FollowUpPageController::class, 'destroy'])->name('follow-ups.destroy');
 
     Route::get('/teams', [TeamPageController::class, 'index'])->name('teams.index');
     Route::post('/teams', [TeamPageController::class, 'store'])->name('teams.store');

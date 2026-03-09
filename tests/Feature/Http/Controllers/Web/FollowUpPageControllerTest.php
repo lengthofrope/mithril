@@ -45,7 +45,7 @@ test('follow-up index passes sections memberOptions selectedTeamMemberId to view
     $response->assertViewHas('sections');
     $response->assertViewHas('memberOptions');
     $response->assertViewHas('selectedTeamMemberId');
-    expect($response->viewData('sections'))->toHaveKeys(['overdue', 'today', 'thisWeek', 'upcoming']);
+    expect($response->viewData('sections'))->toHaveKeys(['overdue', 'today', 'this_week', 'later']);
 });
 
 test('follow-up index groups overdue follow-ups correctly', function () {
@@ -86,7 +86,7 @@ test('follow-up index groups this week follow-ups correctly', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    expect($response->viewData('sections')['thisWeek'])->toHaveCount(1);
+    expect($response->viewData('sections')['this_week'])->toHaveCount(1);
 });
 
 test('follow-up index groups upcoming follow-ups correctly', function () {
@@ -99,7 +99,7 @@ test('follow-up index groups upcoming follow-ups correctly', function () {
 
     $response = $this->actingAs($user)->get('/follow-ups');
 
-    expect($response->viewData('sections')['upcoming'])->toHaveCount(1);
+    expect($response->viewData('sections')['later'])->toHaveCount(1);
 });
 
 test('follow-up index excludes done follow-ups from all buckets', function () {
@@ -222,4 +222,146 @@ test('follow-up index returns only the partial for AJAX requests', function () {
 
     $response->assertOk();
     $response->assertDontSee('<!DOCTYPE html');
+});
+
+test('follow-up index filters by search term', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Review quarterly report',
+        'follow_up_date' => now()->subDay(),
+        'status' => FollowUpStatus::Open,
+    ]);
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Schedule team meeting',
+        'follow_up_date' => now()->subDay(),
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)->get('/follow-ups?search=quarterly');
+
+    expect($response->viewData('sections')['overdue'])->toHaveCount(1);
+    expect($response->viewData('sections')['overdue']->first()->description)->toBe('Review quarterly report');
+});
+
+test('store creates a new follow-up and redirects', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->from('/follow-ups')
+        ->post('/follow-ups', [
+            'description' => 'Check on project status',
+            'follow_up_date' => '2026-03-15',
+        ]);
+
+    $response->assertRedirect('/follow-ups');
+    $this->assertDatabaseHas('follow_ups', [
+        'user_id' => $user->id,
+        'description' => 'Check on project status',
+        'follow_up_date' => '2026-03-15 00:00:00',
+        'status' => FollowUpStatus::Open->value,
+    ]);
+});
+
+test('store requires description', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->from('/follow-ups')
+        ->post('/follow-ups', [
+            'follow_up_date' => '2026-03-15',
+        ]);
+
+    $response->assertSessionHasErrors('description');
+});
+
+test('store defaults follow_up_date to today when not provided', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/follow-ups', [
+        'description' => 'Follow up immediately',
+    ]);
+
+    $this->assertDatabaseHas('follow_ups', [
+        'user_id' => $user->id,
+        'description' => 'Follow up immediately',
+        'follow_up_date' => now()->startOfDay()->toDateTimeString(),
+    ]);
+});
+
+test('store accepts optional team_member_id and waiting_on', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $member = TeamMember::factory()->create(['user_id' => $user->id]);
+
+    $this->actingAs($user)->post('/follow-ups', [
+        'description' => 'Check with team',
+        'team_member_id' => $member->id,
+        'waiting_on' => 'John',
+        'follow_up_date' => '2026-03-20',
+    ]);
+
+    $this->assertDatabaseHas('follow_ups', [
+        'description' => 'Check with team',
+        'team_member_id' => $member->id,
+        'waiting_on' => 'John',
+    ]);
+});
+
+test('destroy deletes a follow-up and redirects', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->from('/follow-ups')
+        ->delete("/follow-ups/{$followUp->id}");
+
+    $response->assertRedirect('/follow-ups');
+    $this->assertDatabaseMissing('follow_ups', ['id' => $followUp->id]);
+});
+
+test('destroy returns JSON for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->delete(
+            "/follow-ups/{$followUp->id}",
+            [],
+            ['X-Requested-With' => 'XMLHttpRequest', 'Accept' => 'application/json'],
+        );
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    $this->assertDatabaseMissing('follow_ups', ['id' => $followUp->id]);
+});
+
+test('destroy prevents deleting another users follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $otherUser->id,
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->delete("/follow-ups/{$followUp->id}");
+
+    $response->assertNotFound();
+    $this->assertDatabaseHas('follow_ups', ['id' => $followUp->id]);
 });

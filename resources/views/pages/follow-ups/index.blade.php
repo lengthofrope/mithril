@@ -16,6 +16,14 @@
         />
     </div>
 
+    {{-- Toolbar --}}
+    <div class="mb-6 flex items-center justify-end">
+        @include('partials.follow-up-create-modal', [
+            'teamOptions' => $teamOptions,
+            'memberOptions' => $memberOptions,
+        ])
+    </div>
+
     {{-- Results --}}
     <div id="follow-ups-results">
         @include('partials.follow-ups-list', ['sections' => $sections])
