@@ -25,6 +25,22 @@ class TaskRequest extends FormRequest
     }
 
     /**
+     * Convert empty strings to null for nullable foreign key fields.
+     *
+     * @return void
+     */
+    protected function prepareForValidation(): void
+    {
+        $nullableFields = ['team_id', 'team_member_id', 'task_group_id', 'task_category_id'];
+
+        foreach ($nullableFields as $field) {
+            if ($this->has($field) && $this->input($field) === '') {
+                $this->merge([$field => null]);
+            }
+        }
+    }
+
+    /**
      * Get the validation rules for task creation and update.
      *
      * @return array<string, mixed>

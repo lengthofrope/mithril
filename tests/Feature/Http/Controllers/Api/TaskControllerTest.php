@@ -219,3 +219,45 @@ test('destroy returns 404 when task does not exist', function () {
 
     $response->assertNotFound();
 });
+
+test('patch updates a single FK field sent as string from auto-save', function (string $field, string $factoryClass) {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $task = Task::factory()->create(['user_id' => $user->id]);
+    $related = $factoryClass::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->patchJson("/api/v1/tasks/{$task->id}", [
+        $field => (string) $related->id,
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('tasks', [
+        'id' => $task->id,
+        $field => $related->id,
+    ]);
+})->with([
+    'team_id' => ['team_id', \App\Models\Team::class],
+    'team_member_id' => ['team_member_id', \App\Models\TeamMember::class],
+    'task_category_id' => ['task_category_id', \App\Models\TaskCategory::class],
+    'task_group_id' => ['task_group_id', \App\Models\TaskGroup::class],
+]);
+
+test('patch clears a FK field when empty string is sent from auto-save', function (string $field) {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $task = Task::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->patchJson("/api/v1/tasks/{$task->id}", [
+        $field => '',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('tasks', [
+        'id' => $task->id,
+        $field => null,
+    ]);
+})->with(['team_id', 'team_member_id', 'task_category_id', 'task_group_id']);

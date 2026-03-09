@@ -32,19 +32,23 @@ function autoSaveField(config: AutoSaveFieldConfig): Record<string, unknown> {
 
         /**
          * Wires the debounced save watcher after Alpine initialises the component.
-         * Skips the first $watch trigger caused by the initial x-init value assignment.
+         * Uses $nextTick to mark as initialized after x-init has assigned the value,
+         * ensuring the first real user change always triggers a save.
          */
-        init(this: { value: string; status: SaveStatus; _initialized: boolean; save: () => Promise<void>; $watch: (key: string, cb: () => void) => void }): void {
+        init(this: { value: string; status: SaveStatus; _initialized: boolean; save: () => Promise<void>; $watch: (key: string, cb: () => void) => void; $nextTick: (cb: () => void) => void }): void {
             const debouncedSave = debounce(() => {
                 void this.save();
             }, debounceMs);
 
             this.$watch('value', () => {
                 if (!this._initialized) {
-                    this._initialized = true;
                     return;
                 }
                 debouncedSave();
+            });
+
+            this.$nextTick(() => {
+                this._initialized = true;
             });
         },
 

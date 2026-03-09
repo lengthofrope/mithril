@@ -47,10 +47,9 @@
                 allMembers: @js($memberOptions),
                 selectedTeamId: @js((string) ($task->team_id ?? '')),
                 get filteredMemberOptions() {
-                    const filtered = this.selectedTeamId
+                    return this.selectedTeamId
                         ? this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId))
                         : this.allMembers;
-                    return [{ value: '', label: '— None —' }, ...filtered];
                 },
             }"
         >
@@ -78,7 +77,7 @@
             {{-- Member select (filtered by team) --}}
             <div
                 x-data="autoSaveField({ endpoint: @js($taskEndpoint), field: 'team_member_id' })"
-                x-init="value = @js((string) ($task->team_member_id ?? ''))"
+                x-init="$nextTick(() => { value = @js((string) ($task->team_member_id ?? '')); })"
                 class="flex flex-col gap-1.5"
             >
                 <label for="asf-team_member_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Assigned to</label>
@@ -88,6 +87,7 @@
                     x-model="value"
                     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
                 >
+                    <option value="">— None —</option>
                     <template x-for="opt in filteredMemberOptions" :key="opt.value">
                         <option :value="opt.value" x-text="opt.label"></option>
                     </template>
