@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\ChartType;
+use App\Enums\DataSource;
 use App\Enums\FollowUpStatus;
 use App\Enums\MemberStatus;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
+use App\Models\AnalyticsWidget;
 use App\Models\Bila;
 use App\Models\BilaPrepItem;
 use App\Models\FollowUp;
@@ -40,6 +43,8 @@ class DatabaseSeeder extends Seeder
         // Seed real team data for Bas
         $basTeams = $this->createBasTeams($bas->id);
         $basMembers = $this->createBasTeamMembers($basTeams, $bas->id);
+        $this->createBasTaskCategories($bas->id);
+        $this->createBasAnalyticsWidgets($bas->id);
 
         // Seed sample data for admin user
         [$teamAlpha, $teamBeta] = $this->createTeams($admin->id);
@@ -180,6 +185,105 @@ class DatabaseSeeder extends Seeder
             ]),
             $membersData,
         );
+    }
+
+    /**
+     * Create task categories for Bas de Kort.
+     *
+     * @param int $userId
+     * @return list<TaskCategory>
+     */
+    private function createBasTaskCategories(int $userId): array
+    {
+        $names = ['People', 'Technical', 'Communication', 'Administrative', 'Hiring', 'Incident', 'Planning'];
+
+        return array_map(
+            fn (string $name) => TaskCategory::create(['user_id' => $userId, 'name' => $name]),
+            $names,
+        );
+    }
+
+    /**
+     * Create default analytics widgets for Bas de Kort.
+     *
+     * @param int $userId
+     * @return void
+     */
+    private function createBasAnalyticsWidgets(int $userId): void
+    {
+        $widgets = [
+            [
+                'data_source' => DataSource::TasksOverTime,
+                'chart_type' => ChartType::Line,
+                'title' => 'Issues over Time',
+                'column_span' => 3,
+                'show_on_dashboard' => true,
+                'show_on_analytics' => true,
+                'sort_order_dashboard' => 0,
+                'sort_order_analytics' => 0,
+                'time_range' => '30d',
+            ],
+            [
+                'data_source' => DataSource::TasksByStatus,
+                'chart_type' => ChartType::Donut,
+                'title' => null,
+                'column_span' => 1,
+                'show_on_dashboard' => false,
+                'show_on_analytics' => true,
+                'sort_order_analytics' => 1,
+            ],
+            [
+                'data_source' => DataSource::FollowUpsByUrgency,
+                'chart_type' => ChartType::Bar,
+                'title' => null,
+                'column_span' => 1,
+                'show_on_dashboard' => false,
+                'show_on_analytics' => true,
+                'sort_order_analytics' => 2,
+            ],
+            [
+                'data_source' => DataSource::TasksByPriority,
+                'chart_type' => ChartType::BarHorizontal,
+                'title' => null,
+                'column_span' => 1,
+                'show_on_dashboard' => false,
+                'show_on_analytics' => true,
+                'sort_order_analytics' => 3,
+            ],
+            [
+                'data_source' => DataSource::TasksByMember,
+                'chart_type' => ChartType::BarHorizontal,
+                'title' => null,
+                'column_span' => 2,
+                'show_on_dashboard' => false,
+                'show_on_analytics' => true,
+                'sort_order_analytics' => 4,
+            ],
+            [
+                'data_source' => DataSource::FollowUpsOverTime,
+                'chart_type' => ChartType::Line,
+                'title' => null,
+                'column_span' => 1,
+                'show_on_dashboard' => false,
+                'show_on_analytics' => true,
+                'sort_order_analytics' => 5,
+                'time_range' => '30d',
+            ],
+            [
+                'data_source' => DataSource::TaskActivity,
+                'chart_type' => ChartType::Line,
+                'title' => null,
+                'column_span' => 2,
+                'show_on_dashboard' => false,
+                'show_on_analytics' => true,
+                'sort_order_analytics' => 6,
+                'time_range' => '30d',
+            ],
+        ];
+
+        foreach ($widgets as $data) {
+            AnalyticsWidget::create(array_merge(['user_id' => $userId], $data));
+        }
     }
 
     /**
