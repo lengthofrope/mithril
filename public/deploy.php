@@ -181,15 +181,18 @@ function extractBearerToken(): ?string
 function run(string $command, array &$log, string $stepName): array
 {
     $repoPath = dirname(__DIR__);
-    $path = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
-    $home = $repoPath;
+    $home = posix_getpwuid(posix_geteuid())['dir'] ?? $repoPath;
+
+    $innerCommand = sprintf(
+        'cd %s && %s',
+        escapeshellarg($repoPath),
+        $command,
+    );
 
     $wrappedCommand = sprintf(
-        'cd %s && export PATH=%s && export HOME=%s && %s 2>&1',
-        escapeshellarg($repoPath),
-        escapeshellarg($path),
+        'export HOME=%s && bash -l -c %s 2>&1',
         escapeshellarg($home),
-        $command,
+        escapeshellarg($innerCommand),
     );
 
     $output = [];
