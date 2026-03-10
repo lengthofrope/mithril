@@ -217,3 +217,68 @@ test('dashboard counters are zero when no data exists', function () {
     expect($counters['today_follow_ups'])->toBe(0);
     expect($counters['bilas_this_week'])->toBe(0);
 });
+
+test('dashboard passes teamOptions and memberOptions to view', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertViewHas('teamOptions');
+    $response->assertViewHas('memberOptions');
+    expect($response->viewData('teamOptions'))->toBeArray();
+    expect($response->viewData('memberOptions'))->toBeArray();
+});
+
+test('dashboard passes categoryOptions to view', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertViewHas('categoryOptions');
+    expect($response->viewData('categoryOptions'))->toBeArray();
+});
+
+test('dashboard passes groups to view', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertViewHas('groups');
+});
+
+test('dashboard does not render quick-add task form', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertDontSee('Quick-add task');
+    $response->assertDontSee('id="quick-task-title"', false);
+});
+
+test('dashboard renders quick-create buttons for all entity types', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertSee('New task');
+    $response->assertSee('New follow-up');
+    $response->assertSee('New note');
+    $response->assertSee('Schedule bila');
+});
+
+test('dashboard includes create modal partials', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertSee('Create a new task');
+    $response->assertSee('Create a new follow-up');
+    $response->assertSee('Create a new note');
+    $response->assertSee('Schedule a new bila');
+});

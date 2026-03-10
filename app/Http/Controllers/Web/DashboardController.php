@@ -11,6 +11,10 @@ use App\Models\Bila;
 use App\Models\CalendarEvent;
 use App\Models\FollowUp;
 use App\Models\Task;
+use App\Models\TaskCategory;
+use App\Models\TaskGroup;
+use App\Models\Team;
+use App\Models\TeamMember;
 use App\Services\DashboardStatsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -50,6 +54,11 @@ class DashboardController extends Controller
                 ->get()
             : null;
 
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
+        $allCategories = TaskCategory::all();
+        $allGroups = TaskGroup::orderBySortOrder()->get();
+
         return view('pages.dashboard', [
             'title' => 'Dashboard',
             'greeting' => $greeting,
@@ -61,6 +70,10 @@ class DashboardController extends Controller
             'calendarEvents' => $calendarEvents,
             'isMicrosoftConnected' => $isMicrosoftConnected,
             'userTimezone' => $userTz,
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
+            'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => $c->id, 'label' => $c->name])->all(),
+            'groups' => $allGroups,
         ]);
     }
 

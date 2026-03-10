@@ -77,51 +77,29 @@
         </x-tl.counter-card>
     </div>
 
-    {{-- Quick-add task form --}}
-    <div class="mb-8 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-        <h2 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Quick-add task</h2>
-        <form
-            method="POST"
-            action="{{ route('tasks.store') }}"
-            class="flex flex-wrap items-end gap-3"
-        >
-            @csrf
-            <div class="flex-1 min-w-48">
-                <label for="quick-task-title" class="sr-only">Task title</label>
-                <input
-                    id="quick-task-title"
-                    type="text"
-                    name="title"
-                    placeholder="New task title…"
-                    required
-                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
-                >
-            </div>
+    {{-- Quick-create buttons --}}
+    <div class="mb-8 flex flex-wrap gap-3">
+        @include('partials.task-create-modal', [
+            'teamOptions' => $teamOptions,
+            'memberOptions' => $memberOptions,
+            'categoryOptions' => $categoryOptions,
+            'groups' => $groups,
+        ])
 
-            <div>
-                <label for="quick-task-priority" class="sr-only">Priority</label>
-                <select
-                    id="quick-task-priority"
-                    name="priority"
-                    class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
-                >
-                    <option value="normal">Normal</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="low">Low</option>
-                </select>
-            </div>
+        @include('partials.follow-up-create-modal', [
+            'teamOptions' => $teamOptions,
+            'memberOptions' => $memberOptions,
+        ])
 
-            <button
-                type="submit"
-                class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
-            >
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Add task
-            </button>
-        </form>
+        @include('partials.note-create-modal', [
+            'teamOptions' => $teamOptions,
+            'memberOptions' => $memberOptions,
+        ])
+
+        @include('partials.bila-create-modal', [
+            'teamOptions' => $teamOptions,
+            'memberOptions' => $memberOptions,
+        ])
     </div>
 
     {{-- Upcoming calendar events (compact widget) --}}
