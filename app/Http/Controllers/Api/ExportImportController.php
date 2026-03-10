@@ -21,6 +21,7 @@ use App\Models\WeeklyReflection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Handles full data export and import for the dashboard.
@@ -33,32 +34,30 @@ class ExportImportController extends Controller
     use ApiResponse;
 
     /**
-     * Export all application data as a JSON response.
+     * Export all application data as a JSON API response.
      *
      * @return JsonResponse
      */
     public function export(): JsonResponse
     {
-        $payload = [
-            'exported_at' => now()->toIso8601String(),
-            'version' => '1.0',
-            'data' => [
-                'teams' => Team::all()->toArray(),
-                'team_members' => TeamMember::all()->toArray(),
-                'task_categories' => TaskCategory::all()->toArray(),
-                'task_groups' => TaskGroup::all()->toArray(),
-                'tasks' => Task::all()->toArray(),
-                'follow_ups' => FollowUp::all()->toArray(),
-                'bilas' => Bila::all()->toArray(),
-                'bila_prep_items' => BilaPrepItem::all()->toArray(),
-                'agreements' => Agreement::all()->toArray(),
-                'notes' => Note::all()->toArray(),
-                'note_tags' => NoteTag::all()->toArray(),
-                'weekly_reflections' => WeeklyReflection::all()->toArray(),
-            ],
-        ];
+        return $this->successResponse($this->buildExportPayload(), 'Export successful.');
+    }
 
-        return $this->successResponse($payload, 'Export successful.');
+    /**
+     * Export all application data as a downloadable JSON file.
+     *
+     * @return StreamedResponse
+     */
+    public function webExport(): StreamedResponse
+    {
+        $payload = $this->buildExportPayload();
+        $filename = 'mithril-export-' . now()->format('Y-m-d-His') . '.json';
+
+        return response()->streamDownload(function () use ($payload): void {
+            echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }, $filename, [
+            'Content-Type' => 'application/json',
+        ]);
     }
 
     /**
@@ -81,6 +80,67 @@ class ExportImportController extends Controller
         });
 
         return $this->successResponse(null, 'Import successful.');
+    }
+
+    /**
+     * Import data from an uploaded JSON file, replacing all existing records.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function webImport(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'import_file' => ['required', 'file', 'mimes:json,txt'],
+        ]);
+
+        $contents = $request->file('import_file')->get();
+        $parsed = json_decode($contents, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return redirect()->route('settings.index')
+                ->with('error', 'The file does not contain valid JSON.');
+        }
+
+        if (empty($parsed['data']) || !is_array($parsed['data'])) {
+            return redirect()->route('settings.index')
+                ->with('error', 'The file does not contain a valid export structure.');
+        }
+
+        DB::transaction(function () use ($parsed): void {
+            $this->truncateAllTables();
+            $this->insertAll($parsed['data']);
+        });
+
+        return redirect()->route('settings.index')
+            ->with('success', 'Import successful.');
+    }
+
+    /**
+     * Build the full export payload with all user data.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildExportPayload(): array
+    {
+        return [
+            'exported_at' => now()->toIso8601String(),
+            'version' => '1.0',
+            'data' => [
+                'teams' => Team::all()->toArray(),
+                'team_members' => TeamMember::all()->toArray(),
+                'task_categories' => TaskCategory::all()->toArray(),
+                'task_groups' => TaskGroup::all()->toArray(),
+                'tasks' => Task::all()->toArray(),
+                'follow_ups' => FollowUp::all()->toArray(),
+                'bilas' => Bila::all()->toArray(),
+                'bila_prep_items' => BilaPrepItem::all()->toArray(),
+                'agreements' => Agreement::all()->toArray(),
+                'notes' => Note::all()->toArray(),
+                'note_tags' => NoteTag::all()->toArray(),
+                'weekly_reflections' => WeeklyReflection::all()->toArray(),
+            ],
+        ];
     }
 
     /**

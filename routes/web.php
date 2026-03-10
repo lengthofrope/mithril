@@ -108,6 +108,6 @@ Route::middleware('auth')->group(function (): void {
 
     Route::post('/reorder', ReorderController::class)->name('reorder');
 
-    Route::get('/settings/export', [ExportImportController::class, 'export'])->name('settings.export');
-    Route::post('/settings/import', [ExportImportController::class, 'import'])->name('settings.import');
+    Route::get('/settings/export', [ExportImportController::class, 'webExport'])->name('settings.export');
+    Route::post('/settings/import', [ExportImportController::class, 'webImport'])->name('settings.import');
 });
