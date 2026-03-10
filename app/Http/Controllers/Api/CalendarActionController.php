@@ -71,6 +71,13 @@ class CalendarActionController extends Controller
         $data    = array_merge($prefill, $request->except(['team_member_name']));
         unset($data['team_member_name']);
 
+        if ($type === 'bila' && empty($data['team_member_id'])) {
+            return $this->errorResponse(
+                'Cannot create a Bila: no matching team member found from the event attendees.',
+                statusCode: 422,
+            );
+        }
+
         $resource = match ($type) {
             'bila' => Bila::create([
                 'team_member_id' => $data['team_member_id'],

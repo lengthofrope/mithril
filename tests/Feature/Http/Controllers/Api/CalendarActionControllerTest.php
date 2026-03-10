@@ -204,6 +204,27 @@ it('creates a resource with a link to the calendar event', function (): void {
     ]);
 });
 
+it('returns 422 when creating bila without matching team member', function (): void {
+    /** @var \Tests\TestCase $this */
+    $user  = User::factory()->create(['email' => 'lead@example.com']);
+    $event = CalendarEvent::factory()->create([
+        'user_id'   => $user->id,
+        'subject'   => 'External meeting',
+        'attendees' => [
+            ['email' => 'lead@example.com', 'name' => 'Lead'],
+            ['email' => 'external@other.com', 'name' => 'External'],
+        ],
+    ]);
+
+    $response = $this->actingAs($user)->postJson("/api/v1/calendar-events/{$event->id}/create/bila");
+
+    $response->assertStatus(422)
+        ->assertJson(['success' => false]);
+
+    expect($response->json('message'))->toContain('no matching team member');
+    $this->assertDatabaseCount('bilas', 0);
+});
+
 it('returns 400 for invalid create type', function (): void {
     /** @var \Tests\TestCase $this */
     ['user' => $user, 'event' => $event] = makeCalendarFixture();

@@ -57,14 +57,16 @@ function calendarEventActions(eventId: number, initialLinks: CalendarEventLink[]
         links: initialLinks.map(mapLinkToBadge),
         menuOpen: false,
         isLoading: false,
+        errorMessage: '',
 
         /**
          * Create a resource of the given type from this calendar event.
          */
-        async createResource(this: { eventId: number; links: LinkBadge[]; menuOpen: boolean; isLoading: boolean }, type: string): Promise<void> {
+        async createResource(this: { eventId: number; links: LinkBadge[]; menuOpen: boolean; isLoading: boolean; errorMessage: string }, type: string): Promise<void> {
             if (this.isLoading) return;
             this.isLoading = true;
             this.menuOpen = false;
+            this.errorMessage = '';
 
             try {
                 const response = await fetch(`/api/v1/calendar-events/${this.eventId}/create/${type}`, {
@@ -76,10 +78,12 @@ function calendarEventActions(eventId: number, initialLinks: CalendarEventLink[]
                     },
                 });
 
-                const json = await response.json() as { success: boolean; data?: { link?: CalendarEventLink } };
+                const json = await response.json() as { success: boolean; data?: { link?: CalendarEventLink }; message?: string };
 
                 if (json.success && json.data?.link) {
                     this.links.push(mapLinkToBadge(json.data.link));
+                } else if (!json.success && json.message) {
+                    this.errorMessage = json.message;
                 }
             } finally {
                 this.isLoading = false;

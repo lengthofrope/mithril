@@ -38,6 +38,42 @@
         class="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
         role="menu"
     >
+        {{-- Linked resources (shown first for quick access) --}}
+        <template x-if="links.length > 0">
+            <div>
+                <p class="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    Linked
+                </p>
+                <template x-for="link in links" :key="link.id">
+                    <div class="flex items-center justify-between px-3 py-1.5">
+                        <a
+                            :href="link.url"
+                            class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                            <span
+                                class="flex h-5 w-5 items-center justify-center rounded bg-gray-100 text-xs font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                                x-text="link.type"
+                            ></span>
+                            <span x-text="link.label"></span>
+                        </a>
+                        <button
+                            type="button"
+                            class="text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
+                            @click.stop="unlinkResource(link.id)"
+                            :disabled="isLoading"
+                            aria-label="Remove link"
+                        >
+                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </template>
+                <div class="my-1 border-t border-gray-100 dark:border-gray-700"></div>
+            </div>
+        </template>
+
         <p class="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
             Create from event
         </p>
@@ -85,42 +121,17 @@
             <span class="flex h-5 w-5 items-center justify-center rounded bg-green-100 text-xs font-bold text-green-600 dark:bg-green-900/30 dark:text-green-400">N</span>
             Note
         </button>
+    </div>
 
-        {{-- Linked resources --}}
-        <template x-if="links.length > 0">
-            <div>
-                <div class="my-1 border-t border-gray-100 dark:border-gray-700"></div>
-                <p class="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                    Linked
-                </p>
-                <template x-for="link in links" :key="link.id">
-                    <div class="flex items-center justify-between px-3 py-1.5">
-                        <a
-                            :href="link.url"
-                            class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                        >
-                            <span
-                                class="flex h-5 w-5 items-center justify-center rounded bg-gray-100 text-xs font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-                                x-text="link.type"
-                            ></span>
-                            <span x-text="link.label"></span>
-                        </a>
-                        <button
-                            type="button"
-                            class="text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
-                            @click.stop="unlinkResource(link.id)"
-                            :disabled="isLoading"
-                            aria-label="Remove link"
-                        >
-                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                <line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                        </button>
-                    </div>
-                </template>
-            </div>
-        </template>
+    {{-- Error message --}}
+    <div
+        x-show="errorMessage"
+        x-transition
+        @click="errorMessage = ''"
+        class="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 shadow-lg dark:border-red-800 dark:bg-red-900/30 dark:text-red-400"
+        role="alert"
+    >
+        <span x-text="errorMessage"></span>
     </div>
 
     {{-- Loading spinner --}}
@@ -136,12 +147,11 @@
         </svg>
     </div>
 
-    {{-- Link count badge (shown when menu is closed) --}}
+    {{-- Link count indicator (shown when menu is closed) --}}
     <template x-if="links.length > 0 && !menuOpen">
         <span
-            class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-teal-500 text-[0.625rem] font-bold text-white"
-            x-text="links.length"
-            aria-label="Linked resources count"
+            class="absolute -left-1.5 -top-1.5 h-2 w-2 rounded-full bg-teal-500"
+            aria-label="Has linked resources"
         ></span>
     </template>
 </div>
