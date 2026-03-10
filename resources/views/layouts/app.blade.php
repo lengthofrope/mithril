@@ -8,6 +8,7 @@
 
     <title>{{ $title ?? 'Dashboard' }} | Mithril</title>
 
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#3d8b6b">
 

@@ -8,6 +8,8 @@
 
     <title>{{ $title ?? 'Dashboard' }} | Mithril</title>
 
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
     <!-- Fonts (non-blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

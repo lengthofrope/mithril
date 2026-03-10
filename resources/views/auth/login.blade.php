@@ -9,6 +9,7 @@
 
     <title>{{ $title ?? 'Sign In' }} | Mithril</title>
 
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
 
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
