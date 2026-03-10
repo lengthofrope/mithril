@@ -29,7 +29,6 @@ class NoteTag extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'note_id',
         'tag',
     ];

@@ -18,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 
 /**
  * Handles task list and kanban page rendering.
@@ -110,10 +111,10 @@ class TaskPageController extends Controller
         $validated = $request->validate([
             'title'            => ['required', 'string', 'max:255'],
             'priority'         => ['nullable', 'string', 'in:urgent,high,normal,low'],
-            'task_group_id'    => ['nullable', 'integer', 'exists:task_groups,id'],
-            'team_id'          => ['nullable', 'integer', 'exists:teams,id'],
-            'team_member_id'   => ['nullable', 'integer', 'exists:team_members,id'],
-            'task_category_id' => ['nullable', 'integer', 'exists:task_categories,id'],
+            'task_group_id'    => ['nullable', 'integer', Rule::exists('task_groups', 'id')->where('user_id', auth()->id())],
+            'team_id'          => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
+            'team_member_id'   => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'task_category_id' => ['nullable', 'integer', Rule::exists('task_categories', 'id')->where('user_id', auth()->id())],
             'deadline'         => ['nullable', 'date'],
         ]);
 
@@ -214,9 +215,17 @@ class TaskPageController extends Controller
     public function bulkUpdate(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'task_ids'   => ['required', 'array'],
-            'task_ids.*' => ['integer', 'exists:tasks,id'],
-            'fields'     => ['required', 'array'],
+            'task_ids'               => ['required', 'array'],
+            'task_ids.*'             => ['integer', Rule::exists('tasks', 'id')->where('user_id', auth()->id())],
+            'fields'                 => ['required', 'array'],
+            'fields.status'          => ['sometimes', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
+            'fields.priority'        => ['sometimes', 'string', 'in:' . implode(',', array_column(Priority::cases(), 'value'))],
+            'fields.task_group_id'   => ['sometimes', 'nullable', 'integer', Rule::exists('task_groups', 'id')->where('user_id', auth()->id())],
+            'fields.task_category_id' => ['sometimes', 'nullable', 'integer', Rule::exists('task_categories', 'id')->where('user_id', auth()->id())],
+            'fields.team_id'         => ['sometimes', 'nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
+            'fields.team_member_id'  => ['sometimes', 'nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'fields.deadline'        => ['sometimes', 'nullable', 'date'],
+            'fields.is_private'      => ['sometimes', 'boolean'],
         ]);
 
         Task::whereIn('id', $validated['task_ids'])
@@ -236,10 +245,10 @@ class TaskPageController extends Controller
     public function move(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'id'             => ['required', 'integer', 'exists:tasks,id'],
-            'status'         => ['nullable', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
-            'task_group_id'  => ['nullable', 'integer', 'exists:task_groups,id'],
-            'clear_group'    => ['nullable', 'boolean'],
+            'id'            => ['required', 'integer', Rule::exists('tasks', 'id')->where('user_id', auth()->id())],
+            'status'        => ['nullable', 'string', 'in:' . implode(',', array_column(TaskStatus::cases(), 'value'))],
+            'task_group_id' => ['nullable', 'integer', Rule::exists('task_groups', 'id')->where('user_id', auth()->id())],
+            'clear_group'   => ['nullable', 'boolean'],
         ]);
 
         $task = Task::findOrFail($validated['id']);

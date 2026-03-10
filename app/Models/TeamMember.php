@@ -47,7 +47,6 @@ class TeamMember extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'team_id',
         'name',
         'role',

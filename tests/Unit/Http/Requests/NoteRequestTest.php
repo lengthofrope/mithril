@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Requests\NoteRequest;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 test('note request rules method returns expected rule keys', function () {
@@ -98,7 +99,9 @@ test('note request fails when team_id references nonexistent record', function (
 });
 
 test('note request passes when team_id references existing team', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['title' => 'My Note', 'team_id' => $team->id],

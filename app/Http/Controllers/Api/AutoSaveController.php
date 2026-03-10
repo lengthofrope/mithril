@@ -58,6 +58,12 @@ class AutoSaveController extends Controller
         $modelClass = $this->modelMap[$modelKey];
         $model = $modelClass::findOrFail($id);
 
+        $blockedFields = ['id', 'user_id', 'created_at', 'updated_at'];
+
+        if (in_array($field, $blockedFields, true)) {
+            return $this->errorResponse("Field '{$field}' cannot be auto-saved.", [], 422);
+        }
+
         if (!in_array($field, $model->getFillable(), true)) {
             return $this->errorResponse("Field '{$field}' is not fillable on {$modelKey}.", [], 422);
         }

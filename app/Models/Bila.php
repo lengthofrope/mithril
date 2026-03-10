@@ -32,7 +32,6 @@ class Bila extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'team_member_id',
         'scheduled_date',
         'notes',

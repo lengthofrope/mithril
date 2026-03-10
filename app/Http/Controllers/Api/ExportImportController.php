@@ -155,9 +155,19 @@ class ExportImportController extends Controller
             return;
         }
 
+        $model = new $modelClass();
+        $allowedFields = $model->getFillable();
+
         foreach (array_chunk($data[$key], 500) as $chunk) {
-            $rows = array_map(fn (array $row) => array_merge($row, ['user_id' => $userId]), $chunk);
-            DB::table((new $modelClass())->getTable())->insert($rows);
+            $rows = array_map(function (array $row) use ($allowedFields, $userId): array {
+                $filtered = array_intersect_key($row, array_flip($allowedFields));
+                unset($filtered['id'], $filtered['user_id']);
+                $filtered['user_id'] = $userId;
+
+                return $filtered;
+            }, $chunk);
+
+            DB::table($model->getTable())->insert($rows);
         }
     }
 }

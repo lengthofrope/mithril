@@ -40,7 +40,6 @@ class FollowUp extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'task_id',
         'team_member_id',
         'description',

@@ -33,7 +33,6 @@ class TaskCategory extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'name',
         'sort_order',
     ];

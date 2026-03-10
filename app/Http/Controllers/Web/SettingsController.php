@@ -52,7 +52,7 @@ class SettingsController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'theme_preference' => ['required', 'string', 'in:light,dark'],
-            'current_password' => ['nullable', 'string'],
+            'current_password' => ['required_with:password', 'nullable', 'string'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
 

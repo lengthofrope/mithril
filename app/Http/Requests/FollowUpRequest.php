@@ -49,8 +49,8 @@ class FollowUpRequest extends FormRequest
         $descriptionRule = $this->isMethod('POST') ? 'required' : 'sometimes';
 
         return [
-            'task_id' => ['nullable', 'integer', 'exists:tasks,id'],
-            'team_member_id' => ['nullable', 'integer', 'exists:team_members,id'],
+            'task_id' => ['nullable', 'integer', Rule::exists('tasks', 'id')->where('user_id', auth()->id())],
+            'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'description' => [$descriptionRule, 'string'],
             'waiting_on' => ['nullable', 'string', 'max:255'],
             'follow_up_date' => ['nullable', 'date'],

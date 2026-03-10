@@ -8,7 +8,10 @@ use App\Events\BilaScheduled;
 use App\Events\TaskStatusChanged;
 use App\Listeners\CreateFollowUpOnWaiting;
 use App\Listeners\ScheduleNextBila;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -36,5 +39,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Event::listen(TaskStatusChanged::class, CreateFollowUpOnWaiting::class);
         Event::listen(BilaScheduled::class, ScheduleNextBila::class);
+
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
     }
 }

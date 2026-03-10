@@ -30,7 +30,6 @@ class WeeklyReflection extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'week_start',
         'week_end',
         'summary',

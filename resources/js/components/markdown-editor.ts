@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 /**
@@ -9,7 +10,7 @@ interface MarkdownEditorConfig {
 
 /**
  * Alpine.js component that pairs a textarea with a live HTML preview.
- * Uses the `marked` library to convert Markdown to sanitized HTML.
+ * Uses `marked` to convert Markdown to HTML and DOMPurify to sanitize it before rendering.
  * The preview pane is toggled via `togglePreview()`.
  */
 function markdownEditor(config: MarkdownEditorConfig): Record<string, unknown> {
@@ -34,11 +35,12 @@ function markdownEditor(config: MarkdownEditorConfig): Record<string, unknown> {
         },
 
         /**
-         * Converts the current Markdown content to HTML and stores it in `preview`.
+         * Converts the current Markdown content to HTML, sanitizes it with DOMPurify,
+         * and stores the result in `preview`.
          */
         async renderPreview(this: { content: string; preview: string }): Promise<void> {
             const rendered = await marked.parse(this.content);
-            this.preview = rendered;
+            this.preview = DOMPurify.sanitize(rendered);
         },
 
         /**

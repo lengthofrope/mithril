@@ -154,7 +154,7 @@ test('auto-save returns 422 when field is not fillable on the model', function (
     $response->assertStatus(422)
         ->assertJson(['success' => false]);
 
-    expect($response->json('message'))->toContain("'id' is not fillable");
+    expect($response->json('message'))->toContain("'id' cannot be auto-saved");
 });
 
 test('auto-save returns 422 validation error when model field is missing', function () {
