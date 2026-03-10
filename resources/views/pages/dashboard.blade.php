@@ -124,6 +124,11 @@
         </form>
     </div>
 
+    {{-- Calendar events --}}
+    <div class="mb-8">
+        <x-tl.calendar-events :events="$calendarEvents" :isMicrosoftConnected="$isMicrosoftConnected" :timezone="$userTimezone" />
+    </div>
+
     {{-- Today section --}}
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 

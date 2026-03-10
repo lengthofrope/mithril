@@ -9,6 +9,7 @@ use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Services\BreadcrumbBuilder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -73,6 +74,23 @@ class SettingsController extends Controller
         $user->save();
 
         return redirect()->route('settings.index')->with('status', 'Profile updated successfully.');
+    }
+
+    /**
+     * Update the authenticated user's timezone preference.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateTimezone(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'timezone' => ['required', 'string', 'timezone:all'],
+        ]);
+
+        $request->user()->update(['timezone' => $validated['timezone']]);
+
+        return response()->json(['success' => true]);
     }
 
     /**

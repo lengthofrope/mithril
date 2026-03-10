@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Web\AboutController;
+use App\Http\Controllers\Web\MicrosoftAuthController;
 use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
 use App\Http\Controllers\Web\DashboardController;
@@ -87,6 +88,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
+    Route::patch('/settings/timezone', [SettingsController::class, 'updateTimezone'])->name('settings.updateTimezone');
 
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
     Route::post('/tasks/move', [TaskPageController::class, 'move'])->name('tasks.move');
@@ -121,4 +123,8 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/settings/import', [ExportImportController::class, 'webImport'])->name('settings.import');
 
     Route::get('/about', [AboutController::class, 'index'])->name('about.index');
+
+    Route::get('/auth/microsoft/redirect', [MicrosoftAuthController::class, 'redirect'])->name('microsoft.redirect');
+    Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'callback'])->name('microsoft.callback');
+    Route::delete('/auth/microsoft', [MicrosoftAuthController::class, 'disconnect'])->name('microsoft.disconnect');
 });
