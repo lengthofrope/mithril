@@ -17,7 +17,7 @@ return [
     'authority' => 'https://login.microsoftonline.com/',
     'graph_url'  => 'https://graph.microsoft.com/v1.0/',
 
-    'calendar_sync_interval_minutes'     => 15,
+    'calendar_sync_interval_minutes'     => 5,
     'availability_sync_interval_minutes' => 5,
     'calendar_days_ahead'                => 7,
     'schedule_batch_size'                => 20,

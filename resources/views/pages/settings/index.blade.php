@@ -142,7 +142,7 @@
                                 <p class="text-sm font-medium text-green-600 dark:text-green-400">
                                     Connected as {{ auth()->user()->microsoft_email }}
                                 </p>
-                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Calendar syncs every 15 minutes, team availability every 5 minutes.</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Calendar and team availability sync every 5 minutes.</p>
                             @else
                                 <p class="text-sm font-medium text-gray-800 dark:text-white/90">Not connected</p>
                                 <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Connect your Microsoft account to sync your calendar and team availability.</p>

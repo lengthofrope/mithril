@@ -16,7 +16,7 @@ Schedule::command('analytics:snapshot')
     ->withoutOverlapping();
 
 Schedule::command('microsoft:sync-calendars')
-    ->everyFifteenMinutes()
+    ->everyFiveMinutes()
     ->name('microsoft.sync-calendars')
     ->withoutOverlapping();
 
