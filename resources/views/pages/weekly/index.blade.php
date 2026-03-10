@@ -177,17 +177,20 @@
                 class="absolute right-0 z-10 mt-2 rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-900"
             >
                 @csrf
-                <label for="past-week-start" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Week starting on
-                </label>
-                <input
-                    type="date"
-                    id="past-week-start"
-                    name="week_start"
-                    max="{{ now()->subWeek()->startOfWeek()->toDateString() }}"
-                    required
-                    class="mb-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
-                />
+                <div x-data="datePicker()">
+                    <label for="past-week-start" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                        Week starting on
+                    </label>
+                    <input
+                        type="text"
+                        id="past-week-start"
+                        name="week_start"
+                        x-ref="input"
+                        placeholder="YYYY-MM-DD"
+                        required
+                        class="mb-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
+                    />
+                </div>
                 <button
                     type="submit"
                     class="w-full rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"

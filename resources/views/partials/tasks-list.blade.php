@@ -23,13 +23,13 @@
                     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                 >
                     {{-- Group header --}}
-                    <button
-                        type="button"
-                        x-on:click="collapsed = !collapsed"
-                        x-bind:aria-expanded="!collapsed"
-                        class="flex w-full items-center justify-between px-5 py-3 text-left"
-                    >
-                        <div class="flex items-center gap-2">
+                    <div class="flex w-full items-center justify-between px-5 py-3">
+                        <button
+                            type="button"
+                            x-on:click="collapsed = !collapsed"
+                            x-bind:aria-expanded="!collapsed"
+                            class="flex flex-1 items-center gap-2 text-left"
+                        >
                             @if($group->color)
                                 <span
                                     class="inline-block h-3 w-3 rounded-full"
@@ -43,16 +43,47 @@
                             <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-white/5 dark:text-gray-400">
                                 {{ $group->tasks->count() }}
                             </span>
-                        </div>
+                        </button>
 
-                        <svg
-                            class="h-4 w-4 text-gray-400 transition"
-                            x-bind:class="collapsed ? '-rotate-90' : ''"
-                            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                        >
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </button>
+                        <div class="flex items-center gap-1" x-on:click.stop>
+                            <x-tl.confirm-dialog-modal
+                                :title="'Delete ' . $group->name . '?'"
+                                message="This will remove the group. Tasks in this group will become ungrouped."
+                                :triggerId="'del-tl-group-' . $group->id"
+                            >
+                                <x-slot name="trigger">
+                                    <button
+                                        type="button"
+                                        class="rounded p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+                                        aria-label="Delete group {{ $group->name }}"
+                                    >
+                                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                                        </svg>
+                                    </button>
+                                </x-slot>
+                                <x-slot name="form">
+                                    <form
+                                        id="confirm-form-del-tl-group-{{ $group->id }}"
+                                        method="POST"
+                                        action="{{ route('task-groups.destroy', $group->id) }}"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                </x-slot>
+                            </x-tl.confirm-dialog-modal>
+
+                            <svg
+                                class="h-4 w-4 cursor-pointer text-gray-400 transition"
+                                x-bind:class="collapsed ? '-rotate-90' : ''"
+                                x-on:click="collapsed = !collapsed"
+                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+                            >
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </div>
+                    </div>
 
                     {{-- Task list --}}
                     <div

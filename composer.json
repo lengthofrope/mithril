@@ -12,8 +12,10 @@
     "license": "proprietary",
     "require": {
         "php": "^8.4",
+        "bacon/bacon-qr-code": "^3.0",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "pragmarx/google2fa-laravel": "^2.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
