@@ -255,13 +255,17 @@
             @php
                 $statusColorMap = [
                     'available'           => 'bg-green-500',
-                    'absent'              => 'bg-red-400',
                     'partially_available' => 'bg-yellow-500',
+                    'working_elsewhere'   => 'bg-blue-500',
+                    'in_a_meeting'        => 'bg-red-500',
+                    'absent'              => 'bg-gray-400',
                 ];
                 $statusLabelMap = [
                     'available'           => 'Available',
-                    'absent'              => 'Absent',
                     'partially_available' => 'Partially available',
+                    'working_elsewhere'   => 'Working elsewhere',
+                    'in_a_meeting'        => 'In a meeting',
+                    'absent'              => 'Absent',
                 ];
                 $statusKey = $member->status instanceof \BackedEnum ? $member->status->value : (string) $member->status;
                 $statusColor = $statusColorMap[$statusKey] ?? 'bg-gray-400';

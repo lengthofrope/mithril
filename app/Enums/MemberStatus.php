@@ -10,6 +10,8 @@ namespace App\Enums;
 enum MemberStatus: string
 {
     case Available = 'available';
-    case Absent = 'absent';
     case PartiallyAvailable = 'partially_available';
+    case WorkingElsewhere = 'working_elsewhere';
+    case InAMeeting = 'in_a_meeting';
+    case Absent = 'absent';
 }

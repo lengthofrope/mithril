@@ -46,7 +46,7 @@ class AnalyticsDataService
      * @param DataSource $source The analytics data source to resolve.
      * @return ChartData Aggregated labels, series values, and colours.
      */
-    public function resolve(DataSource $source): ChartData
+    public function resolve(DataSource $source, string $timezone = 'UTC'): ChartData
     {
         if ($source->isTimeSeries()) {
             throw new \InvalidArgumentException(
@@ -61,9 +61,9 @@ class AnalyticsDataService
             DataSource::TasksByGroup     => $this->tasksByGroup(),
             DataSource::TasksByMember    => $this->tasksByMember(),
             DataSource::TasksByTeam      => $this->tasksByTeam(),
-            DataSource::TasksByDeadline  => $this->tasksByDeadline(),
+            DataSource::TasksByDeadline  => $this->tasksByDeadline($timezone),
             DataSource::FollowUpsByStatus  => $this->followUpsByStatus(),
-            DataSource::FollowUpsByUrgency => $this->followUpsByUrgency(),
+            DataSource::FollowUpsByUrgency => $this->followUpsByUrgency($timezone),
             default => throw new \InvalidArgumentException("Unhandled source: {$source->value}"),
         };
     }
@@ -313,12 +313,12 @@ class AnalyticsDataService
      *
      * @return ChartData Six fixed buckets with counts.
      */
-    private function tasksByDeadline(): ChartData
+    private function tasksByDeadline(string $timezone = 'UTC'): ChartData
     {
-        $today         = now()->startOfDay();
-        $endOfWeek     = now()->endOfWeek();
-        $startNextWeek = now()->startOfWeek()->addWeek();
-        $endNextWeek   = now()->endOfWeek()->addWeek();
+        $today         = now($timezone)->startOfDay();
+        $endOfWeek     = now($timezone)->endOfWeek();
+        $startNextWeek = now($timezone)->startOfWeek()->addWeek();
+        $endNextWeek   = now($timezone)->endOfWeek()->addWeek();
 
         $base = Task::query()->where('status', '!=', TaskStatus::Done->value);
 
@@ -380,10 +380,10 @@ class AnalyticsDataService
      *
      * @return ChartData Four fixed urgency buckets with counts.
      */
-    private function followUpsByUrgency(): ChartData
+    private function followUpsByUrgency(string $timezone = 'UTC'): ChartData
     {
-        $today     = now()->startOfDay();
-        $endOfWeek = now()->endOfWeek();
+        $today     = now($timezone)->startOfDay();
+        $endOfWeek = now($timezone)->endOfWeek();
 
         $base = FollowUp::query()->where('status', '!=', FollowUpStatus::Done->value);
 

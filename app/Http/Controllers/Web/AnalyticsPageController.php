@@ -69,15 +69,16 @@ class AnalyticsPageController extends Controller
 
         $timeRange = $validated['time_range'] ?? '30d';
         $userId    = $request->user()->id;
+        $timezone  = $request->user()->getEffectiveTimezone();
         $result    = [];
 
         foreach ($validated['sources'] as $sourceKey) {
             $source = DataSource::from($sourceKey);
 
             if ($source->isTimeSeries()) {
-                $chartData = $this->resolveTimeSeries($snapshotService, $source, $userId, $timeRange);
+                $chartData = $this->resolveTimeSeries($snapshotService, $source, $userId, $timeRange, $timezone);
             } else {
-                $chartData = $dataService->resolve($source);
+                $chartData = $dataService->resolve($source, $timezone);
             }
 
             $result[$sourceKey] = [
@@ -176,6 +177,7 @@ class AnalyticsPageController extends Controller
      * @param DataSource               $source
      * @param int                      $userId
      * @param string                   $timeRange
+     * @param string                   $timezone
      * @return \App\DataTransferObjects\TimeSeriesChartData
      */
     private function resolveTimeSeries(
@@ -183,11 +185,12 @@ class AnalyticsPageController extends Controller
         DataSource $source,
         int $userId,
         string $timeRange,
+        string $timezone,
     ): \App\DataTransferObjects\TimeSeriesChartData {
         return match ($source) {
-            DataSource::TasksOverTime     => $service->tasksOverTime($userId, $timeRange),
-            DataSource::TaskActivity      => $service->taskActivity($userId, $timeRange),
-            DataSource::FollowUpsOverTime => $service->followUpsOverTime($userId, $timeRange),
+            DataSource::TasksOverTime     => $service->tasksOverTime($userId, $timeRange, $timezone),
+            DataSource::TaskActivity      => $service->taskActivity($userId, $timeRange, $timezone),
+            DataSource::FollowUpsOverTime => $service->followUpsOverTime($userId, $timeRange, $timezone),
         };
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\AgreementController;
 use App\Http\Controllers\Api\AutoSaveController;
+use App\Http\Controllers\Api\CalendarActionController;
 use App\Http\Controllers\Api\CounterController;
 
 use App\Http\Controllers\Api\BilaController;
@@ -34,5 +35,18 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
     Route::get('export', [ExportImportController::class, 'export']);
     Route::post('import', [ExportImportController::class, 'import']);
+
+    Route::prefix('calendar-events/{calendarEvent}')->as('calendar-events.')->group(function (): void {
+        Route::get('prefill/{type}', [CalendarActionController::class, 'prefill'])
+            ->name('prefill')
+            ->whereIn('type', ['bila', 'task', 'follow-up', 'note']);
+
+        Route::post('create/{type}', [CalendarActionController::class, 'create'])
+            ->name('create')
+            ->whereIn('type', ['bila', 'task', 'follow-up', 'note']);
+
+        Route::delete('links/{calendarEventLink}', [CalendarActionController::class, 'unlink'])
+            ->name('unlink');
+    });
 
 });

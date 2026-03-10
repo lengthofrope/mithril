@@ -6,8 +6,10 @@ use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Web\AboutController;
+use App\Http\Controllers\Web\MicrosoftAuthController;
 use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
+use App\Http\Controllers\Web\CalendarPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\FollowUpPageController;
 use App\Http\Controllers\Web\NotePageController;
@@ -71,6 +73,8 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/bilas/{bila}/undone', [BilaPageController::class, 'undoDone'])->name('bilas.undone');
     Route::delete('/bilas/{bila}', [BilaPageController::class, 'destroy'])->name('bilas.destroy');
 
+    Route::get('/calendar', [CalendarPageController::class, 'index'])->name('calendar.index');
+
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
     Route::post('/weekly', [WeeklyReflectionController::class, 'store'])->name('weekly.store');
     Route::delete('/weekly/{weeklyReflection}', [WeeklyReflectionController::class, 'destroy'])->name('weekly.destroy');
@@ -87,6 +91,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
+    Route::patch('/settings/timezone', [SettingsController::class, 'updateTimezone'])->name('settings.updateTimezone');
 
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
     Route::post('/tasks/move', [TaskPageController::class, 'move'])->name('tasks.move');
@@ -121,4 +126,8 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/settings/import', [ExportImportController::class, 'webImport'])->name('settings.import');
 
     Route::get('/about', [AboutController::class, 'index'])->name('about.index');
+
+    Route::get('/auth/microsoft/redirect', [MicrosoftAuthController::class, 'redirect'])->name('microsoft.redirect');
+    Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'callback'])->name('microsoft.callback');
+    Route::delete('/auth/microsoft', [MicrosoftAuthController::class, 'disconnect'])->name('microsoft.disconnect');
 });

@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-11
+
+### Added
+
+- **Office 365 integration** — Calendar sync and team member availability sync from Microsoft Graph API
+- **O365 auto-detection** — When a team member's email is saved or the member is created, the system probes the Graph API to determine if it's a valid O365 mailbox and automatically sets the status source
+- **`microsoft:detect-members` command** — Artisan command that checks all manual team members for O365 mailbox compatibility and upgrades matching members to automatic availability sync
+- **Calendar page** — Dedicated `/calendar` page showing all synced events for the next 7 days, grouped by day, with collapsible day sections
+- **Calendar event resource linking** — Link calendar events to existing bilas, notes, or follow-ups via a polymorphic pivot table; create new bilas directly from 1-on-1 meetings with a matched team member
+- **Calendar event pills** — Linked resources displayed as colored pills on calendar events (dashboard widget and calendar page)
+- **Calendar attendee sync** — Attendees from Microsoft Graph calendar events are synced and stored for resource linking
+- **Dashboard calendar widget** — Upcoming events widget on the dashboard showing the next 3 events until end of week, with "View all" link to calendar page
+- **Dashboard quick-create modals** — Quick-create buttons for tasks, follow-ups, notes, and bilas with team/member/category/group selectors
+- **Edit member modal** — Inline editing of team member details via auto-save fields
+- **User timezone setting** — New timezone selector on the Settings page (auto-saves, defaults to Europe/Amsterdam) used for calendar display, day grouping, greeting, and "today" boundaries
+- **New member statuses** — `In a meeting` (red), `Working elsewhere` (blue), `Partially available` (yellow) join `Available` (green) and `Absent` (gray)
+
+### Changed
+
+- **Sync intervals** — Calendar and availability sync both run every 5 minutes (previously 15 and 5)
+- **Status color scheme** — `Absent` changed from red to gray; `In a meeting` (busy) is now red; `Working elsewhere` is blue
+- **Dashboard layout** — Three-column "today" section (tasks, follow-ups, upcoming/bilas) now stretches to equal height; counter card spacing unified
+- **Calendar page window** — Shows a rolling 7-day window instead of until end-of-week
+- **About page changelog** — Improved readability with colored section badges (Added, Changed, Fixed, Security), removed bullet points and em dashes, added spacing between item title and description
+
+### Fixed
+
+- **O365 detection failure** — `isKnownMicrosoftUser()` always returned false due to a 1-minute time window with a 60-minute `availabilityViewInterval` (Graph API requires interval ≤ window)
+- **Availability sync failure** — `SyncMemberAvailabilityJob` used a 30-minute window with a 60-minute interval, causing the same Graph API validation error
+- **Calendar times off by one hour** — Events were displayed in UTC instead of the user's timezone
+- **Status mapping** — O365 `busy` now correctly maps to "In a meeting" (was "Partially available"); `tentative` maps to "Partially available" (was "Available")
+- **Analytics timezone bug** — Charts and deadline/urgency buckets used UTC instead of the user's timezone, causing "today" to lag behind after midnight in non-UTC timezones
+
 ## [1.2.7] - 2026-03-10
 
 ### Added

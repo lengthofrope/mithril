@@ -207,6 +207,72 @@ test('team member returns 404 for non-existent member', function () {
     $response->assertNotFound();
 });
 
+test('member profile page has an edit button that opens a modal with auto-save fields', function () {
+    /** @var \Tests\TestCase $this */
+    $user   = User::factory()->create();
+    $member = TeamMember::factory()->create([
+        'user_id' => $user->id,
+        'name'    => 'Jane Doe',
+        'role'    => 'Senior Developer',
+        'email'   => 'jane@company.com',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('teams.member', $member));
+
+    $response->assertOk();
+    $response->assertSee('editOpen');
+    $response->assertSee('Edit member', false);
+    $response->assertSee("field: 'name'", false);
+    $response->assertSee("field: 'role'", false);
+    $response->assertSee("field: 'email'", false);
+    $response->assertSee('Jane Doe');
+    $response->assertSee('jane@company.com');
+});
+
+test('member profile page shows auto-save fields for bila interval and next bila date', function () {
+    /** @var \Tests\TestCase $this */
+    $user   = User::factory()->create();
+    $member = TeamMember::factory()->create([
+        'user_id'            => $user->id,
+        'bila_interval_days' => 14,
+        'next_bila_date'     => '2026-04-01',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('teams.member', $member));
+
+    $response->assertOk();
+    $response->assertSee("field: 'bila_interval_days'", false);
+    $response->assertSee("field: 'next_bila_date'", false);
+});
+
+test('member profile page shows status select when status_source is manual', function () {
+    /** @var \Tests\TestCase $this */
+    $user   = User::factory()->create();
+    $member = TeamMember::factory()->create([
+        'user_id'       => $user->id,
+        'status_source' => \App\Enums\StatusSource::Manual,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('teams.member', $member));
+
+    $response->assertOk();
+    $response->assertSee("field: 'status'", false);
+});
+
+test('member profile page does not show status select when status_source is microsoft', function () {
+    /** @var \Tests\TestCase $this */
+    $user   = User::factory()->create();
+    $member = TeamMember::factory()->create([
+        'user_id'       => $user->id,
+        'status_source' => \App\Enums\StatusSource::Microsoft,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('teams.member', $member));
+
+    $response->assertOk();
+    $response->assertDontSee("field: 'status'", false);
+});
+
 test('upload member avatar stores file and updates avatar_path', function () {
     /** @var \Tests\TestCase $this */
     Storage::fake('public');

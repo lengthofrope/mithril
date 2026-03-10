@@ -8,8 +8,13 @@ use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AnalyticsWidget;
 use App\Models\Bila;
+use App\Models\CalendarEvent;
 use App\Models\FollowUp;
 use App\Models\Task;
+use App\Models\TaskCategory;
+use App\Models\TaskGroup;
+use App\Models\Team;
+use App\Models\TeamMember;
 use App\Services\DashboardStatsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -31,10 +36,28 @@ class DashboardController extends Controller
      */
     public function index(Request $request, DashboardStatsService $statsService): View
     {
-        $greeting = $this->resolveGreeting();
+        $userTz = $request->user()->getEffectiveTimezone();
+        $greeting = $this->resolveGreeting($userTz);
         $counters = $statsService->buildStats();
-        $today = $this->buildTodaySection();
+        $today = $this->buildTodaySection($userTz);
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
+
+        $isMicrosoftConnected = $request->user()->hasMicrosoftConnection();
+
+        $calendarEvents = $isMicrosoftConnected
+            ? CalendarEvent::query()
+                ->with('links')
+                ->startingFrom(now($userTz)->startOfDay()->utc())
+                ->until(now($userTz)->endOfWeek()->utc())
+                ->orderBy('start_at')
+                ->limit(3)
+                ->get()
+            : null;
+
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->get();
+        $allCategories = TaskCategory::all();
+        $allGroups = TaskGroup::orderBySortOrder()->get();
 
         return view('pages.dashboard', [
             'title' => 'Dashboard',
@@ -44,17 +67,25 @@ class DashboardController extends Controller
             'todayFollowUps' => $today['overdue_follow_ups'],
             'todayBilas' => $today['bilas_today'],
             'dashboardWidgets' => $dashboardWidgets,
+            'calendarEvents' => $calendarEvents,
+            'isMicrosoftConnected' => $isMicrosoftConnected,
+            'userTimezone' => $userTz,
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
+            'categoryOptions' => $allCategories->map(fn (TaskCategory $c) => ['value' => $c->id, 'label' => $c->name])->all(),
+            'groups' => $allGroups,
         ]);
     }
 
     /**
      * Build a time-based greeting string.
      *
+     * @param string $timezone
      * @return string
      */
-    private function resolveGreeting(): string
+    private function resolveGreeting(string $timezone): string
     {
-        $hour = (int) now()->format('H');
+        $hour = (int) now($timezone)->format('H');
 
         return match (true) {
             $hour < 12 => 'Good morning',
@@ -66,11 +97,12 @@ class DashboardController extends Controller
     /**
      * Build the today section with tasks due today, overdue follow-ups, and today's bilas.
      *
+     * @param string $timezone
      * @return array<string, mixed>
      */
-    private function buildTodaySection(): array
+    private function buildTodaySection(string $timezone): array
     {
-        $tasksDueToday = Task::whereDate('deadline', now()->toDateString())
+        $tasksDueToday = Task::whereDate('deadline', now($timezone)->toDateString())
             ->whereNotIn('status', [TaskStatus::Done->value])
             ->orderBySortOrder()
             ->with(['teamMember', 'taskCategory'])
@@ -84,7 +116,7 @@ class DashboardController extends Controller
             ->get();
 
         $bilasToday = Bila::where('is_done', false)
-            ->whereDate('scheduled_date', now()->toDateString())
+            ->whereDate('scheduled_date', now($timezone)->toDateString())
             ->with(['teamMember', 'prepItems'])
             ->orderBy('scheduled_date')
             ->get();

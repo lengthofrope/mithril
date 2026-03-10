@@ -65,11 +65,11 @@ class AnalyticsSnapshotService
      * @param string $timeRange One of '7d', '30d', or '90d'.
      * @return TimeSeriesChartData
      */
-    public function tasksOverTime(int $userId, string $timeRange): TimeSeriesChartData
+    public function tasksOverTime(int $userId, string $timeRange, string $timezone = 'UTC'): TimeSeriesChartData
     {
         $metrics = array_keys(self::TASK_STATUS_METRICS);
-        $rows    = $this->fetchSnapshots($userId, $timeRange, $metrics);
-        $labels  = $this->buildLabels($timeRange);
+        $rows    = $this->fetchSnapshots($userId, $timeRange, $metrics, $timezone);
+        $labels  = $this->buildLabels($timeRange, $timezone);
 
         $series = [];
         $colors = [];
@@ -97,11 +97,11 @@ class AnalyticsSnapshotService
      * @param string $timeRange One of '7d', '30d', or '90d'.
      * @return TimeSeriesChartData
      */
-    public function taskActivity(int $userId, string $timeRange): TimeSeriesChartData
+    public function taskActivity(int $userId, string $timeRange, string $timezone = 'UTC'): TimeSeriesChartData
     {
         $metrics = ['tasks_total', 'tasks_status_done'];
-        $rows    = $this->fetchSnapshots($userId, $timeRange, $metrics);
-        $labels  = $this->buildLabels($timeRange);
+        $rows    = $this->fetchSnapshots($userId, $timeRange, $metrics, $timezone);
+        $labels  = $this->buildLabels($timeRange, $timezone);
 
         $totals    = $this->buildSeriesData($labels, $rows, 'tasks_total');
         $doneTotal = $this->buildSeriesData($labels, $rows, 'tasks_status_done');
@@ -128,11 +128,11 @@ class AnalyticsSnapshotService
      * @param string $timeRange One of '7d', '30d', or '90d'.
      * @return TimeSeriesChartData
      */
-    public function followUpsOverTime(int $userId, string $timeRange): TimeSeriesChartData
+    public function followUpsOverTime(int $userId, string $timeRange, string $timezone = 'UTC'): TimeSeriesChartData
     {
         $metrics = array_keys(self::FOLLOW_UP_STATUS_METRICS);
-        $rows    = $this->fetchSnapshots($userId, $timeRange, $metrics);
-        $labels  = $this->buildLabels($timeRange);
+        $rows    = $this->fetchSnapshots($userId, $timeRange, $metrics, $timezone);
+        $labels  = $this->buildLabels($timeRange, $timezone);
 
         $series = [];
         $colors = [];
@@ -159,9 +159,9 @@ class AnalyticsSnapshotService
      * @param list<string>    $metrics   Metric column values to include.
      * @return Collection<string, int>
      */
-    private function fetchSnapshots(int $userId, string $timeRange, array $metrics): Collection
+    private function fetchSnapshots(int $userId, string $timeRange, array $metrics, string $timezone = 'UTC'): Collection
     {
-        [$startDate, $endDate] = $this->resolveDateRange($timeRange);
+        [$startDate, $endDate] = $this->resolveDateRange($timeRange, $timezone);
 
         $rows = AnalyticsSnapshot::withoutGlobalScopes()
             ->where('user_id', $userId)
@@ -170,7 +170,7 @@ class AnalyticsSnapshotService
             ->get(['metric', 'snapshot_date', 'value'])
             ->keyBy(fn ($row): string => $row->metric . '|' . $row->snapshot_date->toDateString());
 
-        $today     = Carbon::today()->toDateString();
+        $today     = Carbon::today($timezone)->toDateString();
         $liveData  = $this->computeLiveMetrics($userId, $metrics);
 
         foreach ($liveData as $metric => $value) {
@@ -243,9 +243,9 @@ class AnalyticsSnapshotService
      * @param string $timeRange One of '7d', '30d', or '90d'.
      * @return list<string>
      */
-    private function buildLabels(string $timeRange): array
+    private function buildLabels(string $timeRange, string $timezone = 'UTC'): array
     {
-        [$startDate, $endDate] = $this->resolveDateRange($timeRange);
+        [$startDate, $endDate] = $this->resolveDateRange($timeRange, $timezone);
 
         $labels  = [];
         $current = Carbon::parse($startDate);
@@ -359,11 +359,11 @@ class AnalyticsSnapshotService
      * @param string $timeRange One of '7d', '30d', or '90d'.
      * @return array{0: string, 1: string} Start date and end date as Y-m-d strings.
      */
-    private function resolveDateRange(string $timeRange): array
+    private function resolveDateRange(string $timeRange, string $timezone = 'UTC'): array
     {
         $days      = self::TIME_RANGE_DAYS[$timeRange] ?? self::TIME_RANGE_DAYS['30d'];
-        $endDate   = Carbon::today()->toDateString();
-        $startDate = Carbon::today()->subDays($days - 1)->toDateString();
+        $endDate   = Carbon::today($timezone)->toDateString();
+        $startDate = Carbon::today($timezone)->subDays($days - 1)->toDateString();
 
         return [$startDate, $endDate];
     }

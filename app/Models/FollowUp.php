@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * FollowUp model for tracking items that require a follow-up action.
@@ -148,5 +149,15 @@ class FollowUp extends Model
     {
         return $query->whereDate('follow_up_date', '>', now()->endOfWeek()->toDateString())
             ->where('status', '!=', FollowUpStatus::Done->value);
+    }
+
+    /**
+     * Get all calendar event links for this follow-up.
+     *
+     * @return MorphMany<CalendarEventLink>
+     */
+    public function calendarEventLinks(): MorphMany
+    {
+        return $this->morphMany(CalendarEventLink::class, 'linkable');
     }
 }

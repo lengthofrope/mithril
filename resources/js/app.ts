@@ -18,6 +18,7 @@ import { widgetConfigurator } from './components/widget-configurator';
 import { agreementManager } from './components/agreement-manager';
 import { inlineSelect } from './components/inline-select';
 import { liveCounter } from './components/live-counter';
+import { calendarEventActions } from './components/calendar-event-actions';
 
 declare global {
     interface Window {
@@ -42,6 +43,7 @@ Alpine.data('widgetConfigurator', widgetConfigurator as Parameters<typeof Alpine
 Alpine.data('agreementManager', agreementManager as Parameters<typeof Alpine.data>[1]);
 Alpine.data('inlineSelect', inlineSelect as Parameters<typeof Alpine.data>[1]);
 Alpine.data('liveCounter', liveCounter as Parameters<typeof Alpine.data>[1]);
+Alpine.data('calendarEventActions', calendarEventActions as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

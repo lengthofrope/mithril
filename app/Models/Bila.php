@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Bila model representing a 1-on-1 meeting between team lead and a team member.
@@ -69,5 +70,15 @@ class Bila extends Model
     public function prepItems(): HasMany
     {
         return $this->hasMany(BilaPrepItem::class);
+    }
+
+    /**
+     * Get all calendar event links for this bila.
+     *
+     * @return MorphMany<CalendarEventLink>
+     */
+    public function calendarEventLinks(): MorphMany
+    {
+        return $this->morphMany(CalendarEventLink::class, 'linkable');
     }
 }

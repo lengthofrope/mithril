@@ -73,17 +73,32 @@
                             x-transition:leave-start="opacity-100 translate-y-0"
                             x-transition:leave-end="opacity-0 -translate-y-1"
                             x-cloak
-                            class="mt-3 space-y-3"
+                            class="mt-4 space-y-4"
                         >
                             @foreach($release['sections'] as $sectionName => $items)
                                 <div>
-                                    <h3 class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                        {{ $sectionName }}
-                                    </h3>
-                                    <ul class="space-y-1">
+                                    @switch(strtolower($sectionName))
+                                        @case('added')
+                                            <span class="bg-green-200 text-green-800 dark:bg-green-500/15 dark:text-green-400 mb-2 inline-block rounded-md px-2 py-0.5 text-xs font-semibold uppercase tracking-wider">{{ $sectionName }}</span>
+                                            @break
+                                        @case('changed')
+                                            <span class="bg-blue-200 text-blue-800 dark:bg-blue-500/15 dark:text-blue-400 mb-2 inline-block rounded-md px-2 py-0.5 text-xs font-semibold uppercase tracking-wider">{{ $sectionName }}</span>
+                                            @break
+                                        @case('fixed')
+                                            <span class="bg-orange-200 text-orange-800 dark:bg-orange-500/15 dark:text-orange-400 mb-2 inline-block rounded-md px-2 py-0.5 text-xs font-semibold uppercase tracking-wider">{{ $sectionName }}</span>
+                                            @break
+                                        @case('security')
+                                            <span class="bg-red-200 text-red-800 dark:bg-red-500/15 dark:text-red-400 mb-2 inline-block rounded-md px-2 py-0.5 text-xs font-semibold uppercase tracking-wider">{{ $sectionName }}</span>
+                                            @break
+                                        @default
+                                            <span class="bg-gray-200 text-gray-800 dark:bg-gray-500/15 dark:text-gray-400 mb-2 inline-block rounded-md px-2 py-0.5 text-xs font-semibold uppercase tracking-wider">{{ $sectionName }}</span>
+                                    @endswitch
+                                    <ul class="space-y-3">
                                         @foreach($items as $item)
-                                            <li class="text-sm text-gray-700 dark:text-gray-300">
-                                                {!! \Illuminate\Support\Str::of($item)->replaceMatches('/\*\*(.+?)\*\*/', '<strong class="font-medium text-gray-900 dark:text-white">$1</strong>') !!}
+                                            <li class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                                                {!! \Illuminate\Support\Str::of($item)
+                                                    ->replaceMatches('/\*\*(.+?)\*\*\s*—\s*/', '<strong class="block font-medium text-gray-900 dark:text-white/90">$1</strong>')
+                                                    ->replaceMatches('/\*\*(.+?)\*\*/', '<strong class="block font-medium text-gray-900 dark:text-white/90">$1</strong>') !!}
                                             </li>
                                         @endforeach
                                     </ul>
