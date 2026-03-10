@@ -134,9 +134,11 @@ test('disable two-factor clears all two-factor fields', function () {
         'two_factor_confirmed_at' => now(),
     ]);
 
-    $response = $this->actingAs($user)->delete('/profile/two-factor/disable', [
-        'current_password' => 'my-password',
-    ]);
+    $response = $this->actingAs($user)
+        ->withSession(['two_factor_authenticated' => true])
+        ->delete('/profile/two-factor/disable', [
+            'current_password' => 'my-password',
+        ]);
 
     $response->assertRedirect(route('profile.index'));
     $response->assertSessionHas('status', 'Two-factor authentication has been disabled.');
@@ -154,7 +156,9 @@ test('disable two-factor requires current password', function () {
         'two_factor_confirmed_at' => now(),
     ]);
 
-    $response = $this->actingAs($user)->delete('/profile/two-factor/disable', []);
+    $response = $this->actingAs($user)
+        ->withSession(['two_factor_authenticated' => true])
+        ->delete('/profile/two-factor/disable', []);
 
     $response->assertSessionHasErrors(['current_password']);
 });
@@ -167,9 +171,11 @@ test('disable two-factor fails with wrong password', function () {
         'two_factor_confirmed_at' => now(),
     ]);
 
-    $response = $this->actingAs($user)->delete('/profile/two-factor/disable', [
-        'current_password' => 'wrong-password',
-    ]);
+    $response = $this->actingAs($user)
+        ->withSession(['two_factor_authenticated' => true])
+        ->delete('/profile/two-factor/disable', [
+            'current_password' => 'wrong-password',
+        ]);
 
     $response->assertSessionHasErrors(['current_password']);
 

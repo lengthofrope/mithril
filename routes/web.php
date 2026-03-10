@@ -30,6 +30,9 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->middleware('auth');
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/two-factor-challenge', [TwoFactorController::class, 'showChallenge'])->name('two-factor.challenge');
+    Route::post('/two-factor-challenge', [TwoFactorController::class, 'verifyChallenge']);
+
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/tasks', [TaskPageController::class, 'index'])->name('tasks.index');
