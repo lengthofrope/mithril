@@ -46,8 +46,9 @@ $steps = [
     'migrate'          => 'php artisan migrate --force',
     'cache_clear'      => 'php artisan optimize:clear',
     'cache_warm'       => 'php artisan optimize',
-    'npm_install'      => 'npm ci --omit=dev',
+    'npm_install'      => 'npm ci',
     'npm_build'        => 'npm run build',
+    'npm_prune'        => 'npm prune --omit=dev',
 ];
 
 $log = [];
@@ -94,6 +95,8 @@ if (!runStep('npm_install', $steps['npm_install'], $log)) {
 if (!runStep('npm_build', $steps['npm_build'], $log)) {
     respond(500, 'npm build failed.', $log);
 }
+
+runStep('npm_prune', $steps['npm_prune'], $log);
 
 respond(200, 'Deployment successful.', $log, $branch);
 
