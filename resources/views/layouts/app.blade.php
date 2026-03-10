@@ -6,16 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Dashboard' }} | TeamDash</title>
+    <title>{{ $title ?? 'Dashboard' }} | Mithril</title>
 
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#3d8b6b">
 
     <!-- Fonts (non-blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
@@ -110,6 +111,8 @@
     };
     window.addEventListener('resize', checkMobile);">
 
+
+    @include('layouts.partials.background-decor')
 
     <div class="min-h-screen xl:flex">
         <div x-data="keyboardShortcuts()" class="hidden" aria-hidden="true"></div>

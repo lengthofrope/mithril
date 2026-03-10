@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-10
+
+### Added
+
+- **Inline select component** — New `<x-tl.inline-select-pill>` Blade component with Alpine.js integration for inline priority/status editing on task cards
+- **Live UI counters** — Dashboard counters now auto-refresh via central event dispatch and dedicated `CounterController` API endpoint
+- **`DashboardStatsService`** — Extracted dashboard statistics into a reusable service
+- **SecurityHeaders middleware** — Adds `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and `X-XSS-Protection` headers to all responses
+- **API rate limiting** — All API endpoints now throttled at 60 requests/minute per user
+
+### Changed
+
+- **Rebranding** — Renamed from "TeamDash" to "Mithril" with payoff "Lightweight armor for team leads"
+- Updated all logo SVGs with new shield icon and Mithril branding (light, dark, icon-only, auth)
+- Updated PWA manifest, app icons, and favicon with shield motif
+- Updated page titles, login page heading, and payoff across all Blade templates
+- Updated project README.md with new branding
+- **Rivendell UI redesign** — Sage green brand palette, warm stone grays, Cormorant Garamond serif headings
+- Added decorative background SVGs (trailing vines, clover flowers, arch ornament) on desktop
+- Added `elvish-card` utility with corner ornaments on cards
+- Added `elvish-divider` and `elvish-divider-leaf` decorative utilities
+- Added Tolkien-themed sidebar widget with quote
+- Login page redesign with atmospheric styling and decorative arch
+
+### Security
+
+- **XSS prevention** — Markdown preview now sanitized with DOMPurify before DOM injection via `x-html`
+- **Mass assignment hardening** — Removed `user_id` from `$fillable` on all 12 models; `BelongsToUser` trait handles ownership automatically
+- **AutoSaveController blocklist** — Fields `id`, `user_id`, `created_at`, `updated_at` can no longer be auto-saved
+- **Bulk update field whitelist** — `bulkUpdate` endpoint now only accepts explicitly allowed fields (status, priority, team, member, group, category, deadline, privacy)
+- **Import sanitization** — Import rows are now filtered against model `$fillable`, with `id` and `user_id` stripped before insertion
+- **IDOR prevention** — All `exists:` validation rules scoped to authenticated user via `Rule::exists()->where('user_id', ...)`
+- **Password change protection** — Settings page now requires current password when changing password (`required_with:password`)
+- **Avatar upload hardening** — Restricted to `jpeg`, `png`, `webp` MIME types (blocks SVG with embedded scripts)
+- **Session hardening** — Reduced default session lifetime from 30 days to 1 day, enabled session encryption and secure cookies in `.env.example`
+- **Debug mode** — `APP_DEBUG` defaults to `false` in `.env.example`
+
+### Fixed
+
+- Dark mode background color consistency for sidebar and header
+
 ## [1.0.0] - 2026-03-09
 
 ### Added

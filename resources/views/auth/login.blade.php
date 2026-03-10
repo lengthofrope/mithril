@@ -5,10 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#3d8b6b">
 
-    <title>{{ $title ?? 'Sign In' }} | TeamDash</title>
+    <title>{{ $title ?? 'Sign In' }} | Mithril</title>
 
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
 
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
@@ -24,22 +25,31 @@
     </script>
 </head>
 
-<body class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<body class="min-h-screen login-atmosphere">
 
-    <div class="flex min-h-screen flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <img src="/images/decor/arch-top.svg" alt="" class="absolute top-0 left-1/2 -translate-x-1/2 w-[40rem] opacity-[0.08] dark:opacity-[0.12]" loading="lazy">
+        <img src="/images/decor/fern-top-right.svg" alt="" class="absolute -top-8 -right-8 h-[24rem] w-auto opacity-[0.06] dark:opacity-[0.09]" loading="lazy">
+        <img src="/images/decor/vine-bottom-left.svg" alt="" class="absolute -bottom-4 -left-4 h-[22rem] w-auto opacity-[0.06] dark:opacity-[0.09]" loading="lazy">
+    </div>
+
+    <div class="relative z-1 flex min-h-screen flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
 
         <div class="w-full max-w-md">
 
             <div class="mb-8 text-center">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                    TeamDash
+                <h1 class="text-3xl font-semibold text-gray-900 dark:text-white">
+                    Mithril
                 </h1>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Sign in to your account to continue
+                <p class="mt-1 text-sm italic text-gray-500 dark:text-gray-400">
+                    Lightweight armor for team leads
                 </p>
+                <div class="elvish-divider mt-4">
+                    <span class="elvish-divider-leaf"></span>
+                </div>
             </div>
 
-            <div class="rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] sm:px-8">
+            <div class="elvish-card rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] sm:px-8">
 
                 @if ($errors->any())
                     <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-900/20" role="alert" aria-live="polite">

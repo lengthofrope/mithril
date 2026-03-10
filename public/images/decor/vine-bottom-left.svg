@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="540" viewBox="0 0 420 540" fill="none">
+  <!-- Trailing vine with small flowers — bottom-left corner -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- === INTERTWINING VINE STEMS === -->
+    <g stroke="#8B6914" fill="none" opacity="0.6">
+      <!-- Primary vine — sweeping upward -->
+      <path d="M0 540 C15 510, 30 478, 42 445 C56 408, 62 375, 72 340
+               C82 305, 95 272, 108 240 C122 205, 138 175, 155 145
+               C172 118, 190 92, 208 68 C222 50, 238 34, 252 20"
+            stroke-width="1.8"/>
+      <!-- Secondary vine — weaving around primary -->
+      <path d="M10 530 C28 498, 40 470, 55 438 C70 404, 78 372, 90 338
+               C102 302, 118 270, 132 240 C148 208, 165 180, 182 152
+               C198 128, 216 105, 232 82 C244 66, 258 48, 268 34"
+            stroke-width="1.3" opacity="0.8"/>
+      <!-- Thin wispy trail -->
+      <path d="M5 535 C22 502, 38 472, 50 440 C64 405, 72 368, 84 335
+               C96 300, 110 268, 126 238 C142 210, 162 182, 178 158
+               C195 135, 212 112, 228 92"
+            stroke-width="0.7" opacity="0.5"/>
+    </g>
+
+    <!-- === CURLING TENDRILS === -->
+    <g stroke="#C4A44A" fill="none" opacity="0.35">
+      <path d="M30 490 C20 482, 14 476, 18 470 C22 464, 32 468, 30 478" stroke-width="0.6"/>
+      <path d="M58 420 C48 410, 42 404, 46 398 C50 392, 60 398, 58 408" stroke-width="0.6"/>
+      <path d="M82 355 C92 344, 98 338, 94 332 C90 326, 80 332, 82 342" stroke-width="0.5"/>
+      <path d="M115 280 C105 270, 100 262, 104 256 C108 250, 118 256, 116 268" stroke-width="0.6"/>
+      <path d="M142 225 C152 214, 158 208, 154 202 C150 196, 140 202, 142 214" stroke-width="0.5"/>
+      <path d="M175 165 C165 155, 160 148, 164 142 C168 136, 178 142, 176 154" stroke-width="0.5"/>
+      <path d="M210 105 C220 95, 226 88, 222 82 C218 76, 208 82, 210 94" stroke-width="0.5"/>
+      <path d="M245 55 C255 46, 260 40, 256 34 C252 28, 242 34, 245 44" stroke-width="0.5"/>
+
+      <!-- Floating wisps -->
+      <path d="M18 505 C8 498, 2 494, 6 488 C10 484, 18 490, 16 498" stroke-width="0.4"/>
+      <path d="M130 252 C120 244, 116 240, 122 236 C128 234, 132 242, 128 248" stroke-width="0.4"/>
+      <path d="M200 128 C192 120, 188 114, 194 112 C200 110, 202 118, 198 124" stroke-width="0.4"/>
+    </g>
+
+    <!-- === CLOVER FLOWERS AND CREAM BLOSSOMS === -->
+    <g opacity="0.7">
+      <!-- Flower 1 — large green clover -->
+      <circle cx="28" cy="498" r="3.5" fill="#3d8b6b" fill-opacity="0.5" stroke="none"/>
+      <circle cx="22" cy="494" r="3.2" fill="#3d8b6b" fill-opacity="0.45" stroke="none"/>
+      <circle cx="24" cy="502" r="3" fill="#3d8b6b" fill-opacity="0.4" stroke="none"/>
+      <circle cx="25" cy="498" r="1.2" fill="#C4A44A" fill-opacity="0.6" stroke="none"/>
+
+      <!-- Flower 2 -->
+      <circle cx="52" cy="432" r="3" fill="#3d8b6b" fill-opacity="0.48" stroke="none"/>
+      <circle cx="47" cy="428" r="2.8" fill="#3d8b6b" fill-opacity="0.42" stroke="none"/>
+      <circle cx="49" cy="436" r="2.6" fill="#3d8b6b" fill-opacity="0.38" stroke="none"/>
+      <circle cx="49" cy="432" r="1" fill="#C4A44A" fill-opacity="0.55" stroke="none"/>
+
+      <!-- Flower 3 — cream blossom -->
+      <path d="M72 378 C70 373, 74 370, 78 373 C80 375, 78 379, 74 380Z" fill="#F5E6C8" fill-opacity="0.5" stroke="none"/>
+      <path d="M66 382 C64 378, 68 375, 70 378 C72 380, 70 384, 66 384Z" fill="#F5E6C8" fill-opacity="0.4" stroke="none"/>
+      <circle cx="70" cy="378" r="1" fill="#C4A44A" fill-opacity="0.5" stroke="none"/>
+
+      <!-- Flower 4 -->
+      <circle cx="92" cy="348" r="3.5" fill="#3d8b6b" fill-opacity="0.5" stroke="none"/>
+      <circle cx="86" cy="344" r="3.2" fill="#3d8b6b" fill-opacity="0.45" stroke="none"/>
+      <circle cx="88" cy="352" r="3" fill="#3d8b6b" fill-opacity="0.4" stroke="none"/>
+      <circle cx="89" cy="348" r="1.2" fill="#C4A44A" fill-opacity="0.55" stroke="none"/>
+
+      <!-- Flower 5 — green -->
+      <circle cx="118" cy="272" r="3.2" fill="#3d8b6b" fill-opacity="0.45" stroke="none"/>
+      <circle cx="112" cy="268" r="3" fill="#3d8b6b" fill-opacity="0.4" stroke="none"/>
+      <circle cx="114" cy="276" r="2.8" fill="#3d8b6b" fill-opacity="0.35" stroke="none"/>
+      <circle cx="115" cy="272" r="1.1" fill="#C4A44A" fill-opacity="0.5" stroke="none"/>
+
+      <!-- Flower 6 — cream -->
+      <path d="M138 235 C136 230, 140 228, 144 231 C146 233, 144 237, 140 238Z" fill="#F5E6C8" fill-opacity="0.45" stroke="none"/>
+      <path d="M132 238 C130 234, 134 232, 136 234 C138 236, 136 240, 132 240Z" fill="#F5E6C8" fill-opacity="0.38" stroke="none"/>
+      <circle cx="136" cy="235" r="0.9" fill="#C4A44A" fill-opacity="0.45" stroke="none"/>
+
+      <!-- Flower 7 -->
+      <circle cx="158" cy="178" r="3" fill="#3d8b6b" fill-opacity="0.45" stroke="none"/>
+      <circle cx="152" cy="174" r="2.8" fill="#3d8b6b" fill-opacity="0.4" stroke="none"/>
+      <circle cx="154" cy="182" r="2.6" fill="#3d8b6b" fill-opacity="0.35" stroke="none"/>
+      <circle cx="155" cy="178" r="1" fill="#C4A44A" fill-opacity="0.48" stroke="none"/>
+
+      <!-- Flower 8 -->
+      <circle cx="192" cy="122" r="2.8" fill="#3d8b6b" fill-opacity="0.42" stroke="none"/>
+      <circle cx="187" cy="118" r="2.5" fill="#3d8b6b" fill-opacity="0.38" stroke="none"/>
+      <circle cx="189" cy="126" r="2.3" fill="#3d8b6b" fill-opacity="0.32" stroke="none"/>
+      <circle cx="189" cy="122" r="0.9" fill="#C4A44A" fill-opacity="0.42" stroke="none"/>
+
+      <!-- Flower 9 — cream -->
+      <path d="M215 88 C213 84, 217 81, 220 84 C222 86, 220 90, 217 90Z" fill="#F5E6C8" fill-opacity="0.4" stroke="none"/>
+      <path d="M210 92 C208 88, 212 86, 214 88 C216 90, 214 94, 210 94Z" fill="#F5E6C8" fill-opacity="0.32" stroke="none"/>
+
+      <!-- Flower 10 -->
+      <circle cx="238" cy="58" r="2.5" fill="#3d8b6b" fill-opacity="0.38" stroke="none"/>
+      <circle cx="233" cy="54" r="2.2" fill="#3d8b6b" fill-opacity="0.32" stroke="none"/>
+      <circle cx="235" cy="62" r="2" fill="#3d8b6b" fill-opacity="0.28" stroke="none"/>
+      <circle cx="235" cy="58" r="0.8" fill="#C4A44A" fill-opacity="0.38" stroke="none"/>
+
+      <!-- Flower 11 — tiny near tip -->
+      <circle cx="258" cy="30" r="2" fill="#3d8b6b" fill-opacity="0.3" stroke="none"/>
+      <circle cx="254" cy="27" r="1.8" fill="#3d8b6b" fill-opacity="0.25" stroke="none"/>
+      <circle cx="256" cy="33" r="1.6" fill="#3d8b6b" fill-opacity="0.22" stroke="none"/>
+
+      <!-- Scattered tiny buds -->
+      <circle cx="40" cy="465" r="1.5" fill="#3d8b6b" fill-opacity="0.3" stroke="none"/>
+      <circle cx="65" cy="395" r="1.8" fill="#3d8b6b" fill-opacity="0.28" stroke="none"/>
+      <circle cx="105" cy="305" r="1.5" fill="#3d8b6b" fill-opacity="0.25" stroke="none"/>
+      <circle cx="130" cy="250" r="1.8" fill="#3d8b6b" fill-opacity="0.22" stroke="none"/>
+      <circle cx="170" cy="150" r="1.5" fill="#3d8b6b" fill-opacity="0.2" stroke="none"/>
+      <circle cx="205" cy="100" r="1.3" fill="#3d8b6b" fill-opacity="0.18" stroke="none"/>
+      <circle cx="248" cy="42" r="1.2" fill="#3d8b6b" fill-opacity="0.15" stroke="none"/>
+    </g>
+
+  </g>
+</svg>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Requests\AgreementRequest;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 test('agreement request rules method returns expected rule keys', function () {
@@ -26,8 +27,10 @@ test('agreement request is authorized', function () {
 });
 
 test('agreement request passes with valid required data', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         [
@@ -52,8 +55,10 @@ test('agreement request fails when team_member_id is missing', function () {
 });
 
 test('agreement request fails when description is missing', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_member_id' => $member->id, 'agreed_date' => '2026-03-01'],
@@ -65,8 +70,10 @@ test('agreement request fails when description is missing', function () {
 });
 
 test('agreement request fails when agreed_date is missing', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_member_id' => $member->id, 'description' => 'Some agreement'],
@@ -88,8 +95,10 @@ test('agreement request fails when team_member_id references nonexistent record'
 });
 
 test('agreement request fails when agreed_date is not a valid date', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_member_id' => $member->id, 'description' => 'Some agreement', 'agreed_date' => 'not-a-date'],
@@ -101,8 +110,10 @@ test('agreement request fails when agreed_date is not a valid date', function ()
 });
 
 test('agreement request fails when follow_up_date is not a valid date', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         [
@@ -119,8 +130,10 @@ test('agreement request fails when follow_up_date is not a valid date', function
 });
 
 test('agreement request passes when follow_up_date is a valid date', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         [
@@ -136,8 +149,10 @@ test('agreement request passes when follow_up_date is a valid date', function ()
 });
 
 test('agreement request passes when follow_up_date is null', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         [

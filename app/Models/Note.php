@@ -37,7 +37,6 @@ class Note extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'title',
         'content',
         'team_id',

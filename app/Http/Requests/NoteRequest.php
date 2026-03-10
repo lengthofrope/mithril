@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Form request for creating and updating notes.
@@ -47,8 +48,8 @@ class NoteRequest extends FormRequest
         return [
             'title' => [$this->isMethod('PATCH') || $this->isMethod('PUT') ? 'sometimes' : 'required', 'string', 'max:255'],
             'content' => ['nullable', 'string'],
-            'team_id' => ['nullable', 'integer', 'exists:teams,id'],
-            'team_member_id' => ['nullable', 'integer', 'exists:team_members,id'],
+            'team_id' => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
+            'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'is_pinned' => ['boolean'],
         ];
     }

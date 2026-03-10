@@ -1,4 +1,6 @@
-# Team Lead Dashboard
+# Mithril
+
+*Lightweight armor for team leads.*
 
 A Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built for technical team leads who need more than basic task lists — with follow-ups, per-member context, and privacy controls.
 
@@ -85,7 +87,15 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
    npm run build
    ```
 
-7. **Start the application**
+7. **Set up the cron job**
+
+   Laravel's task scheduler needs a single cron entry on your server. This runs scheduled tasks like the daily analytics snapshot (`analytics:snapshot` at 00:15).
+
+   ```bash
+   * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+   ```
+
+8. **Start the application**
 
    For development, use the combined dev command that starts the Laravel server, queue worker, log viewer, and Vite dev server simultaneously:
 

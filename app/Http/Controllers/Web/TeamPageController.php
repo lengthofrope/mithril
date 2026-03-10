@@ -195,7 +195,7 @@ class TeamPageController extends Controller
     public function uploadMemberAvatar(Request $request, TeamMember $teamMember): RedirectResponse
     {
         $request->validate([
-            'avatar' => ['required', 'image', 'max:2048'],
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
         ]);
 
         if ($teamMember->avatar_path) {

@@ -14,6 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Handles the notes page rendering.
@@ -105,8 +106,8 @@ class NotePageController extends Controller
         $validated = $request->validate([
             'title'          => ['nullable', 'string', 'max:255'],
             'content'        => ['nullable', 'string'],
-            'team_id'        => ['nullable', 'integer', 'exists:teams,id'],
-            'team_member_id' => ['nullable', 'integer', 'exists:team_members,id'],
+            'team_id'        => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
+            'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
         ]);
 
         Note::create([
@@ -132,8 +133,8 @@ class NotePageController extends Controller
         $validated = $request->validate([
             'title'          => ['sometimes', 'string', 'max:255'],
             'content'        => ['sometimes', 'string'],
-            'team_id'        => ['sometimes', 'nullable', 'integer', 'exists:teams,id'],
-            'team_member_id' => ['sometimes', 'nullable', 'integer', 'exists:team_members,id'],
+            'team_id'        => ['sometimes', 'nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
+            'team_member_id' => ['sometimes', 'nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'is_pinned'      => ['sometimes', 'boolean'],
         ]);
 

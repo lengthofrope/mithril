@@ -34,7 +34,6 @@ class BilaPrepItem extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'team_member_id',
         'bila_id',
         'content',

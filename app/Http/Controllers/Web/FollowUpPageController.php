@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Handles the follow-ups page rendering.
@@ -128,7 +129,7 @@ class FollowUpPageController extends Controller
     {
         $validated = $request->validate([
             'description'    => ['required', 'string'],
-            'team_member_id' => ['nullable', 'integer', 'exists:team_members,id'],
+            'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'waiting_on'     => ['nullable', 'string', 'max:255'],
             'follow_up_date' => ['nullable', 'date'],
         ]);

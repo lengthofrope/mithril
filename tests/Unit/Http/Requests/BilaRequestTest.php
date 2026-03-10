@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Requests\BilaRequest;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 test('bila request rules method returns expected rule keys', function () {
@@ -25,8 +26,10 @@ test('bila request is authorized', function () {
 });
 
 test('bila request passes with valid required data', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_member_id' => $member->id, 'scheduled_date' => '2026-04-01'],
@@ -47,8 +50,10 @@ test('bila request fails when team_member_id is missing', function () {
 });
 
 test('bila request fails when scheduled_date is missing', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_member_id' => $member->id],
@@ -70,8 +75,10 @@ test('bila request fails when team_member_id references nonexistent record', fun
 });
 
 test('bila request fails when scheduled_date is not a valid date', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_member_id' => $member->id, 'scheduled_date' => 'not-a-date'],
@@ -83,8 +90,10 @@ test('bila request fails when scheduled_date is not a valid date', function () {
 });
 
 test('bila request passes when notes are provided', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         [
@@ -99,8 +108,10 @@ test('bila request passes when notes are provided', function () {
 });
 
 test('bila request passes when notes are null', function () {
-    $team = Team::factory()->create();
-    $member = TeamMember::factory()->create(['team_id' => $team->id]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_member_id' => $member->id, 'scheduled_date' => '2026-04-01', 'notes' => null],

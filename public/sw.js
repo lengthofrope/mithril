@@ -1,13 +1,13 @@
 const CACHE_VERSION = 'v1';
-const STATIC_CACHE = `teamlead-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `teamlead-dynamic-${CACHE_VERSION}`;
+const STATIC_CACHE = `mithril-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `mithril-dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
 const STATIC_ASSETS = [
     '/offline.html',
     '/manifest.json',
-    '/icons/icon-192.png',
-    '/icons/icon-512.png',
+    '/icons/icon-192.svg',
+    '/icons/icon-512.svg',
 ];
 
 const CACHE_FIRST_PATTERNS = [

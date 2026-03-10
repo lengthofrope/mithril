@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Form request for creating and updating agreements.
@@ -29,7 +30,7 @@ class AgreementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'team_member_id' => ['required', 'integer', 'exists:team_members,id'],
+            'team_member_id' => ['required', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'description' => ['required', 'string'],
             'agreed_date' => ['required', 'date'],
             'follow_up_date' => ['nullable', 'date'],

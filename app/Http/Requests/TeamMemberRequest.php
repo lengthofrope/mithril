@@ -31,7 +31,7 @@ class TeamMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'team_id' => ['required', 'integer', 'exists:teams,id'],
+            'team_id' => ['required', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'name' => ['required', 'string', 'max:255'],
             'role' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

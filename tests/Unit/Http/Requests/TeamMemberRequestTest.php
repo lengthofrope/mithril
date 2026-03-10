@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Requests\TeamMemberRequest;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 test('team member request rules method returns expected rule keys', function () {
@@ -31,7 +32,9 @@ test('team member request is authorized', function () {
 });
 
 test('team member request passes with valid required data', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe'],
@@ -42,7 +45,9 @@ test('team member request passes with valid required data', function () {
 });
 
 test('team member request fails when name is missing', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id],
@@ -74,7 +79,9 @@ test('team member request fails when team_id references nonexistent team', funct
 });
 
 test('team member request fails when name exceeds max length', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => str_repeat('a', 256)],
@@ -86,7 +93,9 @@ test('team member request fails when name exceeds max length', function () {
 });
 
 test('team member request fails when status has invalid value', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe', 'status' => 'unavailable'],
@@ -98,7 +107,9 @@ test('team member request fails when status has invalid value', function () {
 });
 
 test('team member request passes with valid status values', function (string $status) {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe', 'status' => $status],
@@ -109,7 +120,9 @@ test('team member request passes with valid status values', function (string $st
 })->with(['available', 'absent', 'partially_available']);
 
 test('team member request fails when email is invalid', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe', 'email' => 'not-an-email'],
@@ -121,7 +134,9 @@ test('team member request fails when email is invalid', function () {
 });
 
 test('team member request passes when email is valid', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe', 'email' => 'jane@example.com'],
@@ -132,7 +147,9 @@ test('team member request passes when email is valid', function () {
 });
 
 test('team member request fails when bila_interval_days is less than one', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe', 'bila_interval_days' => 0],
@@ -144,7 +161,9 @@ test('team member request fails when bila_interval_days is less than one', funct
 });
 
 test('team member request passes when bila_interval_days is one or more', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe', 'bila_interval_days' => 14],
@@ -155,7 +174,9 @@ test('team member request passes when bila_interval_days is one or more', functi
 });
 
 test('team member request fails when next_bila_date is not a valid date', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         ['team_id' => $team->id, 'name' => 'Jane Doe', 'next_bila_date' => 'not-a-date'],
@@ -167,7 +188,9 @@ test('team member request fails when next_bila_date is not a valid date', functi
 });
 
 test('team member request passes when all optional fields are null', function () {
-    $team = Team::factory()->create();
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $this->actingAs($user);
 
     $validator = Validator::make(
         [

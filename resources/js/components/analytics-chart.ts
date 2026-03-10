@@ -1,5 +1,6 @@
 import ApexCharts from 'apexcharts';
 import { apiClient } from '../utils/api-client';
+import { debounce } from '../utils/debounce';
 import type { ChartType, DataSource, ChartData, TimeSeriesChartData, TimeRange } from '../types/models';
 import type { ApiError } from '../types/api';
 
@@ -37,6 +38,7 @@ interface AnalyticsChartComponent {
     chartInstance: ApexCharts | null;
     init(): void;
     renderChart(data: AnyChartData): void;
+    refreshData(): Promise<void>;
     updateChartType(newType: ChartType): Promise<void>;
     destroy(): void;
     $refs: { chart: HTMLElement };
@@ -229,8 +231,11 @@ function buildDataUrl(config: AnalyticsChartConfig): string {
  * Fetches data from the configured endpoint on mount, renders the chart, and
  * observes dark mode changes to update the chart theme without a full re-render.
  */
+const DATA_CHANGED_DEBOUNCE_MS = 1000;
+
 function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
     let themeObserver: MutationObserver | null = null;
+    let dataChangedHandler: (() => void) | null = null;
 
     return {
         isLoading: true,
@@ -255,6 +260,12 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
                 attributes: true,
                 attributeFilter: ['class'],
             });
+
+            dataChangedHandler = debounce(() => {
+                void self.refreshData();
+            }, DATA_CHANGED_DEBOUNCE_MS);
+
+            window.addEventListener('data-changed', dataChangedHandler);
 
             try {
                 const response = await apiClient.get<ChartDataResponse>(buildDataUrl(config));
@@ -292,6 +303,32 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
             this.chartInstance = new ApexCharts(this.$refs.chart, options);
 
             void this.chartInstance.render();
+        },
+
+        /**
+         * Re-fetches chart data and updates the existing chart instance in-place.
+         */
+        async refreshData(this: AnalyticsChartComponent): Promise<void> {
+            try {
+                const response = await apiClient.get<ChartDataResponse>(buildDataUrl(config));
+                const data = response.data.sources[config.dataSource];
+
+                if (data === undefined) {
+                    return;
+                }
+
+                if (this.chartInstance !== null) {
+                    const options = buildChartOptions(config.chartType, data);
+                    void this.chartInstance.updateOptions(options);
+                } else {
+                    this.$nextTick(() => {
+                        this.renderChart(data);
+                    });
+                }
+            } catch (err) {
+                const apiError = err as ApiError;
+                console.error('[analyticsChart] Refresh failed:', apiError.message);
+            }
         },
 
         /**
@@ -335,7 +372,7 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
         },
 
         /**
-         * Cleans up the ApexCharts instance and MutationObserver on Alpine destroy.
+         * Cleans up the ApexCharts instance, MutationObserver, and event listener on Alpine destroy.
          */
         destroy(this: AnalyticsChartComponent): void {
             if (this.chartInstance !== null) {
@@ -346,6 +383,11 @@ function analyticsChart(config: AnalyticsChartConfig): Record<string, unknown> {
             if (themeObserver !== null) {
                 themeObserver.disconnect();
                 themeObserver = null;
+            }
+
+            if (dataChangedHandler !== null) {
+                window.removeEventListener('data-changed', dataChangedHandler);
+                dataChangedHandler = null;
             }
         },
     };

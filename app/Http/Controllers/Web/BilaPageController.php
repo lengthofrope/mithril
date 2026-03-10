@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Handles bila (1-on-1 meeting) page rendering.
@@ -87,7 +88,7 @@ class BilaPageController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'team_member_id' => ['required', 'integer', 'exists:team_members,id'],
+            'team_member_id' => ['required', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'scheduled_date' => ['required', 'date'],
         ]);
 
@@ -216,8 +217,8 @@ class BilaPageController extends Controller
     public function storePrepItem(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'team_member_id' => ['required', 'integer', 'exists:team_members,id'],
-            'bila_id'        => ['nullable', 'integer', 'exists:bilas,id'],
+            'team_member_id' => ['required', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'bila_id'        => ['nullable', 'integer', Rule::exists('bilas', 'id')->where('user_id', auth()->id())],
             'content'        => ['required', 'string', 'max:1000'],
         ]);
 
@@ -238,7 +239,7 @@ class BilaPageController extends Controller
         $validated = $request->validate([
             'content'      => ['sometimes', 'string', 'max:1000'],
             'is_discussed' => ['sometimes', 'boolean'],
-            'bila_id'      => ['sometimes', 'nullable', 'integer', 'exists:bilas,id'],
+            'bila_id'      => ['sometimes', 'nullable', 'integer', Rule::exists('bilas', 'id')->where('user_id', auth()->id())],
         ]);
 
         $bilaPrepItem->update($validated);
