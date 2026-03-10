@@ -30,7 +30,7 @@ class CalendarPageController extends Controller
         $calendarEvents = CalendarEvent::query()
             ->with('links')
             ->startingFrom(now($userTz)->startOfDay()->utc())
-            ->until(now($userTz)->endOfWeek()->utc())
+            ->until(now($userTz)->addDays(7)->endOfDay()->utc())
             ->orderBy('start_at')
             ->get();
 
