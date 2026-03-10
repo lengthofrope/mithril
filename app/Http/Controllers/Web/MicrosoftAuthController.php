@@ -80,6 +80,8 @@ class MicrosoftAuthController extends Controller
             return redirect()->route('settings.index')
                 ->with('status', 'Your Microsoft account has been connected successfully.');
         } catch (Throwable $exception) {
+            report($exception);
+
             return redirect()->route('settings.index')
                 ->with('error', 'Failed to connect your Microsoft account. Please try again.');
         }
