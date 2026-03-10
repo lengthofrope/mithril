@@ -66,12 +66,17 @@
 
         <button
             type="button"
-            @click="createResource('bila')"
-            class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+            @click="canCreateBila && createResource('bila')"
+            class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+            :class="canCreateBila ? 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer' : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'"
             role="menuitem"
-            :disabled="isLoading"
+            :disabled="isLoading || !canCreateBila"
+            :title="canCreateBila ? '' : 'No matching team member found'"
         >
-            <span class="flex h-5 w-5 items-center justify-center rounded bg-purple-100 text-xs font-bold text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">B</span>
+            <span
+                class="flex h-5 w-5 items-center justify-center rounded text-xs font-bold"
+                :class="canCreateBila ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'"
+            >B</span>
             Bila
         </button>
 

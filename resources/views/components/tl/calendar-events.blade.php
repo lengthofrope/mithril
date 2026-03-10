@@ -10,11 +10,11 @@
      */
     $statusDotClass = function (CalendarEventStatus $status): string {
         return match ($status) {
-            CalendarEventStatus::Busy             => 'bg-blue-500',
-            CalendarEventStatus::Tentative        => 'bg-blue-300',
-            CalendarEventStatus::OutOfOffice      => 'bg-red-400',
-            CalendarEventStatus::Free             => 'bg-green-400',
-            CalendarEventStatus::WorkingElsewhere => 'bg-yellow-400',
+            CalendarEventStatus::Free             => 'bg-green-500',
+            CalendarEventStatus::Tentative        => 'bg-yellow-500',
+            CalendarEventStatus::Busy             => 'bg-red-500',
+            CalendarEventStatus::OutOfOffice      => 'bg-gray-400',
+            CalendarEventStatus::WorkingElsewhere => 'bg-blue-500',
         };
     };
 
@@ -65,6 +65,60 @@
             'linkable_id' => $link->linkable_id,
             'created_at' => $link->created_at->toIso8601String(),
         ])->values()->toJson();
+    };
+
+    /**
+     * Pre-compute which events can create a Bila (have exactly one matching team member).
+     * Uses a single query for all team member emails to avoid N+1.
+     */
+    $user = auth()->user();
+    $userEmails = collect([$user?->email, $user?->microsoft_email])
+        ->filter()
+        ->map(fn (string $e) => strtolower($e))
+        ->all();
+
+    /**
+     * Map of lowercase email → team member ID for matching attendees to members.
+     * Each member can have up to two entries (email + microsoft_email).
+     */
+    $emailToMemberId = \App\Models\TeamMember::query()
+        ->select('id', 'email', 'microsoft_email')
+        ->get()
+        ->flatMap(fn ($m) => collect([
+            $m->email ? strtolower($m->email) : null,
+            $m->microsoft_email ? strtolower($m->microsoft_email) : null,
+        ])->filter()->mapWithKeys(fn (string $e) => [$e => $m->id]))
+        ->all();
+
+    /**
+     * Return attendee names for display, excluding the current user.
+     *
+     * @return list<string>
+     */
+    $attendeeNames = function (\App\Models\CalendarEvent $event) use ($userEmails): array {
+        return collect($event->attendees ?? [])
+            ->filter(fn (array $a) => !in_array(strtolower($a['email'] ?? ''), $userEmails, true))
+            ->map(fn (array $a) => $a['name'] ?? $a['email'] ?? '')
+            ->filter()
+            ->values()
+            ->all();
+    };
+
+    $canCreateBila = function (\App\Models\CalendarEvent $event) use ($userEmails, $emailToMemberId): bool {
+        $attendees = $event->attendees ?? [];
+        $candidateEmails = collect($attendees)
+            ->map(fn (array $a) => strtolower($a['email'] ?? ''))
+            ->filter(fn (string $e) => $e !== '' && !in_array($e, $userEmails, true))
+            ->values()
+            ->all();
+
+        $matchedMemberIds = collect($candidateEmails)
+            ->map(fn (string $e) => $emailToMemberId[$e] ?? null)
+            ->filter()
+            ->unique()
+            ->values();
+
+        return $matchedMemberIds->count() === 1;
     };
 
     $grouped = $groupByDay($events);
@@ -143,7 +197,7 @@
                                 @endphp
 
                                 <div
-                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }})"
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateBila($event) ? 'true' : 'false' }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >
@@ -170,6 +224,13 @@
                                         @if($event->location)
                                             <p class="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
                                                 {{ $event->location }}
+                                            </p>
+                                        @endif
+
+                                        @php $names = $attendeeNames($event); @endphp
+                                        @if(!empty($names))
+                                            <p class="mt-0.5 truncate text-xs text-gray-400 dark:text-gray-500">
+                                                {{ implode(', ', $names) }}
                                             </p>
                                         @endif
 
@@ -240,7 +301,7 @@
                                 @endphp
 
                                 <div
-                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }})"
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateBila($event) ? 'true' : 'false' }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >
@@ -267,6 +328,13 @@
                                         @if($event->location)
                                             <p class="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
                                                 {{ $event->location }}
+                                            </p>
+                                        @endif
+
+                                        @php $names = $attendeeNames($event); @endphp
+                                        @if(!empty($names))
+                                            <p class="mt-0.5 truncate text-xs text-gray-400 dark:text-gray-500">
+                                                {{ implode(', ', $names) }}
                                             </p>
                                         @endif
 
