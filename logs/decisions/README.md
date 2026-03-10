@@ -9,3 +9,4 @@
 | 005 | backend, frontend, analytics, snapshots, line-charts | Time-series line charts via daily analytics snapshots | Analytics | Accepted | 2026-03-08 |
 | 006 | frontend, backend, navigation, breadcrumbs | Contextual hierarchical breadcrumbs | UI | Accepted | 2026-03-09 |
 | 007 | frontend, backend, alpine, api-client, real-time | Live UI refresh via central event dispatch | UI | Accepted | 2026-03-10 |
+| 008 | integration, backend, microsoft, oauth2, calendar, availability | Office 365 Calendar and Availability Integration | Implementation (Phase 1-3) | Accepted | 2026-03-10 |

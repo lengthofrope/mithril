@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Enums\MemberStatus;
+use App\Enums\StatusSource;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Note;
@@ -16,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 /**
  * Handles team and team member page rendering.
@@ -239,10 +241,20 @@ class TeamPageController extends Controller
             'role'               => ['sometimes', 'nullable', 'string', 'max:255'],
             'email'              => ['sometimes', 'nullable', 'email', 'max:255'],
             'notes'              => ['sometimes', 'nullable', 'string'],
-            'status'             => ['sometimes', 'string'],
+            'status'             => ['sometimes', 'string', Rule::in(array_column(MemberStatus::cases(), 'value'))],
             'bila_interval_days' => ['sometimes', 'integer', 'min:1'],
             'next_bila_date'     => ['sometimes', 'nullable', 'date'],
+            'microsoft_email'    => ['sometimes', 'nullable', 'email', 'max:255'],
+            'status_source'      => ['sometimes', 'string', Rule::in(array_column(StatusSource::cases(), 'value'))],
         ]);
+
+        if (isset($validated['status']) && $teamMember->status_source === StatusSource::Microsoft) {
+            unset($validated['status']);
+        }
+
+        if (isset($validated['status_source']) && $validated['status_source'] === StatusSource::Microsoft->value) {
+            $validated['status_synced_at'] = null;
+        }
 
         $teamMember->update($validated);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\MemberStatus;
+use App\Enums\StatusSource;
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
 use App\Models\Traits\HasFollowUp;
@@ -25,6 +26,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $email
  * @property string|null $notes
  * @property MemberStatus $status
+ * @property string|null $microsoft_email
+ * @property StatusSource $status_source
+ * @property \Illuminate\Support\Carbon|null $status_synced_at
  * @property string|null $avatar_path
  * @property int $bila_interval_days
  * @property \Illuminate\Support\Carbon|null $next_bila_date
@@ -53,6 +57,9 @@ class TeamMember extends Model
         'email',
         'notes',
         'status',
+        'microsoft_email',
+        'status_source',
+        'status_synced_at',
         'avatar_path',
         'bila_interval_days',
         'next_bila_date',
@@ -85,8 +92,18 @@ class TeamMember extends Model
     {
         return [
             'status' => MemberStatus::class,
+            'status_source' => StatusSource::class,
+            'status_synced_at' => 'datetime',
             'next_bila_date' => 'date',
         ];
+    }
+
+    /**
+     * Determine whether this member's status is automatically synced via Microsoft.
+     */
+    public function hasAutoStatus(): bool
+    {
+        return $this->status_source === StatusSource::Microsoft;
     }
 
     /**

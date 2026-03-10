@@ -8,6 +8,7 @@ use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AnalyticsWidget;
 use App\Models\Bila;
+use App\Models\CalendarEvent;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Services\DashboardStatsService;
@@ -36,6 +37,14 @@ class DashboardController extends Controller
         $today = $this->buildTodaySection();
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
+        $calendarEvents = CalendarEvent::query()
+            ->startingFrom(now()->startOfDay())
+            ->until(now()->endOfWeek())
+            ->orderBy('start_at')
+            ->get();
+
+        $isMicrosoftConnected = $request->user()->hasMicrosoftConnection();
+
         return view('pages.dashboard', [
             'title' => 'Dashboard',
             'greeting' => $greeting,
@@ -44,6 +53,8 @@ class DashboardController extends Controller
             'todayFollowUps' => $today['overdue_follow_ups'],
             'todayBilas' => $today['bilas_today'],
             'dashboardWidgets' => $dashboardWidgets,
+            'calendarEvents' => $calendarEvents,
+            'isMicrosoftConnected' => $isMicrosoftConnected,
         ]);
     }
 
