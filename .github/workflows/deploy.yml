@@ -19,6 +19,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
             -w "\n%{http_code}" \
             -s \
+            --max-time 300 \
             "${{ vars.DEPLOY_URL }}/deploy.php")
 
           http_code=$(echo "$response" | tail -n1)
