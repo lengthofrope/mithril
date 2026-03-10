@@ -224,7 +224,7 @@ class MicrosoftGraphService
                     'timeZone' => 'UTC',
                 ],
                 'endTime'                 => [
-                    'dateTime' => $now->addMinutes(1)->toIso8601String(),
+                    'dateTime' => $now->addMinutes(60)->toIso8601String(),
                     'timeZone' => 'UTC',
                 ],
                 'availabilityViewInterval' => 60,

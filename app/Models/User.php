@@ -36,6 +36,7 @@ class User extends Authenticatable
         'microsoft_access_token',
         'microsoft_refresh_token',
         'microsoft_token_expires_at',
+        'timezone',
     ];
 
     /**
@@ -83,6 +84,14 @@ class User extends Authenticatable
     public function hasMicrosoftConnection(): bool
     {
         return $this->microsoft_id !== null;
+    }
+
+    /**
+     * Get the user's effective timezone, defaulting to Europe/Amsterdam.
+     */
+    public function getEffectiveTimezone(): string
+    {
+        return $this->timezone ?? 'Europe/Amsterdam';
     }
 
     /**

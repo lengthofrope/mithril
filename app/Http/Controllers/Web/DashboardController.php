@@ -32,14 +32,15 @@ class DashboardController extends Controller
      */
     public function index(Request $request, DashboardStatsService $statsService): View
     {
-        $greeting = $this->resolveGreeting();
+        $userTz = $request->user()->getEffectiveTimezone();
+        $greeting = $this->resolveGreeting($userTz);
         $counters = $statsService->buildStats();
-        $today = $this->buildTodaySection();
+        $today = $this->buildTodaySection($userTz);
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
         $calendarEvents = CalendarEvent::query()
-            ->startingFrom(now()->startOfDay())
-            ->until(now()->endOfWeek())
+            ->startingFrom(now($userTz)->startOfDay()->utc())
+            ->until(now($userTz)->endOfWeek()->utc())
             ->orderBy('start_at')
             ->get();
 
@@ -55,17 +56,19 @@ class DashboardController extends Controller
             'dashboardWidgets' => $dashboardWidgets,
             'calendarEvents' => $calendarEvents,
             'isMicrosoftConnected' => $isMicrosoftConnected,
+            'userTimezone' => $userTz,
         ]);
     }
 
     /**
      * Build a time-based greeting string.
      *
+     * @param string $timezone
      * @return string
      */
-    private function resolveGreeting(): string
+    private function resolveGreeting(string $timezone): string
     {
-        $hour = (int) now()->format('H');
+        $hour = (int) now($timezone)->format('H');
 
         return match (true) {
             $hour < 12 => 'Good morning',
@@ -77,11 +80,12 @@ class DashboardController extends Controller
     /**
      * Build the today section with tasks due today, overdue follow-ups, and today's bilas.
      *
+     * @param string $timezone
      * @return array<string, mixed>
      */
-    private function buildTodaySection(): array
+    private function buildTodaySection(string $timezone): array
     {
-        $tasksDueToday = Task::whereDate('deadline', now()->toDateString())
+        $tasksDueToday = Task::whereDate('deadline', now($timezone)->toDateString())
             ->whereNotIn('status', [TaskStatus::Done->value])
             ->orderBySortOrder()
             ->with(['teamMember', 'taskCategory'])
@@ -95,7 +99,7 @@ class DashboardController extends Controller
             ->get();
 
         $bilasToday = Bila::where('is_done', false)
-            ->whereDate('scheduled_date', now()->toDateString())
+            ->whereDate('scheduled_date', now($timezone)->toDateString())
             ->with(['teamMember', 'prepItems'])
             ->orderBy('scheduled_date')
             ->get();

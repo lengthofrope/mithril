@@ -126,7 +126,7 @@
 
     {{-- Calendar events --}}
     <div class="mb-8">
-        <x-tl.calendar-events :events="$calendarEvents" :isMicrosoftConnected="$isMicrosoftConnected" />
+        <x-tl.calendar-events :events="$calendarEvents" :isMicrosoftConnected="$isMicrosoftConnected" :timezone="$userTimezone" />
     </div>
 
     {{-- Today section --}}

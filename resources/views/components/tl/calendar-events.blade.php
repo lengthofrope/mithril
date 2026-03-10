@@ -1,9 +1,9 @@
-@props(['events', 'isMicrosoftConnected' => false])
+@props(['events', 'isMicrosoftConnected' => false, 'timezone' => 'Europe/Amsterdam'])
 
 @php
     use App\Enums\CalendarEventStatus;
 
-    $now = now();
+    $now = now($timezone);
 
     /**
      * Return the Tailwind dot color class for a given CalendarEventStatus enum value.
@@ -21,8 +21,9 @@
     /**
      * Return whether an event is currently in progress.
      */
-    $isHappening = function (\App\Models\CalendarEvent $event) use ($now): bool {
-        return $event->start_at->lte($now) && $event->end_at->gte($now);
+    $isHappening = function (\App\Models\CalendarEvent $event) use ($now, $timezone): bool {
+        return $event->start_at->timezone($timezone)->lte($now)
+            && $event->end_at->timezone($timezone)->gte($now);
     };
 
     /**
@@ -31,18 +32,18 @@
      * @param \Illuminate\Database\Eloquent\Collection $collection
      * @return array<string, \Illuminate\Database\Eloquent\Collection>
      */
-    $groupByDay = function (\Illuminate\Database\Eloquent\Collection $collection) use ($now): array {
+    $groupByDay = function (\Illuminate\Database\Eloquent\Collection $collection) use ($now, $timezone): array {
         $groups = [];
 
         foreach ($collection as $event) {
-            $date = $event->start_at->toDateString();
+            $localStart = $event->start_at->timezone($timezone);
 
-            if ($event->start_at->isToday()) {
+            if ($localStart->isToday()) {
                 $label = 'Today';
-            } elseif ($event->start_at->isTomorrow()) {
+            } elseif ($localStart->isTomorrow()) {
                 $label = 'Tomorrow';
             } else {
-                $label = $event->start_at->format('l, d F');
+                $label = $localStart->format('l, d F');
             }
 
             $groups[$label] ??= collect();
@@ -113,14 +114,14 @@
                         {{-- Time column --}}
                         <div
                             class="w-16 shrink-0 text-xs text-gray-500 dark:text-gray-400"
-                            aria-label="{{ $event->is_all_day ? 'All day' : $event->start_at->format('H:i') . ' to ' . $event->end_at->format('H:i') }}"
+                            aria-label="{{ $event->is_all_day ? 'All day' : $event->start_at->timezone($timezone)->format('H:i') . ' to ' . $event->end_at->timezone($timezone)->format('H:i') }}"
                         >
                             @if($event->is_all_day)
                                 All day
                             @else
-                                {{ $event->start_at->format('H:i') }}
+                                {{ $event->start_at->timezone($timezone)->format('H:i') }}
                                 <br>
-                                {{ $event->end_at->format('H:i') }}
+                                {{ $event->end_at->timezone($timezone)->format('H:i') }}
                             @endif
                         </div>
 
