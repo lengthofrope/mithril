@@ -21,8 +21,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('microsoft_event_id', 255);
             $table->string('subject', 500);
-            $table->timestamp('start_at');
-            $table->timestamp('end_at');
+            $table->dateTime('start_at');
+            $table->dateTime('end_at');
             $table->boolean('is_all_day')->default(false);
             $table->string('location', 500)->nullable();
             $table->string('status', 30);
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('online_meeting_url', 1000)->nullable();
             $table->string('organizer_name', 255)->nullable();
             $table->string('organizer_email', 255)->nullable();
-            $table->timestamp('synced_at');
+            $table->dateTime('synced_at');
             $table->timestamps();
 
             $table->unique(['user_id', 'microsoft_event_id']);
