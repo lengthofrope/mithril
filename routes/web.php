@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Web\AboutController;
 use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
 use App\Http\Controllers\Web\DashboardController;
@@ -118,4 +119,6 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/settings/export', [ExportImportController::class, 'webExport'])->name('settings.export');
     Route::post('/settings/import', [ExportImportController::class, 'webImport'])->name('settings.import');
+
+    Route::get('/about', [AboutController::class, 'index'])->name('about.index');
 });

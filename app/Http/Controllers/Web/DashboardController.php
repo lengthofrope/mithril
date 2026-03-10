@@ -76,7 +76,9 @@ class DashboardController extends Controller
             ->with(['teamMember', 'taskCategory'])
             ->get();
 
-        $overdueFollowUps = FollowUp::overdue()
+        $overdueFollowUps = FollowUp::where(function ($query) {
+            $query->overdue()->orWhere(fn ($q) => $q->dueToday());
+        })
             ->with('teamMember')
             ->orderBy('follow_up_date')
             ->get();
