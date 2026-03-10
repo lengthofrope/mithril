@@ -136,7 +136,19 @@
             @endif
         </div>
 
-        <div class="flex flex-wrap items-center gap-2" x-data="{ deleteOpen: false }">
+        <div class="flex flex-wrap items-center gap-2" x-data="{ editOpen: false, deleteOpen: false }">
+            <button
+                type="button"
+                x-on:click="editOpen = true"
+                class="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                title="Edit member details"
+            >
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit
+            </button>
+
             <a
                 href="{{ route('bilas.index', ['team_member_id' => $member->id]) }}"
                 class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
@@ -158,6 +170,112 @@
                 </svg>
                 Remove
             </button>
+
+            {{-- Edit member details modal --}}
+            <div
+                x-show="editOpen"
+                x-cloak
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                x-on:keydown.escape.window="editOpen = false"
+            >
+                <div
+                    class="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-900"
+                    x-on:click.outside="editOpen = false"
+                >
+                    <div class="mb-5 flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-gray-900 dark:text-white">Edit member</h2>
+                        <button
+                            type="button"
+                            x-on:click="editOpen = false"
+                            class="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                            aria-label="Close"
+                        >
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <x-tl.auto-save-field
+                                :endpoint="route('members.update', $member->id)"
+                                field="name"
+                                :value="$member->name ?? ''"
+                                type="text"
+                                label="Name"
+                            />
+                            <x-tl.auto-save-field
+                                :endpoint="route('members.update', $member->id)"
+                                field="role"
+                                :value="$member->role ?? ''"
+                                type="text"
+                                label="Role"
+                            />
+                        </div>
+                        <x-tl.auto-save-field
+                            :endpoint="route('members.update', $member->id)"
+                            field="email"
+                            :value="$member->email ?? ''"
+                            type="email"
+                            label="Email"
+                        />
+                        @if($member->status_source !== \App\Enums\StatusSource::Microsoft)
+                            <x-tl.auto-save-field
+                                :endpoint="route('members.update', $member->id)"
+                                field="status"
+                                :value="$member->status instanceof \BackedEnum ? $member->status->value : (string) $member->status"
+                                type="select"
+                                label="Status"
+                                :options="[
+                                    ['value' => 'available', 'label' => 'Available'],
+                                    ['value' => 'absent', 'label' => 'Absent'],
+                                    ['value' => 'partially_available', 'label' => 'Partially available'],
+                                ]"
+                            />
+                        @else
+                            <div class="flex items-center gap-1.5">
+                                <span class="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden="true"></span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    Auto-synced via Office 365
+                                    @if($member->status_synced_at)
+                                        &middot; {{ $member->status_synced_at->diffForHumans() }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <x-tl.auto-save-field
+                                :endpoint="route('members.update', $member->id)"
+                                field="bila_interval_days"
+                                :value="$member->bila_interval_days"
+                                type="number"
+                                label="Bila interval (days)"
+                            />
+                            <x-tl.auto-save-field
+                                :endpoint="route('members.update', $member->id)"
+                                field="next_bila_date"
+                                :value="$member->next_bila_date?->format('Y-m-d') ?? ''"
+                                type="date"
+                                label="Next bila date"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex justify-end">
+                        <button
+                            type="button"
+                            x-on:click="editOpen = false"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             {{-- Delete member confirmation modal --}}
             <div
@@ -211,15 +329,6 @@
             label="Notes about {{ $member->name }}"
         />
     </div>
-
-    {{-- Status sync indicator --}}
-    @if($member->status_source?->value === 'microsoft')
-        <div class="mb-6 rounded-xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-                Status is automatically synced from Office 365 for this member's Microsoft email address.
-            </p>
-        </div>
-    @endif
 
     {{-- Sections --}}
     <div
