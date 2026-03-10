@@ -187,7 +187,7 @@ function run(string $command, array &$log, string $stepName): array
     $home = $_SERVER['HOME'] ?? getenv('HOME') ?: dirname($repoPath, 2);
 
     $innerCommand = sprintf(
-        'export HOME=%s && cd %s && source $HOME/.bashrc 2>/dev/null; source $HOME/.nvm/nvm.sh 2>/dev/null; %s',
+        'export HOME=%s && cd %s && source $HOME/.profile 2>/dev/null; source $HOME/.bashrc 2>/dev/null; source $HOME/.nvm/nvm.sh 2>/dev/null; %s',
         escapeshellarg($home),
         escapeshellarg($repoPath),
         $command,
