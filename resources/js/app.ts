@@ -16,6 +16,7 @@ import { weeklyChart } from './components/weekly-chart';
 import { widgetConfigurator } from './components/widget-configurator';
 import { agreementManager } from './components/agreement-manager';
 import { inlineSelect } from './components/inline-select';
+import { liveCounter } from './components/live-counter';
 
 declare global {
     interface Window {
@@ -38,6 +39,7 @@ Alpine.data('weeklyChart', weeklyChart as Parameters<typeof Alpine.data>[1]);
 Alpine.data('widgetConfigurator', widgetConfigurator as Parameters<typeof Alpine.data>[1]);
 Alpine.data('agreementManager', agreementManager as Parameters<typeof Alpine.data>[1]);
 Alpine.data('inlineSelect', inlineSelect as Parameters<typeof Alpine.data>[1]);
+Alpine.data('liveCounter', liveCounter as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

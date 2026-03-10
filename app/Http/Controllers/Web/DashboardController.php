@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AnalyticsWidget;
 use App\Models\Bila;
 use App\Models\FollowUp;
 use App\Models\Task;
+use App\Services\DashboardStatsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -26,12 +26,13 @@ class DashboardController extends Controller
      * Display the dashboard index page.
      *
      * @param Request $request
+     * @param DashboardStatsService $statsService
      * @return View
      */
-    public function index(Request $request): View
+    public function index(Request $request, DashboardStatsService $statsService): View
     {
         $greeting = $this->resolveGreeting();
-        $counters = $this->buildStats();
+        $counters = $statsService->buildStats();
         $today = $this->buildTodaySection();
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
@@ -60,34 +61,6 @@ class DashboardController extends Controller
             $hour < 17 => 'Good afternoon',
             default => 'Good evening',
         };
-    }
-
-    /**
-     * Gather counter statistics for the dashboard header.
-     *
-     * @return array<string, int>
-     */
-    private function buildStats(): array
-    {
-        $openTaskCount = Task::whereNotIn('status', [TaskStatus::Done->value])->count();
-        $urgentTaskCount = Task::where('priority', Priority::Urgent->value)
-            ->whereNotIn('status', [TaskStatus::Done->value])
-            ->count();
-        $overdueFollowUpCount = FollowUp::overdue()->count();
-        $todayFollowUpCount = FollowUp::dueToday()->count();
-        $upcomingBilaCount = Bila::where('is_done', false)
-            ->whereBetween(
-                'scheduled_date',
-                [now()->startOfWeek()->toDateString(), now()->endOfWeek()->toDateString()]
-            )->count();
-
-        return [
-            'open_tasks' => $openTaskCount,
-            'urgent_tasks' => $urgentTaskCount,
-            'overdue_follow_ups' => $overdueFollowUpCount,
-            'today_follow_ups' => $todayFollowUpCount,
-            'bilas_this_week' => $upcomingBilaCount,
-        ];
     }
 
     /**

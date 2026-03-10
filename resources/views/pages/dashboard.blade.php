@@ -22,6 +22,7 @@
             :count="$counters['open_tasks']"
             color="blue"
             :link="route('tasks.index')"
+            counterKey="open_tasks"
         >
             <x-slot name="icon">
                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -35,6 +36,7 @@
             :count="$counters['urgent_tasks']"
             color="red"
             :link="route('tasks.index', ['priority' => 'urgent'])"
+            counterKey="urgent_tasks"
         >
             <x-slot name="icon">
                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -48,6 +50,7 @@
             :count="$counters['overdue_follow_ups']"
             color="orange"
             :link="route('follow-ups.index')"
+            counterKey="overdue_follow_ups"
         >
             <x-slot name="icon">
                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -61,6 +64,7 @@
             :count="$counters['bilas_this_week']"
             color="purple"
             :link="route('bilas.index')"
+            counterKey="bilas_this_week"
         >
             <x-slot name="icon">
                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

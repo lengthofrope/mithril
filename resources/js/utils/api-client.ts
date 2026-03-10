@@ -2,6 +2,8 @@ import type { ApiResponse, ApiError } from '../types/api';
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
+const MUTATING_METHODS: ReadonlySet<HttpMethod> = new Set(['POST', 'PATCH', 'DELETE']);
+
 /**
  * Reads the CSRF token from the meta tag injected by Laravel's Blade layout.
  */
@@ -48,6 +50,10 @@ async function executeRequest<T>(
 
     if (!response.ok) {
         throw json as ApiError;
+    }
+
+    if (MUTATING_METHODS.has(method)) {
+        window.dispatchEvent(new CustomEvent('data-changed'));
     }
 
     return json as ApiResponse<T>;

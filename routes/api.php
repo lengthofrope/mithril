@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\AgreementController;
 use App\Http\Controllers\Api\AutoSaveController;
+use App\Http\Controllers\Api\CounterController;
 
 use App\Http\Controllers\Api\BilaController;
 use App\Http\Controllers\Api\ExportImportController;
@@ -28,6 +29,7 @@ Route::prefix('v1')->middleware('auth:web')->as('api.')->group(function (): void
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);
 
+    Route::get('counters', CounterController::class)->name('counters');
     Route::get('search', [SearchController::class, 'search']);
 
     Route::get('export', [ExportImportController::class, 'export']);
