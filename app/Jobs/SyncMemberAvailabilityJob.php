@@ -101,7 +101,7 @@ class SyncMemberAvailabilityJob implements ShouldQueue
         }
 
         $from      = now();
-        $to        = now()->addMinutes(30);
+        $to        = now()->addMinutes(60);
         $batchSize = (int) config('microsoft.schedule_batch_size', 20);
 
         try {
