@@ -19,6 +19,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('calendar_event_links')) {
+            return;
+        }
+
         Schema::create('calendar_event_links', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('calendar_event_id')

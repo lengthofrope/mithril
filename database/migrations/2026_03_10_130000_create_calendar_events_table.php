@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('online_meeting_url', 1000)->nullable();
             $table->string('organizer_name', 255)->nullable();
             $table->string('organizer_email', 255)->nullable();
+            $table->json('attendees')->nullable();
             $table->dateTime('synced_at');
             $table->timestamps();
 
