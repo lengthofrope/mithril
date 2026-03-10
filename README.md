@@ -1,4 +1,6 @@
-# Team Lead Dashboard
+# Mithril
+
+*Lightweight armor for team leads.*
 
 A Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built for technical team leads who need more than basic task lists — with follow-ups, per-member context, and privacy controls.
 

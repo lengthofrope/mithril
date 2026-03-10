@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 1.1.0
+
+### Added
+
+- **Inline select component** — New `<x-tl.inline-select-pill>` Blade component with Alpine.js integration for inline priority/status editing on task cards
+- **Live UI counters** — Dashboard counters now auto-refresh via central event dispatch and dedicated `CounterController` API endpoint
+- **`DashboardStatsService`** — Extracted dashboard statistics into a reusable service
+
+### Changed
+
+- **Rebranding** — Renamed from "TeamDash" to "Mithril" with payoff "Lightweight armor for team leads"
+- Updated all logo SVGs with new shield icon and Mithril branding (light, dark, icon-only, auth)
+- Updated PWA manifest, app icons, and favicon with shield motif
+- Updated page titles, login page heading, and payoff across all Blade templates
+- Updated project README.md with new branding
+
+### Fixed
+
+- Dark mode background color consistency for sidebar and header
+
 ## [1.0.0] - 2026-03-09
 
 ### Added
