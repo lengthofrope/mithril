@@ -181,6 +181,75 @@ describe('Dashboard calendar display', function (): void {
         expect($response->viewData('calendarEvents'))->toHaveCount(0);
     });
 
+    it('renders today day group as open by default', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-collapse']);
+
+        CalendarEvent::factory()->create([
+            'user_id'  => $user->id,
+            'subject'  => 'Today meeting',
+            'start_at' => now()->addHour(),
+            'end_at'   => now()->addHours(2),
+            'status'   => CalendarEventStatus::Busy,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('x-data="{ open: true }"', false);
+    });
+
+    it('renders tomorrow day group as open by default', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-collapse-tmr']);
+
+        CalendarEvent::factory()->create([
+            'user_id'  => $user->id,
+            'subject'  => 'Tomorrow meeting',
+            'start_at' => now()->addDay()->startOfDay()->addHours(10),
+            'end_at'   => now()->addDay()->startOfDay()->addHours(11),
+            'status'   => CalendarEventStatus::Busy,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Tomorrow')
+            ->assertSee('x-data="{ open: true }"', false);
+    });
+
+    it('renders later day groups as closed by default', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-collapse-later']);
+
+        CalendarEvent::factory()->create([
+            'user_id'  => $user->id,
+            'subject'  => 'Later week meeting',
+            'start_at' => now()->addDays(3)->startOfDay()->addHours(10),
+            'end_at'   => now()->addDays(3)->startOfDay()->addHours(11),
+            'status'   => CalendarEventStatus::Busy,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('x-data="{ open: false }"', false);
+    });
+
+    it('renders day group headers as clickable toggle buttons', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-toggle']);
+
+        CalendarEvent::factory()->create([
+            'user_id'  => $user->id,
+            'subject'  => 'Toggle test meeting',
+            'start_at' => now()->addHour(),
+            'end_at'   => now()->addHours(2),
+            'status'   => CalendarEventStatus::Busy,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('@click="open = !open"', false);
+    });
+
     it('does not include events that start after the end of the current week', function (): void {
         $user = User::factory()->create(['microsoft_id' => 'ms-future']);
 
