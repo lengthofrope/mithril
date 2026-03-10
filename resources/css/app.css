@@ -294,13 +294,6 @@
   box-shadow: inset -1px 0 0 var(--color-brand-900);
 }
 
-/* Softer card hover with a warm glow instead of harsh border change */
-.rounded-2xl:hover::before,
-.rounded-2xl:hover::after {
-  opacity: 0.25;
-  transition: opacity 0.3s ease;
-}
-
 /* Login page atmospheric styling */
 .login-atmosphere {
   background:

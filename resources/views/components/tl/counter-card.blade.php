@@ -25,7 +25,7 @@
     @if($counterKey)
         x-data="liveCounter({ endpoint: '{{ route('api.counters') }}', counterKey: '{{ $counterKey }}', initialValue: {{ (int) $count }} })"
     @endif
-    class="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] {{ $link ? 'transition hover:border-gray-300 dark:hover:border-gray-700' : '' }}"
+    class="elvish-card group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] {{ $link ? 'transition hover:border-gray-300 dark:hover:border-gray-700' : '' }}"
 >
     <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl {{ $colors['bg'] }} {{ $colors['text'] }}">
         {{ $icon ?? '' }}
