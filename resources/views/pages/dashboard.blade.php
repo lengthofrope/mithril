@@ -12,6 +12,9 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {{ now()->format('l, d F Y') }}
             </p>
+            <div class="elvish-divider mt-3 max-w-xs">
+                <span class="elvish-divider-leaf"></span>
+            </div>
         </div>
     </div>
 

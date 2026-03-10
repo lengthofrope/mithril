@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="120" viewBox="0 0 600 120" fill="none">
+  <!-- Elvish arch with interlocking knotwork -->
+  <g opacity="1" stroke="#3d8b6b" stroke-width="1" stroke-linecap="round" fill="none">
+    <!-- Main arch -->
+    <path d="M0 120 C0 50, 135 0, 300 0 C465 0, 600 50, 600 120" stroke-width="1"/>
+
+    <!-- Inner arch -->
+    <path d="M30 120 C30 62, 150 18, 300 18 C450 18, 570 62, 570 120" stroke-width="0.8" opacity="0.6"/>
+
+    <!-- Decorative nodes along the arch -->
+    <circle cx="300" cy="6" r="3" stroke-width="0.8"/>
+    <circle cx="300" cy="6" r="6" stroke-width="0.5" opacity="0.4"/>
+
+    <!-- Leaf ornaments at arch peak -->
+    <path d="M285 8 C278 2, 280 -5, 288 -2 C290 -1, 288 4, 285 8" opacity="0.5"/>
+    <path d="M315 8 C322 2, 320 -5, 312 -2 C310 -1, 312 4, 315 8" opacity="0.5"/>
+
+    <!-- Side scrollwork left -->
+    <path d="M80 95 C75 82, 85 72, 95 78 C105 84, 98 95, 88 95"/>
+    <path d="M130 68 C128 55, 140 48, 148 55 C156 62, 146 72, 138 68"/>
+    <path d="M190 45 C190 34, 202 30, 208 38 C214 46, 204 52, 196 46"/>
+    <path d="M245 28 C248 20, 258 18, 262 25 C266 32, 256 35, 250 30"/>
+
+    <!-- Side scrollwork right (mirrored) -->
+    <path d="M520 95 C525 82, 515 72, 505 78 C495 84, 502 95, 512 95"/>
+    <path d="M470 68 C472 55, 460 48, 452 55 C444 62, 454 72, 462 68"/>
+    <path d="M410 45 C410 34, 398 30, 392 38 C386 46, 396 52, 404 46"/>
+    <path d="M355 28 C352 20, 342 18, 338 25 C334 32, 344 35, 350 30"/>
+  </g>
+</svg>

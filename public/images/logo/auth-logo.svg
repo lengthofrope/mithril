@@ -1,7 +1,7 @@
 <svg width="310" height="48" viewBox="0 0 310 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="48" height="48" rx="12" fill="#4F46E5"/>
+<rect width="48" height="48" rx="12" fill="#2f7358"/>
 <path d="M24 9L12 15V25.5C12 33.38 17.1 40.73 24 42.75C30.9 40.73 36 33.38 36 25.5V15L24 9Z" fill="white" fill-opacity="0.9"/>
 <path d="M24 9L12 15V25.5C12 33.38 17.1 40.73 24 42.75V9Z" fill="white"/>
-<text x="58" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="white">Mithril</text>
-<text x="58" y="42" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="400" fill="rgba(255,255,255,0.7)" font-style="italic">Lightweight armor for team leads</text>
+<text x="58" y="24" font-family="'Cormorant Garamond', Georgia, serif" font-size="26" font-weight="600" fill="white">Mithril</text>
+<text x="58" y="42" font-family="Outfit, system-ui, sans-serif" font-size="12" font-weight="400" fill="rgba(255,255,255,0.7)" font-style="italic">Lightweight armor for team leads</text>
 </svg>
