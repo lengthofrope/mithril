@@ -1,0 +1,35 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Server
+    permissions:
+      contents: read
+
+    steps:
+      - name: Trigger Deployment
+        run: |
+          response=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
+            -w "\n%{http_code}" \
+            -s \
+            "${{ vars.DEPLOY_URL }}/deploy.php")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "Deployment failed with status $http_code"
+            exit 1
+          fi
+
+          echo "Deployment successful!"
