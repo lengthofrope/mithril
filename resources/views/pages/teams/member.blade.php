@@ -8,13 +8,17 @@
         @php
             $statusColorMap = [
                 'available'           => 'bg-green-500',
-                'absent'              => 'bg-red-400',
                 'partially_available' => 'bg-yellow-500',
+                'working_elsewhere'   => 'bg-blue-500',
+                'in_a_meeting'        => 'bg-red-500',
+                'absent'              => 'bg-gray-400',
             ];
             $statusLabelMap = [
                 'available'           => 'Available',
-                'absent'              => 'Absent',
                 'partially_available' => 'Partially available',
+                'working_elsewhere'   => 'Working elsewhere',
+                'in_a_meeting'        => 'In a meeting',
+                'absent'              => 'Absent',
             ];
             $statusKey = $member->status instanceof \BackedEnum ? $member->status->value : (string) $member->status;
             $statusColor = $statusColorMap[$statusKey] ?? 'bg-gray-400';
@@ -232,8 +236,10 @@
                                 label="Status"
                                 :options="[
                                     ['value' => 'available', 'label' => 'Available'],
-                                    ['value' => 'absent', 'label' => 'Absent'],
                                     ['value' => 'partially_available', 'label' => 'Partially available'],
+                                    ['value' => 'working_elsewhere', 'label' => 'Working elsewhere'],
+                                    ['value' => 'in_a_meeting', 'label' => 'In a meeting'],
+                                    ['value' => 'absent', 'label' => 'Absent'],
                                 ]"
                             />
                         @else

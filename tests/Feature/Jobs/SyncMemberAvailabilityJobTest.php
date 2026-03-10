@@ -21,7 +21,7 @@ describe('SyncMemberAvailabilityJob', function (): void {
         Mockery::close();
     });
 
-    it('updates member status to PartiallyAvailable when graph returns busy scheduleItem', function (): void {
+    it('updates member status to InAMeeting when graph returns busy scheduleItem', function (): void {
         $user = User::factory()->create([
             'microsoft_id'               => 'ms-123',
             'microsoft_access_token'     => 'token',
@@ -54,7 +54,7 @@ describe('SyncMemberAvailabilityJob', function (): void {
 
         (new SyncMemberAvailabilityJob($user))->handle($mock);
 
-        expect($member->fresh()->status)->toBe(MemberStatus::PartiallyAvailable);
+        expect($member->fresh()->status)->toBe(MemberStatus::InAMeeting);
     });
 
     it('updates member status to Absent when graph returns oof scheduleItem', function (): void {
@@ -127,6 +127,78 @@ describe('SyncMemberAvailabilityJob', function (): void {
         (new SyncMemberAvailabilityJob($user))->handle($mock);
 
         expect($member->fresh()->status)->toBe(MemberStatus::Available);
+    });
+
+    it('updates member status to PartiallyAvailable when graph returns tentative scheduleItem', function (): void {
+        $user = User::factory()->create([
+            'microsoft_id'               => 'ms-tentative',
+            'microsoft_access_token'     => 'token',
+            'microsoft_refresh_token'    => 'refresh',
+            'microsoft_token_expires_at' => now()->addHour(),
+        ]);
+
+        $team   = Team::factory()->create(['user_id' => $user->id]);
+        $member = TeamMember::create([
+            'user_id'         => $user->id,
+            'team_id'         => $team->id,
+            'name'            => 'Tentative Tina',
+            'microsoft_email' => 'tina@example.com',
+            'status_source'   => StatusSource::Microsoft,
+            'status'          => MemberStatus::Available,
+        ]);
+
+        $mock = Mockery::mock(MicrosoftGraphService::class);
+        $mock->shouldReceive('getScheduleAvailability')
+            ->once()
+            ->andReturn(collect([
+                [
+                    'email'        => 'tina@example.com',
+                    'availability' => [
+                        ['status' => 'tentative', 'start' => [], 'end' => []],
+                    ],
+                ],
+            ]));
+        $this->app->instance(MicrosoftGraphService::class, $mock);
+
+        (new SyncMemberAvailabilityJob($user))->handle($mock);
+
+        expect($member->fresh()->status)->toBe(MemberStatus::PartiallyAvailable);
+    });
+
+    it('updates member status to WorkingElsewhere when graph returns workingElsewhere scheduleItem', function (): void {
+        $user = User::factory()->create([
+            'microsoft_id'               => 'ms-wfh',
+            'microsoft_access_token'     => 'token',
+            'microsoft_refresh_token'    => 'refresh',
+            'microsoft_token_expires_at' => now()->addHour(),
+        ]);
+
+        $team   = Team::factory()->create(['user_id' => $user->id]);
+        $member = TeamMember::create([
+            'user_id'         => $user->id,
+            'team_id'         => $team->id,
+            'name'            => 'Remote Rick',
+            'microsoft_email' => 'rick@example.com',
+            'status_source'   => StatusSource::Microsoft,
+            'status'          => MemberStatus::Available,
+        ]);
+
+        $mock = Mockery::mock(MicrosoftGraphService::class);
+        $mock->shouldReceive('getScheduleAvailability')
+            ->once()
+            ->andReturn(collect([
+                [
+                    'email'        => 'rick@example.com',
+                    'availability' => [
+                        ['status' => 'workingElsewhere', 'start' => [], 'end' => []],
+                    ],
+                ],
+            ]));
+        $this->app->instance(MicrosoftGraphService::class, $mock);
+
+        (new SyncMemberAvailabilityJob($user))->handle($mock);
+
+        expect($member->fresh()->status)->toBe(MemberStatus::WorkingElsewhere);
     });
 
     it('skips members without a microsoft_email', function (): void {

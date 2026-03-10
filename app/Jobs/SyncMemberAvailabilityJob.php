@@ -52,11 +52,11 @@ class SyncMemberAvailabilityJob implements ShouldQueue
      * @var array<string, int>
      */
     private const AVAILABILITY_WEIGHT = [
-        '3' => 40, // oof         → Absent
-        '2' => 30, // busy        → PartiallyAvailable
-        '1' => 20, // tentative   → Available
-        '4' => 10, // workingElsewhere → Available
-        '0' => 10, // free        → Available
+        '3' => 50, // oof              → Absent
+        '2' => 40, // busy             → InAMeeting
+        '1' => 30, // tentative        → PartiallyAvailable
+        '4' => 20, // workingElsewhere → WorkingElsewhere
+        '0' => 10, // free             → Available
     ];
 
     /**
@@ -65,10 +65,10 @@ class SyncMemberAvailabilityJob implements ShouldQueue
      * @var array<string, int>
      */
     private const SCHEDULE_ITEM_WEIGHT = [
-        'oof'              => 40,
-        'busy'             => 30,
-        'tentative'        => 20,
-        'workingElsewhere' => 10,
+        'oof'              => 50,
+        'busy'             => 40,
+        'tentative'        => 30,
+        'workingElsewhere' => 20,
         'free'             => 10,
     ];
 
@@ -251,8 +251,10 @@ class SyncMemberAvailabilityJob implements ShouldQueue
     {
         return match ($slot) {
             '3'     => MemberStatus::Absent,
-            '2'     => MemberStatus::PartiallyAvailable,
-            '0', '1', '4' => MemberStatus::Available,
+            '2'     => MemberStatus::InAMeeting,
+            '1'     => MemberStatus::PartiallyAvailable,
+            '4'     => MemberStatus::WorkingElsewhere,
+            '0'     => MemberStatus::Available,
             default => null,
         };
     }
@@ -299,8 +301,10 @@ class SyncMemberAvailabilityJob implements ShouldQueue
     {
         return match ($status) {
             'oof'              => MemberStatus::Absent,
-            'busy'             => MemberStatus::PartiallyAvailable,
-            'tentative', 'free', 'workingElsewhere' => MemberStatus::Available,
+            'busy'             => MemberStatus::InAMeeting,
+            'tentative'        => MemberStatus::PartiallyAvailable,
+            'workingElsewhere' => MemberStatus::WorkingElsewhere,
+            'free'             => MemberStatus::Available,
             default            => null,
         };
     }
