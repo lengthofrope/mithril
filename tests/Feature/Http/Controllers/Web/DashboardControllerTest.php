@@ -13,6 +13,8 @@ use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
+const USER_TZ = 'Europe/Amsterdam';
+
 test('dashboard returns 200 for authenticated user', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
@@ -104,6 +106,7 @@ test('counters urgent_tasks counts urgent non-done tasks only', function () {
 
 test('counters overdue_follow_ups counts overdue non-done follow-ups', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
     FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDays(2)]);
@@ -116,6 +119,7 @@ test('counters overdue_follow_ups counts overdue non-done follow-ups', function 
 
 test('counters today_follow_ups counts follow-ups due today', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
     FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString()]);
@@ -128,7 +132,7 @@ test('counters today_follow_ups counts follow-ups due today', function () {
 
 test('counters bilas_this_week counts bilas within the current week', function () {
     /** @var \Tests\TestCase $this */
-    $this->travelTo(Carbon::create(2026, 3, 4, 10, 0, 0)); // Wednesday
+    $this->travelTo(Carbon::parse('2026-03-04 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
     Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()]);
@@ -142,11 +146,12 @@ test('counters bilas_this_week counts bilas within the current week', function (
 
 test('todayTasks contains tasks with deadline today and not done', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
-    Task::factory()->create(['user_id' => $user->id, 'deadline' => now()->toDateString(), 'status' => TaskStatus::Open]);
-    Task::factory()->create(['user_id' => $user->id, 'deadline' => now()->toDateString(), 'status' => TaskStatus::Done]);
-    Task::factory()->create(['user_id' => $user->id, 'deadline' => now()->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDay()->toDateString(), 'status' => TaskStatus::Open]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -155,6 +160,7 @@ test('todayTasks contains tasks with deadline today and not done', function () {
 
 test('todayFollowUps contains overdue and today non-done follow-ups', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
     FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDays(3)]);
@@ -169,10 +175,11 @@ test('todayFollowUps contains overdue and today non-done follow-ups', function (
 
 test('todayBilas contains bilas scheduled for today', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->toDateString()]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay()->toDateString()]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString()]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString()]);
 
     $response = $this->actingAs($user)->get('/');
 
@@ -181,7 +188,7 @@ test('todayBilas contains bilas scheduled for today', function () {
 
 test('counters bilas_this_week excludes done bilas', function () {
     /** @var \Tests\TestCase $this */
-    $this->travelTo(Carbon::create(2026, 3, 4, 10, 0, 0)); // Wednesday
+    $this->travelTo(Carbon::parse('2026-03-04 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
     Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(), 'is_done' => false]);
@@ -194,10 +201,11 @@ test('counters bilas_this_week excludes done bilas', function () {
 
 test('todayBilas excludes done bilas', function () {
     /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->toDateString(), 'is_done' => false]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->toDateString(), 'is_done' => true]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString(), 'is_done' => true]);
 
     $response = $this->actingAs($user)->get('/');
 
