@@ -203,6 +203,47 @@ class MicrosoftGraphService
     }
 
     /**
+     * Determine whether a given email address resolves to a known user in the
+     * connected Microsoft 365 tenant by probing the getSchedule endpoint.
+     *
+     * @param User   $user  The authenticated user whose token will be used.
+     * @param string $email The email address to verify.
+     * @return bool True when the email resolves to a valid Microsoft 365 mailbox.
+     */
+    public function isKnownMicrosoftUser(User $user, string $email): bool
+    {
+        $this->ensureValidToken($user);
+
+        $now = now();
+
+        $response = Http::withToken($user->microsoft_access_token)
+            ->post(config('microsoft.graph_url') . 'me/calendar/getSchedule', [
+                'schedules'                => [$email],
+                'startTime'               => [
+                    'dateTime' => $now->toIso8601String(),
+                    'timeZone' => 'UTC',
+                ],
+                'endTime'                 => [
+                    'dateTime' => $now->addMinutes(1)->toIso8601String(),
+                    'timeZone' => 'UTC',
+                ],
+                'availabilityViewInterval' => 60,
+            ]);
+
+        if ($response->failed()) {
+            return false;
+        }
+
+        $schedules = $response->json('value', []);
+
+        if (empty($schedules)) {
+            return false;
+        }
+
+        return ! isset($schedules[0]['error']);
+    }
+
+    /**
      * Revoke all stored Microsoft credentials from the user record.
      *
      * @param User $user The user whose Microsoft access should be cleared.

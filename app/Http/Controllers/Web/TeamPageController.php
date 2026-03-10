@@ -12,6 +12,7 @@ use App\Models\Note;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Services\BreadcrumbBuilder;
+use App\Services\MicrosoftGraphService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -230,12 +231,20 @@ class TeamPageController extends Controller
     /**
      * Update editable profile fields on a team member record.
      *
-     * @param Request $request
-     * @param TeamMember $teamMember
+     * When the microsoft_email field is provided, the status_source is automatically
+     * determined by probing the Microsoft Graph API. The status_source field is no
+     * longer accepted as direct input.
+     *
+     * @param Request                  $request
+     * @param TeamMember               $teamMember
+     * @param MicrosoftGraphService    $graphService
      * @return JsonResponse
      */
-    public function updateMember(Request $request, TeamMember $teamMember): JsonResponse
-    {
+    public function updateMember(
+        Request $request,
+        TeamMember $teamMember,
+        MicrosoftGraphService $graphService,
+    ): JsonResponse {
         $validated = $request->validate([
             'name'               => ['sometimes', 'string', 'max:255'],
             'role'               => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -244,20 +253,63 @@ class TeamPageController extends Controller
             'status'             => ['sometimes', 'string', Rule::in(array_column(MemberStatus::cases(), 'value'))],
             'bila_interval_days' => ['sometimes', 'integer', 'min:1'],
             'next_bila_date'     => ['sometimes', 'nullable', 'date'],
-            'microsoft_email'    => ['sometimes', 'nullable', 'email', 'max:255'],
-            'status_source'      => ['sometimes', 'string', Rule::in(array_column(StatusSource::cases(), 'value'))],
         ]);
+
+        unset($validated['status_source'], $validated['microsoft_email']);
 
         if (isset($validated['status']) && $teamMember->status_source === StatusSource::Microsoft) {
             unset($validated['status']);
         }
 
-        if (isset($validated['status_source']) && $validated['status_source'] === StatusSource::Microsoft->value) {
-            $validated['status_synced_at'] = null;
+        if (array_key_exists('email', $validated)) {
+            $statusSource = $this->resolveStatusSource(
+                $request->user(),
+                $validated['email'],
+                $graphService,
+            );
+
+            $validated['status_source'] = $statusSource;
+            $validated['microsoft_email'] = $statusSource === StatusSource::Microsoft->value
+                ? $validated['email']
+                : null;
+
+            if ($statusSource === StatusSource::Microsoft->value) {
+                $validated['status_synced_at'] = null;
+            }
         }
 
         $teamMember->update($validated);
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success'       => true,
+            'status_source' => $teamMember->fresh()->status_source->value,
+        ]);
+    }
+
+    /**
+     * Determine the appropriate status source based on whether the email is a
+     * known Microsoft 365 account.
+     *
+     * @param \App\Models\User|null    $user
+     * @param string|null              $email
+     * @param MicrosoftGraphService    $graphService
+     * @return string The status source value.
+     */
+    private function resolveStatusSource(
+        ?\App\Models\User $user,
+        ?string $email,
+        MicrosoftGraphService $graphService,
+    ): string {
+        if ($email === null || $user === null || ! $user->hasMicrosoftConnection()) {
+            return StatusSource::Manual->value;
+        }
+
+        try {
+            $isKnown = $graphService->isKnownMicrosoftUser($user, $email);
+
+            return $isKnown ? StatusSource::Microsoft->value : StatusSource::Manual->value;
+        } catch (\Throwable) {
+            return StatusSource::Manual->value;
+        }
     }
 }

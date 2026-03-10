@@ -212,61 +212,14 @@
         />
     </div>
 
-    {{-- Microsoft email auto-save --}}
-    <div class="mb-6">
-        <x-tl.auto-save-field
-            :endpoint="route('members.update', $member->id)"
-            field="microsoft_email"
-            :value="$member->microsoft_email ?? ''"
-            type="email"
-            label="Microsoft email (for availability sync)"
-        />
-    </div>
-
-    {{-- Status sync settings --}}
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-            <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Status sync</h2>
+    {{-- Status sync indicator --}}
+    @if($member->status_source?->value === 'microsoft')
+        <div class="mb-6 rounded-xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+                Status is automatically synced from Office 365 for this member's Microsoft email address.
+            </p>
         </div>
-        <div class="p-5" x-data="{ statusSource: '{{ $member->status_source?->value ?? 'manual' }}' }">
-            <div class="flex flex-wrap items-center gap-4">
-                <div>
-                    <label for="status-source" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
-                        Status source
-                    </label>
-                    <select
-                        id="status-source"
-                        x-model="statusSource"
-                        x-on:change="
-                            fetch('{{ route('members.update', $member->id) }}', {
-                                method: 'PATCH',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                    'Accept': 'application/json'
-                                },
-                                body: JSON.stringify({ status_source: statusSource })
-                            })
-                        "
-                        class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
-                    >
-                        <option value="manual">Manual</option>
-                        <option value="microsoft">Auto (Office 365)</option>
-                    </select>
-                </div>
-
-                {{-- Note: this warning is server-rendered — it reflects the email value at page load only --}}
-                <div x-show="statusSource === 'microsoft'" x-cloak class="text-xs text-gray-500 dark:text-gray-400">
-                    <p>Status will be automatically synced from the Microsoft email address above.</p>
-                    @if(!$member->microsoft_email)
-                        <p class="mt-1 text-amber-600 dark:text-amber-400">
-                            Microsoft email is required for auto-sync.
-                        </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
+    @endif
 
     {{-- Sections --}}
     <div
