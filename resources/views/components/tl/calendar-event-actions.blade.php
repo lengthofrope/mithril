@@ -1,20 +1,6 @@
-@props(['event'])
+{{-- Requires a parent element with calendarEventActions x-data --}}
 
-@php
-    $links = $event->links ?? collect();
-    $linksJson = $links->map(fn ($link) => [
-        'id' => $link->id,
-        'calendar_event_id' => $link->calendar_event_id,
-        'linkable_type' => $link->linkable_type,
-        'linkable_id' => $link->linkable_id,
-        'created_at' => $link->created_at->toIso8601String(),
-    ])->values()->toJson();
-@endphp
-
-<div
-    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson }})"
-    class="relative"
->
+<div class="relative shrink-0">
     {{-- Action button --}}
     <button
         type="button"
@@ -38,7 +24,7 @@
         class="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
         role="menu"
     >
-        {{-- Linked resources (shown first for quick access) --}}
+        {{-- Linked resources (quick access with unlink option) --}}
         <template x-if="links.length > 0">
             <div>
                 <p class="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
@@ -123,17 +109,6 @@
         </button>
     </div>
 
-    {{-- Error message --}}
-    <div
-        x-show="errorMessage"
-        x-transition
-        @click="errorMessage = ''"
-        class="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 shadow-lg dark:border-red-800 dark:bg-red-900/30 dark:text-red-400"
-        role="alert"
-    >
-        <span x-text="errorMessage"></span>
-    </div>
-
     {{-- Loading spinner --}}
     <div
         x-show="isLoading"
@@ -146,12 +121,4 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
         </svg>
     </div>
-
-    {{-- Link count indicator (shown when menu is closed) --}}
-    <template x-if="links.length > 0 && !menuOpen">
-        <span
-            class="absolute -left-1.5 -top-1.5 h-2 w-2 rounded-full bg-teal-500"
-            aria-label="Has linked resources"
-        ></span>
-    </template>
 </div>

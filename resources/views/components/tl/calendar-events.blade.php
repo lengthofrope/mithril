@@ -53,6 +53,20 @@
         return $groups;
     };
 
+    /**
+     * Serialize an event's links for the Alpine calendarEventActions component.
+     */
+    $linksJson = function (\App\Models\CalendarEvent $event): string {
+        $links = $event->links ?? collect();
+        return $links->map(fn ($link) => [
+            'id' => $link->id,
+            'calendar_event_id' => $link->calendar_event_id,
+            'linkable_type' => $link->linkable_type,
+            'linkable_id' => $link->linkable_id,
+            'created_at' => $link->created_at->toIso8601String(),
+        ])->values()->toJson();
+    };
+
     $grouped = $groupByDay($events);
 
     /**
@@ -129,6 +143,7 @@
                                 @endphp
 
                                 <div
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >
@@ -171,10 +186,13 @@
                                                 Join online meeting
                                             </a>
                                         @endif
+
+                                        {{-- Linked resource pills --}}
+                                        <x-tl.calendar-event-pills />
                                     </div>
 
-                                    {{-- Actions --}}
-                                    <x-tl.calendar-event-actions :event="$event" />
+                                    {{-- Actions dropdown --}}
+                                    <x-tl.calendar-event-actions />
 
                                     {{-- Status indicator --}}
                                     <span
@@ -222,6 +240,7 @@
                                 @endphp
 
                                 <div
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >
@@ -264,10 +283,13 @@
                                                 Join online meeting
                                             </a>
                                         @endif
+
+                                        {{-- Linked resource pills --}}
+                                        <x-tl.calendar-event-pills />
                                     </div>
 
-                                    {{-- Actions --}}
-                                    <x-tl.calendar-event-actions :event="$event" />
+                                    {{-- Actions dropdown --}}
+                                    <x-tl.calendar-event-actions />
 
                                     {{-- Status indicator --}}
                                     <span

@@ -81,7 +81,10 @@ function calendarEventActions(eventId: number, initialLinks: CalendarEventLink[]
                 const json = await response.json() as { success: boolean; data?: { link?: CalendarEventLink }; message?: string };
 
                 if (json.success && json.data?.link) {
-                    this.links.push(mapLinkToBadge(json.data.link));
+                    const badge = mapLinkToBadge(json.data.link);
+                    this.links.push(badge);
+                    window.location.href = badge.url;
+                    return;
                 } else if (!json.success && json.message) {
                     this.errorMessage = json.message;
                 }
