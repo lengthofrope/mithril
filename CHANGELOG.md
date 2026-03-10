@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.7] - Unreleased
 
+### Added
+
+- **About page** — Accessible from the user dropdown menu, shows app info, current version, and full changelog with collapsible release sections
+
 ### Fixed
 
 - **Dashboard follow-ups widget** — Follow-ups due today were not shown; only overdue items appeared. Now includes both overdue and today's follow-ups
