@@ -157,17 +157,37 @@ class TeamPageController extends Controller
     /**
      * Store a new team member for the given team.
      *
-     * @param Request $request
-     * @param Team $team
+     * When an email is provided and the authenticated user has an active Microsoft
+     * connection, the Graph API is probed to determine whether the email resolves
+     * to a known O365 mailbox. If so, status_source is set to microsoft and
+     * microsoft_email is populated automatically.
+     *
+     * @param Request               $request
+     * @param Team                  $team
+     * @param MicrosoftGraphService $graphService
      * @return RedirectResponse
      */
-    public function storeMember(Request $request, Team $team): RedirectResponse
-    {
+    public function storeMember(
+        Request $request,
+        Team $team,
+        MicrosoftGraphService $graphService,
+    ): RedirectResponse {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'role' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
         ]);
+
+        $statusSource = $this->resolveStatusSource(
+            $request->user(),
+            $validated['email'] ?? null,
+            $graphService,
+        );
+
+        $validated['status_source'] = $statusSource;
+        $validated['microsoft_email'] = $statusSource === StatusSource::Microsoft->value
+            ? $validated['email']
+            : null;
 
         $team->members()->create($validated);
 

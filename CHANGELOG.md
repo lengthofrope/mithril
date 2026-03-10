@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Office 365 integration** — Calendar sync and team member availability sync from Microsoft Graph API
-- **O365 auto-detection** — When a team member's email is saved, the system probes the Graph API to determine if it's a valid O365 mailbox and automatically sets the status source
+- **O365 auto-detection** — When a team member's email is saved or the member is created, the system probes the Graph API to determine if it's a valid O365 mailbox and automatically sets the status source
+- **`microsoft:detect-members` command** — Artisan command that checks all manual team members for O365 mailbox compatibility and upgrades matching members to automatic availability sync
 - **User timezone setting** — New timezone selector on the Settings page (auto-saves, defaults to Europe/Amsterdam) used for calendar display, day grouping, greeting, and "today" boundaries
 - **New member statuses** — `In a meeting` (red), `Working elsewhere` (blue), `Partially available` (yellow) join `Available` (green) and `Absent` (gray)
 

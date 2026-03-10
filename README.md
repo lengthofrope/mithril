@@ -174,6 +174,7 @@ php artisan migrate:fresh --seed   # Reset database with sample data
 php artisan schedule:run           # Run scheduler (analytics, calendar sync, availability sync)
 php artisan microsoft:sync-calendars    # Manually sync calendars for all connected users
 php artisan microsoft:sync-availability # Manually sync team member availability
+php artisan microsoft:detect-members    # Check manual members for O365 mailbox and upgrade
 ```
 
 ### Verification

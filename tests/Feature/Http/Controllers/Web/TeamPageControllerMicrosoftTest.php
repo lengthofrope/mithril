@@ -291,6 +291,122 @@ describe('TeamPageController — Microsoft availability fields', function (): vo
         });
     });
 
+    describe('storeMember() — O365 auto-detection on creation', function (): void {
+        it('auto-sets status_source to microsoft when email is a known O365 account', function (): void {
+            $user = User::factory()->create([
+                'microsoft_id'    => 'ms-id-123',
+                'microsoft_email' => 'user@company.com',
+            ]);
+            $team = Team::factory()->create(['user_id' => $user->id]);
+
+            $mock = Mockery::mock(MicrosoftGraphService::class);
+            $mock->shouldReceive('isKnownMicrosoftUser')
+                ->with($user, 'colleague@company.com')
+                ->once()
+                ->andReturn(true);
+            $this->app->instance(MicrosoftGraphService::class, $mock);
+
+            $this->actingAs($user)
+                ->post(route('teams.members.store', $team), [
+                    'name'  => 'Colleague',
+                    'email' => 'colleague@company.com',
+                ])
+                ->assertRedirect();
+
+            $member = TeamMember::where('email', 'colleague@company.com')->first();
+            expect($member->status_source)->toBe(StatusSource::Microsoft);
+            expect($member->microsoft_email)->toBe('colleague@company.com');
+        });
+
+        it('defaults to manual when email is not a known O365 account', function (): void {
+            $user = User::factory()->create([
+                'microsoft_id'    => 'ms-id-123',
+                'microsoft_email' => 'user@company.com',
+            ]);
+            $team = Team::factory()->create(['user_id' => $user->id]);
+
+            $mock = Mockery::mock(MicrosoftGraphService::class);
+            $mock->shouldReceive('isKnownMicrosoftUser')
+                ->with($user, 'external@gmail.com')
+                ->once()
+                ->andReturn(false);
+            $this->app->instance(MicrosoftGraphService::class, $mock);
+
+            $this->actingAs($user)
+                ->post(route('teams.members.store', $team), [
+                    'name'  => 'External',
+                    'email' => 'external@gmail.com',
+                ])
+                ->assertRedirect();
+
+            $member = TeamMember::where('email', 'external@gmail.com')->first();
+            expect($member->status_source)->toBe(StatusSource::Manual);
+            expect($member->microsoft_email)->toBeNull();
+        });
+
+        it('defaults to manual when no email is provided', function (): void {
+            $user = User::factory()->create([
+                'microsoft_id'    => 'ms-id-123',
+                'microsoft_email' => 'user@company.com',
+            ]);
+            $team = Team::factory()->create(['user_id' => $user->id]);
+
+            $mock = Mockery::mock(MicrosoftGraphService::class);
+            $mock->shouldNotReceive('isKnownMicrosoftUser');
+            $this->app->instance(MicrosoftGraphService::class, $mock);
+
+            $this->actingAs($user)
+                ->post(route('teams.members.store', $team), [
+                    'name' => 'No Email',
+                ])
+                ->assertRedirect();
+
+            $member = TeamMember::where('name', 'No Email')->first();
+            expect($member->status_source)->toBe(StatusSource::Manual);
+            expect($member->microsoft_email)->toBeNull();
+        });
+
+        it('defaults to manual when user has no Microsoft connection', function (): void {
+            $user = User::factory()->create(['microsoft_id' => null]);
+            $team = Team::factory()->create(['user_id' => $user->id]);
+
+            $this->actingAs($user)
+                ->post(route('teams.members.store', $team), [
+                    'name'  => 'Disconnected',
+                    'email' => 'someone@company.com',
+                ])
+                ->assertRedirect();
+
+            $member = TeamMember::where('email', 'someone@company.com')->first();
+            expect($member->status_source)->toBe(StatusSource::Manual);
+            expect($member->microsoft_email)->toBeNull();
+        });
+
+        it('gracefully falls back to manual when O365 lookup fails on creation', function (): void {
+            $user = User::factory()->create([
+                'microsoft_id'    => 'ms-id-123',
+                'microsoft_email' => 'user@company.com',
+            ]);
+            $team = Team::factory()->create(['user_id' => $user->id]);
+
+            $mock = Mockery::mock(MicrosoftGraphService::class);
+            $mock->shouldReceive('isKnownMicrosoftUser')
+                ->andThrow(new RuntimeException('Graph API error'));
+            $this->app->instance(MicrosoftGraphService::class, $mock);
+
+            $this->actingAs($user)
+                ->post(route('teams.members.store', $team), [
+                    'name'  => 'Error Member',
+                    'email' => 'error@company.com',
+                ])
+                ->assertRedirect();
+
+            $member = TeamMember::where('email', 'error@company.com')->first();
+            expect($member->status_source)->toBe(StatusSource::Manual);
+            expect($member->microsoft_email)->toBeNull();
+        });
+    });
+
     describe('member profile page', function (): void {
         it('does not show a separate microsoft email field', function (): void {
             /** @var \Tests\TestCase $this */
