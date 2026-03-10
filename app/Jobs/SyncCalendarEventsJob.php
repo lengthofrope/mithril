@@ -82,6 +82,7 @@ class SyncCalendarEventsJob implements ShouldQueue
                             'online_meeting_url' => $eventData['online_meeting_url'],
                             'organizer_name'     => $eventData['organizer_name'],
                             'organizer_email'    => $eventData['organizer_email'],
+                            'attendees'          => $eventData['attendees'] ?? [],
                             'synced_at'          => now(),
                         ]
                     );

@@ -150,7 +150,7 @@ class MicrosoftGraphService
             ->get(config('microsoft.graph_url') . 'me/calendarView', [
                 'startDateTime' => $from->toIso8601String(),
                 'endDateTime'   => $to->toIso8601String(),
-                '$select'       => 'id,subject,start,end,isAllDay,location,showAs,isOnlineMeeting,onlineMeeting,organizer',
+                '$select'       => 'id,subject,start,end,isAllDay,location,showAs,isOnlineMeeting,onlineMeeting,organizer,attendees',
                 '$orderby'      => 'start/dateTime',
                 '$top'          => 100,
             ]);
@@ -383,6 +383,14 @@ class MicrosoftGraphService
             'online_meeting_url'  => $event['onlineMeeting']['joinUrl'] ?? null,
             'organizer_name'      => $event['organizer']['emailAddress']['name'] ?? null,
             'organizer_email'     => $event['organizer']['emailAddress']['address'] ?? null,
+            'attendees'           => collect($event['attendees'] ?? [])
+                ->map(fn (array $a): array => [
+                    'email' => $a['emailAddress']['address'] ?? null,
+                    'name'  => $a['emailAddress']['name'] ?? null,
+                ])
+                ->filter(fn (array $a): bool => $a['email'] !== null)
+                ->values()
+                ->all(),
         ];
     }
 }

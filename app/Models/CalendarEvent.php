@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null          $online_meeting_url
  * @property string|null          $organizer_name
  * @property string|null          $organizer_email
+ * @property array<int, array{email: string, name: string|null}>|null $attendees
  * @property \Illuminate\Support\Carbon $synced_at
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
@@ -53,6 +54,7 @@ class CalendarEvent extends Model
         'online_meeting_url',
         'organizer_name',
         'organizer_email',
+        'attendees',
         'synced_at',
     ];
 
@@ -69,6 +71,7 @@ class CalendarEvent extends Model
             'is_all_day'        => 'boolean',
             'is_online_meeting' => 'boolean',
             'status'            => CalendarEventStatus::class,
+            'attendees'         => 'array',
             'synced_at'         => 'datetime',
         ];
     }
