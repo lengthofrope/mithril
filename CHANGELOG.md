@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - Unreleased
+
+### Added
+
+- **Office 365 integration** — Calendar sync and team member availability sync from Microsoft Graph API
+- **O365 auto-detection** — When a team member's email is saved, the system probes the Graph API to determine if it's a valid O365 mailbox and automatically sets the status source
+- **User timezone setting** — New timezone selector on the Settings page (auto-saves, defaults to Europe/Amsterdam) used for calendar display, day grouping, greeting, and "today" boundaries
+- **New member statuses** — `In a meeting` (red), `Working elsewhere` (blue), `Partially available` (yellow) join `Available` (green) and `Absent` (gray)
+
+### Changed
+
+- **Sync intervals** — Calendar and availability sync both run every 5 minutes (previously 15 and 5)
+- **Status color scheme** — `Absent` changed from red to gray; `In a meeting` (busy) is now red; `Working elsewhere` is blue
+
+### Fixed
+
+- **O365 detection failure** — `isKnownMicrosoftUser()` always returned false due to a 1-minute time window with a 60-minute `availabilityViewInterval` (Graph API requires interval ≤ window)
+- **Availability sync failure** — `SyncMemberAvailabilityJob` used a 30-minute window with a 60-minute interval, causing the same Graph API validation error
+- **Calendar times off by one hour** — Events were displayed in UTC instead of the user's timezone
+- **Status mapping** — O365 `busy` now correctly maps to "In a meeting" (was "Partially available"); `tentative` maps to "Partially available" (was "Available")
+
 ## [1.2.7] - 2026-03-10
 
 ### Added
