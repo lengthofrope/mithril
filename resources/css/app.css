@@ -44,7 +44,7 @@
 
   --color-current: currentColor;
   --color-transparent: transparent;
-  --color-white: #f9f7f3;
+  --color-white: #f5f2ec;
   --color-black: #1a1e1c;
 
   --color-brand-25: #f4f8f6;
@@ -73,10 +73,10 @@
   --color-blue-light-900: #144135;
   --color-blue-light-950: #0b2920;
 
-  --color-gray-25: #f7f6f2;
-  --color-gray-50: #efede9;
-  --color-gray-100: #e3e1dc;
-  --color-gray-200: #d3d0ca;
+  --color-gray-25: #f0ede7;
+  --color-gray-50: #e8e5de;
+  --color-gray-100: #ddd9d2;
+  --color-gray-200: #cec9c1;
   --color-gray-300: #b8b4ad;
   --color-gray-400: #8e8a82;
   --color-gray-500: #65625a;
@@ -203,7 +203,7 @@
 @layer base {
   body {
     background-image:
-      url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
   }
   .dark body,
   body:is(.dark *) {
@@ -297,8 +297,9 @@
 /* Login page atmospheric styling */
 .login-atmosphere {
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(61, 139, 107, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(47, 115, 88, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 20%, rgba(61, 139, 107, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(47, 115, 88, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(139, 105, 20, 0.04) 0%, transparent 70%),
     var(--color-gray-50);
 }
 
