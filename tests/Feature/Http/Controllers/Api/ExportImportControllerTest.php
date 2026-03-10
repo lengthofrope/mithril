@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 
 uses(RefreshDatabase::class);
 
@@ -173,4 +174,91 @@ test('import handles empty data keys gracefully', function () {
     ]);
 
     $response->assertOk();
+});
+
+test('web export returns a downloadable json file with content-disposition header', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/settings/export');
+
+    $response->assertOk();
+    $response->assertHeader('Content-Type', 'application/json');
+    $response->assertHeader('Content-Disposition');
+    expect($response->headers->get('Content-Disposition'))->toContain('attachment');
+    expect($response->headers->get('Content-Disposition'))->toContain('.json');
+});
+
+test('web export file contains valid export structure', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Team::factory()->count(2)->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get('/settings/export');
+
+    $json = json_decode($response->streamedContent(), true);
+    expect($json)->toHaveKeys(['exported_at', 'version', 'data']);
+    expect($json['data']['teams'])->toHaveCount(2);
+});
+
+test('web import accepts a json file upload and imports data', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $payload = json_encode([
+        'exported_at' => now()->toIso8601String(),
+        'version' => '1.0',
+        'data' => [
+            'teams' => [
+                ['id' => 1, 'name' => 'Imported Team', 'created_at' => now()->toDateTimeString(), 'updated_at' => now()->toDateTimeString()],
+            ],
+        ],
+    ]);
+
+    $file = UploadedFile::fake()->createWithContent('export.json', $payload);
+
+    $response = $this->actingAs($user)->post('/settings/import', [
+        'import_file' => $file,
+    ]);
+
+    $response->assertRedirect(route('settings.index'));
+    expect(Team::count())->toBe(1);
+    expect(Team::first()->name)->toBe('Imported Team');
+});
+
+test('web import shows error when no file is uploaded', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/settings/import', []);
+
+    $response->assertSessionHasErrors(['import_file']);
+});
+
+test('web import shows error when file contains invalid json', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $file = UploadedFile::fake()->createWithContent('export.json', 'not-valid-json');
+
+    $response = $this->actingAs($user)->post('/settings/import', [
+        'import_file' => $file,
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+});
+
+test('web import shows error when json has no data key', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $file = UploadedFile::fake()->createWithContent('export.json', json_encode(['version' => '1.0']));
+
+    $response = $this->actingAs($user)->post('/settings/import', [
+        'import_file' => $file,
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
 });

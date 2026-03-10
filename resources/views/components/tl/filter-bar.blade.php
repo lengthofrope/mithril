@@ -86,12 +86,16 @@
                     </select>
 
                 @elseif($filter['type'] === 'date-range')
-                    <input
-                        id="filter-{{ $filter['field'] }}"
-                        type="date"
-                        x-model="filterState['{{ $filter['field'] }}']"
-                        class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
-                    >
+                    <div x-data="datePicker()">
+                        <input
+                            id="filter-{{ $filter['field'] }}"
+                            type="text"
+                            x-ref="input"
+                            x-model="filterState['{{ $filter['field'] }}']"
+                            placeholder="YYYY-MM-DD"
+                            class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                    </div>
                 @endif
             </div>
         @endforeach

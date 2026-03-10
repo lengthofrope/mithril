@@ -196,6 +196,138 @@
             </div>
         </div>
 
+        {{-- Two-factor authentication --}}
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Two-factor authentication</h2>
+            </div>
+            <div class="p-5">
+                @if($user->hasTwoFactorEnabled())
+                    {{-- 2FA is enabled --}}
+                    <div class="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 dark:border-green-800/50 dark:bg-green-500/10">
+                        <svg class="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 12 15 16 10"/>
+                        </svg>
+                        <span class="text-sm font-medium text-green-700 dark:text-green-400">
+                            Two-factor authentication is enabled.
+                        </span>
+                    </div>
+
+                    <form method="POST" action="{{ route('two-factor.disable') }}" class="mt-4 space-y-4">
+                        @csrf
+                        @method('DELETE')
+
+                        <div>
+                            <label for="2fa-disable-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Current password
+                            </label>
+                            <input
+                                id="2fa-disable-password"
+                                type="password"
+                                name="current_password"
+                                required
+                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+                            >
+                            @error('current_password')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-800 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                        >
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
+                            </svg>
+                            Disable two-factor authentication
+                        </button>
+                    </form>
+
+                @elseif(session('two_factor_setup') || ($user->two_factor_secret && !$user->two_factor_confirmed_at))
+                    {{-- 2FA setup in progress — show QR code and confirmation form --}}
+                    <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                        Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code to confirm.
+                    </p>
+
+                    <div class="mb-4 flex justify-center rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                        {!! \App\Http\Controllers\Web\TwoFactorController::generateQrCodeSvg($user) !!}
+                    </div>
+
+                    @php
+                        $recoveryCodes = $user->two_factor_recovery_codes
+                            ? json_decode(decrypt($user->two_factor_recovery_codes), true)
+                            : [];
+                    @endphp
+
+                    @if(!empty($recoveryCodes))
+                        <div class="mb-4">
+                            <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Recovery codes</p>
+                            <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                                Store these codes in a safe place. Each code can only be used once to regain access if you lose your authenticator device.
+                            </p>
+                            <div class="grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                @foreach($recoveryCodes as $code)
+                                    <span>{{ $code }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('two-factor.confirm') }}" class="space-y-4">
+                        @csrf
+
+                        <div>
+                            <label for="2fa-confirm-code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Verification code
+                            </label>
+                            <input
+                                id="2fa-confirm-code"
+                                type="text"
+                                name="code"
+                                inputmode="numeric"
+                                pattern="[0-9]{6}"
+                                maxlength="6"
+                                autocomplete="one-time-code"
+                                required
+                                placeholder="000000"
+                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 tracking-widest placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+                            >
+                            @error('code')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600"
+                        >
+                            Confirm and enable
+                        </button>
+                    </form>
+
+                @else
+                    {{-- 2FA not enabled — show enable button --}}
+                    <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                        Add an extra layer of security to your account by enabling two-factor authentication with an authenticator app.
+                    </p>
+
+                    <form method="POST" action="{{ route('two-factor.enable') }}">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600"
+                        >
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            Enable two-factor authentication
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
+
         {{-- Success flash --}}
         @if(session('status'))
             <div

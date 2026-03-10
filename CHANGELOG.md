@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-10
+
+### Added
+
+- **Two-factor authentication (TOTP)** — Enable/disable MFA via profile settings using any TOTP authenticator app (Google Authenticator, Authy, etc.)
+- **2FA login challenge** — Users with 2FA enabled must enter a 6-digit code or recovery code after password authentication before accessing the app
+- **Recovery codes** — Eight single-use recovery codes generated when enabling 2FA, consumed on use
+- **EnsureTwoFactorChallengeCompleted middleware** — Enforces 2FA challenge for all authenticated routes when 2FA is enabled
+- **Flatpickr date picker** — All date fields across the app now use Flatpickr for consistent date input (tasks, follow-ups, bilas, weekly reflections, agreements, filters)
+- **Date picker Alpine component** — Reusable `datePicker` Alpine.js component wrapping Flatpickr with x-model compatibility
+- **Auto-save date field type** — `<x-tl.auto-save-field type="date">` now renders a Flatpickr-powered input
+- **Task group management from list view** — Create and delete task groups directly from the tasks list toolbar (previously only in Settings)
+- **Web export/import** — Export and import application data via the settings page
+
+### Security
+
+- **2FA enforcement** — Two-factor authentication challenge integrated into the login flow with session-based verification
+
 ## [1.1.0] - 2026-03-10
 
 ### Added

@@ -14,6 +14,7 @@ use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\TaskPageController;
 use App\Http\Controllers\Web\TeamPageController;
+use App\Http\Controllers\Web\TwoFactorController;
 use App\Http\Controllers\Web\WeeklyReflectionController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,9 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->middleware('auth');
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/two-factor-challenge', [TwoFactorController::class, 'showChallenge'])->name('two-factor.challenge');
+    Route::post('/two-factor-challenge', [TwoFactorController::class, 'verifyChallenge']);
+
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/tasks', [TaskPageController::class, 'index'])->name('tasks.index');
@@ -75,6 +79,10 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
     Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
 
+    Route::post('/profile/two-factor/enable', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
+    Route::post('/profile/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+    Route::delete('/profile/two-factor/disable', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
+
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
@@ -108,6 +116,6 @@ Route::middleware('auth')->group(function (): void {
 
     Route::post('/reorder', ReorderController::class)->name('reorder');
 
-    Route::get('/settings/export', [ExportImportController::class, 'export'])->name('settings.export');
-    Route::post('/settings/import', [ExportImportController::class, 'import'])->name('settings.import');
+    Route::get('/settings/export', [ExportImportController::class, 'webExport'])->name('settings.export');
+    Route::post('/settings/import', [ExportImportController::class, 'webImport'])->name('settings.import');
 });

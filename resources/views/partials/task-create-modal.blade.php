@@ -103,13 +103,15 @@
                         </select>
                     </div>
 
-                    <div>
+                    <div x-data="datePicker()">
                         <label for="new-task-deadline" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Deadline</label>
                         <input
                             id="new-task-deadline"
-                            type="date"
+                            type="text"
                             name="deadline"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                            x-ref="input"
+                            placeholder="YYYY-MM-DD"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                         >
                     </div>
                 </div>

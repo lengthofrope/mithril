@@ -75,6 +75,7 @@ if (!runStep('migrate', $steps['migrate'], $log)) {
     respond(500, 'Database migration failed.', $log);
 }
 
+runStep('storage_link', 'php artisan storage:link 2>/dev/null || true', $log);
 runStep('cache_clear', $steps['cache_clear'], $log);
 runStep('cache_warm', $steps['cache_warm'], $log);
 

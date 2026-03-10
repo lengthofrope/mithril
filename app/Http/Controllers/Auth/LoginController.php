@@ -63,6 +63,13 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ($user->hasTwoFactorEnabled()) {
+            return redirect()->route('two-factor.challenge');
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 
