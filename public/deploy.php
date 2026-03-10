@@ -184,19 +184,16 @@ function extractBearerToken(): ?string
 function run(string $command, array &$log, string $stepName): array
 {
     $repoPath = dirname(__DIR__);
-    $home = $_SERVER['HOME'] ?? getenv('HOME') ?: '~';
+    $home = $_SERVER['HOME'] ?? getenv('HOME') ?: dirname($repoPath, 2);
 
     $innerCommand = sprintf(
-        'cd %s && %s',
+        'export HOME=%s && cd %s && source $HOME/.bashrc 2>/dev/null; source $HOME/.nvm/nvm.sh 2>/dev/null; %s',
+        escapeshellarg($home),
         escapeshellarg($repoPath),
         $command,
     );
 
-    $wrappedCommand = sprintf(
-        'export HOME=%s && bash -l -c %s 2>&1',
-        escapeshellarg($home),
-        escapeshellarg($innerCommand),
-    );
+    $wrappedCommand = sprintf('bash -c %s 2>&1', escapeshellarg($innerCommand));
 
     $output = [];
     $code = 0;
