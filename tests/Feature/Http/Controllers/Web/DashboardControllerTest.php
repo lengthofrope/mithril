@@ -153,17 +153,18 @@ test('todayTasks contains tasks with deadline today and not done', function () {
     expect($response->viewData('todayTasks'))->toHaveCount(1);
 });
 
-test('todayFollowUps contains all overdue non-done follow-ups', function () {
+test('todayFollowUps contains overdue and today non-done follow-ups', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
     FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDays(3)]);
     FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->subDay()]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString()]);
     FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->addDay()]);
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('todayFollowUps'))->toHaveCount(2);
+    expect($response->viewData('todayFollowUps'))->toHaveCount(3);
 });
 
 test('todayBilas contains bilas scheduled for today', function () {

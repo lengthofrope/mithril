@@ -197,14 +197,14 @@
                             href="{{ route('bilas.show', $bila->id) }}"
                             class="flex items-center gap-3 px-5 py-3 transition hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                         >
-                            @if(isset($bila->member) && $bila->member)
-                                <x-tl.team-member-avatar :member="$bila->member" size="sm" />
+                            @if($bila->teamMember)
+                                <x-tl.team-member-avatar :member="$bila->teamMember" size="sm" />
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                        {{ $bila->member->name }}
+                                        {{ $bila->teamMember->name }}
                                     </p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ \Carbon\Carbon::parse($bila->scheduled_date)->format('H:i') }}
+                                        {{ $bila->scheduled_date->format('d M Y') }}
                                     </p>
                                 </div>
                             @else
