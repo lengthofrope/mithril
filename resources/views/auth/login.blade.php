@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#4f46e5">
 
-    <title>{{ $title ?? 'Sign In' }} | TeamDash</title>
+    <title>{{ $title ?? 'Sign In' }} | Mithril</title>
 
     <link rel="manifest" href="/manifest.json">
 
@@ -32,10 +32,10 @@
 
             <div class="mb-8 text-center">
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                    TeamDash
+                    Mithril
                 </h1>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Sign in to your account to continue
+                    Lightweight armor for team leads
                 </p>
             </div>
 

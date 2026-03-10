@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Dashboard' }} | TeamDash</title>
+    <title>{{ $title ?? 'Dashboard' }} | Mithril</title>
 
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4f46e5">

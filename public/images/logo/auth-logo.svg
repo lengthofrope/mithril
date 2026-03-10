@@ -1,7 +1,7 @@
-<svg width="231" height="48" viewBox="0 0 231 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="310" height="48" viewBox="0 0 310 48" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="48" height="48" rx="12" fill="#4F46E5"/>
-<path d="M13.06 12.63C13.06 11.24 14.19 10.1 15.59 10.1C16.98 10.1 18.11 11.24 18.11 12.63V35.37C18.11 36.76 16.98 37.9 15.59 37.9C14.19 37.9 13.06 36.76 13.06 35.37V12.63Z" fill="white"/>
-<path d="M22.54 22.74C22.54 21.34 23.67 20.21 25.07 20.21C26.46 20.21 27.59 21.34 27.59 22.74V35.37C27.59 36.76 26.46 37.89 25.07 37.89C23.67 37.89 22.54 36.76 22.54 35.37V22.74Z" fill="white" fill-opacity="0.85"/>
-<path d="M32.01 16.42C32.01 15.02 33.14 13.89 34.53 13.89C35.93 13.89 37.06 15.02 37.06 16.42V35.37C37.06 36.76 35.93 37.89 34.53 37.89C33.14 37.89 32.01 36.76 32.01 35.37V16.42Z" fill="white" fill-opacity="0.65"/>
-<text x="58" y="33" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="white">TeamDash</text>
+<path d="M24 9L12 15V25.5C12 33.38 17.1 40.73 24 42.75C30.9 40.73 36 33.38 36 25.5V15L24 9Z" fill="white" fill-opacity="0.9"/>
+<path d="M24 9L12 15V25.5C12 33.38 17.1 40.73 24 42.75V9Z" fill="white"/>
+<text x="58" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="white">Mithril</text>
+<text x="58" y="42" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="400" fill="rgba(255,255,255,0.7)" font-style="italic">Lightweight armor for team leads</text>
 </svg>

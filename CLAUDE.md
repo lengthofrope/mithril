@@ -8,7 +8,7 @@ At the start of every new conversation, automatically invoke both `/tdd` and `/a
 
 ## Project Overview
 
-Team Lead Dashboard — a Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built on top of **TailAdmin Laravel** (MIT, https://github.com/TailAdmin/tailadmin-laravel).
+**Mithril** — *Lightweight armor for team leads.* A Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built on top of **TailAdmin Laravel** (MIT, https://github.com/TailAdmin/tailadmin-laravel).
 
 ## Stack
 

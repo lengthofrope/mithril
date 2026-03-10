@@ -1,7 +1,7 @@
 {
-  "name": "TeamDash",
-  "short_name": "TeamDash",
-  "description": "Personal team management dashboard",
+  "name": "Mithril",
+  "short_name": "Mithril",
+  "description": "Lightweight armor for team leads",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",
