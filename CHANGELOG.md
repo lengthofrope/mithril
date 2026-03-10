@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - Unreleased
+
+### Fixed
+
+- **Dashboard follow-ups widget** — Follow-ups due today were not shown; only overdue items appeared. Now includes both overdue and today's follow-ups
+- **Dashboard bilas widget** — Team member name was not displayed (showed "Bila #N" instead) due to incorrect relationship reference
+- **Dashboard bilas widget** — Showed "00:00" instead of the scheduled date, since `scheduled_date` is a date-only field
+
 ## [1.2.6] - 2026-03-10
 
 ### Fixed
