@@ -41,13 +41,14 @@ describe('Dashboard calendar display', function (): void {
         expect($response->viewData('isMicrosoftConnected'))->toBeFalse();
     });
 
-    it('shows the connect prompt when the user is not connected and has no events', function (): void {
+    it('does not show the calendar widget when the user is not connected', function (): void {
         $user = User::factory()->create(['microsoft_id' => null]);
 
         $this->actingAs($user)
             ->get('/')
             ->assertOk()
-            ->assertSee('Connect your Office 365 account');
+            ->assertDontSee('Upcoming')
+            ->assertDontSee('Connect your Office 365 account');
     });
 
     it('shows the empty state message when the user is connected but has no events this week', function (): void {
@@ -56,7 +57,7 @@ describe('Dashboard calendar display', function (): void {
         $this->actingAs($user)
             ->get('/')
             ->assertOk()
-            ->assertSee('No events scheduled for the rest of this week.');
+            ->assertSee('No upcoming events.');
     });
 
     it('does not show the connect prompt when the user is connected but has no events', function (): void {
@@ -181,7 +182,7 @@ describe('Dashboard calendar display', function (): void {
         expect($response->viewData('calendarEvents'))->toHaveCount(0);
     });
 
-    it('renders today day group as open by default', function (): void {
+    it('shows day label for each event in the compact widget', function (): void {
         $user = User::factory()->create(['microsoft_id' => 'ms-collapse']);
 
         CalendarEvent::factory()->create([
@@ -195,59 +196,31 @@ describe('Dashboard calendar display', function (): void {
         $this->actingAs($user)
             ->get('/')
             ->assertOk()
-            ->assertSee('x-data="{ open: true }"', false);
+            ->assertSee('Today');
     });
 
-    it('renders tomorrow day group as open by default', function (): void {
-        $user = User::factory()->create(['microsoft_id' => 'ms-collapse-tmr']);
-
-        CalendarEvent::factory()->create([
-            'user_id'  => $user->id,
-            'subject'  => 'Tomorrow meeting',
-            'start_at' => now()->addDay()->startOfDay()->addHours(10),
-            'end_at'   => now()->addDay()->startOfDay()->addHours(11),
-            'status'   => CalendarEventStatus::Busy,
-        ]);
+    it('shows a View all link to the calendar page', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-viewall']);
 
         $this->actingAs($user)
             ->get('/')
             ->assertOk()
-            ->assertSee('Tomorrow')
-            ->assertSee('x-data="{ open: true }"', false);
+            ->assertSee('View all');
     });
 
-    it('renders later day groups as closed by default', function (): void {
-        $user = User::factory()->create(['microsoft_id' => 'ms-collapse-later']);
+    it('limits dashboard to 3 events even when more exist', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-limit']);
 
-        CalendarEvent::factory()->create([
+        CalendarEvent::factory()->count(5)->create([
             'user_id'  => $user->id,
-            'subject'  => 'Later week meeting',
-            'start_at' => now()->addDays(3)->startOfDay()->addHours(10),
-            'end_at'   => now()->addDays(3)->startOfDay()->addHours(11),
-            'status'   => CalendarEventStatus::Busy,
-        ]);
-
-        $this->actingAs($user)
-            ->get('/')
-            ->assertOk()
-            ->assertSee('x-data="{ open: false }"', false);
-    });
-
-    it('renders day group headers as clickable toggle buttons', function (): void {
-        $user = User::factory()->create(['microsoft_id' => 'ms-toggle']);
-
-        CalendarEvent::factory()->create([
-            'user_id'  => $user->id,
-            'subject'  => 'Toggle test meeting',
             'start_at' => now()->addHour(),
             'end_at'   => now()->addHours(2),
             'status'   => CalendarEventStatus::Busy,
         ]);
 
-        $this->actingAs($user)
-            ->get('/')
-            ->assertOk()
-            ->assertSee('@click="open = !open"', false);
+        $response = $this->actingAs($user)->get('/');
+
+        expect($response->viewData('calendarEvents'))->toHaveCount(3);
     });
 
     it('does not include events that start after the end of the current week', function (): void {

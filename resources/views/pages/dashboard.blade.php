@@ -124,10 +124,10 @@
         </form>
     </div>
 
-    {{-- Calendar events --}}
-    <div class="mb-8">
-        <x-tl.calendar-events :events="$calendarEvents" :isMicrosoftConnected="$isMicrosoftConnected" :timezone="$userTimezone" />
-    </div>
+    {{-- Upcoming calendar events (compact widget) --}}
+    @if($calendarEvents !== null)
+        <x-tl.calendar-upcoming :events="$calendarEvents" :timezone="$userTimezone" />
+    @endif
 
     {{-- Today section --}}
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">

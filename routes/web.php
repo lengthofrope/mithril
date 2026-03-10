@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\AboutController;
 use App\Http\Controllers\Web\MicrosoftAuthController;
 use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
+use App\Http\Controllers\Web\CalendarPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\FollowUpPageController;
 use App\Http\Controllers\Web\NotePageController;
@@ -71,6 +72,8 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/bilas/{bila}/done', [BilaPageController::class, 'markDone'])->name('bilas.done');
     Route::patch('/bilas/{bila}/undone', [BilaPageController::class, 'undoDone'])->name('bilas.undone');
     Route::delete('/bilas/{bila}', [BilaPageController::class, 'destroy'])->name('bilas.destroy');
+
+    Route::get('/calendar', [CalendarPageController::class, 'index'])->name('calendar.index');
 
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
     Route::post('/weekly', [WeeklyReflectionController::class, 'store'])->name('weekly.store');

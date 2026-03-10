@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Helpers;
 
 use App\Models\Team;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Builds the sidebar navigation structure.
@@ -20,47 +21,64 @@ class MenuHelper
      */
     public static function getMainNavItems(): array
     {
-        return [
+        $items = [
             [
                 'icon' => 'dashboard',
                 'name' => 'Dashboard',
                 'path' => '/',
             ],
-            [
-                'icon' => 'task',
-                'name' => 'Tasks',
-                'subItems' => [
-                    ['name' => 'List View', 'path' => '/tasks'],
-                    ['name' => 'Kanban', 'path' => '/tasks/kanban'],
-                ],
-            ],
-            [
-                'icon' => 'follow-up',
-                'name' => 'Follow-ups',
-                'path' => '/follow-ups',
-            ],
-            self::buildTeamsItem(),
-            [
-                'icon' => 'notes',
-                'name' => 'Notes',
-                'path' => '/notes',
-            ],
-            [
+        ];
+
+        if (self::hasMicrosoftConnection()) {
+            $items[] = [
                 'icon' => 'calendar',
-                'name' => "Bila's",
-                'path' => '/bilas',
-            ],
-            [
-                'icon' => 'weekly',
-                'name' => 'Weekly Review',
-                'path' => '/weekly',
-            ],
-            [
-                'icon' => 'analytics',
-                'name' => 'Analytics',
-                'path' => '/analytics',
+                'name' => 'Calendar',
+                'path' => '/calendar',
+            ];
+        }
+
+        $items[] = [
+            'icon' => 'task',
+            'name' => 'Tasks',
+            'subItems' => [
+                ['name' => 'List View', 'path' => '/tasks'],
+                ['name' => 'Kanban', 'path' => '/tasks/kanban'],
             ],
         ];
+
+        $items[] = [
+            'icon' => 'follow-up',
+            'name' => 'Follow-ups',
+            'path' => '/follow-ups',
+        ];
+
+        $items[] = self::buildTeamsItem();
+
+        $items[] = [
+            'icon' => 'notes',
+            'name' => 'Notes',
+            'path' => '/notes',
+        ];
+
+        $items[] = [
+            'icon' => 'bila',
+            'name' => "Bila's",
+            'path' => '/bilas',
+        ];
+
+        $items[] = [
+            'icon' => 'weekly',
+            'name' => 'Weekly Review',
+            'path' => '/weekly',
+        ];
+
+        $items[] = [
+            'icon' => 'analytics',
+            'name' => 'Analytics',
+            'path' => '/analytics',
+        ];
+
+        return $items;
     }
 
     /**
@@ -91,6 +109,18 @@ class MenuHelper
             'name' => 'Teams',
             'subItems' => $subItems,
         ];
+    }
+
+    /**
+     * Determine whether the authenticated user has an active Microsoft connection.
+     *
+     * @return bool
+     */
+    private static function hasMicrosoftConnection(): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null && $user->hasMicrosoftConnection();
     }
 
     /**
@@ -137,6 +167,8 @@ class MenuHelper
             'teams' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 20C17 18.3431 14.7614 17 12 17C9.23858 17 7 18.3431 7 20M21 17.0004C21 15.7702 19.7659 14.7129 18 14.25M3 17.0004C3 15.7702 4.2341 14.7129 6 14.25M18 10.2361C18.6137 9.68679 19 8.8885 19 8C19 6.34315 17.6569 5 16 5C15.2316 5 14.5308 5.28885 14 5.76389M6 10.2361C5.38625 9.68679 5 8.8885 5 8C5 6.34315 6.34315 5 8 5C8.76835 5 9.46924 5.28885 10 5.76389M12 14C10.3431 14 9 12.6569 9 11C9 9.34315 10.3431 8 12 8C13.6569 8 15 9.34315 15 11C15 12.6569 13.6569 14 12 14Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'notes' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'bila' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 21V19C16 16.7909 13.3137 15 10 15C6.68629 15 4 16.7909 4 19V21M20 14.5C21.2091 15.2174 22 16.4091 22 17.75V21M16 3.13C17.7699 3.58 19 5.14 19 7C19 8.86 17.7699 10.42 16 10.87M10 12C7.79086 12 6 10.2091 6 8C6 5.79086 7.79086 4 10 4C12.2091 4 14 5.79086 14 8C14 10.2091 12.2091 12 10 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'calendar' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor"></path></svg>',
 

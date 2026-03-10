@@ -38,14 +38,17 @@ class DashboardController extends Controller
         $today = $this->buildTodaySection($userTz);
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
-        $calendarEvents = CalendarEvent::query()
-            ->with('links')
-            ->startingFrom(now($userTz)->startOfDay()->utc())
-            ->until(now($userTz)->endOfWeek()->utc())
-            ->orderBy('start_at')
-            ->get();
-
         $isMicrosoftConnected = $request->user()->hasMicrosoftConnection();
+
+        $calendarEvents = $isMicrosoftConnected
+            ? CalendarEvent::query()
+                ->with('links')
+                ->startingFrom(now($userTz)->startOfDay()->utc())
+                ->until(now($userTz)->endOfWeek()->utc())
+                ->orderBy('start_at')
+                ->limit(3)
+                ->get()
+            : null;
 
         return view('pages.dashboard', [
             'title' => 'Dashboard',
