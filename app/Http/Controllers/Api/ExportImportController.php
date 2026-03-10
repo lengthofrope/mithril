@@ -18,8 +18,10 @@ use App\Models\TaskGroup;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\WeeklyReflection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -217,17 +219,62 @@ class ExportImportController extends Controller
 
         $model = new $modelClass();
         $allowedFields = $model->getFillable();
+        $dateCasts = $this->getDateCastFields($model);
 
         foreach (array_chunk($data[$key], 500) as $chunk) {
-            $rows = array_map(function (array $row) use ($allowedFields, $userId): array {
+            $rows = array_map(function (array $row) use ($allowedFields, $userId, $dateCasts): array {
                 $filtered = array_intersect_key($row, array_flip($allowedFields));
                 unset($filtered['id'], $filtered['user_id']);
                 $filtered['user_id'] = $userId;
+                $filtered = $this->normalizeDateValues($filtered, $dateCasts);
 
                 return $filtered;
             }, $chunk);
 
             DB::table($model->getTable())->insert($rows);
         }
+    }
+
+    /**
+     * Get the fields that are cast to date or datetime types on the given model.
+     *
+     * @param Model $model
+     * @return array<string, string> Field name to cast type mapping.
+     */
+    private function getDateCastFields(Model $model): array
+    {
+        $dateCasts = [];
+
+        foreach ($model->getCasts() as $field => $cast) {
+            if (in_array($cast, ['date', 'datetime', 'immutable_date', 'immutable_datetime'], true)) {
+                $dateCasts[$field] = $cast;
+            }
+        }
+
+        return $dateCasts;
+    }
+
+    /**
+     * Normalize ISO-8601 date strings to MySQL-compatible formats for date-cast fields.
+     *
+     * @param array<string, mixed> $row
+     * @param array<string, string> $dateCasts
+     * @return array<string, mixed>
+     */
+    private function normalizeDateValues(array $row, array $dateCasts): array
+    {
+        foreach ($dateCasts as $field => $cast) {
+            if (!isset($row[$field]) || $row[$field] === null) {
+                continue;
+            }
+
+            $format = str_contains($cast, 'date') && !str_contains($cast, 'datetime')
+                ? 'Y-m-d'
+                : 'Y-m-d H:i:s';
+
+            $row[$field] = Carbon::parse($row[$field])->format($format);
+        }
+
+        return $row;
     }
 }

@@ -53,8 +53,12 @@ $steps = [
 $log = [];
 
 $statusOutput = run('git status --porcelain', $log, 'git_status');
-if ($statusOutput['code'] !== 0 || trim($statusOutput['output']) !== '') {
-    respond(500, 'Repository has uncommitted changes. Cannot deploy.', $log);
+$hasLocalChanges = $statusOutput['code'] === 0 && trim($statusOutput['output']) !== '';
+
+if ($hasLocalChanges) {
+    if (!runStep('git_stash', 'git stash --include-untracked', $log)) {
+        respond(500, 'Failed to stash local changes. Cannot deploy.', $log);
+    }
 }
 
 if (!runStep('git_fetch', $steps['git_fetch'], $log)) {
@@ -65,6 +69,10 @@ $branch = trim(shell_exec(sprintf('cd %s && git rev-parse --abbrev-ref HEAD 2>/d
 $pullCmd = 'git pull origin ' . escapeshellarg($branch);
 if (!runStep('git_pull', $pullCmd, $log)) {
     respond(500, 'Git pull failed.', $log);
+}
+
+if ($hasLocalChanges) {
+    runStep('git_stash_pop', 'git stash pop', $log);
 }
 
 if (!runStep('composer_install', $steps['composer_install'], $log)) {

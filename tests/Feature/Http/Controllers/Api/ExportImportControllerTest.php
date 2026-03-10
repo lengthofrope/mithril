@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Task;
 use App\Models\Team;
+use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -247,6 +248,79 @@ test('web import shows error when file contains invalid json', function () {
 
     $response->assertRedirect();
     $response->assertSessionHas('error');
+});
+
+test('import handles ISO-8601 date strings in date columns', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->postJson('/api/v1/import', [
+        'data' => [
+            'teams' => [
+                ['id' => $team->id, 'name' => $team->name, 'created_at' => now()->toDateTimeString(), 'updated_at' => now()->toDateTimeString()],
+            ],
+            'team_members' => [
+                [
+                    'id' => 1,
+                    'team_id' => $team->id,
+                    'name' => 'Test Member',
+                    'role' => 'Developer',
+                    'email' => 'test@example.com',
+                    'status' => 'available',
+                    'bila_interval_days' => 14,
+                    'next_bila_date' => '2026-03-30T00:00:00.000000Z',
+                    'sort_order' => 1,
+                    'created_at' => '2026-03-10T12:00:00.000000Z',
+                    'updated_at' => '2026-03-10T12:00:00.000000Z',
+                ],
+            ],
+        ],
+    ]);
+
+    $response->assertOk();
+    expect(TeamMember::count())->toBe(1);
+    expect(TeamMember::first()->next_bila_date->format('Y-m-d'))->toBe('2026-03-30');
+});
+
+test('web import handles ISO-8601 date strings in uploaded file', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $payload = json_encode([
+        'exported_at' => now()->toIso8601String(),
+        'version' => '1.0',
+        'data' => [
+            'teams' => [
+                ['id' => 1, 'name' => 'Team A', 'created_at' => now()->toDateTimeString(), 'updated_at' => now()->toDateTimeString()],
+            ],
+            'team_members' => [
+                [
+                    'id' => 1,
+                    'team_id' => 1,
+                    'name' => 'Member With Date',
+                    'role' => 'Dev',
+                    'email' => 'member@example.com',
+                    'status' => 'available',
+                    'bila_interval_days' => 14,
+                    'next_bila_date' => '2026-04-15T00:00:00.000000Z',
+                    'sort_order' => 1,
+                    'created_at' => '2026-03-10T12:00:00.000000Z',
+                    'updated_at' => '2026-03-10T12:00:00.000000Z',
+                ],
+            ],
+        ],
+    ]);
+
+    $file = UploadedFile::fake()->createWithContent('export.json', $payload);
+
+    $response = $this->actingAs($user)->post('/settings/import', [
+        'import_file' => $file,
+    ]);
+
+    $response->assertRedirect(route('settings.index'));
+    expect(TeamMember::count())->toBe(1);
+    expect(TeamMember::first()->next_bila_date->format('Y-m-d'))->toBe('2026-04-15');
 });
 
 test('web import shows error when json has no data key', function () {
