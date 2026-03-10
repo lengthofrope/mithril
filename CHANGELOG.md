@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated PWA manifest, app icons, and favicon with shield motif
 - Updated page titles, login page heading, and payoff across all Blade templates
 - Updated project README.md with new branding
+- **Rivendell UI redesign** — Sage green brand palette, warm stone grays, Cormorant Garamond serif headings
+- Added decorative background SVGs (trailing vines, clover flowers, arch ornament) on desktop
+- Added `elvish-card` utility with corner ornaments on cards
+- Added `elvish-divider` and `elvish-divider-leaf` decorative utilities
+- Added Tolkien-themed sidebar widget with quote
+- Login page redesign with atmospheric styling and decorative arch
 
 ### Fixed
 
