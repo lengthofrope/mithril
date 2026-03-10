@@ -39,6 +39,7 @@ class DashboardController extends Controller
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
         $calendarEvents = CalendarEvent::query()
+            ->with('links')
             ->startingFrom(now($userTz)->startOfDay()->utc())
             ->until(now($userTz)->endOfWeek()->utc())
             ->orderBy('start_at')

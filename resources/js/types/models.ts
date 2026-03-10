@@ -220,5 +220,44 @@ interface TimeSeriesChartData {
     colors: string[];
 }
 
-export type { Priority, TaskStatus, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData };
+/**
+ * Calendar event status from Microsoft Graph.
+ */
+type CalendarEventStatus = 'free' | 'tentative' | 'busy' | 'oof' | 'workingElsewhere';
+
+/**
+ * Mirrors the `calendar_events` Eloquent model.
+ */
+interface CalendarEvent {
+    id: number;
+    microsoft_event_id: string;
+    subject: string;
+    start_at: string;
+    end_at: string;
+    is_all_day: boolean;
+    location: string | null;
+    status: CalendarEventStatus;
+    is_online_meeting: boolean;
+    online_meeting_url: string | null;
+    organizer_name: string | null;
+    organizer_email: string | null;
+    attendees: Array<{ email: string; name: string | null }> | null;
+    links?: CalendarEventLink[];
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Mirrors the `calendar_event_links` Eloquent model.
+ */
+interface CalendarEventLink {
+    id: number;
+    calendar_event_id: number;
+    linkable_type: string;
+    linkable_id: number;
+    linkable?: Bila | Task | FollowUp | Note;
+    created_at: string;
+}
+
+export type { Priority, TaskStatus, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink };

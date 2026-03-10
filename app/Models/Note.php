@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Note model for storing markdown-based notes.
@@ -102,5 +103,15 @@ class Note extends Model
     public function tags(): HasMany
     {
         return $this->hasMany(NoteTag::class);
+    }
+
+    /**
+     * Get all calendar event links for this note.
+     *
+     * @return MorphMany<CalendarEventLink>
+     */
+    public function calendarEventLinks(): MorphMany
+    {
+        return $this->morphMany(CalendarEventLink::class, 'linkable');
     }
 }

@@ -173,6 +173,9 @@
                                         @endif
                                     </div>
 
+                                    {{-- Actions --}}
+                                    <x-tl.calendar-event-actions :event="$event" />
+
                                     {{-- Status indicator --}}
                                     <span
                                         class="mt-1 h-2 w-2 shrink-0 rounded-full {{ $dotClass }}"
@@ -262,6 +265,9 @@
                                             </a>
                                         @endif
                                     </div>
+
+                                    {{-- Actions --}}
+                                    <x-tl.calendar-event-actions :event="$event" />
 
                                     {{-- Status indicator --}}
                                     <span

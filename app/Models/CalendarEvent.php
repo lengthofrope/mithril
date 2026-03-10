@@ -10,6 +10,8 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * CalendarEvent model representing a Microsoft Graph calendar event synced for a user.
@@ -98,5 +100,55 @@ class CalendarEvent extends Model
     public function scopeUntil(Builder $query, CarbonInterface $date): Builder
     {
         return $query->where('start_at', '<=', $date);
+    }
+
+    /**
+     * Get all resource links for this calendar event.
+     *
+     * @return HasMany<CalendarEventLink>
+     */
+    public function links(): HasMany
+    {
+        return $this->hasMany(CalendarEventLink::class);
+    }
+
+    /**
+     * Get all linked Bilas through the polymorphic pivot.
+     *
+     * @return MorphToMany<Bila>
+     */
+    public function linkedBilas(): MorphToMany
+    {
+        return $this->morphedByMany(Bila::class, 'linkable', 'calendar_event_links');
+    }
+
+    /**
+     * Get all linked Tasks through the polymorphic pivot.
+     *
+     * @return MorphToMany<Task>
+     */
+    public function linkedTasks(): MorphToMany
+    {
+        return $this->morphedByMany(Task::class, 'linkable', 'calendar_event_links');
+    }
+
+    /**
+     * Get all linked FollowUps through the polymorphic pivot.
+     *
+     * @return MorphToMany<FollowUp>
+     */
+    public function linkedFollowUps(): MorphToMany
+    {
+        return $this->morphedByMany(FollowUp::class, 'linkable', 'calendar_event_links');
+    }
+
+    /**
+     * Get all linked Notes through the polymorphic pivot.
+     *
+     * @return MorphToMany<Note>
+     */
+    public function linkedNotes(): MorphToMany
+    {
+        return $this->morphedByMany(Note::class, 'linkable', 'calendar_event_links');
     }
 }
