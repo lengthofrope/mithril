@@ -181,7 +181,7 @@ function extractBearerToken(): ?string
 function run(string $command, array &$log, string $stepName): array
 {
     $repoPath = dirname(__DIR__);
-    $home = posix_getpwuid(posix_geteuid())['dir'] ?? $repoPath;
+    $home = $_SERVER['HOME'] ?? getenv('HOME') ?: '~';
 
     $innerCommand = sprintf(
         'cd %s && %s',
