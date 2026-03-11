@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - Unreleased
+
+### Added
+
+- **User account management** — Activate and deactivate user accounts via `user:enable` and `user:disable` Artisan commands; disabled users are blocked at login and by middleware
+- **`user:list` command** — Artisan command to list all user accounts with their active/disabled status
+- **Data pruning** — Configurable per-user retention period for completed tasks, past follow-ups, and old bilas; runs via `data:prune` Artisan command and daily schedule
+- **Prune settings UI** — New "Data Retention" section on the Settings page to configure pruning retention days (auto-saves)
+- **MIT license** — Added LICENSE file and updated `composer.json` license field
+
+### Changed
+
+- **Self-hosted fonts** — Cormorant Garamond and Outfit fonts are now self-hosted (woff2) instead of loaded from Google Fonts, improving privacy and offline support
+- **Base font size** — Increased root font size to 18px for improved readability
+- **About page** — Enhanced with development stack info, technology badges, and credits section
+- **Profile & settings layout** — Improved responsiveness of profile and settings pages
+- **Vite build config** — Added manual chunk splitting and chunk size warning configuration
+- **Seeded user** — Default seeded user is now disabled by default
+
 ## [1.3.1] - 2026-03-11
 
 ### Fixed
