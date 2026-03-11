@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Enums\Priority;
+use App\Enums\RecurrenceInterval;
 use App\Enums\TaskStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -60,6 +61,9 @@ class TaskRequest extends FormRequest
             'task_category_id' => ['nullable', 'integer', Rule::exists('task_categories', 'id')->where('user_id', auth()->id())],
             'is_private' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'is_recurring' => ['boolean'],
+            'recurrence_interval' => ['nullable', Rule::enum(RecurrenceInterval::class)],
+            'recurrence_custom_days' => ['nullable', 'integer', 'min:1', 'max:365'],
         ];
     }
 }

@@ -137,6 +137,11 @@
             />
         </div>
 
+        {{-- Recurrence --}}
+        <div class="mb-6">
+            <x-tl.recurrence-settings :task="$task" />
+        </div>
+
         {{-- Description --}}
         <div>
             <x-tl.auto-save-field

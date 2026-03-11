@@ -89,6 +89,14 @@
                 </span>
             @endif
 
+            @if($task->is_recurring)
+                <span class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title="Recurring {{ $task->recurrence_interval?->value ?? '' }}">
+                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                    </svg>
+                </span>
+            @endif
+
             @if(isset($task->member) && $task->member)
                 <span class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                     <x-tl.team-member-avatar :member="$task->member" size="sm" />
