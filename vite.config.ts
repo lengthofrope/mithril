@@ -10,4 +10,16 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        chunkSizeWarningLimit: 550,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    apexcharts: ['apexcharts'],
+                    sortablejs: ['sortablejs'],
+                    markdown: ['marked', 'dompurify'],
+                },
+            },
+        },
+    },
 });
