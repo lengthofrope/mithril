@@ -47,7 +47,7 @@ class DashboardController extends Controller
         $calendarEvents = $isMicrosoftConnected
             ? CalendarEvent::query()
                 ->with('links')
-                ->startingFrom(now($userTz)->startOfDay()->utc())
+                ->notEndedAt(now($userTz)->utc())
                 ->until(now($userTz)->endOfWeek()->utc())
                 ->orderBy('start_at')
                 ->limit(3)

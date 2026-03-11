@@ -103,6 +103,18 @@ class CalendarEvent extends Model
     }
 
     /**
+     * Scope to filter events that have not yet ended at a given point in time.
+     *
+     * @param Builder<CalendarEvent> $query
+     * @param CarbonInterface        $date
+     * @return Builder<CalendarEvent>
+     */
+    public function scopeNotEndedAt(Builder $query, CarbonInterface $date): Builder
+    {
+        return $query->where('end_at', '>=', $date);
+    }
+
+    /**
      * Get all resource links for this calendar event.
      *
      * @return HasMany<CalendarEventLink>

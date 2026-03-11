@@ -95,6 +95,50 @@ describe('Dashboard calendar widget', function (): void {
             ->assertSee('Upcoming');
     });
 
+    it('excludes events that have already ended', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-123']);
+
+        // Event that ended 1 hour ago — should NOT appear
+        CalendarEvent::factory()->create([
+            'user_id' => $user->id,
+            'start_at' => now()->subHours(2),
+            'end_at' => now()->subHour(),
+            'subject' => 'Finished meeting',
+        ]);
+
+        // Event starting in 1 hour — should appear
+        CalendarEvent::factory()->create([
+            'user_id' => $user->id,
+            'start_at' => now()->addHour(),
+            'end_at' => now()->addHours(2),
+            'subject' => 'Future meeting',
+        ]);
+
+        $response = $this->actingAs($user)->get('/');
+        $events = $response->viewData('calendarEvents');
+
+        expect($events)->toHaveCount(1);
+        expect($events[0]->subject)->toBe('Future meeting');
+    });
+
+    it('includes events that are currently happening', function (): void {
+        $user = User::factory()->create(['microsoft_id' => 'ms-123']);
+
+        // Event that started 30 min ago and ends in 30 min — should appear
+        CalendarEvent::factory()->create([
+            'user_id' => $user->id,
+            'start_at' => now()->subMinutes(30),
+            'end_at' => now()->addMinutes(30),
+            'subject' => 'Ongoing meeting',
+        ]);
+
+        $response = $this->actingAs($user)->get('/');
+        $events = $response->viewData('calendarEvents');
+
+        expect($events)->toHaveCount(1);
+        expect($events[0]->subject)->toBe('Ongoing meeting');
+    });
+
     it('includes events from tomorrow when today has fewer than 3', function (): void {
         $user = User::factory()->create(['microsoft_id' => 'ms-123']);
 
