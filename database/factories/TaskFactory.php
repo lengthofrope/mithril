@@ -34,6 +34,11 @@ class TaskFactory extends Factory
             'task_group_id' => null,
             'task_category_id' => null,
             'is_private' => false,
+            'is_recurring' => false,
+            'recurrence_interval' => null,
+            'recurrence_custom_days' => null,
+            'recurrence_series_id' => null,
+            'recurrence_parent_id' => null,
         ];
     }
 }

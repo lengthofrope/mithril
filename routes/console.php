@@ -11,8 +11,13 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('analytics:snapshot')
-    ->dailyAt('00:15')
+    ->dailyAt('00:05')
     ->name('analytics.daily-snapshot')
+    ->withoutOverlapping();
+
+Schedule::command('data:prune')
+    ->dailyAt('01:00')
+    ->name('data.prune')
     ->withoutOverlapping();
 
 Schedule::command('microsoft:sync-calendars')

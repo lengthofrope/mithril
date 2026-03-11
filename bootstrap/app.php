@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureAccountIsActive::class);
+        $middleware->appendToGroup('api', \App\Http\Middleware\EnsureAccountIsActive::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTwoFactorChallengeCompleted::class);
 
         $middleware->api(prepend: [

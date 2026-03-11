@@ -15,7 +15,9 @@
         </div>
     @endif
 
-    <div class="space-y-6 max-w-2xl">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+      <div class="space-y-6">
 
         {{-- Theme --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -83,13 +85,12 @@
                             }
                         }
                     }"
-                    class="flex items-center justify-between gap-4"
                 >
-                    <div class="min-w-0 flex-1">
-                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">Display timezone</p>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Used for calendar events and time-based greetings</p>
-                    </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-gray-800 dark:text-white/90">Display timezone</p>
+                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Used for calendar events and time-based greetings</p>
+                        </div>
                         <select
                             x-model="timezone"
                             x-on:change="save()"
@@ -100,6 +101,8 @@
                                 <option value="{{ $tz }}" @selected($tz === $user->getEffectiveTimezone())>{{ $tz }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="min-h-5 mt-1">
                         <span
                             x-show="saved"
                             x-transition:leave="transition ease-in duration-200"
@@ -123,6 +126,114 @@
                 <path d="M9 18l6-6-6-6"/>
             </svg>
         </a>
+
+      </div>
+
+      <div class="space-y-6">
+
+        {{-- Data pruning --}}
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Data pruning</h2>
+            </div>
+            <div
+                class="p-5 space-y-4"
+                x-data="{
+                    days: '{{ $user->prune_after_days ?? '' }}',
+                    saving: false,
+                    saved: false,
+                    error: '',
+                    get isConfigured() {
+                        return this.days !== '' && parseInt(this.days) >= 30;
+                    },
+                    async save() {
+                        this.saving = true;
+                        this.saved = false;
+                        this.error = '';
+                        try {
+                            const response = await fetch('{{ route('settings.updatePruneAfterDays') }}', {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    prune_after_days: this.days === '' ? null : parseInt(this.days),
+                                }),
+                            });
+                            if (response.ok) {
+                                this.saved = true;
+                                setTimeout(() => this.saved = false, 2000);
+                            } else {
+                                const data = await response.json();
+                                this.error = data.errors?.prune_after_days?.[0] ?? 'Failed to save.';
+                            }
+                        } finally {
+                            this.saving = false;
+                        }
+                    }
+                }"
+            >
+                <div class="flex items-center justify-between gap-4">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">Auto-delete completed items after</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Completed tasks and follow-ups older than this will be automatically removed. Analytics history is preserved.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="number"
+                            x-model="days"
+                            x-on:change="save()"
+                            min="30"
+                            max="365"
+                            placeholder="Off"
+                            class="w-20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                            aria-label="Retention period in days"
+                        >
+                        <span class="text-sm text-gray-500 dark:text-gray-400">days</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 min-h-5">
+                    <span
+                        x-show="saved"
+                        x-transition:leave="transition ease-in duration-200"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="text-xs text-green-600 dark:text-green-400"
+                        x-cloak
+                    >Saved</span>
+                    <p
+                        x-show="error"
+                        x-text="error"
+                        class="text-xs text-red-600 dark:text-red-400"
+                        x-cloak
+                    ></p>
+                </div>
+
+                <div
+                    x-show="isConfigured"
+                    x-transition
+                    x-cloak
+                    class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-800"
+                >
+                    <div>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">Prune now</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Immediately remove completed items older than <span x-text="days"></span> days</p>
+                    </div>
+                    <form method="POST" action="{{ route('settings.prune') }}">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-900/50 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-900/20"
+                            aria-label="Prune completed items now"
+                        >
+                            Prune now
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         {{-- Microsoft Office 365 --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -232,6 +343,8 @@
                 </div>
             </div>
         </div>
+
+      </div>
 
     </div>
 @endsection

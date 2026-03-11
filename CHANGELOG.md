@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-12
+
+### Added
+
+- **Recurring tasks** — Tasks can be configured with recurrence intervals (daily, weekly, biweekly, monthly, quarterly, yearly) with optional end dates; completed recurring tasks automatically generate the next occurrence via an observer and `RecurrenceService`
+- **Recurrence settings component** — Reusable `<x-tl.recurrence-settings>` Blade component with Alpine.js for configuring task recurrence on the task detail page
+- **User account management** — Activate and deactivate user accounts via `user:enable` and `user:disable` Artisan commands; disabled users are blocked at login and by middleware
+- **`user:list` command** — Artisan command to list all user accounts with their active/disabled status
+- **Data pruning** — Configurable per-user retention period for completed tasks, past follow-ups, and old bilas; runs via `data:prune` Artisan command and daily schedule
+- **Prune settings UI** — New "Data Retention" section on the Settings page to configure pruning retention days (auto-saves)
+- **MIT license** — Added LICENSE file and updated `composer.json` license field
+- **Calendar "now" divider** — Decorative leaf divider on the calendar page separates past events from upcoming ones in the Today section
+- **Calendar past events** — Events that have already ended are greyed out on the calendar page while keeping actions fully interactive
+
+### Security
+
+- **`is_active` mass assignment hardening** — Removed `is_active` from `User::$fillable` to prevent potential privilege escalation; field is now managed exclusively via explicit assignment
+- **Disabled user API bypass** — Added `EnsureAccountIsActive` middleware to the API middleware group so disabled users are blocked on both web and API routes; returns JSON 403 for API requests
+- **AutoSave field restriction** — Blocked `recurrence_parent_id` and `recurrence_series_id` from being writable via `AutoSaveController`; these fields are now only set by `RecurrenceService`
+- **Data pruning cross-user leak** — Scoped orphaned `CalendarEventLink` cleanup in `DataPruningService` to the user being pruned, preventing unintended deletion of other users' calendar links
+
+### Fixed
+
+- **View transition FOUC** — Added `<link rel="expect" blocking="render">` to prevent flash of unstyled content during cross-document view transitions; moved `pagereveal` handler to `<head>` as parser-blocking script per spec requirements
+- **Font flash during transitions** — Added `<link rel="preload">` for Outfit and Cormorant Garamond fonts to eliminate font-swap flash during page transitions
+- **Layout shift between pages** — Forced persistent vertical scrollbar to prevent width jump when navigating between short and long pages
+
+### Changed
+
+- **Quick-create redirects to detail page** — Creating a task, follow-up, note, or bila from the dashboard now redirects to the resource's detail page so additional fields can be set immediately
+- **Self-hosted fonts** — Cormorant Garamond and Outfit fonts are now self-hosted (woff2) instead of loaded from Google Fonts, improving privacy and offline support
+- **Base font size** — Increased root font size to 18px for improved readability
+- **About page** — Enhanced with development stack info, technology badges, and credits section
+- **Profile & settings layout** — Improved responsiveness of profile and settings pages
+- **Vite build config** — Added manual chunk splitting and chunk size warning configuration
+- **Seeded user** — Default seeded user is now disabled by default
+
 ## [1.3.1] - 2026-03-11
 
 ### Fixed

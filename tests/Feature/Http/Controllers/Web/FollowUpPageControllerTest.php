@@ -248,7 +248,7 @@ test('follow-up index filters by search term', function () {
     expect($response->viewData('sections')['overdue']->first()->description)->toBe('Review quarterly report');
 });
 
-test('store creates a new follow-up and redirects', function () {
+test('store creates a new follow-up and redirects to show page', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -259,7 +259,8 @@ test('store creates a new follow-up and redirects', function () {
             'follow_up_date' => '2026-03-15',
         ]);
 
-    $response->assertRedirect('/follow-ups');
+    $followUp = FollowUp::where('user_id', $user->id)->where('description', 'Check on project status')->first();
+    $response->assertRedirect(route('follow-ups.show', $followUp));
     $this->assertDatabaseHas('follow_ups', [
         'user_id' => $user->id,
         'description' => 'Check on project status',

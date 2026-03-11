@@ -45,7 +45,7 @@ class TakeAnalyticsSnapshot extends Command
     public function handle(): int
     {
         $snapshotDate = Carbon::today()->toDateString();
-        $users        = User::all();
+        $users        = User::where('is_active', true)->get();
 
         $this->info("Taking analytics snapshot for {$users->count()} user(s) on {$snapshotDate}.");
 

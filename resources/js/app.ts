@@ -8,6 +8,7 @@ import { sortableKanban } from './components/sortable-kanban';
 import { filterManager } from './components/filter-manager';
 import { markdownEditor } from './components/markdown-editor';
 import { privacyToggle } from './components/privacy-toggle';
+import { recurrenceSettings } from './components/recurrence-settings';
 import { confirmDialog } from './components/confirm-dialog';
 import { datePicker } from './components/date-picker';
 import { keyboardShortcuts } from './components/keyboard-shortcuts';
@@ -33,6 +34,7 @@ Alpine.data('sortableKanban', sortableKanban as Parameters<typeof Alpine.data>[1
 Alpine.data('filterManager', filterManager as Parameters<typeof Alpine.data>[1]);
 Alpine.data('markdownEditor', markdownEditor as Parameters<typeof Alpine.data>[1]);
 Alpine.data('privacyToggle', privacyToggle as Parameters<typeof Alpine.data>[1]);
+Alpine.data('recurrenceSettings', recurrenceSettings as Parameters<typeof Alpine.data>[1]);
 Alpine.data('confirmDialog', confirmDialog as Parameters<typeof Alpine.data>[1]);
 Alpine.data('datePicker', datePicker as Parameters<typeof Alpine.data>[1]);
 Alpine.data('keyboardShortcuts', keyboardShortcuts as Parameters<typeof Alpine.data>[1]);

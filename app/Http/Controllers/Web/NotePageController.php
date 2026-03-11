@@ -110,7 +110,7 @@ class NotePageController extends Controller
             'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
         ]);
 
-        Note::create([
+        $note = Note::create([
             'user_id'        => $request->user()->id,
             'title'          => $validated['title'] ?: 'Untitled',
             'content'        => $validated['content'] ?? '',
@@ -118,7 +118,7 @@ class NotePageController extends Controller
             'team_member_id' => $validated['team_member_id'] ?? null,
         ]);
 
-        return redirect()->route('notes.index');
+        return redirect()->route('notes.show', $note);
     }
 
     /**

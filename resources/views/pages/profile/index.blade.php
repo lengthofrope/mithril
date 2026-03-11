@@ -3,7 +3,9 @@
 @section('content')
     <x-common.page-breadcrumb :items="$breadcrumbs" />
 
-    <div class="space-y-6 max-w-2xl">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+      <div class="space-y-6">
 
         {{-- Avatar --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -126,6 +128,10 @@
                 </form>
             </div>
         </div>
+
+      </div>
+
+      <div class="space-y-6">
 
         {{-- Password --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -328,21 +334,23 @@
             </div>
         </div>
 
-        {{-- Success flash --}}
-        @if(session('status'))
-            <div
-                x-data="{ show: true }"
-                x-show="show"
-                x-init="setTimeout(() => show = false, 3000)"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="fixed bottom-6 right-6 z-50 rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg"
-                role="alert"
-            >
-                {{ session('status') }}
-            </div>
-        @endif
+      </div>
 
     </div>
+
+    {{-- Success flash --}}
+    @if(session('status'))
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-init="setTimeout(() => show = false, 3000)"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed bottom-6 right-6 z-50 rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg"
+            role="alert"
+        >
+            {{ session('status') }}
+        </div>
+    @endif
 @endsection

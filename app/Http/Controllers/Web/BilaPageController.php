@@ -100,7 +100,7 @@ class BilaPageController extends Controller
 
         BilaScheduled::dispatch($bila);
 
-        return redirect()->route('bilas.index');
+        return redirect()->route('bilas.show', $bila);
     }
 
     /**

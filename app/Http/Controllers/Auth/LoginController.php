@@ -61,10 +61,20 @@ class LoginController extends Controller
 
         RateLimiter::clear($this->throttleKey($request));
 
-        $request->session()->regenerate();
-
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        if (!$user->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been disabled.',
+            ]);
+        }
+
+        $request->session()->regenerate();
 
         if ($user->hasTwoFactorEnabled()) {
             return redirect()->route('two-factor.challenge');

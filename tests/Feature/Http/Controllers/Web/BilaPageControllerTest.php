@@ -172,7 +172,7 @@ test('bila index returns only the partial for AJAX requests', function () {
     $response->assertDontSee('<!DOCTYPE html');
 });
 
-test('store creates a new bila and redirects', function () {
+test('store creates a new bila and redirects to show page', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
     $member = TeamMember::factory()->create(['user_id' => $user->id]);
@@ -184,7 +184,8 @@ test('store creates a new bila and redirects', function () {
             'scheduled_date' => now()->addDays(7)->toDateString(),
         ]);
 
-    $response->assertRedirect('/bilas');
+    $bila = Bila::where('user_id', $user->id)->where('team_member_id', $member->id)->first();
+    $response->assertRedirect(route('bilas.show', $bila));
     $this->assertDatabaseHas('bilas', [
         'user_id' => $user->id,
         'team_member_id' => $member->id,

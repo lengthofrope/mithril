@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Priority;
+use App\Enums\RecurrenceInterval;
 use App\Enums\TaskStatus;
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
@@ -15,7 +16,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Str;
 
 /**
  * Task model representing a unit of work.
@@ -33,6 +36,11 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property int|null $task_category_id
  * @property bool $is_private
  * @property int $sort_order
+ * @property bool $is_recurring
+ * @property RecurrenceInterval|null $recurrence_interval
+ * @property int|null $recurrence_custom_days
+ * @property string|null $recurrence_series_id
+ * @property int|null $recurrence_parent_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -44,6 +52,20 @@ class Task extends Model
     use HasFollowUp;
     use HasSortOrder;
     use Searchable;
+
+    /**
+     * Auto-generate recurrence_series_id when is_recurring is enabled.
+     *
+     * @return void
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Task $task): void {
+            if ($task->is_recurring && $task->recurrence_series_id === null) {
+                $task->recurrence_series_id = (string) Str::uuid();
+            }
+        });
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -63,6 +85,11 @@ class Task extends Model
         'task_category_id',
         'is_private',
         'sort_order',
+        'is_recurring',
+        'recurrence_interval',
+        'recurrence_custom_days',
+        'recurrence_series_id',
+        'recurrence_parent_id',
     ];
 
     /**
@@ -78,6 +105,7 @@ class Task extends Model
         'task_group_id' => 'exact',
         'task_category_id' => 'exact',
         'is_private' => 'boolean',
+        'is_recurring' => 'boolean',
         'deadline' => 'date_range',
     ];
 
@@ -100,6 +128,8 @@ class Task extends Model
             'status' => TaskStatus::class,
             'deadline' => 'date',
             'is_private' => 'boolean',
+            'is_recurring' => 'boolean',
+            'recurrence_interval' => RecurrenceInterval::class,
         ];
     }
 
@@ -151,5 +181,35 @@ class Task extends Model
     public function calendarEventLinks(): MorphMany
     {
         return $this->morphMany(CalendarEventLink::class, 'linkable');
+    }
+
+    /**
+     * Get the previous instance in this recurrence series.
+     *
+     * @return BelongsTo<Task, Task>
+     */
+    public function recurrenceParent(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'recurrence_parent_id');
+    }
+
+    /**
+     * Get the next instance spawned from this task.
+     *
+     * @return HasOne<Task>
+     */
+    public function recurrenceChild(): HasOne
+    {
+        return $this->hasOne(Task::class, 'recurrence_parent_id');
+    }
+
+    /**
+     * Get all tasks in the same recurrence series.
+     *
+     * @return HasMany<Task>
+     */
+    public function seriesTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'recurrence_series_id', 'recurrence_series_id');
     }
 }

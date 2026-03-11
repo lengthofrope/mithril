@@ -9,6 +9,11 @@ type Priority = 'urgent' | 'high' | 'normal' | 'low';
 type TaskStatus = 'open' | 'in_progress' | 'waiting' | 'done';
 
 /**
+ * Available recurrence intervals for recurring tasks.
+ */
+type RecurrenceInterval = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
+
+/**
  * Follow-up lifecycle status.
  */
 type FollowUpStatus = 'open' | 'snoozed' | 'done';
@@ -66,6 +71,11 @@ interface Task {
     task_group_id: number | null;
     task_category_id: number | null;
     is_private: boolean;
+    is_recurring: boolean;
+    recurrence_interval: RecurrenceInterval | null;
+    recurrence_custom_days: number | null;
+    recurrence_series_id: string | null;
+    recurrence_parent_id: number | null;
     sort_order: number;
     created_at: string;
     updated_at: string;
@@ -259,5 +269,5 @@ interface CalendarEventLink {
     created_at: string;
 }
 
-export type { Priority, TaskStatus, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus };
+export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus };
 export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink };

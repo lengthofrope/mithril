@@ -118,7 +118,7 @@ class TaskPageController extends Controller
             'deadline'         => ['nullable', 'date'],
         ]);
 
-        Task::create([
+        $task = Task::create([
             'user_id'          => $request->user()->id,
             'title'            => $validated['title'],
             'priority'         => $validated['priority'] ?? 'normal',
@@ -129,7 +129,7 @@ class TaskPageController extends Controller
             'deadline'         => $validated['deadline'] ?? null,
         ]);
 
-        return redirect()->back();
+        return redirect()->route('tasks.show', $task);
     }
 
     /**
