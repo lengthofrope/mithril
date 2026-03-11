@@ -3,7 +3,7 @@
 @section('content')
     <x-common.page-breadcrumb :items="$breadcrumbs" />
 
-    <div class="space-y-6 max-w-2xl">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
 
         {{-- Task categories --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">

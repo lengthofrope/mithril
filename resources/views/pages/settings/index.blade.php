@@ -15,7 +15,9 @@
         </div>
     @endif
 
-    <div class="space-y-6 max-w-2xl">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+      <div class="space-y-6">
 
         {{-- Theme --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -124,6 +126,10 @@
                 <path d="M9 18l6-6-6-6"/>
             </svg>
         </a>
+
+      </div>
+
+      <div class="space-y-6">
 
         {{-- Data pruning --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -337,6 +343,8 @@
                 </div>
             </div>
         </div>
+
+      </div>
 
     </div>
 @endsection
