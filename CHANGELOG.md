@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Recurring tasks** — Tasks can be configured with recurrence intervals (daily, weekly, biweekly, monthly, quarterly, yearly) with optional end dates; completed recurring tasks automatically generate the next occurrence via an observer and `RecurrenceService`
+- **Recurrence settings component** — Reusable `<x-tl.recurrence-settings>` Blade component with Alpine.js for configuring task recurrence on the task detail page
 - **User account management** — Activate and deactivate user accounts via `user:enable` and `user:disable` Artisan commands; disabled users are blocked at login and by middleware
 - **`user:list` command** — Artisan command to list all user accounts with their active/disabled status
 - **Data pruning** — Configurable per-user retention period for completed tasks, past follow-ups, and old bilas; runs via `data:prune` Artisan command and daily schedule
@@ -19,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Quick-create redirects to detail page** — Creating a task, follow-up, note, or bila from the dashboard now redirects to the resource's detail page so additional fields can be set immediately
 - **Self-hosted fonts** — Cormorant Garamond and Outfit fonts are now self-hosted (woff2) instead of loaded from Google Fonts, improving privacy and offline support
 - **Base font size** — Increased root font size to 18px for improved readability
 - **About page** — Enhanced with development stack info, technology badges, and credits section
