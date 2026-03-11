@@ -54,7 +54,8 @@ test('task store accepts optional team_id and team_member_id', function () {
             'team_member_id' => $member->id,
         ]);
 
-    $response->assertRedirect('/tasks');
+    $task = Task::where('title', 'Assigned task')->first();
+    $response->assertRedirect(route('tasks.show', $task));
     $this->assertDatabaseHas('tasks', [
         'title' => 'Assigned task',
         'team_id' => $team->id,
@@ -75,7 +76,8 @@ test('task store accepts optional category and deadline', function () {
             'deadline' => '2026-04-01',
         ]);
 
-    $response->assertRedirect('/tasks');
+    $task = Task::where('title', 'Categorised task')->first();
+    $response->assertRedirect(route('tasks.show', $task));
     $this->assertDatabaseHas('tasks', [
         'title' => 'Categorised task',
         'task_category_id' => $category->id,

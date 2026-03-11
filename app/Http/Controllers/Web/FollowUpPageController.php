@@ -134,7 +134,7 @@ class FollowUpPageController extends Controller
             'follow_up_date' => ['nullable', 'date'],
         ]);
 
-        FollowUp::create([
+        $followUp = FollowUp::create([
             'user_id'        => $request->user()->id,
             'description'    => $validated['description'],
             'team_member_id' => $validated['team_member_id'] ?? null,
@@ -143,7 +143,7 @@ class FollowUpPageController extends Controller
             'status'         => FollowUpStatus::Open->value,
         ]);
 
-        return redirect()->route('follow-ups.index');
+        return redirect()->route('follow-ups.show', $followUp);
     }
 
     /**

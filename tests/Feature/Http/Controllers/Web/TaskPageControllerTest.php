@@ -191,7 +191,7 @@ test('task kanban filters tasks by priority', function () {
     expect($response->viewData('tasks'))->toHaveCount(1);
 });
 
-test('task store creates a new task and redirects back', function () {
+test('task store creates a new task and redirects to show page', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -202,7 +202,8 @@ test('task store creates a new task and redirects back', function () {
             'priority' => 'normal',
         ]);
 
-    $response->assertRedirect('/tasks');
+    $task = Task::where('user_id', $user->id)->where('title', 'Test task from form')->first();
+    $response->assertRedirect(route('tasks.show', $task));
     $this->assertDatabaseHas('tasks', [
         'user_id' => $user->id,
         'title' => 'Test task from form',
@@ -237,7 +238,8 @@ test('task store accepts optional task_group_id', function () {
             'task_group_id' => $group->id,
         ]);
 
-    $response->assertRedirect('/tasks');
+    $task = Task::where('title', 'Grouped task')->first();
+    $response->assertRedirect(route('tasks.show', $task));
     $this->assertDatabaseHas('tasks', [
         'title' => 'Grouped task',
         'task_group_id' => $group->id,

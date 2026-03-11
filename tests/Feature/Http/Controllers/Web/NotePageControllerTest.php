@@ -193,7 +193,7 @@ test('notes index strips markdown syntax from preview text', function () {
     expect(trim($matches[1]))->toContain('Working Agreements');
 });
 
-test('store creates a new note and redirects', function () {
+test('store creates a new note and redirects to show page', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -203,7 +203,8 @@ test('store creates a new note and redirects', function () {
             'title' => 'My new note',
         ]);
 
-    $response->assertRedirect('/notes');
+    $note = Note::where('user_id', $user->id)->where('title', 'My new note')->first();
+    $response->assertRedirect(route('notes.show', $note));
     $this->assertDatabaseHas('notes', [
         'user_id' => $user->id,
         'title' => 'My new note',
