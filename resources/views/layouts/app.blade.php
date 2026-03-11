@@ -12,12 +12,6 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#3d8b6b">
 
-    <!-- Fonts (non-blocking) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
-
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
 
