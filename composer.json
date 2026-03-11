@@ -9,7 +9,7 @@
         "pwa",
         "team-management"
     ],
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": "^8.4",
         "bacon/bacon-qr-code": "^3.0",
