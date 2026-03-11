@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -28,9 +29,14 @@ class EnsureTwoFactorChallengeCompleted
         if ($user
             && $user->hasTwoFactorEnabled()
             && !$request->session()->get('two_factor_authenticated')
+            && !Auth::viaRemember()
             && !$request->is('two-factor-challenge', 'logout')
         ) {
             return redirect()->route('two-factor.challenge');
+        }
+
+        if ($user && Auth::viaRemember() && $user->hasTwoFactorEnabled()) {
+            $request->session()->put('two_factor_authenticated', true);
         }
 
         return $next($request);

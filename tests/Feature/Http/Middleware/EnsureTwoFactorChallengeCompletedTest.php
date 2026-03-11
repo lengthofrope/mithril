@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 
 uses(RefreshDatabase::class);
@@ -190,6 +192,26 @@ test('login without 2fa redirects to dashboard as usual', function () {
     ]);
 
     $response->assertRedirect(route('dashboard'));
+});
+
+// --- Remember-me bypasses 2FA challenge ---
+
+test('user restored via remember token skips two-factor challenge', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create([
+        'two_factor_secret' => encrypt('TESTSECRET'),
+        'two_factor_confirmed_at' => now(),
+        'remember_token' => Str::random(60),
+    ]);
+
+    $cookieName = Auth::guard('web')->getRecallerName();
+    $recaller = $user->id . '|' . $user->remember_token . '|' . $user->password;
+
+    $response = $this->withCookies([$cookieName => $recaller])->get('/');
+
+    $response->assertOk();
+    expect(Auth::viaRemember())->toBeTrue();
+    expect(session('two_factor_authenticated'))->toBeTrue();
 });
 
 // --- Logout clears 2FA session ---
