@@ -13,3 +13,4 @@
 | 009 | integration, backend, microsoft, ux, auto-detection | Auto-detect O365 status source from member email | Implementation (Phase 1-3) | Accepted | 2026-03-10 |
 | 010 | backend, frontend, settings, calendar, timezone | User timezone setting for display-time conversion | Implementation (Phase 1-3) | Accepted | 2026-03-10 |
 | 011 | backend, frontend, calendar, microsoft, polymorphic, pivot | Calendar event resource linking via polymorphic pivot table | Calendar Actions | Accepted | 2026-03-10 |
+| 012 | backend, auth, artisan, middleware, users | Disable user accounts via boolean flag and artisan commands | Operations | Accepted | 2026-03-11 |
