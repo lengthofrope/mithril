@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Calendar "now" divider** — Decorative leaf divider on the calendar page separates past events from upcoming ones in the Today section
 - **Calendar past events** — Events that have already ended are greyed out on the calendar page while keeping actions fully interactive
 
+### Fixed
+
+- **View transition FOUC** — Added `<link rel="expect" blocking="render">` to prevent flash of unstyled content during cross-document view transitions; moved `pagereveal` handler to `<head>` as parser-blocking script per spec requirements
+- **Font flash during transitions** — Added `<link rel="preload">` for Outfit and Cormorant Garamond fonts to eliminate font-swap flash during page transitions
+- **Layout shift between pages** — Forced persistent vertical scrollbar to prevent width jump when navigating between short and long pages
+
 ### Changed
 
 - **Quick-create redirects to detail page** — Creating a task, follow-up, note, or bila from the dashboard now redirects to the resource's detail page so additional fields can be set immediately

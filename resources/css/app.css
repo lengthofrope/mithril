@@ -226,6 +226,7 @@
   }
   html {
     font-size: 18px;
+    overflow-y: scroll;
   }
   body {
     @apply relative font-normal font-outfit z-1 bg-gray-50;

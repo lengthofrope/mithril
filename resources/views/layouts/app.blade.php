@@ -12,6 +12,13 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#3d8b6b">
 
+    <!-- Preload custom fonts to prevent FOUT during view transitions -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/outfit/outfit-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/cormorant-garamond/cormorant-garamond-latin.woff2" crossorigin>
+
+    <!-- Block rendering until main content is in the DOM (prevents FOUC during view transitions) -->
+    <link rel="expect" blocking="render" href="#app-content">
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
 
@@ -88,6 +95,17 @@
             }
         })();
     </script>
+
+    <!-- Set view transition click origin (must be in <head> as parser-blocking script) -->
+    <script>
+        window.addEventListener('pagereveal', function(e) {
+            if (!e.viewTransition) return;
+            var x = sessionStorage.getItem('click-x') || '50%';
+            var y = sessionStorage.getItem('click-y') || '50%';
+            document.documentElement.style.setProperty('--click-x', x);
+            document.documentElement.style.setProperty('--click-y', y);
+        });
+    </script>
     
 </head>
 
@@ -108,7 +126,7 @@
 
     @include('layouts.partials.background-decor')
 
-    <div class="min-h-screen xl:flex">
+    <div id="app-content" class="min-h-screen xl:flex">
         <div x-data="keyboardShortcuts()" class="hidden" aria-hidden="true"></div>
         @include('layouts.backdrop')
         @include('layouts.sidebar')
@@ -154,14 +172,6 @@
         }
         sessionStorage.setItem('click-x', (x / window.innerWidth * 100).toFixed(1) + '%');
         sessionStorage.setItem('click-y', (y / window.innerHeight * 100).toFixed(1) + '%');
-    });
-
-    window.addEventListener('pagereveal', function(e) {
-        if (!e.viewTransition) return;
-        var x = sessionStorage.getItem('click-x') || '50%';
-        var y = sessionStorage.getItem('click-y') || '50%';
-        document.documentElement.style.setProperty('--click-x', x);
-        document.documentElement.style.setProperty('--click-y', y);
     });
 </script>
 
