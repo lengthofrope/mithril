@@ -19,8 +19,8 @@
             />
         </div>
 
-        {{-- Row: Priority + Status --}}
-        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {{-- Row: Priority + Status + Deadline --}}
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <x-tl.auto-save-field
                 :endpoint="$taskEndpoint"
                 field="priority"
@@ -37,6 +37,14 @@
                 type="select"
                 label="Status"
                 :options="$statusOptions"
+            />
+
+            <x-tl.auto-save-field
+                :endpoint="$taskEndpoint"
+                field="deadline"
+                :value="$task->deadline ? $task->deadline->format('Y-m-d') : ''"
+                type="date"
+                label="Deadline"
             />
         </div>
 
@@ -96,8 +104,8 @@
             </div>
         </div>
 
-        {{-- Row: Category + Group --}}
-        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {{-- Row: Category + Group + Private --}}
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <x-tl.auto-save-field
                 :endpoint="$taskEndpoint"
                 field="task_category_id"
@@ -115,17 +123,6 @@
                 label="Group"
                 :options="array_merge([['value' => '', 'label' => '— None —']], $groupOptions)"
             />
-        </div>
-
-        {{-- Row: Deadline + Private --}}
-        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <x-tl.auto-save-field
-                :endpoint="$taskEndpoint"
-                field="deadline"
-                :value="$task->deadline ? $task->deadline->format('Y-m-d') : ''"
-                type="date"
-                label="Deadline"
-            />
 
             <x-tl.auto-save-field
                 :endpoint="$taskEndpoint"
@@ -137,8 +134,8 @@
             />
         </div>
 
-        {{-- Recurrence --}}
-        <div class="mb-6">
+        {{-- Row: Recurrence (Recurring + Interval + Custom days) --}}
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <x-tl.recurrence-settings :task="$task" />
         </div>
 
