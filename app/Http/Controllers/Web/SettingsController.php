@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Services\BreadcrumbBuilder;
+use App\Services\DataPruningService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -74,6 +75,45 @@ class SettingsController extends Controller
         $user->save();
 
         return redirect()->route('settings.index')->with('status', 'Profile updated successfully.');
+    }
+
+    /**
+     * Update the authenticated user's prune retention period.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updatePruneAfterDays(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'prune_after_days' => ['nullable', 'integer', 'min:30', 'max:365'],
+        ]);
+
+        $request->user()->update(['prune_after_days' => $validated['prune_after_days'] ?? null]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Manually trigger data pruning for the authenticated user.
+     *
+     * @param Request $request
+     * @param DataPruningService $service
+     * @return RedirectResponse
+     */
+    public function prune(Request $request, DataPruningService $service): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->prune_after_days === null) {
+            return redirect()->route('settings.index')
+                ->with('error', 'Pruning is not configured. Set a retention period first.');
+        }
+
+        $result = $service->pruneForUser($user);
+
+        return redirect()->route('settings.index')
+            ->with('status', "Removed {$result->tasksDeleted} task(s) and {$result->followUpsDeleted} follow-up(s).");
     }
 
     /**

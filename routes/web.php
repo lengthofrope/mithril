@@ -92,6 +92,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
     Route::patch('/settings/timezone', [SettingsController::class, 'updateTimezone'])->name('settings.updateTimezone');
+    Route::patch('/settings/prune-after-days', [SettingsController::class, 'updatePruneAfterDays'])->name('settings.updatePruneAfterDays');
+    Route::post('/settings/prune', [SettingsController::class, 'prune'])->name('settings.prune');
 
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
     Route::post('/tasks/move', [TaskPageController::class, 'move'])->name('tasks.move');

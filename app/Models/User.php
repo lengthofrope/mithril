@@ -37,6 +37,7 @@ class User extends Authenticatable
         'microsoft_refresh_token',
         'microsoft_token_expires_at',
         'timezone',
+        'prune_after_days',
         'is_active',
     ];
 
@@ -68,6 +69,7 @@ class User extends Authenticatable
             'microsoft_access_token'     => 'encrypted',
             'microsoft_refresh_token'    => 'encrypted',
             'microsoft_token_expires_at' => 'datetime',
+            'prune_after_days'           => 'integer',
             'is_active'                  => 'boolean',
         ];
     }
