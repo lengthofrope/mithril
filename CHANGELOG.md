@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data pruning** — Configurable per-user retention period for completed tasks, past follow-ups, and old bilas; runs via `data:prune` Artisan command and daily schedule
 - **Prune settings UI** — New "Data Retention" section on the Settings page to configure pruning retention days (auto-saves)
 - **MIT license** — Added LICENSE file and updated `composer.json` license field
+- **Calendar "now" divider** — Decorative leaf divider on the calendar page separates past events from upcoming ones in the Today section
+- **Calendar past events** — Events that have already ended are greyed out on the calendar page while keeping actions fully interactive
 
 ### Changed
 

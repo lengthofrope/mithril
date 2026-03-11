@@ -27,6 +27,13 @@
     };
 
     /**
+     * Return whether an event has already ended.
+     */
+    $isPast = function (\App\Models\CalendarEvent $event) use ($now, $timezone): bool {
+        return $event->end_at->timezone($timezone)->lt($now);
+    };
+
+    /**
      * Group an event collection by a human-readable day label.
      *
      * @param \Illuminate\Database\Eloquent\Collection $collection
@@ -190,11 +197,23 @@
 
                         {{-- Events --}}
                         <div x-show="open" x-collapse class="divide-y divide-gray-100 dark:divide-gray-800">
+                            @php $hasPastEvent = false; $nowLineInserted = false; @endphp
                             @foreach($dayEvents as $event)
                                 @php
                                     $happening = $isHappening($event);
+                                    $past      = $isPast($event);
                                     $dotClass  = $statusDotClass($event->status);
                                 @endphp
+
+                                {{-- "Now" divider — only between past and upcoming events (not before first or after last) --}}
+                                @if($dayLabel === 'Today' && !$nowLineInserted && !$past && $hasPastEvent)
+                                    @php $nowLineInserted = true; @endphp
+                                    <div class="elvish-divider mx-5" aria-hidden="true">
+                                        <span class="elvish-divider-leaf"></span>
+                                    </div>
+                                @endif
+
+                                @if($past) @php $hasPastEvent = true; @endphp @endif
 
                                 <div
                                     x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateBila($event) ? 'true' : 'false' }})"
@@ -203,7 +222,7 @@
                                 >
                                     {{-- Time column --}}
                                     <div
-                                        class="w-16 shrink-0 text-xs text-gray-500 dark:text-gray-400"
+                                        class="w-16 shrink-0 text-xs text-gray-500 dark:text-gray-400 {{ $past ? 'opacity-40' : '' }}"
                                         aria-label="{{ $event->is_all_day ? 'All day' : $event->start_at->timezone($timezone)->format('H:i') . ' to ' . $event->end_at->timezone($timezone)->format('H:i') }}"
                                     >
                                         @if($event->is_all_day)
@@ -216,7 +235,7 @@
                                     </div>
 
                                     {{-- Content column --}}
-                                    <div class="min-w-0 flex-1">
+                                    <div class="min-w-0 flex-1 {{ $past ? 'opacity-40' : '' }}">
                                         <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
                                             {{ $event->subject }}
                                         </p>
@@ -257,12 +276,13 @@
 
                                     {{-- Status indicator --}}
                                     <span
-                                        class="mt-1 h-2 w-2 shrink-0 rounded-full {{ $dotClass }}"
+                                        class="mt-1 h-2 w-2 shrink-0 rounded-full {{ $dotClass }} {{ $past ? 'opacity-40' : '' }}"
                                         aria-label="{{ $event->status->value }}"
                                         role="img"
                                     ></span>
                                 </div>
                             @endforeach
+
                         </div>
                     </div>
                 @endforeach
