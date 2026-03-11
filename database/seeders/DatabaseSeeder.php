@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Enums\ChartType;
-use App\Enums\DataSource;
 use App\Enums\FollowUpStatus;
 use App\Enums\MemberStatus;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
-use App\Models\AnalyticsWidget;
 use App\Models\Bila;
 use App\Models\BilaPrepItem;
 use App\Models\FollowUp;
@@ -25,7 +22,6 @@ use App\Models\TeamMember;
 use App\Models\User;
 use App\Models\WeeklyReflection;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Seeds the database with representative sample data for development and testing.
@@ -38,13 +34,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $admin = $this->createAdminUser();
-        $bas = $this->createBasUser();
-
-        // Seed real team data for Bas
-        $basTeams = $this->createBasTeams($bas->id);
-        $basMembers = $this->createBasTeamMembers($basTeams, $bas->id);
-        $this->createBasTaskCategories($bas->id);
-        $this->createBasAnalyticsWidgets($bas->id);
 
         // Seed sample data for admin user
         [$teamAlpha, $teamBeta] = $this->createTeams($admin->id);
@@ -75,226 +64,8 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@teamlead.test',
             'password' => 'password',
             'theme_preference' => 'dark',
+            'is_active' => false,
         ]);
-    }
-
-    /**
-     * Create the Bas de Kort user with real credentials.
-     *
-     * @return User
-     */
-    private function createBasUser(): User
-    {
-        $user = User::create([
-            'name' => 'Bas de Kort',
-            'email' => 'bas.dekort@proudnerds.com',
-            'password' => 'temporary',
-            'theme_preference' => 'dark',
-        ]);
-
-        DB::table('users')
-            ->where('id', $user->id)
-            ->update(['password' => '$2y$12$slEBkFyynKvLmvqHwRanKOpP42T1YxKmNsDIg9YgnrzNUUYU8JV/i']);
-
-        return $user->fresh();
-    }
-
-    /**
-     * Create teams for Bas de Kort.
-     *
-     * @param int $userId
-     * @return array<string, Team>
-     */
-    private function createBasTeams(int $userId): array
-    {
-        $teams = [];
-
-        $teams['houston'] = Team::create([
-            'user_id' => $userId,
-            'name' => 'Houston',
-            'description' => 'WordPress Team',
-            'color' => '#3b82f6',
-            'sort_order' => 1,
-        ]);
-
-        $teams['go_eve'] = Team::create([
-            'user_id' => $userId,
-            'name' => 'Go-EVE',
-            'description' => 'Platform team',
-            'color' => '#3bf761',
-            'sort_order' => 2,
-        ]);
-
-        $teams['cupertino'] = Team::create([
-            'user_id' => $userId,
-            'name' => 'Cupertino',
-            'description' => 'TYPO3 Team',
-            'color' => '#f9a124',
-            'sort_order' => 3,
-        ]);
-
-        $teams['facilitair'] = Team::create([
-            'user_id' => $userId,
-            'name' => 'Facilitair',
-            'description' => null,
-            'color' => '#fe2020',
-            'sort_order' => 4,
-        ]);
-
-        return $teams;
-    }
-
-    /**
-     * Create team members for Bas de Kort's teams.
-     *
-     * @param array<string, Team> $teams
-     * @param int $userId
-     * @return list<TeamMember>
-     */
-    private function createBasTeamMembers(array $teams, int $userId): array
-    {
-        $membersData = [
-            ['team' => 'houston', 'name' => 'Dionne Weijtens', 'role' => 'Medior Frontend Developer', 'email' => 'dionne.weijtens@proudnerds.com', 'sort_order' => 1],
-            ['team' => 'houston', 'name' => 'Merel van Raaij-Staal', 'role' => 'Senior Fullstack Developer', 'email' => 'merel.vanraaij-staal@proudnerds.com', 'sort_order' => 2],
-            ['team' => 'houston', 'name' => 'Bart Klein Reesink', 'role' => 'Medior Backend Developer', 'email' => 'bart.kleinreesink@proudnerds.com', 'sort_order' => 3],
-            ['team' => 'houston', 'name' => 'Robine Gussinklo', 'role' => 'Product Owner', 'email' => 'robine.gussinklo@proudnerds.com', 'sort_order' => 4],
-            ['team' => 'houston', 'name' => 'Kayleigh Wijnsouw', 'role' => 'Junior tester', 'email' => 'kayleigh.wijnsouw@proudnerds.com', 'sort_order' => 5],
-            ['team' => 'cupertino', 'name' => 'Emile Blume', 'role' => 'Senior Frontend Developer', 'email' => 'emile.blume@proudnerds.com', 'sort_order' => 6],
-            ['team' => 'cupertino', 'name' => 'Jacco van der Post', 'role' => 'Senior Backend Developer', 'email' => 'jacco.vanderpost@proudnerds.com', 'sort_order' => 7],
-            ['team' => 'facilitair', 'name' => 'Bouchra El Kamili', 'role' => 'Facilitair', 'email' => 'bouchra.elkamili@proudnerds.com', 'sort_order' => 8],
-            ['team' => 'go_eve', 'name' => 'Lieske Merkus-Bakker', 'role' => 'Product Owner', 'email' => 'lieske.merkus-bakker@proudnerds.com', 'sort_order' => 9],
-            ['team' => 'go_eve', 'name' => 'Lex Raijmakers', 'role' => 'Senior Frontend Developer', 'email' => 'lex.raijmakers@proudnerds.com', 'sort_order' => 10],
-            ['team' => 'go_eve', 'name' => 'Michele Ongaro', 'role' => 'Senior Backend Developer', 'email' => 'michele.ongaro@proudnerds.com', 'sort_order' => 11],
-            ['team' => 'go_eve', 'name' => 'Tamara Moerkens', 'role' => 'Medior Frontend Developer', 'email' => 'tamara.moerkens@proudnerds.com', 'sort_order' => 12],
-            ['team' => 'go_eve', 'name' => 'Luuk Marschalk', 'role' => 'Medior Frontend Developer', 'email' => 'luuk.marschalk@proudnerds.com', 'sort_order' => 13],
-            ['team' => 'go_eve', 'name' => 'Marco Beijen', 'role' => 'Medior Backend Developer', 'email' => 'marco.beijen@proudnerds.com', 'sort_order' => 14],
-            ['team' => 'go_eve', 'name' => 'Tina Thalis', 'role' => 'Senior Test Engineer', 'email' => 'tina.thalis@proudnerds.com', 'sort_order' => 15],
-            ['team' => 'go_eve', 'name' => 'Gijsbert van Everdingen', 'role' => 'Medior Frontend Developer', 'email' => 'gijsbert.vaneverdingen@proudnerds.com', 'sort_order' => 16],
-        ];
-
-        return array_map(
-            fn (array $data) => TeamMember::create([
-                'user_id' => $userId,
-                'team_id' => $teams[$data['team']]->id,
-                'name' => $data['name'],
-                'role' => $data['role'],
-                'email' => $data['email'],
-                'status' => MemberStatus::Available,
-                'bila_interval_days' => 14,
-                'sort_order' => $data['sort_order'],
-            ]),
-            $membersData,
-        );
-    }
-
-    /**
-     * Create task categories for Bas de Kort.
-     *
-     * @param int $userId
-     * @return list<TaskCategory>
-     */
-    private function createBasTaskCategories(int $userId): array
-    {
-        $names = ['People', 'Technical', 'Communication', 'Administrative', 'Hiring', 'Incident', 'Planning'];
-
-        return array_map(
-            fn (string $name) => TaskCategory::create(['user_id' => $userId, 'name' => $name]),
-            $names,
-        );
-    }
-
-    /**
-     * Create default analytics widgets for Bas de Kort.
-     *
-     * @param int $userId
-     * @return void
-     */
-    private function createBasAnalyticsWidgets(int $userId): void
-    {
-        $widgets = [
-            [
-                'data_source' => DataSource::TasksOverTime,
-                'chart_type' => ChartType::Line,
-                'title' => 'Issues over Time',
-                'column_span' => 3,
-                'show_on_dashboard' => true,
-                'show_on_analytics' => true,
-                'sort_order_dashboard' => 0,
-                'sort_order_analytics' => 0,
-                'time_range' => '30d',
-            ],
-            [
-                'data_source' => DataSource::TasksByStatus,
-                'chart_type' => ChartType::Donut,
-                'title' => null,
-                'column_span' => 1,
-                'show_on_dashboard' => false,
-                'show_on_analytics' => true,
-                'sort_order_analytics' => 1,
-            ],
-            [
-                'data_source' => DataSource::FollowUpsByUrgency,
-                'chart_type' => ChartType::Bar,
-                'title' => null,
-                'column_span' => 1,
-                'show_on_dashboard' => false,
-                'show_on_analytics' => true,
-                'sort_order_analytics' => 2,
-            ],
-            [
-                'data_source' => DataSource::TasksByPriority,
-                'chart_type' => ChartType::BarHorizontal,
-                'title' => null,
-                'column_span' => 1,
-                'show_on_dashboard' => false,
-                'show_on_analytics' => true,
-                'sort_order_analytics' => 3,
-            ],
-            [
-                'data_source' => DataSource::TasksByTeam,
-                'chart_type' => ChartType::Bar,
-                'title' => null,
-                'column_span' => 1,
-                'show_on_dashboard' => true,
-                'show_on_analytics' => true,
-                'sort_order_dashboard' => 1,
-                'sort_order_analytics' => 4,
-            ],
-            [
-                'data_source' => DataSource::TasksByMember,
-                'chart_type' => ChartType::BarHorizontal,
-                'title' => null,
-                'column_span' => 2,
-                'show_on_dashboard' => true,
-                'show_on_analytics' => true,
-                'sort_order_dashboard' => 2,
-                'sort_order_analytics' => 5,
-            ],
-            [
-                'data_source' => DataSource::FollowUpsOverTime,
-                'chart_type' => ChartType::Line,
-                'title' => null,
-                'column_span' => 3,
-                'show_on_dashboard' => false,
-                'show_on_analytics' => true,
-                'sort_order_analytics' => 6,
-                'time_range' => '30d',
-            ],
-            [
-                'data_source' => DataSource::TaskActivity,
-                'chart_type' => ChartType::Line,
-                'title' => null,
-                'column_span' => 3,
-                'show_on_dashboard' => false,
-                'show_on_analytics' => true,
-                'sort_order_analytics' => 7,
-                'time_range' => '30d',
-            ],
-        ];
-
-        foreach ($widgets as $data) {
-            AnalyticsWidget::create(array_merge(['user_id' => $userId], $data));
-        }
     }
 
     /**
