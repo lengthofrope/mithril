@@ -42,8 +42,8 @@ class UserFactory extends Factory
      */
     public function disabled(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'is_active' => false,
-        ]);
+        return $this->afterMaking(function (\App\Models\User $user): void {
+            $user->is_active = false;
+        });
     }
 }

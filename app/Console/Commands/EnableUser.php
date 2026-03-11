@@ -48,7 +48,8 @@ class EnableUser extends Command
             return self::SUCCESS;
         }
 
-        $user->update(['is_active' => true]);
+        $user->is_active = true;
+        $user->save();
 
         $this->info("User [{$email}] has been re-enabled.");
 

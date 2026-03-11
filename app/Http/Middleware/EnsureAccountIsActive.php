@@ -28,6 +28,10 @@ class EnsureAccountIsActive
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Your account has been disabled.'], 403);
+            }
+
             return redirect()->route('login')
                 ->withErrors(['email' => 'Your account has been disabled.']);
         }

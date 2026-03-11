@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Calendar "now" divider** — Decorative leaf divider on the calendar page separates past events from upcoming ones in the Today section
 - **Calendar past events** — Events that have already ended are greyed out on the calendar page while keeping actions fully interactive
 
+### Security
+
+- **`is_active` mass assignment hardening** — Removed `is_active` from `User::$fillable` to prevent potential privilege escalation; field is now managed exclusively via explicit assignment
+- **Disabled user API bypass** — Added `EnsureAccountIsActive` middleware to the API middleware group so disabled users are blocked on both web and API routes; returns JSON 403 for API requests
+- **AutoSave field restriction** — Blocked `recurrence_parent_id` and `recurrence_series_id` from being writable via `AutoSaveController`; these fields are now only set by `RecurrenceService`
+- **Data pruning cross-user leak** — Scoped orphaned `CalendarEventLink` cleanup in `DataPruningService` to the user being pruned, preventing unintended deletion of other users' calendar links
+
 ### Fixed
 
 - **View transition FOUC** — Added `<link rel="expect" blocking="render">` to prevent flash of unstyled content during cross-document view transitions; moved `pagereveal` handler to `<head>` as parser-blocking script per spec requirements

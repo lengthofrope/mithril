@@ -27,10 +27,9 @@ describe('user:list command', function (): void {
     });
 
     it('shows disabled users as No', function (): void {
-        User::factory()->create([
+        User::factory()->disabled()->create([
             'name' => 'Jane Doe',
             'email' => 'jane@example.com',
-            'is_active' => false,
         ]);
 
         $this->artisan('user:list')
@@ -43,7 +42,7 @@ describe('user:list command', function (): void {
 
     it('lists multiple users', function (): void {
         User::factory()->create(['name' => 'Alice', 'email' => 'alice@example.com']);
-        User::factory()->create(['name' => 'Bob', 'email' => 'bob@example.com', 'is_active' => false]);
+        User::factory()->disabled()->create(['name' => 'Bob', 'email' => 'bob@example.com']);
 
         $this->artisan('user:list')
             ->expectsTable(

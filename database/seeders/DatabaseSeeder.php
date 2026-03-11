@@ -59,13 +59,17 @@ class DatabaseSeeder extends Seeder
      */
     private function createAdminUser(): User
     {
-        return User::create([
+        $user = User::create([
             'name' => 'Team Lead',
             'email' => 'admin@teamlead.test',
             'password' => 'password',
             'theme_preference' => 'dark',
-            'is_active' => false,
         ]);
+
+        $user->is_active = false;
+        $user->save();
+
+        return $user;
     }
 
     /**

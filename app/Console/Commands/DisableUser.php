@@ -49,7 +49,8 @@ class DisableUser extends Command
             return self::SUCCESS;
         }
 
-        $user->update(['is_active' => false]);
+        $user->is_active = false;
+        $user->save();
 
         DB::table('sessions')->where('user_id', $user->id)->delete();
 

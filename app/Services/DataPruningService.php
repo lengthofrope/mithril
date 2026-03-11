@@ -43,7 +43,9 @@ class DataPruningService
             ->where('updated_at', '<', $cutoff)
             ->delete();
 
-        CalendarEventLink::whereDoesntHave('linkable')->delete();
+        CalendarEventLink::whereDoesntHave('linkable')
+            ->whereHas('calendarEvent', fn ($query) => $query->withoutGlobalScopes()->where('user_id', $user->id))
+            ->delete();
 
         return new PruneResult($tasksDeleted, $followUpsDeleted);
     }

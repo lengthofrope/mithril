@@ -8,10 +8,9 @@ use Illuminate\Support\Facades\Hash;
 
 describe('login with disabled account', function (): void {
     it('rejects login for disabled user with correct credentials', function (): void {
-        User::factory()->create([
+        User::factory()->disabled()->create([
             'email' => 'disabled@example.com',
             'password' => Hash::make('password123'),
-            'is_active' => false,
         ]);
 
         $response = $this->post('/login', [
@@ -39,10 +38,9 @@ describe('login with disabled account', function (): void {
     });
 
     it('uses generic error message for disabled account', function (): void {
-        User::factory()->create([
+        User::factory()->disabled()->create([
             'email' => 'disabled@example.com',
             'password' => Hash::make('password123'),
-            'is_active' => false,
         ]);
 
         $response = $this->post('/login', [
@@ -54,15 +52,15 @@ describe('login with disabled account', function (): void {
     });
 
     it('preserves 2fa state when user is disabled and re-enabled', function (): void {
-        $user = User::factory()->create([
+        $user = User::factory()->disabled()->create([
             'email' => 'twofa@example.com',
             'password' => Hash::make('password123'),
             'two_factor_secret' => encrypt('TESTSECRET'),
             'two_factor_confirmed_at' => now(),
-            'is_active' => false,
         ]);
 
-        $user->update(['is_active' => true]);
+        $user->is_active = true;
+        $user->save();
         $user->refresh();
 
         expect($user->hasTwoFactorEnabled())->toBeTrue();

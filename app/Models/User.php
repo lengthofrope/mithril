@@ -38,7 +38,6 @@ class User extends Authenticatable
         'microsoft_token_expires_at',
         'timezone',
         'prune_after_days',
-        'is_active',
     ];
 
     /**

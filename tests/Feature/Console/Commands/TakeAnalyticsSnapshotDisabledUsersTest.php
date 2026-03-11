@@ -17,7 +17,7 @@ afterEach(function (): void {
 describe('analytics:snapshot with disabled users', function (): void {
     it('skips disabled users', function (): void {
         $active = User::factory()->create();
-        $disabled = User::factory()->create(['is_active' => false]);
+        $disabled = User::factory()->disabled()->create();
 
         $this->artisan('analytics:snapshot');
 
@@ -26,12 +26,13 @@ describe('analytics:snapshot with disabled users', function (): void {
     });
 
     it('resumes snapshots for re-enabled user', function (): void {
-        $user = User::factory()->create(['is_active' => false]);
+        $user = User::factory()->disabled()->create();
 
         $this->artisan('analytics:snapshot');
         expect(AnalyticsSnapshot::where('user_id', $user->id)->count())->toBe(0);
 
-        $user->update(['is_active' => true]);
+        $user->is_active = true;
+        $user->save();
 
         $this->artisan('analytics:snapshot');
         expect(AnalyticsSnapshot::where('user_id', $user->id)->count())->toBe(9);

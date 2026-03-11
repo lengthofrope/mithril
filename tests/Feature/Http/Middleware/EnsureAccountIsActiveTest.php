@@ -15,7 +15,7 @@ describe('EnsureAccountIsActive middleware', function (): void {
     });
 
     it('redirects disabled users to login with error', function (): void {
-        $user = User::factory()->create(['is_active' => false]);
+        $user = User::factory()->disabled()->create();
 
         $response = $this->actingAs($user)->get('/');
 
@@ -24,7 +24,7 @@ describe('EnsureAccountIsActive middleware', function (): void {
     });
 
     it('logs out disabled users mid-session', function (): void {
-        $user = User::factory()->create(['is_active' => false]);
+        $user = User::factory()->disabled()->create();
 
         $this->actingAs($user)->get('/');
 
@@ -32,7 +32,7 @@ describe('EnsureAccountIsActive middleware', function (): void {
     });
 
     it('allows disabled users to reach the logout route', function (): void {
-        $user = User::factory()->create(['is_active' => false]);
+        $user = User::factory()->disabled()->create();
 
         $response = $this->actingAs($user)->post('/logout');
 
