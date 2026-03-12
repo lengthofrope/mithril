@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\FollowUpStatus;
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
+use App\Models\Traits\HasResourceLinks;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +34,7 @@ class FollowUp extends Model
     use BelongsToUser;
     use Filterable;
     use HasFactory;
+    use HasResourceLinks;
     use Searchable;
 
     /**

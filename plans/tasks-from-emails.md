@@ -1,7 +1,7 @@
 # Tasks from E-mails — Implementation Plan
 
 **Created:** 2026-03-12
-**Status:** Approved
+**Status:** In Progress
 **Author:** Bas de Kort
 
 ## Summary
@@ -801,6 +801,14 @@ type EmailImportance = 'low' | 'normal' | 'high';
 - `routes/api.php` — Phase 5 adds routes
 - `routes/web.php` — Phase 6 adds mail route
 - `resources/js/app.ts` — Phase 8 + 9 register Alpine components
+
+---
+
+## Parallelization
+
+**Strategy:** Sequential
+
+All phases have inter-dependencies that make parallel execution impractical. Phase 0→1 are independent but small enough to run sequentially. Phases 2–5 chain linearly (Graph API → Sync → Actions → Endpoints). Frontend phases 6–9 depend on backend phases. Execute sequentially with the lead.
 
 ---
 
