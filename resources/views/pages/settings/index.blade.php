@@ -416,7 +416,6 @@
                     x-data="{
                         flagged: {{ $user->email_source_flagged ? 'true' : 'false' }},
                         categorized: {{ $user->email_source_categorized ? 'true' : 'false' }},
-                        categoryName: '{{ $user->email_source_category_name ?? 'Mithril' }}',
                         unread: {{ $user->email_source_unread ? 'true' : 'false' }},
                         saving: false,
                         saved: false,
@@ -436,7 +435,6 @@
                                     body: JSON.stringify({
                                         email_source_flagged: this.flagged,
                                         email_source_categorized: this.categorized,
-                                        email_source_category_name: this.categoryName,
                                         email_source_unread: this.unread,
                                     }),
                                 });
@@ -473,7 +471,7 @@
                     <label class="flex items-center justify-between gap-4 cursor-pointer">
                         <div>
                             <p class="text-sm font-medium text-gray-800 dark:text-white/90">Categorized emails</p>
-                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Emails with a specific Outlook category</p>
+                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Emails with any Outlook category, grouped by category on the E-mail page</p>
                         </div>
                         <input
                             type="checkbox"
@@ -482,17 +480,6 @@
                             class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700"
                         >
                     </label>
-
-                    <div x-show="categorized" x-transition x-cloak class="ml-4 flex items-center gap-2">
-                        <label for="email-category-name" class="text-sm text-gray-600 dark:text-gray-400">Category name</label>
-                        <input
-                            id="email-category-name"
-                            type="text"
-                            x-model="categoryName"
-                            x-on:change="save()"
-                            class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                        >
-                    </div>
 
                     <label class="flex items-center justify-between gap-4 cursor-pointer">
                         <div>

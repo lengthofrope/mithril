@@ -10,71 +10,65 @@ use App\Services\EmailSyncService;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Support\Collection;
 
-describe('EmailSyncService::buildFilter()', function (): void {
-    it('returns flagged filter when only flagged source is enabled', function (): void {
-        $user = User::factory()->create([
-            'email_source_flagged'     => true,
-            'email_source_categorized' => false,
-            'email_source_unread'      => false,
-        ]);
-
+describe('EmailSyncService::determineSourcesForMessage()', function (): void {
+    it('tags flagged messages', function (): void {
         $service = app(EmailSyncService::class);
 
-        expect($service->buildFilter($user))->toBe("flag/flagStatus eq 'flagged'");
+        $sources = $service->determineSourcesForMessage([
+            'is_flagged'  => true,
+            'categories'  => [],
+            'is_read'     => true,
+        ]);
+
+        expect($sources)->toBe(['flagged']);
     });
 
-    it('returns categorized filter with custom category name', function (): void {
-        $user = User::factory()->create([
-            'email_source_flagged'        => false,
-            'email_source_categorized'    => true,
-            'email_source_category_name'  => 'ActionItems',
-            'email_source_unread'         => false,
-        ]);
-
+    it('tags categorized messages with non-empty categories', function (): void {
         $service = app(EmailSyncService::class);
 
-        expect($service->buildFilter($user))->toBe("categories/any(c:c eq 'ActionItems')");
+        $sources = $service->determineSourcesForMessage([
+            'is_flagged'  => false,
+            'categories'  => ['Mithril', 'Urgent'],
+            'is_read'     => true,
+        ]);
+
+        expect($sources)->toBe(['categorized']);
     });
 
-    it('returns unread filter when only unread source is enabled', function (): void {
-        $user = User::factory()->create([
-            'email_source_flagged'     => false,
-            'email_source_categorized' => false,
-            'email_source_unread'      => true,
-        ]);
-
+    it('tags unread messages', function (): void {
         $service = app(EmailSyncService::class);
 
-        expect($service->buildFilter($user))->toBe('isRead eq false');
+        $sources = $service->determineSourcesForMessage([
+            'is_flagged'  => false,
+            'categories'  => [],
+            'is_read'     => false,
+        ]);
+
+        expect($sources)->toBe(['unread']);
     });
 
-    it('combines multiple sources with OR logic', function (): void {
-        $user = User::factory()->create([
-            'email_source_flagged'        => true,
-            'email_source_categorized'    => true,
-            'email_source_category_name'  => 'Mithril',
-            'email_source_unread'         => true,
+    it('tags multiple sources when all apply', function (): void {
+        $service = app(EmailSyncService::class);
+
+        $sources = $service->determineSourcesForMessage([
+            'is_flagged'  => true,
+            'categories'  => ['Important'],
+            'is_read'     => false,
         ]);
 
-        $service = app(EmailSyncService::class);
-        $filter  = $service->buildFilter($user);
-
-        expect($filter)->toContain("flag/flagStatus eq 'flagged'")
-            ->and($filter)->toContain("categories/any(c:c eq 'Mithril')")
-            ->and($filter)->toContain('isRead eq false')
-            ->and($filter)->toContain(' or ');
+        expect($sources)->toBe(['flagged', 'categorized', 'unread']);
     });
 
-    it('returns empty string when no sources are enabled', function (): void {
-        $user = User::factory()->create([
-            'email_source_flagged'     => false,
-            'email_source_categorized' => false,
-            'email_source_unread'      => false,
-        ]);
-
+    it('returns empty array when no sources apply', function (): void {
         $service = app(EmailSyncService::class);
 
-        expect($service->buildFilter($user))->toBe('');
+        $sources = $service->determineSourcesForMessage([
+            'is_flagged'  => false,
+            'categories'  => [],
+            'is_read'     => true,
+        ]);
+
+        expect($sources)->toBe([]);
     });
 });
 
@@ -135,9 +129,6 @@ describe('EmailSyncService::syncEmails()', function (): void {
             'microsoft_access_token'     => 'valid-token',
             'microsoft_refresh_token'    => 'valid-refresh',
             'microsoft_token_expires_at' => now()->addHour(),
-            'email_source_flagged'       => true,
-            'email_source_categorized'   => false,
-            'email_source_unread'        => false,
         ]);
 
         $graphService = Mockery::mock(MicrosoftGraphService::class);
@@ -170,7 +161,9 @@ describe('EmailSyncService::syncEmails()', function (): void {
 
         $email = Email::withoutGlobalScopes()->first();
         expect($email->microsoft_message_id)->toBe('AAMkNEW1')
-            ->and($email->subject)->toBe('New email');
+            ->and($email->subject)->toBe('New email')
+            ->and($email->sources)->toContain('flagged')
+            ->and($email->sources)->toContain('unread');
     });
 
     it('removes stale non-dismissed emails no longer in API response', function (): void {
@@ -179,9 +172,6 @@ describe('EmailSyncService::syncEmails()', function (): void {
             'microsoft_access_token'     => 'valid-token',
             'microsoft_refresh_token'    => 'valid-refresh',
             'microsoft_token_expires_at' => now()->addHour(),
-            'email_source_flagged'       => true,
-            'email_source_categorized'   => false,
-            'email_source_unread'        => false,
         ]);
 
         Email::factory()->create([
@@ -209,9 +199,6 @@ describe('EmailSyncService::syncEmails()', function (): void {
             'microsoft_access_token'     => 'valid-token',
             'microsoft_refresh_token'    => 'valid-refresh',
             'microsoft_token_expires_at' => now()->addHour(),
-            'email_source_flagged'       => true,
-            'email_source_categorized'   => false,
-            'email_source_unread'        => false,
         ]);
 
         Email::factory()->create([
@@ -239,9 +226,6 @@ describe('EmailSyncService::syncEmails()', function (): void {
             'microsoft_access_token'     => 'valid-token',
             'microsoft_refresh_token'    => 'valid-refresh',
             'microsoft_token_expires_at' => now()->addHour(),
-            'email_source_flagged'       => true,
-            'email_source_categorized'   => false,
-            'email_source_unread'        => false,
         ]);
 
         $email = Email::factory()->create([
@@ -274,19 +258,80 @@ describe('EmailSyncService::syncEmails()', function (): void {
             ->and($link->email_subject)->toBeString();
     });
 
-    it('skips sync when no sources are enabled', function (): void {
+    it('determines sources per-message based on message properties', function (): void {
         $user = User::factory()->create([
-            'email_source_flagged'     => false,
-            'email_source_categorized' => false,
-            'email_source_unread'      => false,
+            'microsoft_id'               => 'ms-id-123',
+            'microsoft_access_token'     => 'valid-token',
+            'microsoft_refresh_token'    => 'valid-refresh',
+            'microsoft_token_expires_at' => now()->addHour(),
         ]);
 
         $graphService = Mockery::mock(MicrosoftGraphService::class);
-        $graphService->shouldNotReceive('getMyMessages');
+        $graphService->shouldReceive('getMyMessages')
+            ->once()
+            ->andReturn(collect([
+                [
+                    'microsoft_message_id' => 'AAMkFLAGGED',
+                    'subject'              => 'Flagged only',
+                    'sender_name'          => 'Bob',
+                    'sender_email'         => 'bob@example.com',
+                    'received_at'          => '2026-03-12T10:00:00Z',
+                    'body_preview'         => '',
+                    'is_read'              => true,
+                    'is_flagged'           => true,
+                    'flag_due_date'        => null,
+                    'categories'           => [],
+                    'importance'           => 'normal',
+                    'has_attachments'      => false,
+                    'web_link'             => null,
+                ],
+                [
+                    'microsoft_message_id' => 'AAMkCATEGORIZED',
+                    'subject'              => 'Categorized',
+                    'sender_name'          => 'Carol',
+                    'sender_email'         => 'carol@example.com',
+                    'received_at'          => '2026-03-12T11:00:00Z',
+                    'body_preview'         => '',
+                    'is_read'              => true,
+                    'is_flagged'           => false,
+                    'flag_due_date'        => null,
+                    'categories'           => ['Urgent'],
+                    'importance'           => 'normal',
+                    'has_attachments'      => false,
+                    'web_link'             => null,
+                ],
+                [
+                    'microsoft_message_id' => 'AAMkPLAIN',
+                    'subject'              => 'Plain read email',
+                    'sender_name'          => 'Dave',
+                    'sender_email'         => 'dave@example.com',
+                    'received_at'          => '2026-03-12T09:00:00Z',
+                    'body_preview'         => '',
+                    'is_read'              => true,
+                    'is_flagged'           => false,
+                    'flag_due_date'        => null,
+                    'categories'           => [],
+                    'importance'           => 'normal',
+                    'has_attachments'      => false,
+                    'web_link'             => null,
+                ],
+            ]));
 
         app()->instance(MicrosoftGraphService::class, $graphService);
 
         $service = app(EmailSyncService::class);
         $service->syncEmails($user);
+
+        $emails = Email::withoutGlobalScopes()->where('user_id', $user->id)->get();
+        expect($emails)->toHaveCount(3);
+
+        $flagged = $emails->firstWhere('microsoft_message_id', 'AAMkFLAGGED');
+        expect($flagged->sources)->toBe(['flagged']);
+
+        $categorized = $emails->firstWhere('microsoft_message_id', 'AAMkCATEGORIZED');
+        expect($categorized->sources)->toBe(['categorized']);
+
+        $plain = $emails->firstWhere('microsoft_message_id', 'AAMkPLAIN');
+        expect($plain->sources)->toBe([]);
     });
 });

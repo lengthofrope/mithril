@@ -28,6 +28,14 @@ interface ApiResponse<T = unknown> {
     message?: string;
 }
 
+/**
+ * A group of emails sharing the same Outlook category.
+ */
+interface CategoryGroup {
+    name: string;
+    emails: EmailWithUI[];
+}
+
 const LINK_TYPE_MAP: Record<string, LinkTypeInfo> = {
     'App\\Models\\Bila': { label: 'Bila', badge: 'B', urlPrefix: '/bilas/' },
     'App\\Models\\Task': { label: 'Task', badge: 'T', urlPrefix: '/tasks/' },
@@ -67,6 +75,43 @@ interface EmailWithUI extends Email {
 }
 
 /**
+ * Group emails by their Outlook categories, sorted by received_at within each group.
+ *
+ * Emails with multiple categories appear in each matching group.
+ * Emails without categories are placed in an "Uncategorized" group.
+ */
+function groupByCategory(emails: EmailWithUI[]): CategoryGroup[] {
+    const groups: Record<string, EmailWithUI[]> = {};
+
+    for (const email of emails) {
+        const categories = (email.categories ?? []) as string[];
+
+        if (categories.length === 0) {
+            groups['Uncategorized'] ??= [];
+            groups['Uncategorized'].push(email);
+        } else {
+            for (const cat of categories) {
+                groups[cat] ??= [];
+                groups[cat].push(email);
+            }
+        }
+    }
+
+    return Object.entries(groups)
+        .map(([name, groupEmails]) => ({
+            name,
+            emails: groupEmails.sort((a, b) =>
+                new Date(b.received_at).getTime() - new Date(a.received_at).getTime()
+            ),
+        }))
+        .sort((a, b) => {
+            if (a.name === 'Uncategorized') return 1;
+            if (b.name === 'Uncategorized') return -1;
+            return a.name.localeCompare(b.name);
+        });
+}
+
+/**
  * Alpine.js component for the mail page — lists, filters, and acts on synced emails.
  */
 function emailPage(): Record<string, unknown> {
@@ -75,6 +120,20 @@ function emailPage(): Record<string, unknown> {
         sourceFilter: 'all',
         isLoading: true,
         errorMessage: '',
+
+        /**
+         * Whether the current view shows emails grouped by Outlook category.
+         */
+        get showCategoryGroups(): boolean {
+            return (this as unknown as { sourceFilter: string }).sourceFilter === 'categorized';
+        },
+
+        /**
+         * Emails grouped by Outlook category, for the categorized view.
+         */
+        get categoryGroups(): CategoryGroup[] {
+            return groupByCategory((this as unknown as { emails: EmailWithUI[] }).emails);
+        },
 
         /**
          * Fetch emails on component init.
@@ -217,4 +276,4 @@ function emailPage(): Record<string, unknown> {
 }
 
 export { emailPage };
-export type { LinkBadge, EmailWithUI };
+export type { LinkBadge, EmailWithUI, CategoryGroup };

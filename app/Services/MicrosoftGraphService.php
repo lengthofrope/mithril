@@ -254,22 +254,28 @@ class MicrosoftGraphService
      * @return Collection<int, array<string, mixed>> Normalised message records.
      * @throws RuntimeException When the Graph request fails.
      */
-    public function getMyMessages(User $user, string $filter, int $top = 50): Collection
+    public function getMyMessages(User $user, string $filter = '', int $top = 50): Collection
     {
         $this->ensureValidToken($user);
 
+        $params = [
+            '$select' => 'id,subject,from,receivedDateTime,bodyPreview,isRead,flag,categories,importance,hasAttachments,webLink',
+            '$top'    => $top,
+        ];
+
+        if ($filter !== '') {
+            $params['$filter'] = $filter;
+        }
+
         $response = Http::withToken($user->microsoft_access_token)
-            ->get(config('microsoft.graph_url') . 'me/messages', [
-                '$filter'  => $filter,
-                '$select'  => 'id,subject,from,receivedDateTime,bodyPreview,isRead,flag,categories,importance,hasAttachments,webLink',
-                '$orderby' => 'receivedDateTime desc',
-                '$top'     => $top,
-            ]);
+            ->get(config('microsoft.graph_url') . 'me/mailFolders/Inbox/messages', $params);
 
         $this->assertSuccessfulGraphResponse($response);
 
         return collect($response->json('value', []))
-            ->map(fn (array $message): array => $this->normaliseMessage($message));
+            ->map(fn (array $message): array => $this->normaliseMessage($message))
+            ->sortByDesc('received_at')
+            ->values();
     }
 
     /**

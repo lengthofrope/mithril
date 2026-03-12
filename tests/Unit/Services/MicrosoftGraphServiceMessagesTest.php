@@ -16,7 +16,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
         ]);
 
         Http::fake([
-            '*/me/messages*' => Http::response([
+            '*/me/mailFolders/Inbox/messages*' => Http::response([
                 'value' => [
                     [
                         'id'               => 'AAMkABC123',
@@ -69,7 +69,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
         ]);
 
         Http::fake([
-            '*/me/messages*' => Http::response([
+            '*/me/mailFolders/Inbox/messages*' => Http::response([
                 'value' => [
                     [
                         'id'               => 'AAMkDEF456',
@@ -114,7 +114,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
         ]);
 
         Http::fake([
-            '*/me/messages*' => Http::response([
+            '*/me/mailFolders/Inbox/messages*' => Http::response([
                 'value' => [
                     [
                         'id'               => 'AAMkGHI789',
@@ -153,7 +153,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
         ]);
 
         Http::fake([
-            '*/me/messages*' => Http::response(['value' => []]),
+            '*/me/mailFolders/Inbox/messages*' => Http::response(['value' => []]),
         ]);
 
         $service = app(MicrosoftGraphService::class);
@@ -173,7 +173,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
         ]);
 
         Http::fake([
-            '*/me/messages*' => Http::response([
+            '*/me/mailFolders/Inbox/messages*' => Http::response([
                 'error' => ['message' => 'MailboxNotEnabledForRESTAPI'],
             ], 403),
         ]);

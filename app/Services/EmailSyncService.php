@@ -9,6 +9,9 @@ use App\Models\User;
 
 /**
  * Handles email synchronization from Microsoft Graph to the local cache.
+ *
+ * Always fetches all inbox emails. Source tags (flagged, categorized, unread)
+ * are determined per-message and stored for display filtering/grouping.
  */
 class EmailSyncService
 {
@@ -20,35 +23,28 @@ class EmailSyncService
     ) {}
 
     /**
-     * Build the OData filter string based on user preferences.
+     * Determine which source tags apply to a message based on its properties.
      *
-     * Combines active sources with OR logic.
-     *
-     * @param User $user The user whose preferences determine the filter.
-     * @return string OData filter string, or empty string if no sources enabled.
+     * @param array<string, mixed> $graphMessage The normalized message from MicrosoftGraphService.
+     * @return array<int, string> Array of matched source type strings.
      */
-    public function buildFilter(User $user): string
+    public function determineSourcesForMessage(array $graphMessage): array
     {
-        $filters = [];
+        $sources = [];
 
-        if ($user->email_source_flagged) {
-            $filters[] = "flag/flagStatus eq 'flagged'";
+        if ($graphMessage['is_flagged'] ?? false) {
+            $sources[] = 'flagged';
         }
 
-        if ($user->email_source_categorized) {
-            $categoryName = $user->email_source_category_name ?? 'Mithril';
-            $filters[] = "categories/any(c:c eq '{$categoryName}')";
+        if (!empty($graphMessage['categories'])) {
+            $sources[] = 'categorized';
         }
 
-        if ($user->email_source_unread) {
-            $filters[] = 'isRead eq false';
+        if (!($graphMessage['is_read'] ?? true)) {
+            $sources[] = 'unread';
         }
 
-        if (empty($filters)) {
-            return '';
-        }
-
-        return implode(' or ', $filters);
+        return $sources;
     }
 
     /**
@@ -89,29 +85,24 @@ class EmailSyncService
     }
 
     /**
-     * Sync emails from Microsoft Graph for the given user.
+     * Sync all inbox emails from Microsoft Graph for the given user.
      *
-     * Upserts into the emails table, removes emails that no longer match filters.
-     * Dismissed emails are never removed by sync.
+     * Fetches all inbox messages (up to the configured limit), determines source
+     * tags per-message, and upserts into the local cache. Messages no longer in
+     * the inbox (and not dismissed) are removed.
      *
      * @param User $user The user to sync emails for.
      * @return void
      */
     public function syncEmails(User $user): void
     {
-        $filter = $this->buildFilter($user);
+        $messages = $this->graphService->getMyMessages($user);
 
-        if ($filter === '') {
-            return;
-        }
-
-        $messages = $this->graphService->getMyMessages($user, $filter);
-
-        $activeSources = $this->getActiveSources($user);
         $syncedIds = [];
 
         foreach ($messages as $message) {
-            $normalized = $this->normalizeMessage($message, $activeSources);
+            $sources = $this->determineSourcesForMessage($message);
+            $normalized = $this->normalizeMessage($message, $sources);
 
             Email::withoutGlobalScopes()
                 ->updateOrCreate(
@@ -130,30 +121,5 @@ class EmailSyncService
             ->where('is_dismissed', false)
             ->whereNotIn('microsoft_message_id', $syncedIds)
             ->delete();
-    }
-
-    /**
-     * Get the list of active source names for the user.
-     *
-     * @param User $user The user to check sources for.
-     * @return array<int, string> Array of active source type strings.
-     */
-    private function getActiveSources(User $user): array
-    {
-        $sources = [];
-
-        if ($user->email_source_flagged) {
-            $sources[] = 'flagged';
-        }
-
-        if ($user->email_source_categorized) {
-            $sources[] = 'categorized';
-        }
-
-        if ($user->email_source_unread) {
-            $sources[] = 'unread';
-        }
-
-        return $sources;
     }
 }

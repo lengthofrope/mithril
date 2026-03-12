@@ -167,7 +167,6 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'email_source_flagged' => ['sometimes', 'boolean'],
             'email_source_categorized' => ['sometimes', 'boolean'],
-            'email_source_category_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'email_source_unread' => ['sometimes', 'boolean'],
         ]);
 
