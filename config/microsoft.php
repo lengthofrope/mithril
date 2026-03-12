@@ -11,6 +11,7 @@ return [
     'scopes' => [
         'User.Read',
         'Calendars.Read',
+        'Mail.Read',
         'offline_access',
     ],
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AnalyticsWidget;
 use App\Models\Bila;
 use App\Models\CalendarEvent;
+use App\Models\Email;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\TaskCategory;
@@ -59,6 +60,14 @@ class DashboardController extends Controller
                 ->get()
             : null;
 
+        $flaggedEmails = $isMicrosoftConnected
+            ? Email::query()
+                ->with('emailLinks')
+                ->where('is_flagged', true)
+                ->orderByRaw('flag_due_date IS NULL, flag_due_date ASC')
+                ->get()
+            : null;
+
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
         $allCategories = TaskCategory::all();
@@ -76,6 +85,7 @@ class DashboardController extends Controller
             'upcomingBilas' => $upcoming['bilas'],
             'dashboardWidgets' => $dashboardWidgets,
             'calendarEvents' => $calendarEvents,
+            'flaggedEmails' => $flaggedEmails,
             'isMicrosoftConnected' => $isMicrosoftConnected,
             'userTimezone' => $userTz,
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),

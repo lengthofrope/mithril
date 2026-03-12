@@ -38,15 +38,19 @@ describe('MenuHelper calendar item', function (): void {
         expect($calendarItem)->toBeNull();
     });
 
-    it('places the Calendar item right after Dashboard', function (): void {
+    it('places the Calendar item after Dashboard', function (): void {
         $user = User::factory()->create(['microsoft_id' => 'ms-123']);
         $this->actingAs($user);
 
         $items = MenuHelper::getMainNavItems();
-        $names = collect($items)->pluck('name')->values()->all();
+        $nonSeparatorNames = collect($items)
+            ->reject(fn (array $item): bool => !empty($item['separator']))
+            ->pluck('name')
+            ->values()
+            ->all();
 
-        $dashboardIndex = array_search('Dashboard', $names);
-        $calendarIndex = array_search('Calendar', $names);
+        $dashboardIndex = array_search('Dashboard', $nonSeparatorNames);
+        $calendarIndex = array_search('Calendar', $nonSeparatorNames);
 
         expect($calendarIndex)->toBe($dashboardIndex + 1);
     });

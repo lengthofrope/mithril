@@ -29,3 +29,8 @@ Schedule::command('microsoft:sync-availability')
     ->everyFiveMinutes()
     ->name('microsoft.sync-availability')
     ->withoutOverlapping();
+
+Schedule::command('microsoft:sync-emails')
+    ->everyFiveMinutes()
+    ->name('microsoft.sync-emails')
+    ->withoutOverlapping();

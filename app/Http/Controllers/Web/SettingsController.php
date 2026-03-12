@@ -113,7 +113,7 @@ class SettingsController extends Controller
         $result = $service->pruneForUser($user);
 
         return redirect()->route('settings.index')
-            ->with('status', "Removed {$result->tasksDeleted} task(s) and {$result->followUpsDeleted} follow-up(s).");
+            ->with('status', "Removed {$result->tasksDeleted} task(s), {$result->followUpsDeleted} follow-up(s), and {$result->emailsDeleted} email(s).");
     }
 
     /**
@@ -152,6 +152,23 @@ class SettingsController extends Controller
             'dashboard_upcoming_follow_ups' => $validated['dashboard_upcoming_follow_ups'] ?? null,
             'dashboard_upcoming_bilas' => $validated['dashboard_upcoming_bilas'] ?? null,
         ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Update the authenticated user's sidebar collapsed preference.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateSidebarCollapsed(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'sidebar_collapsed' => ['required', 'boolean'],
+        ]);
+
+        $request->user()->update(['sidebar_collapsed' => $validated['sidebar_collapsed']]);
 
         return response()->json(['success' => true]);
     }

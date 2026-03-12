@@ -55,31 +55,34 @@
             });
 
             Alpine.store('sidebar', {
-                // Initialize based on screen size
-                isExpanded: window.innerWidth >= 1280, // true for desktop, false for mobile
+                sidebarCollapsed: {{ auth()->user()->sidebar_collapsed ? 'true' : 'false' }},
+                isExpanded: window.innerWidth >= 1280 && !{{ auth()->user()->sidebar_collapsed ? 'true' : 'false' }},
                 isMobileOpen: false,
-                isHovered: false,
 
                 toggleExpanded() {
                     this.isExpanded = !this.isExpanded;
-                    // When toggling desktop sidebar, ensure mobile menu is closed
                     this.isMobileOpen = false;
+                    this.persistCollapsed(!this.isExpanded);
                 },
 
                 toggleMobileOpen() {
                     this.isMobileOpen = !this.isMobileOpen;
-                    // Don't modify isExpanded when toggling mobile menu
                 },
 
                 setMobileOpen(val) {
                     this.isMobileOpen = val;
                 },
 
-                setHovered(val) {
-                    // Only allow hover effects on desktop when sidebar is collapsed
-                    if (window.innerWidth >= 1280 && !this.isExpanded) {
-                        this.isHovered = val;
-                    }
+                persistCollapsed(collapsed) {
+                    fetch('/settings/sidebar-collapsed', {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ sidebar_collapsed: collapsed }),
+                    });
                 }
             });
         });
@@ -111,14 +114,14 @@
 
 <body
     x-data
-    x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;
+    x-init="
     const checkMobile = () => {
         if (window.innerWidth < 1280) {
             $store.sidebar.setMobileOpen(false);
             $store.sidebar.isExpanded = false;
         } else {
             $store.sidebar.isMobileOpen = false;
-            $store.sidebar.isExpanded = true;
+            $store.sidebar.isExpanded = !$store.sidebar.sidebarCollapsed;
         }
     };
     window.addEventListener('resize', checkMobile);">
@@ -134,8 +137,8 @@
         <div class="flex-1"
             x-init="requestAnimationFrame(() => $el.classList.add('transition-all', 'duration-300', 'ease-in-out'))"
             :class="{
-                'xl:ml-[290px]': $store.sidebar.isExpanded || $store.sidebar.isHovered,
-                'xl:ml-[90px]': !$store.sidebar.isExpanded && !$store.sidebar.isHovered,
+                'xl:ml-[290px]': $store.sidebar.isExpanded,
+                'xl:ml-[90px]': !$store.sidebar.isExpanded,
                 'ml-0': $store.sidebar.isMobileOpen
             }">
             <!-- app header start -->

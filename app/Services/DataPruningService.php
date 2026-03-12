@@ -8,6 +8,8 @@ use App\DataTransferObjects\PruneResult;
 use App\Enums\FollowUpStatus;
 use App\Enums\TaskStatus;
 use App\Models\CalendarEventLink;
+use App\Models\Email;
+use App\Models\EmailLink;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\User;
@@ -43,11 +45,24 @@ class DataPruningService
             ->where('updated_at', '<', $cutoff)
             ->delete();
 
+        $emailsDeleted = Email::withoutGlobalScope('user')
+            ->where('user_id', $user->id)
+            ->where('is_dismissed', true)
+            ->where('updated_at', '<', $cutoff)
+            ->delete();
+
         CalendarEventLink::whereDoesntHave('linkable')
             ->whereHas('calendarEvent', fn ($query) => $query->withoutGlobalScopes()->where('user_id', $user->id))
             ->delete();
 
-        return new PruneResult($tasksDeleted, $followUpsDeleted);
+        EmailLink::whereDoesntHave('linkable')
+            ->where(function ($query) use ($user): void {
+                $query->whereNull('email_id')
+                    ->orWhereHas('email', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id));
+            })
+            ->delete();
+
+        return new PruneResult($tasksDeleted, $followUpsDeleted, $emailsDeleted);
     }
 
     /**
@@ -72,6 +87,12 @@ class DataPruningService
             ->where('updated_at', '<', $cutoff)
             ->count();
 
-        return new PruneResult($tasksCount, $followUpsCount);
+        $emailsCount = Email::withoutGlobalScope('user')
+            ->where('user_id', $user->id)
+            ->where('is_dismissed', true)
+            ->where('updated_at', '<', $cutoff)
+            ->count();
+
+        return new PruneResult($tasksCount, $followUpsCount, $emailsCount);
     }
 }

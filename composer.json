@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "lengthofrope/teamlead-dashboard",
+    "name": "lengthofrope/mithril",
     "type": "project",
     "description": "Team Lead Dashboard — a PWA for managing teams.",
     "keywords": [

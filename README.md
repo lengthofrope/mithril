@@ -4,19 +4,41 @@
 
 A Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built for technical team leads who need more than basic task lists — with follow-ups, per-member context, and privacy controls.
 
+## Screenshots
+
+### Dashboard
+
+| Light | Dark |
+|-------|------|
+| ![Dashboard light mode](docs/screenshots/dashboard-light.png) | ![Dashboard dark mode](docs/screenshots/dashboard-dark.png) |
+
+### Tasks
+
+| Light | Dark |
+|-------|------|
+| ![Tasks light mode](docs/screenshots/tasks-light.png) | ![Tasks dark mode](docs/screenshots/tasks-dark.png) |
+
+### Calendar
+
+| Light | Dark |
+|-------|------|
+| ![Calendar light mode](docs/screenshots/calendar-light.png) | ![Calendar dark mode](docs/screenshots/calendar-dark.png) |
+
 ## Features
 
-- **Dashboard** — Greeting, counters, today-section, quick-add inline form
-- **Tasks** — Priorities, categories, groups, privacy flag, kanban + list view, drag & drop sorting, bulk actions
+- **Dashboard** — Greeting, counters, today-section, quick-create buttons, upcoming calendar events, flagged emails
+- **Tasks** — Priorities, categories, groups, privacy flag, kanban + list view, drag & drop sorting, bulk actions, recurring tasks
 - **Follow-ups** — Timeline view (overdue > today > this week > later), snooze, auto-populated from "waiting" tasks
 - **Teams & Members** — Profile pages with linked tasks, follow-ups, bila history, agreements
 - **Bilas** — Recurring 1-on-1s with prep items checklist, markdown notes
 - **Notes** — Markdown with live preview, tags, pinning, full-text search
 - **Weekly Reflection** — Auto-generated summary + free-form reflection
 - **Analytics** — Configurable dashboard with charts and widgets
-- **Office 365** — Calendar sync and automatic team member availability via Microsoft Graph API
+- **E-mail** — Inbox sync from Microsoft 365, flagged email widget, resource linking to tasks/follow-ups/notes/bilas
+- **Office 365** — Calendar sync, team member availability, and email integration via Microsoft Graph API
 - **PWA** — Service worker, offline fallback, push notifications, installable
-- **Auth** — Email/password + remember-me cookie, optional WebAuthn
+- **Auth** — Email/password + remember-me cookie, two-factor authentication (TOTP)
+- **Dark mode** — Full dark mode support with Rivendell-inspired UI theme
 
 ## Tech Stack
 
@@ -41,8 +63,8 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url> teamlead-dashboard
-   cd teamlead-dashboard
+   git clone <repository-url> mithril
+   cd mithril
    ```
 
 2. **Install dependencies**
@@ -65,7 +87,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
    DB_CONNECTION=mariadb
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_DATABASE=teamlead_dashboard
+   DB_DATABASE=mithril
    DB_USERNAME=root
    DB_PASSWORD=
    ```
@@ -73,7 +95,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 4. **Create the database**
 
    ```bash
-   mysql -u root -e "CREATE DATABASE teamlead_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+   mysql -u root -e "CREATE DATABASE mithril CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
    ```
 
 5. **Run migrations and seed**
@@ -90,7 +112,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 
 7. **Configure Microsoft Office 365 integration (optional)**
 
-   To enable calendar sync and team member availability from Outlook:
+   To enable calendar sync, team member availability, and email integration from Outlook:
 
    a. **Create an App Registration** in the [Azure Portal](https://entra.microsoft.com):
       - Go to **Microsoft Entra ID** > **App registrations** > **New registration**
@@ -106,7 +128,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 
    c. **Configure API permissions:**
       - Go to **API permissions** > **Add a permission** > **Microsoft Graph** > **Delegated permissions**
-      - Add: `User.Read`, `Calendars.Read`, `offline_access`
+      - Add: `User.Read`, `Calendars.Read`, `Mail.Read`, `offline_access`
       - Optionally add `Calendars.Read.Shared` for shared calendar access
       - For team availability without per-member consent: add **Application permission** `Schedule.Read.All` and grant admin consent
 
@@ -128,7 +150,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 
 8. **Set up the cron job**
 
-   Laravel's task scheduler needs a single cron entry on your server. This runs scheduled tasks including the daily analytics snapshot, calendar sync (every 15 min), and team availability sync (every 5 min).
+   Laravel's task scheduler needs a single cron entry on your server. This runs scheduled tasks including the daily analytics snapshot, calendar sync (every 5 min), availability sync (every 5 min), and email sync.
 
    ```bash
    * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
@@ -136,7 +158,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 
 9. **Start a queue worker**
 
-   The calendar and availability sync jobs run on the queue. Start a worker:
+   The calendar, availability, and email sync jobs run on the queue. Start a worker:
 
    ```bash
    php artisan queue:work --sleep=3 --tries=3
@@ -171,10 +193,11 @@ php artisan test                   # Run test suite (Pest)
 npx tsc --noEmit                   # TypeScript type checking
 npm run build                      # Production build
 php artisan migrate:fresh --seed   # Reset database with sample data
-php artisan schedule:run           # Run scheduler (analytics, calendar sync, availability sync)
+php artisan schedule:run           # Run scheduler (analytics, calendar sync, availability sync, email sync)
 php artisan microsoft:sync-calendars    # Manually sync calendars for all connected users
 php artisan microsoft:sync-availability # Manually sync team member availability
 php artisan microsoft:detect-members    # Check manual members for O365 mailbox and upgrade
+php artisan sync:emails                 # Manually sync emails for all connected users
 ```
 
 ### Verification
@@ -192,7 +215,7 @@ npm run build
 - **No "Save" buttons** — everything auto-saves via debounced AJAX (500 ms)
 - **Blade for rendering, Alpine.js for interactivity** — no SPA, no client-side routing
 - **Generic controllers** — `ReorderController` and `AutoSaveController` work for any model
-- **Reusable model traits** — `HasSortOrder`, `Filterable`, `HasFollowUp`, `Searchable`
+- **Reusable model traits** — `HasSortOrder`, `Filterable`, `HasFollowUp`, `Searchable`, `HasResourceLinks`
 - **Laravel Events** for side-effects — keeps controllers thin
 - **TypeScript modules** exposed as Alpine.js `data()` components
 

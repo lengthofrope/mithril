@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - Unreleased
+
+### Added
+
+- **E-mail integration** — Sync inbox emails from Microsoft 365 via Graph API; dedicated `/mail` page with email cards showing sender, subject, importance, and timestamp; `SyncEmailsJob` runs on schedule; `sync:emails` Artisan command for manual sync
+- **E-mail dashboard widget** — Flagged emails with deadlines displayed in a dashboard widget for quick triage
+- **E-mail resource linking** — Link emails to existing tasks, follow-ups, notes, or bilas via resource pills; reusable `<x-tl.email-pills>` and `<x-tl.email-actions>` Blade components with Alpine.js
+- **E-mail sender avatars** — Color-coded avatar circles for email senders based on sender name
+- **`HasResourceLinks` trait** — Reusable Eloquent trait for automatic cleanup of polymorphic resource links on model deletion; applied to Task, FollowUp, Note, and Bila
+- **Sidebar collapsed preference** — Sidebar collapsed/expanded state is persisted per user and restored on page load
+
+### Changed
+
+- **Office 365 connector** — Updated Microsoft Graph API integration with additional mail permissions for email sync; **reconnecting your Office 365 account is required** for the new e-mail features to work
+- **Dashboard task cards** — Drag & drop disabled on dashboard task cards to prevent accidental reordering outside the tasks page
+- **Sidebar** — Simplified hover and collapsed state logic for cleaner interaction
+
 ## [1.4.0] - 2026-03-12
 
 ### Added

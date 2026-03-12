@@ -10,6 +10,7 @@ use App\Enums\TaskStatus;
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
 use App\Models\Traits\HasFollowUp;
+use App\Models\Traits\HasResourceLinks;
 use App\Models\Traits\HasSortOrder;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -50,6 +51,7 @@ class Task extends Model
     use Filterable;
     use HasFactory;
     use HasFollowUp;
+    use HasResourceLinks;
     use HasSortOrder;
     use Searchable;
 

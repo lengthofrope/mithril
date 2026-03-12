@@ -269,5 +269,51 @@ interface CalendarEventLink {
     created_at: string;
 }
 
-export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink };
+/**
+ * Email importance levels from Microsoft Graph.
+ */
+type EmailImportance = 'low' | 'normal' | 'high';
+
+/**
+ * Mirrors the `emails` Eloquent model.
+ */
+interface Email {
+    id: number;
+    microsoft_message_id: string;
+    subject: string;
+    sender_name: string | null;
+    sender_email: string | null;
+    body_preview: string | null;
+    received_at: string;
+    is_read: boolean;
+    is_flagged: boolean;
+    flag_due_date: string | null;
+    importance: EmailImportance;
+    categories: string[];
+    sources: string[];
+    web_link: string | null;
+    links?: EmailLink[];
+    sender_is_team_member?: boolean;
+    sender_avatar_url?: string | null;
+    sender_initials?: string;
+    sender_display_name?: string;
+    sender_avatar_color?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Mirrors the `email_links` Eloquent model.
+ */
+interface EmailLink {
+    id: number;
+    email_id: number | null;
+    email_subject: string | null;
+    linkable_type: string;
+    linkable_id: number;
+    linkable?: Bila | Task | FollowUp | Note;
+    created_at: string;
+}
+
+export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink };

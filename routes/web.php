@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\MicrosoftAuthController;
 use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
 use App\Http\Controllers\Web\CalendarPageController;
+use App\Http\Controllers\Web\EmailPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\FollowUpPageController;
 use App\Http\Controllers\Web\NotePageController;
@@ -74,6 +75,7 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/bilas/{bila}', [BilaPageController::class, 'destroy'])->name('bilas.destroy');
 
     Route::get('/calendar', [CalendarPageController::class, 'index'])->name('calendar.index');
+    Route::get('/mail', [EmailPageController::class, 'index'])->name('mail.index');
 
     Route::get('/weekly', [WeeklyReflectionController::class, 'index'])->name('weekly.index');
     Route::post('/weekly', [WeeklyReflectionController::class, 'store'])->name('weekly.store');
@@ -95,7 +97,7 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/settings/prune-after-days', [SettingsController::class, 'updatePruneAfterDays'])->name('settings.updatePruneAfterDays');
     Route::post('/settings/prune', [SettingsController::class, 'prune'])->name('settings.prune');
     Route::patch('/settings/dashboard-widgets', [SettingsController::class, 'updateDashboardWidgets'])->name('settings.updateDashboardWidgets');
-
+    Route::patch('/settings/sidebar-collapsed', [SettingsController::class, 'updateSidebarCollapsed'])->name('settings.updateSidebarCollapsed');
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
     Route::post('/tasks/move', [TaskPageController::class, 'move'])->name('tasks.move');
 

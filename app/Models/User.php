@@ -41,6 +41,7 @@ class User extends Authenticatable
         'dashboard_upcoming_tasks',
         'dashboard_upcoming_follow_ups',
         'dashboard_upcoming_bilas',
+        'sidebar_collapsed',
     ];
 
     /**
@@ -75,6 +76,7 @@ class User extends Authenticatable
             'dashboard_upcoming_tasks'      => 'integer',
             'dashboard_upcoming_follow_ups' => 'integer',
             'dashboard_upcoming_bilas'      => 'integer',
+            'sidebar_collapsed'                 => 'boolean',
             'is_active'                     => 'boolean',
         ];
     }

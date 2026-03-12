@@ -244,6 +244,41 @@ class MicrosoftGraphService
     }
 
     /**
+     * Fetch filtered messages from the user's inbox.
+     *
+     * Includes flag.dueDateTime in $select for deadline extraction.
+     *
+     * @param User   $user   The user whose messages should be fetched.
+     * @param string $filter OData filter string for the messages query.
+     * @param int    $top    Maximum number of messages to retrieve.
+     * @return Collection<int, array<string, mixed>> Normalised message records.
+     * @throws RuntimeException When the Graph request fails.
+     */
+    public function getMyMessages(User $user, string $filter = '', int $top = 50): Collection
+    {
+        $this->ensureValidToken($user);
+
+        $params = [
+            '$select' => 'id,subject,from,receivedDateTime,bodyPreview,isRead,flag,categories,importance,hasAttachments,webLink',
+            '$top'    => $top,
+        ];
+
+        if ($filter !== '') {
+            $params['$filter'] = $filter;
+        }
+
+        $response = Http::withToken($user->microsoft_access_token)
+            ->get(config('microsoft.graph_url') . 'me/mailFolders/Inbox/messages', $params);
+
+        $this->assertSuccessfulGraphResponse($response);
+
+        return collect($response->json('value', []))
+            ->map(fn (array $message): array => $this->normaliseMessage($message))
+            ->sortByDesc('received_at')
+            ->values();
+    }
+
+    /**
      * Revoke all stored Microsoft credentials from the user record.
      *
      * @param User $user The user whose Microsoft access should be cleared.
@@ -361,6 +396,39 @@ class MicrosoftGraphService
             . 'Status: ' . $response->status() . '. '
             . 'Detail: ' . $errorDetail
         );
+    }
+
+    /**
+     * Map a raw Graph API message array to the application's normalised schema.
+     *
+     * @param array<string, mixed> $message Raw message data from the Graph messages response.
+     * @return array<string, mixed> Normalised message record.
+     */
+    private function normaliseMessage(array $message): array
+    {
+        $flag        = $message['flag'] ?? [];
+        $isFlagged   = ($flag['flagStatus'] ?? null) === 'flagged';
+        $flagDueDate = null;
+
+        if (isset($flag['dueDateTime']['dateTime'])) {
+            $flagDueDate = substr($flag['dueDateTime']['dateTime'], 0, 10);
+        }
+
+        return [
+            'microsoft_message_id' => $message['id'],
+            'subject'              => $message['subject'] ?? '',
+            'sender_name'          => $message['from']['emailAddress']['name'] ?? null,
+            'sender_email'         => $message['from']['emailAddress']['address'] ?? null,
+            'received_at'          => $message['receivedDateTime'] ?? null,
+            'body_preview'         => $message['bodyPreview'] ?? null,
+            'is_read'              => $message['isRead'] ?? false,
+            'is_flagged'           => $isFlagged,
+            'flag_due_date'        => $flagDueDate,
+            'categories'           => $message['categories'] ?? [],
+            'importance'           => $message['importance'] ?? 'normal',
+            'has_attachments'      => $message['hasAttachments'] ?? false,
+            'web_link'             => $message['webLink'] ?? null,
+        ];
     }
 
     /**
