@@ -188,10 +188,14 @@
             </div>
         </div>
 
-        {{-- Upcoming calendar + Bilas --}}
+        {{-- Upcoming calendar + Flagged emails + Bilas --}}
         <div class="flex flex-col gap-6">
             @if($calendarEvents !== null)
                 <x-tl.calendar-upcoming :events="$calendarEvents" :timezone="$userTimezone" />
+            @endif
+
+            @if($flaggedEmails !== null)
+                <x-tl.email-flagged-widget :emails="$flaggedEmails" />
             @endif
 
             <div class="flex-1 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">

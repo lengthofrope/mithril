@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AgreementController;
 use App\Http\Controllers\Api\AutoSaveController;
 use App\Http\Controllers\Api\CalendarActionController;
 use App\Http\Controllers\Api\CounterController;
+use App\Http\Controllers\Api\EmailActionController;
 
 use App\Http\Controllers\Api\BilaController;
 use App\Http\Controllers\Api\ExportImportController;
@@ -35,6 +36,26 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
     Route::get('export', [ExportImportController::class, 'export']);
     Route::post('import', [ExportImportController::class, 'import']);
+
+    Route::prefix('emails')->as('emails.')->group(function (): void {
+        Route::get('/', [EmailActionController::class, 'index'])->name('index');
+        Route::get('dashboard', [EmailActionController::class, 'dashboard'])->name('dashboard');
+
+        Route::prefix('{email}')->group(function (): void {
+            Route::get('prefill/{type}', [EmailActionController::class, 'prefill'])
+                ->name('prefill')
+                ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+
+            Route::post('create/{type}', [EmailActionController::class, 'create'])
+                ->name('create')
+                ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+
+            Route::post('dismiss', [EmailActionController::class, 'dismiss'])->name('dismiss');
+            Route::post('undismiss', [EmailActionController::class, 'undismiss'])->name('undismiss');
+
+            Route::delete('links/{emailLink}', [EmailActionController::class, 'unlink'])->name('unlink');
+        });
+    });
 
     Route::prefix('calendar-events/{calendarEvent}')->as('calendar-events.')->group(function (): void {
         Route::get('prefill/{type}', [CalendarActionController::class, 'prefill'])

@@ -20,6 +20,7 @@ import { agreementManager } from './components/agreement-manager';
 import { inlineSelect } from './components/inline-select';
 import { liveCounter } from './components/live-counter';
 import { calendarEventActions } from './components/calendar-event-actions';
+import { emailPage } from './components/email-page';
 
 declare global {
     interface Window {
@@ -46,6 +47,7 @@ Alpine.data('agreementManager', agreementManager as Parameters<typeof Alpine.dat
 Alpine.data('inlineSelect', inlineSelect as Parameters<typeof Alpine.data>[1]);
 Alpine.data('liveCounter', liveCounter as Parameters<typeof Alpine.data>[1]);
 Alpine.data('calendarEventActions', calendarEventActions as Parameters<typeof Alpine.data>[1]);
+Alpine.data('emailPage', emailPage as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

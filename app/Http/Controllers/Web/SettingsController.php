@@ -113,7 +113,7 @@ class SettingsController extends Controller
         $result = $service->pruneForUser($user);
 
         return redirect()->route('settings.index')
-            ->with('status', "Removed {$result->tasksDeleted} task(s) and {$result->followUpsDeleted} follow-up(s).");
+            ->with('status', "Removed {$result->tasksDeleted} task(s), {$result->followUpsDeleted} follow-up(s), and {$result->emailsDeleted} email(s).");
     }
 
     /**
@@ -152,6 +152,26 @@ class SettingsController extends Controller
             'dashboard_upcoming_follow_ups' => $validated['dashboard_upcoming_follow_ups'] ?? null,
             'dashboard_upcoming_bilas' => $validated['dashboard_upcoming_bilas'] ?? null,
         ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Update the authenticated user's email source preferences.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateEmailSources(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email_source_flagged' => ['sometimes', 'boolean'],
+            'email_source_categorized' => ['sometimes', 'boolean'],
+            'email_source_category_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'email_source_unread' => ['sometimes', 'boolean'],
+        ]);
+
+        $request->user()->update($validated);
 
         return response()->json(['success' => true]);
     }

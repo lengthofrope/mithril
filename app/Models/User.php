@@ -41,6 +41,10 @@ class User extends Authenticatable
         'dashboard_upcoming_tasks',
         'dashboard_upcoming_follow_ups',
         'dashboard_upcoming_bilas',
+        'email_source_flagged',
+        'email_source_categorized',
+        'email_source_category_name',
+        'email_source_unread',
     ];
 
     /**
@@ -76,6 +80,9 @@ class User extends Authenticatable
             'dashboard_upcoming_follow_ups' => 'integer',
             'dashboard_upcoming_bilas'      => 'integer',
             'is_active'                     => 'boolean',
+            'email_source_flagged'          => 'boolean',
+            'email_source_categorized'      => 'boolean',
+            'email_source_unread'           => 'boolean',
         ];
     }
 

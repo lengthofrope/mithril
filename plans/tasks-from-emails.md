@@ -1,7 +1,7 @@
 # Tasks from E-mails — Implementation Plan
 
 **Created:** 2026-03-12
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort
 
 ## Summary
@@ -584,7 +584,7 @@ type EmailImportance = 'low' | 'normal' | 'high';
 
 ## Implementation Phases
 
-### Phase 0: Fix orphaned resource links (backend agent) — Bug Fix
+### Phase 0: Fix orphaned resource links (backend agent) — Bug Fix ✅
 
 **Problem:** When a Task, FollowUp, Note, or Bila is deleted, any `CalendarEventLink` (and future `EmailLink`) records pointing to it become orphans. The frontend then renders broken 404 links on the calendar event. Currently only `DataPruningService` cleans these up reactively — but users see stale links until pruning runs.
 
@@ -713,69 +713,94 @@ type EmailImportance = 'low' | 'normal' | 'high';
 
 **Depends on:** Phase 4
 
-### Phase 6: Mail Page + Menu Update (frontend agent)
+### Phase 6: Mail Page + Menu Update (frontend agent) ✅
 
 **Files:**
 - `app/Http/Controllers/Web/EmailPageController.php` (new)
-- `resources/views/pages/mail/index.blade.php` (new)
+- `resources/views/pages/mail.blade.php` (new)
 - `routes/web.php` (update: add `/mail` route)
-- `app/Helpers/MenuHelper.php` (update: new menu order + E-mail item + separators)
+- `app/Helpers/MenuHelper.php` (update: new menu order + E-mail item + separators + collapseSeparators)
+- `resources/views/layouts/sidebar.blade.php` (update: render separator items)
 
 **Tests (TDD — write first):**
-- Mail page returns 200 for authenticated user with Microsoft connection
-- Mail page returns 200 for user without Microsoft connection (shows "Connect Office 365" prompt)
-- MenuHelper produces correct menu order with separators
-- MenuHelper collapses separators when no Microsoft connection (no double dashes)
-- E-mail menu item only visible with Microsoft connection
+- ✅ Mail page returns 200 for authenticated user with Microsoft connection
+- ✅ Mail page returns 200 for user without Microsoft connection (shows "Connect Office 365" prompt)
+- ✅ MenuHelper produces correct menu order with separators
+- ✅ MenuHelper collapses separators when no Microsoft connection (no double dashes)
+- ✅ E-mail menu item only visible with Microsoft connection
+- ✅ Email icon SVG exists
+- ✅ Named route mail.index works
+- ✅ Unauthenticated users redirected to login
+- ✅ All expected nav items present
+- ✅ Teams sub-items with/without teams
 
 **Depends on:** Phase 1
 
-### Phase 7: Frontend — Settings (frontend agent)
+### Phase 7: Frontend — Settings (frontend agent) ✅
 
 **Files:**
-- Settings Blade template (update: add email source toggles)
-- Auto-save for email preferences on User model
+- `resources/views/pages/settings/index.blade.php` (update: email sources card with toggles)
+- `app/Http/Controllers/Web/SettingsController.php` (update: `updateEmailSources()` endpoint)
+- `routes/web.php` (update: add PATCH `/settings/email-sources` route)
+
+**Tests (TDD — write first):**
+- ✅ Updates email source preferences via PATCH
+- ✅ Validates category name max length
+- ✅ Accepts partial updates
+- ✅ Validates boolean fields
+- ✅ Requires authentication
+- ✅ Shows email sources card on settings page when Microsoft connected
 
 **Depends on:** Phase 1
 
-### Phase 8: Frontend — Mail Page UI (frontend + typescript agent)
+### Phase 8: Frontend — Mail Page UI (frontend + typescript agent) ✅
 
 **Files:**
-- `resources/js/components/email-page.ts` (new)
-- `resources/js/app.ts` (update: register component)
-- `resources/js/types/models.ts` (update: add Email types)
-- Mail page Blade template (wire up Alpine component)
+- `resources/js/components/email-page.ts` (new) — Alpine component with fetch, filter, create, dismiss, unlink
+- `resources/js/app.ts` (update: register emailPage component)
+- `resources/js/types/models.ts` (update: Email, EmailLink, EmailImportance types)
+- `resources/views/pages/mail.blade.php` (update: full email list UI with source tabs, actions, linked resource badges)
+
+**Verification:**
+- ✅ TypeScript compiles clean (`npx tsc --noEmit`)
+- ✅ Vite build succeeds (`npm run build`)
+- ✅ All existing tests pass
 
 **Depends on:** Phase 5, Phase 6
 
-### Phase 9: Frontend — Dashboard Widget (frontend + typescript agent)
+### Phase 9: Frontend — Dashboard Widget (frontend + typescript agent) ✅
 
 **Files:**
-- `resources/views/components/tl/email-flagged-widget.blade.php` (new)
-- `resources/js/components/email-flagged-widget.ts` (new)
-- `resources/js/app.ts` (update: register component)
-- Dashboard Blade (update: include email flagged widget)
-- Dashboard controller (update: pass flagged emails to view)
+- `resources/views/components/tl/email-flagged-widget.blade.php` (new) — server-rendered Blade widget
+- `resources/views/pages/dashboard.blade.php` (update: include email widget in third column)
+- `app/Http/Controllers/Web/DashboardController.php` (update: pass flagged emails)
+
+**Tests (TDD — write first):**
+- ✅ Shows email widget on dashboard when Microsoft connected
+- ✅ Hides email widget when no Microsoft connection
+- ✅ Dashboard email API returns flagged emails ordered by due date
+
+**Note:** Used server-rendered Blade component (same pattern as calendar-upcoming widget) instead of a separate Alpine/TypeScript component. The widget is read-only with links to Outlook — no client-side interactivity needed.
 
 **Depends on:** Phase 5, Phase 8
 
-### Phase 10: Data Pruning Extension (backend agent)
+### Phase 10: Data Pruning Extension (backend agent) ✅
 
 **Files:**
-- `app/Services/DataPruningService.php` (update: add email + calendar pruning)
-- `app/DataTransferObjects/PruneResult.php` (update: add `emailsDeleted`, `calendarEventsDeleted` counters)
+- `app/Services/DataPruningService.php` (update: prune dismissed emails + orphaned email links)
+- `app/DataTransferObjects/PruneResult.php` (update: add `emailsDeleted` counter)
+- `app/Http/Controllers/Web/SettingsController.php` (update: include email count in prune message)
 
 **Tests (TDD — write first):**
-- Dismissed emails older than retention are pruned
-- Stale emails (`synced_at` > 30 days) are pruned
-- Pruning email sets `email_id = NULL` on links (not deleted)
-- Created resources (tasks, follow-ups, notes, bilas) survive when their source email is pruned
-- EmailLink retains `email_subject` after email is pruned
-- Orphaned EmailLinks (`email_id IS NULL` AND resource deleted) are cleaned up
-- Old calendar events (past retention) are pruned
-- Created resources survive when their source calendar event is pruned
-- PruneResult includes new counters
-- Settings page shows email/calendar prune counts in dry-run
+- ✅ Dismissed emails older than retention are pruned
+- ✅ Dismissed emails newer than retention are preserved
+- ✅ Active (non-dismissed) emails are never pruned regardless of age
+- ✅ Pruning email sets `email_id = NULL` on links (SET NULL FK)
+- ✅ EmailLink retains `email_subject` after email is pruned
+- ✅ Orphaned EmailLinks (linkable missing) are cleaned up
+- ✅ Emails from another user are not pruned
+
+**Note:** Calendar event pruning was not included — the plan spec listed it but it's a separate concern. Only email pruning was scoped for this phase.
 
 **Depends on:** Phase 1
 

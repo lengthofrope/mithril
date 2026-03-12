@@ -106,6 +106,12 @@
                         <!-- Menu Items -->
                         <ul class="flex flex-col gap-1">
                             @foreach ($menuGroup['items'] as $itemIndex => $item)
+                                @if (!empty($item['separator']))
+                                    <li class="my-1">
+                                        <hr class="border-gray-200 dark:border-gray-700" />
+                                    </li>
+                                    @continue
+                                @endif
                                 <li>
                                     @if (isset($item['subItems']))
                                         <!-- Menu Item with Submenu -->

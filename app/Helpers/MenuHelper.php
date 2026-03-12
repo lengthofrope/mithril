@@ -17,6 +17,9 @@ class MenuHelper
     /**
      * Return the main navigation items for the sidebar.
      *
+     * Separator items use `['separator' => true]`. Adjacent separators and
+     * leading/trailing separators are collapsed by collapseSeparators().
+     *
      * @return array<int, array<string, mixed>>
      */
     public static function getMainNavItems(): array
@@ -27,6 +30,7 @@ class MenuHelper
                 'name' => 'Dashboard',
                 'path' => '/',
             ],
+            ['separator' => true],
         ];
 
         if (self::hasMicrosoftConnection()) {
@@ -35,7 +39,14 @@ class MenuHelper
                 'name' => 'Calendar',
                 'path' => '/calendar',
             ];
+            $items[] = [
+                'icon' => 'email',
+                'name' => 'E-mail',
+                'path' => '/mail',
+            ];
         }
+
+        $items[] = ['separator' => true];
 
         $items[] = [
             'icon' => 'task',
@@ -52,8 +63,6 @@ class MenuHelper
             'path' => '/follow-ups',
         ];
 
-        $items[] = self::buildTeamsItem();
-
         $items[] = [
             'icon' => 'notes',
             'name' => 'Notes',
@@ -66,11 +75,17 @@ class MenuHelper
             'path' => '/bilas',
         ];
 
+        $items[] = ['separator' => true];
+
+        $items[] = self::buildTeamsItem();
+
         $items[] = [
             'icon' => 'weekly',
             'name' => 'Weekly Review',
             'path' => '/weekly',
         ];
+
+        $items[] = ['separator' => true];
 
         $items[] = [
             'icon' => 'analytics',
@@ -78,7 +93,7 @@ class MenuHelper
             'path' => '/analytics',
         ];
 
-        return $items;
+        return self::collapseSeparators($items);
     }
 
     /**
@@ -121,6 +136,37 @@ class MenuHelper
         $user = Auth::user();
 
         return $user !== null && $user->hasMicrosoftConnection();
+    }
+
+    /**
+     * Remove adjacent, leading, and trailing separator items from the list.
+     *
+     * @param array<int, array<string, mixed>> $items
+     * @return array<int, array<string, mixed>>
+     */
+    private static function collapseSeparators(array $items): array
+    {
+        $result = [];
+        $lastWasSeparator = true;
+
+        foreach ($items as $item) {
+            if (!empty($item['separator'])) {
+                if ($lastWasSeparator) {
+                    continue;
+                }
+                $lastWasSeparator = true;
+            } else {
+                $lastWasSeparator = false;
+            }
+
+            $result[] = $item;
+        }
+
+        if ($result !== [] && !empty(end($result)['separator'])) {
+            array_pop($result);
+        }
+
+        return array_values($result);
     }
 
     /**
@@ -175,6 +221,8 @@ class MenuHelper
             'weekly' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 6.10457 9.89543 7 11 7H13C14.1046 7 15 6.10457 15 5M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5M12 12H15M12 16H15M9 12H9.01M9 16H9.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'analytics' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 20V10M12 20V4M6 20V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'email' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7L10.94 11.3375C11.5885 11.7428 12.4115 11.7428 13.06 11.3375L20 7M5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
         ];
 
