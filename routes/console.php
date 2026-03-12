@@ -34,3 +34,8 @@ Schedule::command('microsoft:sync-emails')
     ->everyFiveMinutes()
     ->name('microsoft.sync-emails')
     ->withoutOverlapping();
+
+Schedule::command('jira:sync-issues')
+    ->everyFiveMinutes()
+    ->name('jira.sync-issues')
+    ->withoutOverlapping();

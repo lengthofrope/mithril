@@ -234,20 +234,20 @@ sequenceDiagram
 ### Phase 2: Data Model & Sync
 - **Goal:** Jira issues are synced to a local cache on schedule
 - **Specs:**
-  - [ ] Migration creates `jira_issues` table with all columns and indexes
-  - [ ] Migration creates `jira_issue_links` table with polymorphic structure
-  - [ ] `JiraIssue` model uses `BelongsToUser`, has correct casts and fillable
-  - [ ] `JiraIssueLink` model has `linkable` morphTo relationship
-  - [ ] `JiraCloudService::searchIssues()` executes JQL and returns normalized results
-  - [ ] `JiraSyncService` fetches assigned, mentioned, and watched issues (max 250 total, by most recently updated)
-  - [ ] `JiraSyncService` merges sources when an issue matches multiple queries
-  - [ ] `JiraSyncService` upserts issues (keyed on `user_id` + `jira_issue_id`)
-  - [ ] `JiraSyncService` removes stale issues not in sync set (preserving dismissed)
-  - [ ] `JiraSyncService` preserves `is_dismissed` flag on re-sync
-  - [ ] `SyncJiraIssuesJob` handles token expiry gracefully (no re-queue on revoked)
-  - [ ] `SyncJiraIssuesJob` retries up to 3 times with backoff on transient failures
-  - [ ] `SyncJiraIssues` command dispatches jobs for all Jira-connected users
-  - [ ] Scheduler runs `jira:sync-issues` every 5 minutes
+  - [x] Migration creates `jira_issues` table with all columns and indexes
+  - [x] Migration creates `jira_issue_links` table with polymorphic structure
+  - [x] `JiraIssue` model uses `BelongsToUser`, has correct casts and fillable
+  - [x] `JiraIssueLink` model has `linkable` morphTo relationship
+  - [x] `JiraCloudService::searchIssues()` executes JQL and returns normalized results
+  - [x] `JiraSyncService` fetches assigned, mentioned, and watched issues (max 250 total, by most recently updated)
+  - [x] `JiraSyncService` merges sources when an issue matches multiple queries
+  - [x] `JiraSyncService` upserts issues (keyed on `user_id` + `jira_issue_id`)
+  - [x] `JiraSyncService` removes stale issues not in sync set (preserving dismissed)
+  - [x] `JiraSyncService` preserves `is_dismissed` flag on re-sync
+  - [x] `SyncJiraIssuesJob` handles token expiry gracefully (no re-queue on revoked)
+  - [x] `SyncJiraIssuesJob` retries up to 3 times with backoff on transient failures
+  - [x] `SyncJiraIssues` command dispatches jobs for all Jira-connected users
+  - [x] Scheduler runs `jira:sync-issues` every 5 minutes
 - **Files:** Migrations, `JiraIssue`, `JiraIssueLink`, `JiraSyncService`, `SyncJiraIssuesJob`, `SyncJiraIssues` command, `routes/console.php`
 
 ### Phase 3: Browse Page & Dashboard Widget
