@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('subject', 500);
             $table->string('sender_name', 255)->nullable();
             $table->string('sender_email', 255)->nullable();
-            $table->timestamp('received_at');
+            $table->timestamp('received_at')->useCurrent();
             $table->text('body_preview')->nullable();
             $table->boolean('is_read')->default(false);
             $table->boolean('is_flagged')->default(false);
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('web_link', 1000)->nullable();
             $table->json('sources');
             $table->boolean('is_dismissed')->default(false);
-            $table->timestamp('synced_at');
+            $table->timestamp('synced_at')->useCurrent();
             $table->timestamps();
 
             $table->unique(['user_id', 'microsoft_message_id']);
