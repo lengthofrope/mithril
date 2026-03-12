@@ -15,3 +15,4 @@
 | 011 | backend, frontend, calendar, microsoft, polymorphic, pivot | Calendar event resource linking via polymorphic pivot table | Calendar Actions | Accepted | 2026-03-10 |
 | 012 | backend, auth, artisan, middleware, users | Disable user accounts via boolean flag and artisan commands | Operations | Accepted | 2026-03-11 |
 | 013 | backend, frontend, tasks, recurrence, observer, events | Recurring tasks via copy-on-complete with model observer event dispatch | Recurring Tasks | Accepted | 2026-03-11 |
+| 014 | backend, frontend, dashboard, settings, user-preferences | Configurable dashboard upcoming items | Dashboard | Accepted | 2026-03-12 |

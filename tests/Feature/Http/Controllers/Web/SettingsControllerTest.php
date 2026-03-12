@@ -195,3 +195,72 @@ test('settings updateProfile does not change password when current_password is e
     $user->refresh();
     expect(Hash::check('unchanged-password', $user->password))->toBeTrue();
 });
+
+test('updateDashboardWidgets saves all three values', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->patchJson('/settings/dashboard-widgets', [
+        'dashboard_upcoming_tasks' => 5,
+        'dashboard_upcoming_follow_ups' => 3,
+        'dashboard_upcoming_bilas' => 2,
+    ]);
+
+    $response->assertOk()->assertJson(['success' => true]);
+    $user->refresh();
+    expect($user->dashboard_upcoming_tasks)->toBe(5);
+    expect($user->dashboard_upcoming_follow_ups)->toBe(3);
+    expect($user->dashboard_upcoming_bilas)->toBe(2);
+});
+
+test('updateDashboardWidgets accepts null values to disable upcoming', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create([
+        'dashboard_upcoming_tasks' => 5,
+        'dashboard_upcoming_follow_ups' => 3,
+        'dashboard_upcoming_bilas' => 2,
+    ]);
+
+    $response = $this->actingAs($user)->patchJson('/settings/dashboard-widgets', [
+        'dashboard_upcoming_tasks' => null,
+        'dashboard_upcoming_follow_ups' => null,
+        'dashboard_upcoming_bilas' => null,
+    ]);
+
+    $response->assertOk()->assertJson(['success' => true]);
+    $user->refresh();
+    expect($user->dashboard_upcoming_tasks)->toBeNull();
+    expect($user->dashboard_upcoming_follow_ups)->toBeNull();
+    expect($user->dashboard_upcoming_bilas)->toBeNull();
+});
+
+test('updateDashboardWidgets validates max value is 20', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->patchJson('/settings/dashboard-widgets', [
+        'dashboard_upcoming_tasks' => 25,
+    ]);
+
+    $response->assertUnprocessable();
+});
+
+test('updateDashboardWidgets validates min value is 0', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->patchJson('/settings/dashboard-widgets', [
+        'dashboard_upcoming_tasks' => -1,
+    ]);
+
+    $response->assertUnprocessable();
+});
+
+test('updateDashboardWidgets requires authentication', function () {
+    /** @var \Tests\TestCase $this */
+    $response = $this->patchJson('/settings/dashboard-widgets', [
+        'dashboard_upcoming_tasks' => 5,
+    ]);
+
+    $response->assertUnauthorized();
+});

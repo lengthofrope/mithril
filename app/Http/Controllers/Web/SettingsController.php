@@ -134,6 +134,29 @@ class SettingsController extends Controller
     }
 
     /**
+     * Update the authenticated user's dashboard widget upcoming-items settings.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateDashboardWidgets(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'dashboard_upcoming_tasks' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'dashboard_upcoming_follow_ups' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'dashboard_upcoming_bilas' => ['nullable', 'integer', 'min:0', 'max:20'],
+        ]);
+
+        $request->user()->update([
+            'dashboard_upcoming_tasks' => $validated['dashboard_upcoming_tasks'] ?? null,
+            'dashboard_upcoming_follow_ups' => $validated['dashboard_upcoming_follow_ups'] ?? null,
+            'dashboard_upcoming_bilas' => $validated['dashboard_upcoming_bilas'] ?? null,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Display the task settings sub-page with categories and groups.
      *
      * @param Request $request

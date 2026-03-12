@@ -38,6 +38,9 @@ class User extends Authenticatable
         'microsoft_token_expires_at',
         'timezone',
         'prune_after_days',
+        'dashboard_upcoming_tasks',
+        'dashboard_upcoming_follow_ups',
+        'dashboard_upcoming_bilas',
     ];
 
     /**
@@ -68,8 +71,11 @@ class User extends Authenticatable
             'microsoft_access_token'     => 'encrypted',
             'microsoft_refresh_token'    => 'encrypted',
             'microsoft_token_expires_at' => 'datetime',
-            'prune_after_days'           => 'integer',
-            'is_active'                  => 'boolean',
+            'prune_after_days'              => 'integer',
+            'dashboard_upcoming_tasks'      => 'integer',
+            'dashboard_upcoming_follow_ups' => 'integer',
+            'dashboard_upcoming_bilas'      => 'integer',
+            'is_active'                     => 'boolean',
         ];
     }
 

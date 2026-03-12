@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Recurrence settings component** — Reusable `<x-tl.recurrence-settings>` Blade component with Alpine.js for configuring task recurrence on the task detail page
 - **User account management** — Activate and deactivate user accounts via `user:enable` and `user:disable` Artisan commands; disabled users are blocked at login and by middleware
 - **`user:list` command** — Artisan command to list all user accounts with their active/disabled status
+- **Configurable dashboard upcoming items** — Dashboard widgets (tasks, follow-ups, bilas) can optionally show upcoming items beyond today; configurable per-widget in Settings with an elvish-leaf divider separating today from future items, and dynamic widget titles
 - **Data pruning** — Configurable per-user retention period for completed tasks, past follow-ups, and old bilas; runs via `data:prune` Artisan command and daily schedule
 - **Prune settings UI** — New "Data Retention" section on the Settings page to configure pruning retention days (auto-saves)
 - **MIT license** — Added LICENSE file and updated `composer.json` license field

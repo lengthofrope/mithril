@@ -116,6 +116,125 @@
             </div>
         </div>
 
+        {{-- Dashboard widgets --}}
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Dashboard widgets</h2>
+            </div>
+            <div
+                class="p-5 space-y-4"
+                x-data="{
+                    tasks: '{{ $user->dashboard_upcoming_tasks ?? '' }}',
+                    followUps: '{{ $user->dashboard_upcoming_follow_ups ?? '' }}',
+                    bilas: '{{ $user->dashboard_upcoming_bilas ?? '' }}',
+                    saving: false,
+                    saved: false,
+                    error: '',
+                    async save() {
+                        this.saving = true;
+                        this.saved = false;
+                        this.error = '';
+                        try {
+                            const response = await fetch('{{ route('settings.updateDashboardWidgets') }}', {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    dashboard_upcoming_tasks: this.tasks === '' ? null : parseInt(this.tasks),
+                                    dashboard_upcoming_follow_ups: this.followUps === '' ? null : parseInt(this.followUps),
+                                    dashboard_upcoming_bilas: this.bilas === '' ? null : parseInt(this.bilas),
+                                }),
+                            });
+                            if (response.ok) {
+                                this.saved = true;
+                                setTimeout(() => this.saved = false, 2000);
+                            } else {
+                                const data = await response.json();
+                                this.error = Object.values(data.errors ?? {}).flat()[0] ?? 'Failed to save.';
+                            }
+                        } finally {
+                            this.saving = false;
+                        }
+                    }
+                }"
+            >
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Show upcoming items after today's entries on each dashboard widget. Leave empty for today only.
+                </p>
+
+                <div class="flex items-center justify-between gap-4">
+                    <label for="dashboard-upcoming-tasks" class="text-sm font-medium text-gray-800 dark:text-white/90">Tasks</label>
+                    <div class="flex items-center gap-2">
+                        <input
+                            id="dashboard-upcoming-tasks"
+                            type="number"
+                            x-model="tasks"
+                            x-on:change="save()"
+                            min="0"
+                            max="20"
+                            placeholder="Off"
+                            class="w-20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        >
+                        <span class="text-sm text-gray-500 dark:text-gray-400">items</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <label for="dashboard-upcoming-follow-ups" class="text-sm font-medium text-gray-800 dark:text-white/90">Follow-ups</label>
+                    <div class="flex items-center gap-2">
+                        <input
+                            id="dashboard-upcoming-follow-ups"
+                            type="number"
+                            x-model="followUps"
+                            x-on:change="save()"
+                            min="0"
+                            max="20"
+                            placeholder="Off"
+                            class="w-20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        >
+                        <span class="text-sm text-gray-500 dark:text-gray-400">items</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <label for="dashboard-upcoming-bilas" class="text-sm font-medium text-gray-800 dark:text-white/90">Bilas</label>
+                    <div class="flex items-center gap-2">
+                        <input
+                            id="dashboard-upcoming-bilas"
+                            type="number"
+                            x-model="bilas"
+                            x-on:change="save()"
+                            min="0"
+                            max="20"
+                            placeholder="Off"
+                            class="w-20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        >
+                        <span class="text-sm text-gray-500 dark:text-gray-400">items</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 min-h-5">
+                    <span
+                        x-show="saved"
+                        x-transition:leave="transition ease-in duration-200"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="text-xs text-green-600 dark:text-green-400"
+                        x-cloak
+                    >Saved</span>
+                    <p
+                        x-show="error"
+                        x-text="error"
+                        class="text-xs text-red-600 dark:text-red-400"
+                        x-cloak
+                    ></p>
+                </div>
+            </div>
+        </div>
+
         {{-- Task configuration --}}
         <a href="{{ route('settings.tasks') }}" class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700">
             <div>

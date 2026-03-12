@@ -290,3 +290,167 @@ test('dashboard includes create modal partials', function () {
     $response->assertSee('Create a new note');
     $response->assertSee('Schedule a new bila');
 });
+
+test('dashboard passes upcomingTasks as empty collection when setting is null', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create(['dashboard_upcoming_tasks' => null]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertViewHas('upcomingTasks');
+    expect($response->viewData('upcomingTasks'))->toHaveCount(0);
+});
+
+test('dashboard passes upcomingFollowUps as empty collection when setting is null', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create(['dashboard_upcoming_follow_ups' => null]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertViewHas('upcomingFollowUps');
+    expect($response->viewData('upcomingFollowUps'))->toHaveCount(0);
+});
+
+test('dashboard passes upcomingBilas as empty collection when setting is null', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create(['dashboard_upcoming_bilas' => null]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertViewHas('upcomingBilas');
+    expect($response->viewData('upcomingBilas'))->toHaveCount(0);
+});
+
+test('upcomingTasks fetches future tasks limited to configured amount', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_tasks' => 2]);
+
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDays(2)->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDays(3)->toDateString(), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('todayTasks'))->toHaveCount(1);
+    expect($response->viewData('upcomingTasks'))->toHaveCount(2);
+});
+
+test('upcomingTasks excludes done tasks', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_tasks' => 5]);
+
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDays(2)->toDateString(), 'status' => TaskStatus::Done]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('upcomingTasks'))->toHaveCount(1);
+});
+
+test('upcomingFollowUps fetches future follow-ups limited to configured amount', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_follow_ups' => 1]);
+
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->toDateString()]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->addDay()->toDateString()]);
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->addDays(2)->toDateString()]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('todayFollowUps'))->toHaveCount(1);
+    expect($response->viewData('upcomingFollowUps'))->toHaveCount(1);
+});
+
+test('upcomingBilas fetches future bilas limited to configured amount', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_bilas' => 2]);
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDays(2)->toDateString(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDays(3)->toDateString(), 'is_done' => false]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('todayBilas'))->toHaveCount(1);
+    expect($response->viewData('upcomingBilas'))->toHaveCount(2);
+});
+
+test('upcomingBilas excludes done bilas', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_bilas' => 5]);
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDays(2)->toDateString(), 'is_done' => true]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('upcomingBilas'))->toHaveCount(1);
+});
+
+test('upcomingTasks are ordered by deadline ascending', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_tasks' => 5]);
+
+    $farTask = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDays(5)->toDateString(), 'status' => TaskStatus::Open]);
+    $nearTask = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $upcoming = $response->viewData('upcomingTasks');
+    expect($upcoming->first()->id)->toBe($nearTask->id);
+    expect($upcoming->last()->id)->toBe($farTask->id);
+});
+
+test('dashboard shows dynamic title when upcoming tasks are configured and exist', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_tasks' => 3]);
+
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertSee('Upcoming tasks');
+    $response->assertDontSee('Tasks due today');
+});
+
+test('dashboard shows today-only title when upcoming tasks is null', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create(['dashboard_upcoming_tasks' => null]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertSee('Tasks due today');
+});
+
+test('dashboard shows dynamic title when upcoming follow-ups are configured and exist', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_follow_ups' => 3]);
+
+    FollowUp::factory()->create(['user_id' => $user->id, 'follow_up_date' => now()->addDay()->toDateString()]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertSee('Upcoming follow-ups');
+});
+
+test('dashboard shows dynamic title when upcoming bilas are configured and exist', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_bilas' => 3]);
+
+    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertSee('Upcoming bilas');
+});

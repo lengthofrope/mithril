@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\FollowUpStatus;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AnalyticsWidget;
@@ -15,8 +16,10 @@ use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\User;
 use App\Services\DashboardStatsService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
@@ -36,10 +39,12 @@ class DashboardController extends Controller
      */
     public function index(Request $request, DashboardStatsService $statsService): View
     {
-        $userTz = $request->user()->getEffectiveTimezone();
+        $user = $request->user();
+        $userTz = $user->getEffectiveTimezone();
         $greeting = $this->resolveGreeting($userTz);
         $counters = $statsService->buildStats();
         $today = $this->buildTodaySection($userTz);
+        $upcoming = $this->buildUpcomingSection($userTz, $user);
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
         $isMicrosoftConnected = $request->user()->hasMicrosoftConnection();
@@ -66,6 +71,9 @@ class DashboardController extends Controller
             'todayTasks' => $today['tasks_due_today'],
             'todayFollowUps' => $today['overdue_follow_ups'],
             'todayBilas' => $today['bilas_today'],
+            'upcomingTasks' => $upcoming['tasks'],
+            'upcomingFollowUps' => $upcoming['follow_ups'],
+            'upcomingBilas' => $upcoming['bilas'],
             'dashboardWidgets' => $dashboardWidgets,
             'calendarEvents' => $calendarEvents,
             'isMicrosoftConnected' => $isMicrosoftConnected,
@@ -125,6 +133,51 @@ class DashboardController extends Controller
             'tasks_due_today' => $tasksDueToday,
             'overdue_follow_ups' => $overdueFollowUps,
             'bilas_today' => $bilasToday,
+        ];
+    }
+
+    /**
+     * Build the upcoming section with future items based on user preferences.
+     *
+     * @param string $timezone
+     * @param User $user
+     * @return array<string, Collection>
+     */
+    private function buildUpcomingSection(string $timezone, User $user): array
+    {
+        $todayDate = now($timezone)->toDateString();
+
+        $upcomingTasks = $user->dashboard_upcoming_tasks
+            ? Task::whereDate('deadline', '>', $todayDate)
+                ->whereNotIn('status', [TaskStatus::Done->value])
+                ->orderBy('deadline')
+                ->with(['teamMember', 'taskCategory'])
+                ->limit($user->dashboard_upcoming_tasks)
+                ->get()
+            : new Collection();
+
+        $upcomingFollowUps = $user->dashboard_upcoming_follow_ups
+            ? FollowUp::whereDate('follow_up_date', '>', $todayDate)
+                ->where('status', '!=', FollowUpStatus::Done->value)
+                ->with('teamMember')
+                ->orderBy('follow_up_date')
+                ->limit($user->dashboard_upcoming_follow_ups)
+                ->get()
+            : new Collection();
+
+        $upcomingBilas = $user->dashboard_upcoming_bilas
+            ? Bila::where('is_done', false)
+                ->whereDate('scheduled_date', '>', $todayDate)
+                ->with(['teamMember', 'prepItems'])
+                ->orderBy('scheduled_date')
+                ->limit($user->dashboard_upcoming_bilas)
+                ->get()
+            : new Collection();
+
+        return [
+            'tasks' => $upcomingTasks,
+            'follow_ups' => $upcomingFollowUps,
+            'bilas' => $upcomingBilas,
         ];
     }
 }
