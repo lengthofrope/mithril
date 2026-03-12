@@ -1,11 +1,3 @@
-@php
-    $avatarColors = [
-        'bg-blue-500', 'bg-purple-500', 'bg-green-500',
-        'bg-orange-500', 'bg-pink-500', 'bg-teal-500',
-        'bg-indigo-500', 'bg-rose-500',
-    ];
-@endphp
-
 <div
     x-data="emailActions(email.id, email.links ?? [], email.sender_is_team_member ?? false)"
     class="flex items-start gap-3 px-5 py-3 transition-colors"
@@ -24,7 +16,7 @@
         <template x-if="!email.sender_avatar_url">
             <span
                 class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
-                :class="[{{ json_encode($avatarColors) }}][email.id % {{ count($avatarColors) }}]"
+                :class="email.sender_avatar_color || 'bg-gray-500'"
                 x-text="email.sender_initials || '?'"
                 :title="email.sender_display_name || email.sender_name || 'Unknown sender'"
                 aria-hidden="true"

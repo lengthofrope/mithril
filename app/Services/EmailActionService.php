@@ -101,11 +101,22 @@ class EmailActionService
         return $this->getEmailToMemberMap()->get(strtolower($email->sender_email));
     }
 
+    private const AVATAR_COLORS = [
+        'bg-blue-500',
+        'bg-purple-500',
+        'bg-green-500',
+        'bg-orange-500',
+        'bg-pink-500',
+        'bg-teal-500',
+        'bg-indigo-500',
+        'bg-rose-500',
+    ];
+
     /**
      * Build sender display data for the frontend (avatar, initials, name).
      *
      * @param Email $email The email to build sender data for.
-     * @return array{sender_is_team_member: bool, sender_avatar_url: string|null, sender_initials: string, sender_display_name: string}
+     * @return array{sender_is_team_member: bool, sender_avatar_url: string|null, sender_initials: string, sender_display_name: string, sender_avatar_color: string}
      */
     public function buildSenderDisplayData(Email $email): array
     {
@@ -117,11 +128,15 @@ class EmailActionService
             ->take(2)
             ->implode('');
 
+        $colorKey = strtolower($email->sender_email ?? $displayName);
+        $colorIndex = abs(crc32($colorKey)) % count(self::AVATAR_COLORS);
+
         return [
             'sender_is_team_member' => $member !== null,
             'sender_avatar_url'     => $member?->avatar_path ? asset('storage/' . $member->avatar_path) : null,
             'sender_initials'       => $initials,
             'sender_display_name'   => $displayName,
+            'sender_avatar_color'   => self::AVATAR_COLORS[$colorIndex],
         ];
     }
 
