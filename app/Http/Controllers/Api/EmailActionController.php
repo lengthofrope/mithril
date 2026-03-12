@@ -54,10 +54,8 @@ class EmailActionController extends Controller
 
         $emails = $query->get()->map(fn (Email $email): array => array_merge(
             $email->toArray(),
-            [
-                'links'                => $email->emailLinks->toArray(),
-                'sender_is_team_member' => $this->service->senderIsTeamMember($email),
-            ],
+            ['links' => $email->emailLinks->toArray()],
+            $this->service->buildSenderDisplayData($email),
         ));
 
         return $this->successResponse($emails);

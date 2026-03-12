@@ -18,11 +18,70 @@ interface CategoryGroup {
 }
 
 /**
+ * A group of emails sharing the same date label (Today, Yesterday, etc.).
+ */
+interface DateGroup {
+    label: string;
+    emails: Email[];
+    defaultOpen: boolean;
+}
+
+/**
  * Get the CSRF token from the meta tag.
  */
 function getCSRFToken(): string {
     const meta = document.querySelector('meta[name="csrf-token"]');
     return meta?.getAttribute('content') ?? '';
+}
+
+/**
+ * Determine the date label for a given date string relative to today.
+ */
+function getDateLabel(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfToday.getDay() + (startOfToday.getDay() === 0 ? -6 : 1));
+
+    const emailDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    if (emailDate >= startOfToday) {
+        return 'Today';
+    }
+    if (emailDate >= startOfYesterday) {
+        return 'Yesterday';
+    }
+    if (emailDate >= startOfWeek) {
+        return 'This week';
+    }
+    return 'Older';
+}
+
+/**
+ * Group emails by date label, preserving received_at order within each group.
+ */
+function groupByDate(emails: Email[]): DateGroup[] {
+    const order = ['Today', 'Yesterday', 'This week', 'Older'];
+    const groups: Record<string, Email[]> = {};
+
+    for (const email of emails) {
+        const label = getDateLabel(email.received_at);
+        groups[label] ??= [];
+        groups[label].push(email);
+    }
+
+    return order
+        .filter((label) => groups[label]?.length)
+        .map((label) => ({
+            label,
+            emails: groups[label],
+            defaultOpen: label === 'Today' || label === 'Yesterday',
+        }));
 }
 
 /**
@@ -84,6 +143,13 @@ function emailPage(): Record<string, unknown> {
          */
         get categoryGroups(): CategoryGroup[] {
             return groupByCategory((this as unknown as { emails: Email[] }).emails);
+        },
+
+        /**
+         * Emails grouped by date label (Today, Yesterday, This week, Older).
+         */
+        get dateGroups(): DateGroup[] {
+            return groupByDate((this as unknown as { emails: Email[] }).emails);
         },
 
         /**
@@ -162,4 +228,4 @@ function emailPage(): Record<string, unknown> {
 }
 
 export { emailPage };
-export type { CategoryGroup };
+export type { CategoryGroup, DateGroup };

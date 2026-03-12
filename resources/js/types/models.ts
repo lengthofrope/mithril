@@ -295,6 +295,9 @@ interface Email {
     is_dismissed: boolean;
     links?: EmailLink[];
     sender_is_team_member?: boolean;
+    sender_avatar_url?: string | null;
+    sender_initials?: string;
+    sender_display_name?: string;
     created_at: string;
     updated_at: string;
 }

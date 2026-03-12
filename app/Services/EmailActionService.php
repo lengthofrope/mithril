@@ -8,6 +8,7 @@ use App\Models\Email;
 use App\Models\EmailLink;
 use App\Models\TeamMember;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * Handles the business logic for creating and linking resources to emails.
@@ -17,6 +18,13 @@ use Illuminate\Database\Eloquent\Model;
  */
 class EmailActionService
 {
+    /**
+     * Cached map of lowercase email → TeamMember for batch lookups.
+     *
+     * @var Collection<string, TeamMember>|null
+     */
+    private ?Collection $emailToMemberMap = null;
+
     /**
      * Resolve which team member matches the email sender.
      *
@@ -51,6 +59,70 @@ class EmailActionService
     public function senderIsTeamMember(Email $email): bool
     {
         return $this->resolveTeamMember($email) !== null;
+    }
+
+    /**
+     * Build the email-to-member lookup map on first use.
+     *
+     * @return Collection<string, TeamMember>
+     */
+    private function getEmailToMemberMap(): Collection
+    {
+        if ($this->emailToMemberMap !== null) {
+            return $this->emailToMemberMap;
+        }
+
+        $members = TeamMember::query()
+            ->select('id', 'name', 'avatar_path', 'email', 'microsoft_email')
+            ->get();
+
+        $this->emailToMemberMap = $members->flatMap(
+            fn (TeamMember $m): array => collect([
+                $m->email ? strtolower($m->email) : null,
+                $m->microsoft_email ? strtolower($m->microsoft_email) : null,
+            ])->filter()->mapWithKeys(fn (string $e): array => [$e => $m])->all()
+        );
+
+        return $this->emailToMemberMap;
+    }
+
+    /**
+     * Resolve the team member matching an email sender using the cached map.
+     *
+     * @param Email $email The email to resolve.
+     * @return TeamMember|null The matched team member.
+     */
+    public function resolveTeamMemberFromMap(Email $email): ?TeamMember
+    {
+        if ($email->sender_email === null) {
+            return null;
+        }
+
+        return $this->getEmailToMemberMap()->get(strtolower($email->sender_email));
+    }
+
+    /**
+     * Build sender display data for the frontend (avatar, initials, name).
+     *
+     * @param Email $email The email to build sender data for.
+     * @return array{sender_is_team_member: bool, sender_avatar_url: string|null, sender_initials: string, sender_display_name: string}
+     */
+    public function buildSenderDisplayData(Email $email): array
+    {
+        $member = $this->resolveTeamMemberFromMap($email);
+        $displayName = $member?->name ?? $email->sender_name ?? $email->sender_email ?? 'Unknown';
+
+        $initials = collect(explode(' ', $displayName))
+            ->map(fn (string $word): string => strtoupper(mb_substr($word, 0, 1)))
+            ->take(2)
+            ->implode('');
+
+        return [
+            'sender_is_team_member' => $member !== null,
+            'sender_avatar_url'     => $member?->avatar_path ? asset('storage/' . $member->avatar_path) : null,
+            'sender_initials'       => $initials,
+            'sender_display_name'   => $displayName,
+        ];
     }
 
     /**
