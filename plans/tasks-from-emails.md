@@ -29,7 +29,7 @@ The new menu order groups items logically with dash separators:
 Dashboard
 ---
 Calendar          (Microsoft connection required)
-Mail              (Microsoft connection required)
+E-mail            (Microsoft connection required)
 ---
 Tasks
 Follow-ups
@@ -42,7 +42,7 @@ Weekly Review
 Analytics
 ```
 
-When no Microsoft connection is active, Calendar and Mail are hidden and the two separators around them collapse into one — no double separator is shown.
+When no Microsoft connection is active, Calendar and E-mail are hidden and the two separators around them collapse into one — no double separator is shown.
 
 ### Read-Only Email Access
 
@@ -121,6 +121,8 @@ email_links
 ```
 
 **Why `ON DELETE SET NULL`:** When an email is pruned or removed by sync, the link record survives with `email_id = NULL`. The `email_subject` field preserves provenance so the resource can still show "Created from email: [subject]". Orphaned links (where the linked *resource* is deleted) are cleaned up by the pruning service.
+
+**Note:** This differs from `calendar_event_links`, which uses `ON DELETE CASCADE`. The SET NULL approach is an improvement — CalendarEventLinks should be migrated to SET NULL separately (out of scope for this plan).
 
 ### Modified Table: `users`
 
@@ -230,8 +232,11 @@ class SyncEmailsJob implements ShouldQueue
         // 3. Fetch messages from Graph API (GET /me/messages?$filter=...&$top=50&$orderby=receivedDateTime desc)
         //    Include $select=flag to get flag.dueDateTime
         // 4. Upsert into emails table (on microsoft_message_id)
-        // 5. Remove cached emails that no longer match the filter (links survive via SET NULL FK)
-        // 6. Update synced_at
+        // 5. Remove stale cached emails:
+        //    - Email no longer returned by Graph API filter
+        //    - AND email is NOT dismissed (dismissed emails are managed by the user, not sync)
+        //    - Links survive via SET NULL FK regardless
+        // 6. Update synced_at on all upserted records
     }
 }
 ```
@@ -404,7 +409,7 @@ Route::prefix('emails')->group(function () {
 Dashboard
 --- separator ---
 Calendar          ← conditional: Microsoft connection
-Mail              ← conditional: Microsoft connection (NEW)
+E-mail            ← conditional: Microsoft connection (NEW)
 --- separator ---
 Tasks
 Follow-ups
@@ -417,7 +422,7 @@ Weekly Review
 Analytics
 ```
 
-The separator support (dashes) requires either a new `'separator' => true` item type in the menu array, or grouping into multiple menu groups in `getMenuGroups()`. When no Microsoft connection is active, Calendar and Mail are hidden and the two separators around them must collapse into one — never render consecutive separators.
+Implement separators by adding a `'separator' => true` item type in the menu items array returned by `getMainNavItems()`. The Blade sidebar partial renders a visual divider (horizontal line with a leaf in the middle, matching the `elvish-divider-leaf` pattern used elsewhere in the app). Separators are purely visual — not collapsible. `getMenuGroups()` filters out separators that end up adjacent (e.g. when no Microsoft connection hides Calendar and E-mail) — never render consecutive separators or a separator as the first/last item.
 
 ---
 
@@ -428,8 +433,8 @@ The separator support (dashes) requires either a new `'separator' => true` item 
 Full-page view at `resources/views/pages/mail/index.blade.php`:
 
 ```
-Mail Page
-├── Header: "Mail" + sync status ("Last synced: 2 min ago") + manual refresh button
+E-mail Page
+├── Header: "E-mail" + sync status ("Last synced: 2 min ago") + manual refresh button
 ├── Source tabs: [All] [Flagged] [Categorized] [Unread] (based on active sources)
 ├── Search bar: filter by subject/sender (client-side on cached data)
 ├── Email list (full height, scrollable)
@@ -465,7 +470,7 @@ Compact widget on the dashboard, following the same card-style pattern as the ca
 <x-tl.email-flagged-widget :emails="$flaggedEmails" />
 
 Dashboard Email Widget
-├── Header: "Flagged Mail" (with mail icon)
+├── Header: "Flagged E-mail" (with mail icon)
 ├── Email list (compact, max 5 items, deadline emails first):
 │   ├── Email item (compact row):
 │   │   ├── Due date badge (if set — color: overdue=red, today=amber, upcoming=default)
@@ -483,7 +488,7 @@ Dashboard Email Widget
 
 ### Settings: Email Sources
 
-On the settings page, under the Microsoft section:
+On the settings page, under the Microsoft section. All toggles and inputs auto-save via the existing `PATCH /settings` endpoint (same mechanism as `dashboard_upcoming_tasks` and other user preferences):
 
 ```
 Email Integration
@@ -575,6 +580,29 @@ type EmailImportance = 'low' | 'normal' | 'high';
 
 ## Implementation Phases
 
+### Phase 0: Fix orphaned resource links (backend agent) — Bug Fix
+
+**Problem:** When a Task, FollowUp, Note, or Bila is deleted, any `CalendarEventLink` (and future `EmailLink`) records pointing to it become orphans. The frontend then renders broken 404 links on the calendar event. Currently only `DataPruningService` cleans these up reactively — but users see stale links until pruning runs.
+
+**Solution:** Create a `HasResourceLinks` trait that hooks into the Eloquent `deleting` event to clean up all polymorphic link records (`CalendarEventLink` and `EmailLink`) before the resource is deleted. Apply the trait to Task, FollowUp, Note, and Bila models.
+
+**Files:**
+- `app/Models/Traits/HasResourceLinks.php` (new)
+- `app/Models/Task.php` (update: use HasResourceLinks)
+- `app/Models/FollowUp.php` (update: use HasResourceLinks)
+- `app/Models/Note.php` (update: use HasResourceLinks)
+- `app/Models/Bila.php` (update: use HasResourceLinks)
+
+**Tests (TDD — write first):**
+- Deleting a Task removes its CalendarEventLinks
+- Deleting a FollowUp removes its CalendarEventLinks
+- Deleting a Note removes its CalendarEventLinks
+- Deleting a Bila removes its CalendarEventLinks
+- Deleting a resource with no links does not error
+- Deleting a resource with EmailLinks removes them (after Phase 1)
+
+**Depends on:** nothing
+
 ### Phase 1: Data Layer (backend agent)
 
 **Files:**
@@ -632,7 +660,9 @@ type EmailImportance = 'low' | 'normal' | 'high';
 - `normalizeMessage()`: maps Graph fields correctly
 - `normalizeMessage()`: extracts `flag_due_date` from `flag.dueDateTime`
 - `syncEmails()`: upserts new emails, updates existing, removes stale
-- `syncEmails()`: does not remove dismissed emails that have links
+- `syncEmails()`: does not remove dismissed emails (regardless of whether they have links)
+- `syncEmails()`: removes non-dismissed emails that are no longer returned by Graph API
+- `syncEmails()`: links survive via SET NULL when stale emails are removed
 - Job dispatches correctly from scheduler command
 
 **Depends on:** Phase 2
@@ -685,14 +715,14 @@ type EmailImportance = 'low' | 'normal' | 'high';
 - `app/Http/Controllers/Web/EmailPageController.php` (new)
 - `resources/views/pages/mail/index.blade.php` (new)
 - `routes/web.php` (update: add `/mail` route)
-- `app/Helpers/MenuHelper.php` (update: new menu order + Mail item + separators)
+- `app/Helpers/MenuHelper.php` (update: new menu order + E-mail item + separators)
 
 **Tests (TDD — write first):**
 - Mail page returns 200 for authenticated user with Microsoft connection
 - Mail page returns 200 for user without Microsoft connection (shows "Connect Office 365" prompt)
 - MenuHelper produces correct menu order with separators
 - MenuHelper collapses separators when no Microsoft connection (no double dashes)
-- Mail menu item only visible with Microsoft connection
+- E-mail menu item only visible with Microsoft connection
 
 **Depends on:** Phase 1
 
@@ -751,6 +781,7 @@ type EmailImportance = 'low' | 'normal' | 'high';
 
 | Phase | Agent | Owns |
 |-------|-------|------|
+| 0 | backend | HasResourceLinks trait, model updates (bug fix) |
 | 1 | backend | Migrations, models, enums, factories |
 | 2 | backend | Graph service, config |
 | 3 | backend | Sync service, job, command |
@@ -781,7 +812,7 @@ Extend the existing `DataPruningService` to handle email and calendar cleanup. T
 | **Stale emails no longer in inbox** | `synced_at` older than 30 days (safety net for emails sync missed) | Covers edge cases where sync misses cleanup (e.g., source toggle changes between syncs). Links survive via SET NULL FK. |
 | **Orphaned EmailLinks** | `EmailLink` where `email_id IS NULL` AND the linked resource no longer exists | Both the source email and the created resource are gone — the link serves no purpose. |
 | **Old calendar events** | `CalendarEvent` where `start_at` is older than retention period | Currently these accumulate forever. Links survive via their existing SET NULL / orphan cleanup. |
-| **Orphaned CalendarEventLinks** | Already handled — no change needed. | Existing behavior in `DataPruningService`. |
+| **Orphaned CalendarEventLinks** | Already handled — no change needed. | Existing behavior in `DataPruningService`. Now a safety net — Phase 0's `HasResourceLinks` trait handles the primary cleanup on resource deletion. |
 
 ### Important: Resources Always Survive
 
@@ -823,6 +854,7 @@ The `PruneResult` DTO should be extended with additional counters (`emailsDelete
 | Flagged email without due date | Shown on both mail page and dashboard widget. On dashboard, sorted after emails with deadlines. No due date badge displayed. |
 | Bila action for non-team-member sender | Button greyed out with tooltip "Sender is not a team member". API returns 422 if called directly. |
 | Email sender matches multiple team members | First match wins (same email should not belong to multiple members). |
+| Linked resource (task/follow-up/note/bila) deleted | `HasResourceLinks` trait cleans up all CalendarEventLinks and EmailLinks on `deleting` event. No orphaned links remain. (Bug fix — Phase 0) |
 
 ---
 
