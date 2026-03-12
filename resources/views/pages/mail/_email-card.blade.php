@@ -1,4 +1,7 @@
-<div class="rounded-xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
+<div
+    x-data="emailActions(email.id, email.links ?? [], email.sender_is_team_member ?? false)"
+    class="rounded-xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800"
+>
     <div class="flex items-start justify-between gap-4">
         <div class="min-w-0 flex-1">
             {{-- Subject + importance --}}
@@ -35,18 +38,6 @@
                     <span class="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[0.625rem] font-medium text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400" x-text="cat"></span>
                 </template>
             </div>
-
-            {{-- Linked resource badges --}}
-            <div x-show="email._links.length > 0" class="mt-2 flex flex-wrap gap-1">
-                <template x-for="link in email._links" :key="link.id">
-                    <a :href="link.url"
-                        class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[0.625rem] font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-900/30 dark:text-brand-400 dark:hover:bg-brand-900/50">
-                        <span x-text="link.type" class="font-bold"></span>
-                        <span x-text="link.label"></span>
-                        <button @click.prevent="unlinkResource(email.id, link.id)" class="ml-0.5 text-brand-400 hover:text-red-500" title="Unlink" aria-label="Unlink resource">&times;</button>
-                    </a>
-                </template>
-            </div>
         </div>
 
         {{-- Action buttons --}}
@@ -58,31 +49,11 @@
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             </a>
 
-            {{-- Create resource dropdown --}}
-            <div class="relative">
-                <button @click="email._menuOpen = !email._menuOpen"
-                    class="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                    title="Create from email" aria-label="Create from email">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
-
-                <div x-show="email._menuOpen"
-                    @click.outside="email._menuOpen = false"
-                    x-transition
-                    x-cloak
-                    class="absolute right-0 z-10 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                    <button @click="createResource(email.id, 'task')" class="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">Task</button>
-                    <button @click="createResource(email.id, 'follow-up')" class="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">Follow-up</button>
-                    <button @click="createResource(email.id, 'note')" class="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">Note</button>
-                    <button @click="createResource(email.id, 'bila')"
-                        :disabled="!email.sender_is_team_member"
-                        :class="email.sender_is_team_member ? 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700' : 'text-gray-300 cursor-not-allowed dark:text-gray-600'"
-                        class="flex w-full items-center px-3 py-2 text-sm">Bila</button>
-                </div>
-            </div>
+            {{-- Actions dropdown (create resource, linked items) --}}
+            <x-tl.email-actions />
 
             {{-- Dismiss --}}
-            <button @click="dismissEmail(email.id)"
+            <button @click="$dispatch('dismiss-email', { emailId: email.id })"
                 class="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700 dark:hover:text-red-400"
                 title="Dismiss" aria-label="Dismiss email">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

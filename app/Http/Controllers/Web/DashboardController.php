@@ -62,6 +62,7 @@ class DashboardController extends Controller
 
         $flaggedEmails = $isMicrosoftConnected
             ? Email::query()
+                ->with('emailLinks')
                 ->where('is_flagged', true)
                 ->where('is_dismissed', false)
                 ->orderByRaw('flag_due_date IS NULL, flag_due_date ASC')

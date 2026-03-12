@@ -43,6 +43,7 @@ class EmailActionController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Email::query()
+            ->with('emailLinks')
             ->where('is_dismissed', false)
             ->orderByDesc('received_at');
 
@@ -53,7 +54,10 @@ class EmailActionController extends Controller
 
         $emails = $query->get()->map(fn (Email $email): array => array_merge(
             $email->toArray(),
-            ['sender_is_team_member' => $this->service->senderIsTeamMember($email)],
+            [
+                'links'                => $email->emailLinks->toArray(),
+                'sender_is_team_member' => $this->service->senderIsTeamMember($email),
+            ],
         ));
 
         return $this->successResponse($emails);

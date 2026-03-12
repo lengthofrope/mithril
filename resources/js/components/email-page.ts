@@ -1,23 +1,4 @@
-import type { Email, EmailLink } from '../types/models';
-
-/**
- * Data shape for a linked resource badge displayed in the UI.
- */
-interface LinkBadge {
-    id: number;
-    type: string;
-    label: string;
-    url: string;
-}
-
-/**
- * Lookup map entry for a linkable model type.
- */
-interface LinkTypeInfo {
-    label: string;
-    badge: string;
-    urlPrefix: string;
-}
+import type { Email } from '../types/models';
 
 /**
  * Standard API response shape.
@@ -33,28 +14,7 @@ interface ApiResponse<T = unknown> {
  */
 interface CategoryGroup {
     name: string;
-    emails: EmailWithUI[];
-}
-
-const LINK_TYPE_MAP: Record<string, LinkTypeInfo> = {
-    'App\\Models\\Bila': { label: 'Bila', badge: 'B', urlPrefix: '/bilas/' },
-    'App\\Models\\Task': { label: 'Task', badge: 'T', urlPrefix: '/tasks/' },
-    'App\\Models\\FollowUp': { label: 'Follow-up', badge: 'F', urlPrefix: '/follow-ups/' },
-    'App\\Models\\Note': { label: 'Note', badge: 'N', urlPrefix: '/notes/' },
-};
-
-/**
- * Map an EmailLink to a display-friendly badge object.
- */
-function mapLinkToBadge(link: EmailLink): LinkBadge {
-    const info = LINK_TYPE_MAP[link.linkable_type] ?? { label: 'Unknown', badge: '?', urlPrefix: '#' };
-
-    return {
-        id: link.id,
-        type: info.badge,
-        label: info.label,
-        url: info.urlPrefix !== '#' ? `${info.urlPrefix}${link.linkable_id}` : '#',
-    };
+    emails: Email[];
 }
 
 /**
@@ -66,22 +26,13 @@ function getCSRFToken(): string {
 }
 
 /**
- * Extended email with UI-specific properties.
- */
-interface EmailWithUI extends Email {
-    _links: LinkBadge[];
-    _menuOpen: boolean;
-    _isLoading: boolean;
-}
-
-/**
  * Group emails by their Outlook categories, sorted by received_at within each group.
  *
  * Emails with multiple categories appear in each matching group.
  * Emails without categories are placed in an "Uncategorized" group.
  */
-function groupByCategory(emails: EmailWithUI[]): CategoryGroup[] {
-    const groups: Record<string, EmailWithUI[]> = {};
+function groupByCategory(emails: Email[]): CategoryGroup[] {
+    const groups: Record<string, Email[]> = {};
 
     for (const email of emails) {
         const categories = (email.categories ?? []) as string[];
@@ -112,11 +63,11 @@ function groupByCategory(emails: EmailWithUI[]): CategoryGroup[] {
 }
 
 /**
- * Alpine.js component for the mail page — lists, filters, and acts on synced emails.
+ * Alpine.js component for the mail page — lists, filters, and dismisses synced emails.
  */
 function emailPage(): Record<string, unknown> {
     return {
-        emails: [] as EmailWithUI[],
+        emails: [] as Email[],
         sourceFilter: 'all',
         isLoading: true,
         errorMessage: '',
@@ -132,20 +83,24 @@ function emailPage(): Record<string, unknown> {
          * Emails grouped by Outlook category, for the categorized view.
          */
         get categoryGroups(): CategoryGroup[] {
-            return groupByCategory((this as unknown as { emails: EmailWithUI[] }).emails);
+            return groupByCategory((this as unknown as { emails: Email[] }).emails);
         },
 
         /**
-         * Fetch emails on component init.
+         * Fetch emails on component init and listen for dismiss events from child components.
          */
-        async init(this: { emails: EmailWithUI[]; sourceFilter: string; isLoading: boolean; errorMessage: string; fetchEmails: () => Promise<void> }): Promise<void> {
+        async init(this: { emails: Email[]; sourceFilter: string; isLoading: boolean; errorMessage: string; fetchEmails: () => Promise<void>; dismissEmail: (emailId: number) => Promise<void>; $el: HTMLElement }): Promise<void> {
+            this.$el.addEventListener('dismiss-email', ((event: CustomEvent<{ emailId: number }>) => {
+                this.dismissEmail(event.detail.emailId);
+            }) as EventListener);
+
             await this.fetchEmails();
         },
 
         /**
          * Fetch emails from the API with the current source filter.
          */
-        async fetchEmails(this: { emails: EmailWithUI[]; sourceFilter: string; isLoading: boolean; errorMessage: string }): Promise<void> {
+        async fetchEmails(this: { emails: Email[]; sourceFilter: string; isLoading: boolean; errorMessage: string }): Promise<void> {
             this.isLoading = true;
             this.errorMessage = '';
 
@@ -162,12 +117,7 @@ function emailPage(): Record<string, unknown> {
                 const json = await response.json() as ApiResponse<Email[]>;
 
                 if (json.success && json.data) {
-                    this.emails = json.data.map((email: Email): EmailWithUI => ({
-                        ...email,
-                        _links: (email.links ?? []).map(mapLinkToBadge),
-                        _menuOpen: false,
-                        _isLoading: false,
-                    }));
+                    this.emails = json.data;
                 } else {
                     this.errorMessage = json.message ?? 'Failed to load emails.';
                 }
@@ -187,45 +137,9 @@ function emailPage(): Record<string, unknown> {
         },
 
         /**
-         * Create a resource from an email.
-         */
-        async createResource(this: { emails: EmailWithUI[] }, emailId: number, type: string): Promise<void> {
-            const email = this.emails.find((e: EmailWithUI) => e.id === emailId);
-            if (!email || email._isLoading) return;
-
-            email._isLoading = true;
-            email._menuOpen = false;
-
-            try {
-                const response = await fetch(`/api/v1/emails/${emailId}/create/${type}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCSRFToken(),
-                        'Accept': 'application/json',
-                    },
-                });
-
-                const json = await response.json() as ApiResponse<{ link?: EmailLink }>;
-
-                if (json.success && json.data?.link) {
-                    const badge = mapLinkToBadge(json.data.link);
-                    email._links.push(badge);
-                }
-            } finally {
-                email._isLoading = false;
-            }
-        },
-
-        /**
          * Dismiss an email (hide from the list).
          */
-        async dismissEmail(this: { emails: EmailWithUI[] }, emailId: number): Promise<void> {
-            const email = this.emails.find((e: EmailWithUI) => e.id === emailId);
-            if (!email || email._isLoading) return;
-
-            email._isLoading = true;
-
+        async dismissEmail(this: { emails: Email[] }, emailId: number): Promise<void> {
             try {
                 const response = await fetch(`/api/v1/emails/${emailId}/dismiss`, {
                     method: 'POST',
@@ -238,42 +152,14 @@ function emailPage(): Record<string, unknown> {
                 const json = await response.json() as ApiResponse;
 
                 if (json.success) {
-                    this.emails = this.emails.filter((e: EmailWithUI) => e.id !== emailId);
+                    this.emails = this.emails.filter((e: Email) => e.id !== emailId);
                 }
-            } finally {
-                if (email) email._isLoading = false;
-            }
-        },
-
-        /**
-         * Remove a link between an email and a resource.
-         */
-        async unlinkResource(this: { emails: EmailWithUI[] }, emailId: number, linkId: number): Promise<void> {
-            const email = this.emails.find((e: EmailWithUI) => e.id === emailId);
-            if (!email || email._isLoading) return;
-
-            email._isLoading = true;
-
-            try {
-                const response = await fetch(`/api/v1/emails/${emailId}/links/${linkId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': getCSRFToken(),
-                        'Accept': 'application/json',
-                    },
-                });
-
-                const json = await response.json() as ApiResponse;
-
-                if (json.success) {
-                    email._links = email._links.filter((link: LinkBadge) => link.id !== linkId);
-                }
-            } finally {
-                email._isLoading = false;
+            } catch {
+                // Silently fail — email stays in list
             }
         },
     };
 }
 
 export { emailPage };
-export type { LinkBadge, EmailWithUI, CategoryGroup };
+export type { CategoryGroup };
