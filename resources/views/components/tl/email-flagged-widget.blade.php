@@ -52,6 +52,9 @@
                             </span>
                         @endif
                     </p>
+
+                    {{-- Linked resource pills --}}
+                    <x-tl.email-pills />
                 </div>
 
                 <div class="flex shrink-0 items-center gap-1">

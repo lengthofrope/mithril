@@ -38,6 +38,9 @@
                     <span class="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[0.625rem] font-medium text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400" x-text="cat"></span>
                 </template>
             </div>
+
+            {{-- Linked resource pills --}}
+            <x-tl.email-pills />
         </div>
 
         {{-- Action buttons --}}
