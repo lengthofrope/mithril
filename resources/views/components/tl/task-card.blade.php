@@ -1,4 +1,4 @@
-@props(['task', 'hideWhenDone' => false])
+@props(['task', 'hideWhenDone' => false, 'draggable' => true])
 
 @php
     $statusValue = $task->status instanceof \BackedEnum ? $task->status->value : $task->status;
@@ -15,19 +15,21 @@
     @endif
     class="group relative flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
 >
-    {{-- Drag handle --}}
-    <button
-        type="button"
-        class="drag-handle mt-0.5 shrink-0 cursor-grab touch-none text-gray-300 transition hover:text-gray-500 active:cursor-grabbing dark:text-gray-600 dark:hover:text-gray-400"
-        aria-label="Drag to reorder"
-        tabindex="-1"
-    >
-        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
-            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
-            <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
-        </svg>
-    </button>
+    @if($draggable)
+        {{-- Drag handle --}}
+        <button
+            type="button"
+            class="drag-handle mt-0.5 shrink-0 cursor-grab touch-none text-gray-300 transition hover:text-gray-500 active:cursor-grabbing dark:text-gray-600 dark:hover:text-gray-400"
+            aria-label="Drag to reorder"
+            tabindex="-1"
+        >
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
+                <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+            </svg>
+        </button>
+    @endif
 
     <div class="min-w-0 flex-1">
         @if($task->is_private)

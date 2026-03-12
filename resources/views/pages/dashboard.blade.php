@@ -118,7 +118,7 @@
             <div class="divide-y divide-gray-100 dark:divide-gray-800">
                 @forelse($todayTasks as $task)
                     <div class="px-5 py-3">
-                        <x-tl.task-card :task="$task" />
+                        <x-tl.task-card :task="$task" :draggable="false" />
                     </div>
                 @empty
                     @if($upcomingTasks->isEmpty())
@@ -139,7 +139,7 @@
 
                     @foreach($upcomingTasks as $task)
                         <div class="px-5 py-3">
-                            <x-tl.task-card :task="$task" />
+                            <x-tl.task-card :task="$task" :draggable="false" />
                         </div>
                     @endforeach
                 @endif
