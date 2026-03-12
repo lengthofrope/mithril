@@ -1,5 +1,9 @@
 # Tasks from E-mails — Implementation Plan
 
+**Created:** 2026-03-12
+**Status:** Approved
+**Author:** Bas de Kort
+
 ## Summary
 
 Add a dedicated **Mail page** to Mithril that surfaces flagged, categorized, or unread Microsoft Outlook emails as actionable items. Users can view a curated email inbox, convert any email into a task, follow-up, note, or bila with a single click, pre-filling fields from the email and linking back to the original. A **dashboard widget** shows flagged emails with deadlines for quick triage. This extends the existing Microsoft Graph integration with the `Mail.Read` permission scope.
