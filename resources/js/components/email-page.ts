@@ -27,14 +27,6 @@ interface DateGroup {
 }
 
 /**
- * Get the CSRF token from the meta tag.
- */
-function getCSRFToken(): string {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta?.getAttribute('content') ?? '';
-}
-
-/**
  * Determine the date label for a given date string relative to today.
  */
 function getDateLabel(dateString: string): string {
@@ -122,7 +114,7 @@ function groupByCategory(emails: Email[]): CategoryGroup[] {
 }
 
 /**
- * Alpine.js component for the mail page — lists, filters, and dismisses synced emails.
+ * Alpine.js component for the mail page — lists and filters synced emails.
  */
 function emailPage(): Record<string, unknown> {
     return {
@@ -153,13 +145,9 @@ function emailPage(): Record<string, unknown> {
         },
 
         /**
-         * Fetch emails on component init and listen for dismiss events from child components.
+         * Fetch emails on component init.
          */
-        async init(this: { emails: Email[]; sourceFilter: string; isLoading: boolean; errorMessage: string; fetchEmails: () => Promise<void>; dismissEmail: (emailId: number) => Promise<void>; $el: HTMLElement }): Promise<void> {
-            this.$el.addEventListener('dismiss-email', ((event: CustomEvent<{ emailId: number }>) => {
-                this.dismissEmail(event.detail.emailId);
-            }) as EventListener);
-
+        async init(this: { emails: Email[]; isLoading: boolean; fetchEmails: () => Promise<void> }): Promise<void> {
             await this.fetchEmails();
         },
 
@@ -202,28 +190,6 @@ function emailPage(): Record<string, unknown> {
             await this.fetchEmails();
         },
 
-        /**
-         * Dismiss an email (hide from the list).
-         */
-        async dismissEmail(this: { emails: Email[] }, emailId: number): Promise<void> {
-            try {
-                const response = await fetch(`/api/v1/emails/${emailId}/dismiss`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': getCSRFToken(),
-                        'Accept': 'application/json',
-                    },
-                });
-
-                const json = await response.json() as ApiResponse;
-
-                if (json.success) {
-                    this.emails = this.emails.filter((e: Email) => e.id !== emailId);
-                }
-            } catch {
-                // Silently fail — email stays in list
-            }
-        },
     };
 }
 

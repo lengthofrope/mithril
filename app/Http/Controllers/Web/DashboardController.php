@@ -64,7 +64,6 @@ class DashboardController extends Controller
             ? Email::query()
                 ->with('emailLinks')
                 ->where('is_flagged', true)
-                ->where('is_dismissed', false)
                 ->orderByRaw('flag_due_date IS NULL, flag_due_date ASC')
                 ->get()
             : null;

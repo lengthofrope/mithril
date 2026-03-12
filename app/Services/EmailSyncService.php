@@ -118,7 +118,6 @@ class EmailSyncService
 
         Email::withoutGlobalScopes()
             ->where('user_id', $user->id)
-            ->where('is_dismissed', false)
             ->whereNotIn('microsoft_message_id', $syncedIds)
             ->delete();
     }

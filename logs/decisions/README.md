@@ -17,3 +17,4 @@
 | 013 | backend, frontend, tasks, recurrence, observer, events | Recurring tasks via copy-on-complete with model observer event dispatch | Recurring Tasks | Accepted | 2026-03-11 |
 | 014 | backend, frontend, dashboard, settings, user-preferences | Configurable dashboard upcoming items | Dashboard | Accepted | 2026-03-12 |
 | 015 | backend, microsoft, email, sync, graph-api | Email sync fetches all inbox emails with per-message source tagging | Email Integration | Accepted | 2026-03-12 |
+| 016 | backend, frontend, email, ux, microsoft | Remove email dismiss functionality | Email Integration | Accepted | 2026-03-12 |

@@ -193,33 +193,6 @@ describe('EmailSyncService::syncEmails()', function (): void {
         expect(Email::withoutGlobalScopes()->where('user_id', $user->id)->count())->toBe(0);
     });
 
-    it('does not remove dismissed emails regardless of API response', function (): void {
-        $user = User::factory()->create([
-            'microsoft_id'               => 'ms-id-123',
-            'microsoft_access_token'     => 'valid-token',
-            'microsoft_refresh_token'    => 'valid-refresh',
-            'microsoft_token_expires_at' => now()->addHour(),
-        ]);
-
-        Email::factory()->create([
-            'user_id'              => $user->id,
-            'microsoft_message_id' => 'AAMkDISMISSED',
-            'is_dismissed'         => true,
-        ]);
-
-        $graphService = Mockery::mock(MicrosoftGraphService::class);
-        $graphService->shouldReceive('getMyMessages')
-            ->once()
-            ->andReturn(collect([]));
-
-        app()->instance(MicrosoftGraphService::class, $graphService);
-
-        $service = app(EmailSyncService::class);
-        $service->syncEmails($user);
-
-        expect(Email::withoutGlobalScopes()->where('user_id', $user->id)->count())->toBe(1);
-    });
-
     it('preserves links via SET NULL when stale emails are removed', function (): void {
         $user = User::factory()->create([
             'microsoft_id'               => 'ms-id-123',

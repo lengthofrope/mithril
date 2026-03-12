@@ -50,9 +50,6 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
                 ->name('create')
                 ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
 
-            Route::post('dismiss', [EmailActionController::class, 'dismiss'])->name('dismiss');
-            Route::post('undismiss', [EmailActionController::class, 'undismiss'])->name('undismiss');
-
             Route::delete('links/{emailLink}', [EmailActionController::class, 'unlink'])->name('unlink');
         });
     });

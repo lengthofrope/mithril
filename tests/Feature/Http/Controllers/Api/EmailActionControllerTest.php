@@ -212,34 +212,6 @@ describe('POST /api/v1/emails/{email}/create/{type}', function (): void {
     });
 });
 
-// ─── Dismiss / Undismiss ─────────────────────────────────────────────────────
-
-describe('POST /api/v1/emails/{email}/dismiss', function (): void {
-    it('sets is_dismissed to true', function (): void {
-        $user  = User::factory()->create();
-        $email = Email::factory()->create(['user_id' => $user->id, 'is_dismissed' => false]);
-
-        $this->actingAs($user)
-            ->postJson("/api/v1/emails/{$email->id}/dismiss")
-            ->assertOk();
-
-        expect($email->fresh()->is_dismissed)->toBeTrue();
-    });
-});
-
-describe('POST /api/v1/emails/{email}/undismiss', function (): void {
-    it('sets is_dismissed to false', function (): void {
-        $user  = User::factory()->create();
-        $email = Email::factory()->create(['user_id' => $user->id, 'is_dismissed' => true]);
-
-        $this->actingAs($user)
-            ->postJson("/api/v1/emails/{$email->id}/undismiss")
-            ->assertOk();
-
-        expect($email->fresh()->is_dismissed)->toBeFalse();
-    });
-});
-
 // ─── Unlink ──────────────────────────────────────────────────────────────────
 
 describe('DELETE /api/v1/emails/{email}/links/{emailLink}', function (): void {

@@ -292,7 +292,6 @@ interface Email {
     categories: string[];
     sources: string[];
     web_link: string | null;
-    is_dismissed: boolean;
     links?: EmailLink[];
     sender_is_team_member?: boolean;
     sender_avatar_url?: string | null;

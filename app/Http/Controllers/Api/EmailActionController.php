@@ -44,7 +44,6 @@ class EmailActionController extends Controller
     {
         $query = Email::query()
             ->with('emailLinks')
-            ->where('is_dismissed', false)
             ->orderByDesc('received_at');
 
         if ($request->has('source') && $request->input('source') !== 'all') {
@@ -72,7 +71,6 @@ class EmailActionController extends Controller
     {
         $emails = Email::query()
             ->where('is_flagged', true)
-            ->where('is_dismissed', false)
             ->orderByRaw('flag_due_date IS NULL, flag_due_date ASC')
             ->get()
             ->map(fn (Email $email): array => array_merge(
@@ -154,36 +152,6 @@ class EmailActionController extends Controller
             'resource' => $resource->fresh(),
             'link'     => $link,
         ], 'Created successfully.', 201);
-    }
-
-    /**
-     * Mark an email as dismissed in Mithril.
-     *
-     * POST /api/v1/emails/{email}/dismiss
-     *
-     * @param Email $email
-     * @return JsonResponse
-     */
-    public function dismiss(Email $email): JsonResponse
-    {
-        $email->update(['is_dismissed' => true]);
-
-        return $this->successResponse(null, 'Email dismissed.');
-    }
-
-    /**
-     * Restore a dismissed email back to the active list.
-     *
-     * POST /api/v1/emails/{email}/undismiss
-     *
-     * @param Email $email
-     * @return JsonResponse
-     */
-    public function undismiss(Email $email): JsonResponse
-    {
-        $email->update(['is_dismissed' => false]);
-
-        return $this->successResponse(null, 'Email restored.');
     }
 
     /**

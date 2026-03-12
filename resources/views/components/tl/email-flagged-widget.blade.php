@@ -20,6 +20,13 @@
             'created_at'    => $link->created_at?->toIso8601String(),
         ])->toJson();
     };
+
+    /**
+     * Pre-compute sender display data for each email (avatar, initials, color).
+     */
+    $senderData = $emails->mapWithKeys(
+        fn (\App\Models\Email $email) => [$email->id => $actionService->buildSenderDisplayData($email)]
+    );
 @endphp
 
 <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -35,16 +42,41 @@
 
     <div class="divide-y divide-gray-100 dark:divide-gray-800">
         @forelse($emails as $email)
+            @php
+                $sender = $senderData[$email->id];
+            @endphp
+
             <div
-                x-data="emailActions({{ $email->id }}, {{ $linksJson($email) }}, {{ $actionService->senderIsTeamMember($email) ? 'true' : 'false' }})"
-                class="flex items-start justify-between gap-3 px-5 py-3"
+                x-data="emailActions({{ $email->id }}, {{ $linksJson($email) }}, {{ $sender['sender_is_team_member'] ? 'true' : 'false' }})"
+                class="flex items-start gap-3 px-5 py-3"
             >
+                {{-- Sender avatar --}}
+                <div class="mt-0.5 shrink-0">
+                    @if($sender['sender_avatar_url'])
+                        <img
+                            src="{{ $sender['sender_avatar_url'] }}"
+                            alt="{{ $sender['sender_display_name'] }}"
+                            class="h-8 w-8 rounded-full object-cover"
+                        >
+                    @else
+                        <span
+                            class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white {{ $sender['sender_avatar_color'] }}"
+                            title="{{ $sender['sender_display_name'] }}"
+                            aria-hidden="true"
+                        >{{ $sender['sender_initials'] }}</span>
+                    @endif
+                </div>
+
+                {{-- Content --}}
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                        {{ $email->subject }}
-                    </p>
+                    <div class="flex items-center gap-1.5">
+                        <svg class="h-3.5 w-3.5 shrink-0 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 24V1h16l-5 8.5L20 18H6v6z"/></svg>
+                        <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
+                            {{ $email->subject }}
+                        </p>
+                    </div>
                     <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                        {{ $email->sender_name ?? $email->sender_email ?? 'Unknown' }}
+                        {{ $sender['sender_display_name'] }}
                         @if($email->flag_due_date)
                             <span class="mx-1">&middot;</span>
                             <span class="{{ $email->flag_due_date->isPast() ? 'text-red-500' : 'text-amber-600 dark:text-amber-400' }}">
@@ -57,12 +89,13 @@
                     <x-tl.email-pills />
                 </div>
 
-                <div class="flex shrink-0 items-center gap-1">
+                {{-- Actions --}}
+                <div class="flex shrink-0 items-center gap-0.5">
                     @if($email->web_link)
                         <a href="{{ $email->web_link }}" target="_blank" rel="noopener noreferrer"
-                            class="shrink-0 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                            class="flex h-6 w-6 items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                             title="Open in Outlook" aria-label="Open in Outlook">
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         </a>
                     @endif
 

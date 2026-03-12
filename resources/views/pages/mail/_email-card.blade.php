@@ -1,7 +1,6 @@
 <div
     x-data="emailActions(email.id, email.links ?? [], email.sender_is_team_member ?? false)"
-    class="flex items-start gap-3 px-5 py-3 transition-colors"
-    :class="email.is_read ? 'opacity-60 hover:opacity-100' : ''"
+    class="flex items-start gap-3 px-5 py-3"
     role="row"
 >
     {{-- Sender avatar --}}
@@ -82,12 +81,6 @@
         {{-- Actions dropdown --}}
         <x-tl.email-actions />
 
-        {{-- Dismiss --}}
-        <button @click="$dispatch('dismiss-email', { emailId: email.id })"
-            class="flex h-6 w-6 items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700 dark:hover:text-red-400"
-            title="Dismiss" aria-label="Dismiss email">
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
     </div>
 
     {{-- Flagged/importance indicator dot --}}
