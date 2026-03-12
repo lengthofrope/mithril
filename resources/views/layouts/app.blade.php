@@ -58,7 +58,6 @@
                 sidebarCollapsed: {{ auth()->user()->sidebar_collapsed ? 'true' : 'false' }},
                 isExpanded: window.innerWidth >= 1280 && !{{ auth()->user()->sidebar_collapsed ? 'true' : 'false' }},
                 isMobileOpen: false,
-                isHovered: false,
 
                 toggleExpanded() {
                     this.isExpanded = !this.isExpanded;
@@ -72,12 +71,6 @@
 
                 setMobileOpen(val) {
                     this.isMobileOpen = val;
-                },
-
-                setHovered(val) {
-                    if (window.innerWidth >= 1280 && !this.isExpanded) {
-                        this.isHovered = val;
-                    }
                 },
 
                 persistCollapsed(collapsed) {
@@ -144,8 +137,8 @@
         <div class="flex-1"
             x-init="requestAnimationFrame(() => $el.classList.add('transition-all', 'duration-300', 'ease-in-out'))"
             :class="{
-                'xl:ml-[290px]': $store.sidebar.isExpanded || $store.sidebar.isHovered,
-                'xl:ml-[90px]': !$store.sidebar.isExpanded && !$store.sidebar.isHovered,
+                'xl:ml-[290px]': $store.sidebar.isExpanded,
+                'xl:ml-[90px]': !$store.sidebar.isExpanded,
                 'ml-0': $store.sidebar.isMobileOpen
             }">
             <!-- app header start -->
