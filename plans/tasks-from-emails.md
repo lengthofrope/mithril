@@ -2,11 +2,47 @@
 
 ## Summary
 
-Surface flagged, categorized, or unread Microsoft Outlook emails as a task source on the dashboard. Users can view a curated email inbox within Mithril and convert any email into a task (or follow-up/note) with a single click, pre-filling the task title from the email subject and linking back to the original email. This extends the existing Microsoft Graph integration with the `Mail.Read` permission scope.
+Add a dedicated **Mail page** to Mithril that surfaces flagged, categorized, or unread Microsoft Outlook emails as actionable items. Users can view a curated email inbox, convert any email into a task, follow-up, note, or bila with a single click, pre-filling fields from the email and linking back to the original. A **dashboard widget** shows flagged emails with deadlines for quick triage. This extends the existing Microsoft Graph integration with the `Mail.Read` permission scope.
 
 ---
 
 ## Design Decisions
+
+### Dedicated Mail Page
+
+Mail gets its own full page at `/mail`, placed in the sidebar directly below Calendar (both require Microsoft connection). The page provides the complete email management experience — filtering, searching, bulk actions, and resource creation. This mirrors how Tasks, Follow-ups, and Notes each have dedicated pages rather than living only on the dashboard.
+
+### Dashboard Widget (Same Pattern as Calendar/Analytics Widgets)
+
+The dashboard shows a **compact email widget** following the same pattern as existing dashboard sections (calendar upcoming, today's tasks, etc.). The widget displays only **flagged emails that have a deadline** (Outlook flag due date). Each email in the widget has action buttons to create:
+
+- **Task** — always available
+- **Follow-up** — always available
+- **Note** — always available
+- **Bila** — **greyed out / disabled** unless the sender's email matches a team member in one of the user's teams (resolved via `TeamMember.email` or `TeamMember.microsoft_email`)
+
+### Sidebar Menu Order
+
+The new menu order groups items logically with dash separators:
+
+```
+Dashboard
+---
+Calendar          (Microsoft connection required)
+Mail              (Microsoft connection required)
+---
+Tasks
+Follow-ups
+Notes
+Bila's
+---
+Teams
+Weekly Review
+---
+Analytics
+```
+
+When no Microsoft connection is active, Calendar and Mail are hidden and the two separators around them collapse into one — no double separator is shown.
 
 ### Read-Only Email Access
 
@@ -14,7 +50,7 @@ Mithril only **reads** emails — it never sends, moves, archives, or modifies f
 
 ### Cached Email Model (Same Pattern as Calendar Events)
 
-Emails are synced to a local `emails` cache table, following the same pattern as `calendar_events`. This avoids slow API calls on page load and enables filtering/searching locally. The sync job runs on a schedule (configurable, default every 15 minutes).
+Emails are synced to a local `emails` cache table, following the same pattern as `calendar_events`. This avoids slow API calls on page load and enables filtering/searching locally. The sync job runs on a schedule (configurable, default every 5 minutes).
 
 ### Three Email Sources
 
@@ -26,11 +62,11 @@ Users configure which emails to surface:
 | **Categorized** | Emails with a specific Outlook category (e.g., "Mithril") | `categories/any(c:c eq 'Mithril')` |
 | **Unread** | Unread emails in the inbox | `isRead eq false` |
 
-Users toggle which sources are active in Settings. At least one must be active for the email panel to appear on the dashboard.
+Users toggle which sources are active in Settings. At least one must be active for the mail page to show content.
 
-### Email → Task Conversion (Same Pattern as Calendar Actions)
+### Email → Resource Conversion (Same Pattern as Calendar Actions)
 
-Converting an email to a task follows the same architecture as "Create from Calendar Event" — pre-fill fields, create via API, link back via a polymorphic pivot. The `EmailLink` model mirrors `CalendarEventLink`.
+Converting an email to a task/follow-up/note/bila follows the same architecture as "Create from Calendar Event" — pre-fill fields, create via API, link back via a polymorphic pivot. The `EmailLink` model mirrors `CalendarEventLink`.
 
 ### No Full Email Client
 
@@ -54,6 +90,7 @@ emails
 ├── body_preview        TEXT, NULL  — Plain text preview (max 500 chars)
 ├── is_read             BOOLEAN, NOT NULL, DEFAULT FALSE
 ├── is_flagged          BOOLEAN, NOT NULL, DEFAULT FALSE
+├── flag_due_date       DATE, NULL  — Outlook flag due date (for deadline widget)
 ├── categories          JSON, NULL  — Array of Outlook category strings
 ├── importance          VARCHAR(20), NOT NULL, DEFAULT 'normal'  — 'low' | 'normal' | 'high'
 ├── has_attachments     BOOLEAN, NOT NULL, DEFAULT FALSE
@@ -65,6 +102,8 @@ emails
 ├── updated_at          TIMESTAMP
 └── UNIQUE (user_id, microsoft_message_id)
 ```
+
+**Note:** `flag_due_date` is extracted from the Graph API `flag.dueDateTime` field. This is critical for the dashboard widget which shows only flagged emails **with a deadline**.
 
 ### New Table: `email_links`
 
@@ -137,6 +176,7 @@ class EmailSyncService
 
     /**
      * Normalize a Graph API message response into an array suitable for upsert.
+     * Includes flag_due_date extraction from flag.dueDateTime.
      */
     public function normalizeMessage(array $graphMessage, EmailSource $source): array
 }
@@ -151,6 +191,7 @@ class EmailActionService
 {
     /**
      * Build pre-fill data for creating a resource from an email.
+     * For 'bila' type, only succeeds if sender resolves to a team member.
      */
     public function buildPrefillData(Email $email, string $resourceType): array
 
@@ -163,6 +204,12 @@ class EmailActionService
      * Resolve team member from sender email (matches against TeamMember.email and microsoft_email).
      */
     public function resolveTeamMember(Email $email): ?TeamMember
+
+    /**
+     * Check if the sender of an email is a member of any of the user's teams.
+     * Used to determine if the Bila action should be enabled.
+     */
+    public function senderIsTeamMember(Email $email): bool
 }
 ```
 
@@ -178,6 +225,7 @@ class SyncEmailsJob implements ShouldQueue
         // 1. Check if user has any email source enabled
         // 2. Build OData filter from user preferences
         // 3. Fetch messages from Graph API (GET /me/messages?$filter=...&$top=50&$orderby=receivedDateTime desc)
+        //    Include $select=flag to get flag.dueDateTime
         // 4. Upsert into emails table (on microsoft_message_id)
         // 5. Remove cached emails that no longer match the filter (except dismissed ones with links)
         // 6. Update synced_at
@@ -185,7 +233,21 @@ class SyncEmailsJob implements ShouldQueue
 }
 ```
 
-### Controller: `EmailActionController`
+### Controller: `EmailPageController` (Web — Mail Page)
+
+```php
+class EmailPageController extends Controller
+{
+    /**
+     * GET /mail
+     * Renders the full mail page with all cached emails.
+     * Filters by source tab, supports search.
+     */
+    public function index(Request $request): View
+}
+```
+
+### Controller: `EmailActionController` (API — Actions)
 
 ```php
 class EmailActionController extends Controller
@@ -197,14 +259,23 @@ class EmailActionController extends Controller
     public function index(Request $request): JsonResponse
 
     /**
+     * GET /api/emails/dashboard
+     * Returns flagged emails with a deadline for the dashboard widget.
+     * Ordered by flag_due_date ASC (most urgent first).
+     */
+    public function dashboard(Request $request): JsonResponse
+
+    /**
      * GET /api/emails/{email}/prefill/{type}
      * Returns pre-fill data for creating a resource from an email.
+     * For 'bila': returns 422 if sender is not a team member.
      */
     public function prefill(Email $email, string $type): JsonResponse
 
     /**
      * POST /api/emails/{email}/create/{type}
      * Creates the resource, links it to the email, returns the resource.
+     * Types: task, follow-up, note, bila
      */
     public function create(Request $request, Email $email, string $type): JsonResponse
 
@@ -227,8 +298,9 @@ class EmailActionController extends Controller
 | Target Resource | Pre-filled Fields |
 |----------------|-------------------|
 | **Task** | `title` ← email `subject`, `team_member_id` ← resolved from sender, `priority` ← mapped from `importance` (high → High, normal → Normal, low → Low) |
-| **Follow-up** | `description` ← email `subject`, `team_member_id` ← resolved from sender, `follow_up_date` ← today + 3 days |
+| **Follow-up** | `description` ← email `subject`, `team_member_id` ← resolved from sender, `follow_up_date` ← `flag_due_date` or today + 3 days |
 | **Note** | `title` ← email `subject`, `content` ← email `body_preview`, `team_member_id` ← resolved from sender |
+| **Bila** | `team_member_id` ← resolved from sender (required), `notes` ← email `subject` as agenda item. Only available when sender resolves to a team member. |
 
 ### MicrosoftGraphService Extension
 
@@ -237,6 +309,7 @@ class EmailActionController extends Controller
 
 /**
  * Fetch filtered messages from the user's inbox.
+ * Includes flag.dueDateTime in $select for deadline extraction.
  */
 public function getMyMessages(
     User $user,
@@ -248,7 +321,7 @@ public function getMyMessages(
 ### Scheduler
 
 ```php
-Schedule::command('microsoft:sync-emails')->everyFifteenMinutes();
+Schedule::command('microsoft:sync-emails')->everyFiveMinutes();
 ```
 
 ### Microsoft Permissions Update
@@ -268,7 +341,18 @@ Add `Mail.Read` to the required scopes in `config/microsoft.php`:
 
 ---
 
-## API Routes
+## Routes
+
+### Web Routes
+
+```php
+// routes/web.php
+Route::get('/mail', [EmailPageController::class, 'index'])
+    ->name('mail.index')
+    ->middleware('auth');
+```
+
+### API Routes
 
 ```php
 // routes/api.php
@@ -276,14 +360,17 @@ Route::prefix('emails')->group(function () {
     Route::get('/', [EmailActionController::class, 'index'])
         ->name('api.emails.index');
 
+    Route::get('dashboard', [EmailActionController::class, 'dashboard'])
+        ->name('api.emails.dashboard');
+
     Route::prefix('{email}')->group(function () {
         Route::get('prefill/{type}', [EmailActionController::class, 'prefill'])
             ->name('api.emails.prefill')
-            ->whereIn('type', ['task', 'follow-up', 'note']);
+            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
 
         Route::post('create/{type}', [EmailActionController::class, 'create'])
             ->name('api.emails.create')
-            ->whereIn('type', ['task', 'follow-up', 'note']);
+            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
 
         Route::post('dismiss', [EmailActionController::class, 'dismiss'])
             ->name('api.emails.dismiss');
@@ -296,33 +383,88 @@ Route::prefix('emails')->group(function () {
 
 ---
 
+## Sidebar Menu Update
+
+`MenuHelper::getMainNavItems()` must be updated to produce the new menu order:
+
+```
+Dashboard
+--- separator ---
+Calendar          ← conditional: Microsoft connection
+Mail              ← conditional: Microsoft connection (NEW)
+--- separator ---
+Tasks
+Follow-ups
+Notes
+Bila's
+--- separator ---
+Teams
+Weekly Review
+--- separator ---
+Analytics
+```
+
+The separator support (dashes) requires either a new `'separator' => true` item type in the menu array, or grouping into multiple menu groups in `getMenuGroups()`. When no Microsoft connection is active, Calendar and Mail are hidden and the two separators around them must collapse into one — never render consecutive separators.
+
+---
+
 ## Frontend
 
-### Dashboard: Email Panel
+### Mail Page (`/mail`)
 
-New Blade component `resources/views/components/tl/email-panel.blade.php`:
+Full-page view at `resources/views/pages/mail/index.blade.php`:
 
 ```
-<x-tl.email-panel :emails="$emails" />
-
-├── Tab bar: [Flagged] [Categorized] [Unread] (based on active sources)
-├── Email list (scrollable, max height ~300px)
-│   ├── Email item:
-│   │   ├── Sender name + time (relative: "2h ago")
-│   │   ├── Subject line (bold if unread, normal if read)
-│   │   ├── Body preview (truncated, 1 line)
-│   │   ├── Importance indicator (⬆ high, none for normal, ⬇ low)
-│   │   ├── 📎 attachment indicator
-│   │   ├── Action button: [+] Create...
-│   │   │   ├── Task
-│   │   │   ├── Follow-up
-│   │   │   └── Note
-│   │   ├── Dismiss button (X) — hides from panel
-│   │   └── Open in Outlook link (→ web_link)
-│   └── Linked resource badges (if any): [T] [F] [N]
+Mail Page
+├── Header: "Mail" + sync status ("Last synced: 2 min ago") + manual refresh button
+├── Source tabs: [All] [Flagged] [Categorized] [Unread] (based on active sources)
+├── Search bar: filter by subject/sender (client-side on cached data)
+├── Email list (full height, scrollable)
+│   ├── Email item (card style, elvish-card):
+│   │   ├── Left: Importance indicator (color-coded)
+│   │   ├── Center:
+│   │   │   ├── Sender name + email
+│   │   │   ├── Subject line (bold if unread)
+│   │   │   ├── Body preview (truncated, 2 lines)
+│   │   │   ├── Flag due date badge (if flagged with deadline)
+│   │   │   └── Linked resource badges: [T] Task [F] Follow-up [N] Note [B] Bila
+│   │   ├── Right: Action buttons
+│   │   │   ├── [+] Create → dropdown:
+│   │   │   │   ├── Task
+│   │   │   │   ├── Follow-up
+│   │   │   │   ├── Note
+│   │   │   │   └── Bila (greyed out if sender not in teams)
+│   │   │   ├── Dismiss (X)
+│   │   │   └── Open in Outlook (→ web_link)
+│   │   └── Meta: received time (relative), 📎 attachment indicator
+│   └── ...
 ├── Empty state: "No actionable emails" or "Connect Office 365 to see emails"
-└── Footer: "Last synced: X min ago" + manual refresh button
+└── Dismissed toggle: "Show dismissed" (hidden by default)
 ```
+
+### Dashboard Widget: Flagged Emails with Deadlines
+
+Compact widget on the dashboard, following the same card-style pattern as the calendar upcoming and today's tasks sections:
+
+```
+<x-tl.email-deadline-widget :emails="$deadlineEmails" />
+
+Dashboard Email Widget
+├── Header: "Mail Deadlines" (with mail icon)
+├── Email list (compact, max 5 items, ordered by due date):
+│   ├── Email item (compact row):
+│   │   ├── Due date badge (color: overdue=red, today=amber, upcoming=default)
+│   │   ├── Subject (truncated)
+│   │   ├── Sender name
+│   │   ├── Action buttons: [Task] [Follow-up] [Note] [Bila*]
+│   │   │   └── *Bila greyed out unless sender matches a team member
+│   │   └── Open in Outlook link
+│   └── ...
+├── "View all" link → /mail
+└── Empty state: "No flagged emails with deadlines"
+```
+
+**Data source:** Only flagged emails (`is_flagged = true`) that have a `flag_due_date` set. Ordered by `flag_due_date ASC` (most urgent first). The dashboard controller passes these separately from the full email list.
 
 ### Settings: Email Sources
 
@@ -335,22 +477,44 @@ Email Integration
 │   ├── [toggle] Categorized emails
 │   │   └── Category name: [input: "Mithril"] (auto-save)
 │   └── [toggle] Unread emails (inbox only)
-└── Note: "Emails sync every 15 minutes. Only subjects and previews are cached."
+└── Note: "Emails sync every 5 minutes. Only subjects and previews are cached."
 ```
 
-### Alpine Component: `emailPanel`
+### Alpine Component: `emailPage`
 
 ```typescript
-interface EmailPanelData {
+interface EmailPageData {
     emails: Email[];
     activeSource: EmailSource | 'all';
+    searchQuery: string;
+    showDismissed: boolean;
     loading: boolean;
 
+    get filteredEmails(): Email[];
     filterBySource(source: string): void;
     createResource(emailId: number, type: string): Promise<void>;
     dismiss(emailId: number): Promise<void>;
+    undismiss(emailId: number): Promise<void>;
     unlinkResource(emailId: number, linkId: number): Promise<void>;
     refresh(): Promise<void>;
+}
+```
+
+### Alpine Component: `emailDeadlineWidget`
+
+```typescript
+interface EmailDeadlineWidgetData {
+    emails: EmailWithDeadline[];
+    loading: boolean;
+
+    createResource(emailId: number, type: string): Promise<void>;
+    refresh(): Promise<void>;
+    canCreateBila(email: EmailWithDeadline): boolean;
+}
+
+interface EmailWithDeadline extends Email {
+    flag_due_date: string;
+    sender_is_team_member: boolean;  // Resolved server-side
 }
 ```
 
@@ -368,12 +532,14 @@ interface Email {
     body_preview: string | null;
     is_read: boolean;
     is_flagged: boolean;
+    flag_due_date: string | null;
     categories: string[] | null;
     importance: EmailImportance;
     has_attachments: boolean;
     web_link: string | null;
     source: EmailSource;
     is_dismissed: boolean;
+    sender_is_team_member?: boolean;  // Included in dashboard endpoint
     links?: EmailLink[];
     synced_at: string;
 }
@@ -383,7 +549,7 @@ interface EmailLink {
     email_id: number;
     linkable_type: string;
     linkable_id: number;
-    linkable?: Task | FollowUp | Note;
+    linkable?: Task | FollowUp | Note | Bila;
     created_at: string;
 }
 
@@ -410,11 +576,13 @@ type EmailImportance = 'low' | 'normal' | 'high';
 
 **Tests (TDD — write first):**
 - Email model: creation, BelongsToUser scope, relationships
-- EmailLink model: polymorphic relationships to Task, FollowUp, Note
+- Email model: `flag_due_date` field stored and cast correctly
+- EmailLink model: polymorphic relationships to Task, FollowUp, Note, Bila
 - Unique constraint on `(user_id, microsoft_message_id)` prevents duplicates
 - Unique constraint on `(email_id, linkable_type, linkable_id)` prevents duplicate links
 - Cascade delete: deleting email removes its links
 - User email preference fields default correctly
+- Scope for dashboard: flagged emails with `flag_due_date` set
 
 **Depends on:** nothing
 
@@ -429,6 +597,7 @@ type EmailImportance = 'low' | 'normal' | 'high';
 - OData filter construction for each source type
 - Combined filter with multiple active sources
 - Error handling for missing `Mail.Read` scope
+- `flag.dueDateTime` extracted to `flag_due_date`
 
 **Depends on:** Phase 1
 
@@ -446,6 +615,7 @@ type EmailImportance = 'low' | 'normal' | 'high';
 - `buildFilter()`: multiple sources combined → OR logic
 - `buildFilter()`: no sources enabled → returns empty (skip sync)
 - `normalizeMessage()`: maps Graph fields correctly
+- `normalizeMessage()`: extracts `flag_due_date` from `flag.dueDateTime`
 - `syncEmails()`: upserts new emails, updates existing, removes stale
 - `syncEmails()`: does not remove dismissed emails that have links
 - Job dispatches correctly from scheduler command
@@ -461,7 +631,12 @@ type EmailImportance = 'low' | 'normal' | 'high';
 - `resolveTeamMember()`: matches sender_email against TeamMember.email (case-insensitive)
 - `resolveTeamMember()`: matches against TeamMember.microsoft_email
 - `resolveTeamMember()`: returns null for no match
-- `buildPrefillData()`: correct pre-fill per resource type
+- `senderIsTeamMember()`: returns true when sender matches a team member
+- `senderIsTeamMember()`: returns false for unknown senders
+- `buildPrefillData()`: correct pre-fill for task, follow-up, note
+- `buildPrefillData()`: correct pre-fill for bila (requires team member)
+- `buildPrefillData()`: bila returns error when sender is not a team member
+- `buildPrefillData()`: follow-up uses `flag_due_date` when available
 - `linkResource()`: creates link, prevents duplicates
 
 **Depends on:** Phase 1
@@ -475,15 +650,36 @@ type EmailImportance = 'low' | 'normal' | 'high';
 **Tests (TDD — write first):**
 - `index`: returns user's emails, filtered by source
 - `index`: respects BelongsToUser scope
+- `dashboard`: returns only flagged emails with `flag_due_date` set
+- `dashboard`: includes `sender_is_team_member` boolean per email
+- `dashboard`: orders by `flag_due_date` ASC
 - `prefill`: returns correct pre-fill data per type
+- `prefill`: bila type returns 422 for non-team-member sender
 - `create`: creates resource + link, returns standardized response
+- `create`: bila type fails for non-team-member sender
 - `dismiss`: sets `is_dismissed = true`
 - `unlink`: removes link without deleting resource
 - Unauthorized access returns 403
 
 **Depends on:** Phase 4
 
-### Phase 6: Frontend — Settings (frontend agent)
+### Phase 6: Mail Page + Menu Update (frontend agent)
+
+**Files:**
+- `app/Http/Controllers/Web/EmailPageController.php` (new)
+- `resources/views/pages/mail/index.blade.php` (new)
+- `routes/web.php` (update: add `/mail` route)
+- `app/Helpers/MenuHelper.php` (update: new menu order + Mail item + separators)
+
+**Tests (TDD — write first):**
+- Mail page returns 200 for authenticated user with Microsoft connection
+- Mail page redirects/403 for user without Microsoft connection
+- MenuHelper produces correct menu order with separators
+- Mail menu item only visible with Microsoft connection
+
+**Depends on:** Phase 1
+
+### Phase 7: Frontend — Settings (frontend agent)
 
 **Files:**
 - Settings Blade template (update: add email source toggles)
@@ -491,17 +687,47 @@ type EmailImportance = 'low' | 'normal' | 'high';
 
 **Depends on:** Phase 1
 
-### Phase 7: Frontend — Email Panel (frontend + typescript agent)
+### Phase 8: Frontend — Mail Page UI (frontend + typescript agent)
 
 **Files:**
-- `resources/views/components/tl/email-panel.blade.php` (new)
-- `resources/js/components/emailPanel.ts` (new)
+- `resources/js/components/email-page.ts` (new)
 - `resources/js/app.ts` (update: register component)
 - `resources/js/types/models.ts` (update: add Email types)
-- Dashboard Blade (update: include email panel)
-- Dashboard controller (update: pass emails to view)
+- Mail page Blade template (wire up Alpine component)
 
 **Depends on:** Phase 5, Phase 6
+
+### Phase 9: Frontend — Dashboard Widget (frontend + typescript agent)
+
+**Files:**
+- `resources/views/components/tl/email-deadline-widget.blade.php` (new)
+- `resources/js/components/email-deadline-widget.ts` (new)
+- `resources/js/app.ts` (update: register component)
+- Dashboard Blade (update: include email deadline widget)
+- Dashboard controller (update: pass deadline emails to view)
+
+**Depends on:** Phase 5, Phase 8
+
+### Phase 10: Data Pruning Extension (backend agent)
+
+**Files:**
+- `app/Services/DataPruningService.php` (update: add email + calendar pruning)
+- `app/DataTransferObjects/PruneResult.php` (update: add `emailsDeleted`, `calendarEventsDeleted` counters)
+
+**Tests (TDD — write first):**
+- Dismissed emails without links older than retention are pruned
+- Dismissed emails with links are NOT pruned
+- Stale emails (`synced_at` > 30 days) without links are pruned
+- Stale emails with links are NOT pruned
+- Created resources (tasks, follow-ups, notes, bilas) survive when their source email is pruned
+- Orphaned EmailLinks (linked resource deleted) are cleaned up
+- Old calendar events (past retention) without links are pruned
+- Old calendar events with links are NOT pruned
+- Created resources survive when their source calendar event is pruned
+- PruneResult includes new counters
+- Settings page shows email/calendar prune counts in dry-run
+
+**Depends on:** Phase 1
 
 ---
 
@@ -513,13 +739,57 @@ type EmailImportance = 'low' | 'normal' | 'high';
 | 2 | backend | Graph service, config |
 | 3 | backend | Sync service, job, command |
 | 4 | backend | EmailActionService |
-| 5 | backend | Controller, routes |
-| 6 | frontend | Settings UI |
-| 7 | frontend + typescript | Email panel component, Alpine component, types |
+| 5 | backend | Controller, routes (API) |
+| 6 | frontend | Mail page controller, Blade, web routes, MenuHelper |
+| 7 | frontend | Settings UI |
+| 8 | frontend + typescript | Mail page Alpine component, types |
+| 9 | frontend + typescript | Dashboard email widget component |
+| 10 | backend | DataPruningService extension, PruneResult update |
 
 **Shared files:**
 - `routes/api.php` — Phase 5 adds routes
-- `resources/js/app.ts` — Phase 7 registers Alpine component
+- `routes/web.php` — Phase 6 adds mail route
+- `resources/js/app.ts` — Phase 8 + 9 register Alpine components
+
+---
+
+## Data Pruning
+
+Extend the existing `DataPruningService` to handle email and calendar cleanup. The guiding principle: **created resources (tasks, follow-ups, notes, bilas) always survive** — only the cached source records and orphaned links are pruned.
+
+### New Pruning Targets
+
+| Target | Condition | Rationale |
+|--------|-----------|-----------|
+| **Dismissed emails without links** | `is_dismissed = true` AND no `email_links` AND `updated_at` older than retention period | No longer actionable and user explicitly dismissed them. |
+| **Stale emails no longer in inbox** | Email no longer returned by Graph API sync (already removed by sync job), but as a safety net: any `Email` record where `synced_at` is older than 30 days AND has no links | Covers edge cases where sync misses cleanup (e.g., source toggle changes between syncs). |
+| **Orphaned EmailLinks** | `EmailLink` where the linked resource no longer exists (same pattern as existing `CalendarEventLink` orphan cleanup) | Linked task/follow-up was pruned or manually deleted. |
+| **Old calendar events** | `CalendarEvent` where `start_at` is older than retention period AND has no `CalendarEventLink` records | Currently these accumulate forever. Past events with no linked resources are just cache bloat. |
+| **Orphaned CalendarEventLinks** | Already handled — no change needed. | Existing behavior in `DataPruningService`. |
+
+### Important: Resources Always Survive
+
+When an `Email` or `CalendarEvent` is pruned, any tasks, follow-ups, notes, or bilas that were created from it remain untouched. The `email_links` / `calendar_event_links` pivot records are deleted (cascade or orphan cleanup), but the resources themselves are independent entities that live on their own lifecycle.
+
+### Updated `DataPruningService`
+
+```php
+class DataPruningService
+{
+    public function pruneForUser(User $user): PruneResult
+    {
+        // Existing: done tasks + done follow-ups beyond retention
+        // Existing: orphaned CalendarEventLinks
+
+        // NEW: dismissed emails without links beyond retention
+        // NEW: stale emails (synced_at > 30 days ago) without links
+        // NEW: orphaned EmailLinks (linked resource deleted)
+        // NEW: old calendar events (start_at beyond retention) without links
+    }
+}
+```
+
+The `PruneResult` DTO should be extended with additional counters (`emailsDeleted`, `calendarEventsDeleted`).
 
 ---
 
@@ -527,13 +797,16 @@ type EmailImportance = 'low' | 'normal' | 'high';
 
 | Scenario | Handling |
 |----------|----------|
-| User has no active email sources | Email panel hidden from dashboard. Sync job skips this user. |
-| Microsoft token lacks `Mail.Read` scope | Sync skips emails, shows "Re-authorize" prompt in email panel area. |
-| Email deleted in Outlook between syncs | Next sync removes it from cache. Links remain but `Email` no longer exists — frontend shows "Email removed". |
+| User has no active email sources | Mail page shows "Enable email sources in Settings". Dashboard widget hidden. Sync job skips this user. |
+| Microsoft token lacks `Mail.Read` scope | Sync skips emails, shows "Re-authorize to enable email integration" prompt on mail page and dashboard widget area. |
+| Email deleted/unflagged in Outlook between syncs | Next sync removes it from cache. Links and created resources survive — only the cached `Email` record is deleted. Frontend shows "Email removed" on orphaned links. |
 | Same email matched by multiple sources (flagged AND unread) | First match wins. `source` field stores the primary source. Unique constraint on `microsoft_message_id` prevents duplicates. |
 | High volume inbox (100+ unread) | Sync fetches max 50 most recent. Configurable via `config/microsoft.php`. |
 | Email dismissed but then flagged again in Outlook | Re-sync does not un-dismiss. User must manually un-dismiss in Mithril (or the dismiss resets on next flag change — discuss during implementation). |
 | Non-ASCII subjects | Graph API returns UTF-8. Laravel handles this natively. |
+| Flagged email without due date | Shown on mail page but NOT in dashboard widget (widget requires `flag_due_date`). |
+| Bila action for non-team-member sender | Button greyed out with tooltip "Sender is not a team member". API returns 422 if called directly. |
+| Email sender matches multiple team members | First match wins (same email should not belong to multiple members). |
 
 ---
 
