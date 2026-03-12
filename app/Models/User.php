@@ -36,6 +36,11 @@ class User extends Authenticatable
         'microsoft_access_token',
         'microsoft_refresh_token',
         'microsoft_token_expires_at',
+        'jira_cloud_id',
+        'jira_account_id',
+        'jira_access_token',
+        'jira_refresh_token',
+        'jira_token_expires_at',
         'timezone',
         'prune_after_days',
         'dashboard_upcoming_tasks',
@@ -56,6 +61,8 @@ class User extends Authenticatable
         'two_factor_recovery_codes',
         'microsoft_access_token',
         'microsoft_refresh_token',
+        'jira_access_token',
+        'jira_refresh_token',
     ];
 
     /**
@@ -72,6 +79,9 @@ class User extends Authenticatable
             'microsoft_access_token'     => 'encrypted',
             'microsoft_refresh_token'    => 'encrypted',
             'microsoft_token_expires_at' => 'datetime',
+            'jira_access_token'          => 'encrypted',
+            'jira_refresh_token'         => 'encrypted',
+            'jira_token_expires_at'      => 'datetime',
             'prune_after_days'              => 'integer',
             'dashboard_upcoming_tasks'      => 'integer',
             'dashboard_upcoming_follow_ups' => 'integer',
@@ -95,6 +105,14 @@ class User extends Authenticatable
     public function hasMicrosoftConnection(): bool
     {
         return $this->microsoft_id !== null;
+    }
+
+    /**
+     * Determine whether the user has an active Jira Cloud connection.
+     */
+    public function hasJiraConnection(): bool
+    {
+        return $this->jira_cloud_id !== null;
     }
 
     /**

@@ -405,6 +405,57 @@
             </div>
         </div>
 
+        {{-- Jira Cloud --}}
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Jira Cloud</h2>
+            </div>
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-start gap-3">
+                        <span class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </span>
+                        <div>
+                            @if(auth()->user()->hasJiraConnection())
+                                <p class="text-sm font-medium text-green-600 dark:text-green-400">
+                                    Connected
+                                </p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Issues sync every 5 minutes.</p>
+                            @else
+                                <p class="text-sm font-medium text-gray-800 dark:text-white/90">Not connected</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Connect your Jira Cloud account to sync issues assigned to you.</p>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if(auth()->user()->hasJiraConnection())
+                        <form method="POST" action="{{ route('jira.disconnect') }}">
+                            @csrf
+                            @method('DELETE')
+                            <button
+                                type="submit"
+                                class="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-900/50 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-900/20"
+                                aria-label="Disconnect Jira Cloud account"
+                            >
+                                Disconnect
+                            </button>
+                        </form>
+                    @else
+                        <a
+                            href="{{ route('jira.redirect') }}"
+                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                            aria-label="Connect your Jira Cloud account"
+                        >
+                            Connect Jira
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         {{-- Data export --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">

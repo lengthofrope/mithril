@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Web\AboutController;
+use App\Http\Controllers\Web\JiraAuthController;
 use App\Http\Controllers\Web\MicrosoftAuthController;
 use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
@@ -135,4 +136,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/auth/microsoft/redirect', [MicrosoftAuthController::class, 'redirect'])->name('microsoft.redirect');
     Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'callback'])->name('microsoft.callback');
     Route::delete('/auth/microsoft', [MicrosoftAuthController::class, 'disconnect'])->name('microsoft.disconnect');
+
+    Route::get('/auth/jira/redirect', [JiraAuthController::class, 'redirect'])->name('jira.redirect');
+    Route::get('/auth/jira/callback', [JiraAuthController::class, 'callback'])->name('jira.callback');
+    Route::delete('/auth/jira', [JiraAuthController::class, 'disconnect'])->name('jira.disconnect');
 });

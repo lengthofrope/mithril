@@ -219,16 +219,16 @@ sequenceDiagram
 ### Phase 1: OAuth & Configuration
 - **Goal:** Users can connect/disconnect Jira from settings
 - **Specs:**
-  - [ ] `config/jira.php` contains all required OAuth and API configuration
-  - [ ] `JiraCloudService` generates correct authorization URL with required scopes
-  - [ ] `JiraCloudService` exchanges auth code for tokens and fetches cloud ID
-  - [ ] `JiraCloudService` stores encrypted tokens on the User model
-  - [ ] `JiraCloudService` refreshes expired tokens automatically before API calls
-  - [ ] `JiraCloudService` revokes access and clears all Jira columns on disconnect
-  - [ ] `JiraAuthController` handles redirect, callback (with CSRF state), and disconnect
-  - [ ] Settings page shows Jira connection status with connect/disconnect button
-  - [ ] `User::hasJiraConnection()` returns correct boolean
-  - [ ] Migration adds all required columns to users table
+  - [x] `config/jira.php` contains all required OAuth and API configuration
+  - [x] `JiraCloudService` generates correct authorization URL with required scopes
+  - [x] `JiraCloudService` exchanges auth code for tokens and fetches cloud ID
+  - [x] `JiraCloudService` stores encrypted tokens on the User model
+  - [x] `JiraCloudService` refreshes expired tokens automatically before API calls
+  - [x] `JiraCloudService` revokes access and clears all Jira columns on disconnect
+  - [x] `JiraAuthController` handles redirect, callback (with CSRF state), and disconnect
+  - [x] Settings page shows Jira connection status with connect/disconnect button
+  - [x] `User::hasJiraConnection()` returns correct boolean
+  - [x] Migration adds all required columns to users table
 - **Files:** `config/jira.php`, `JiraCloudService`, `JiraTokenResponse`, `JiraAuthController`, User model, migration, settings view
 
 ### Phase 2: Data Model & Sync
@@ -294,6 +294,12 @@ sequenceDiagram
   - [ ] Disconnecting Jira clears all cached issues and links for the user
   - [ ] Factory for `JiraIssue` model exists for testing
   - [ ] All existing tests still pass after integration
+
+## Parallelization
+
+**Strategy:** Sequential
+
+All phases have inter-dependencies (OAuth → Models → UI → Actions → Pruning). Phases 3 and 4 share `routes/api.php` and issue card UI, making parallel execution risky for modest gains. Execute all phases sequentially.
 
 ## Out of Scope
 
