@@ -36,6 +36,7 @@ class AutoSaveController extends Controller
         'agreement' => \App\Models\Agreement::class,
         'note' => \App\Models\Note::class,
         'weekly_reflection' => \App\Models\WeeklyReflection::class,
+        'jira_issue' => \App\Models\JiraIssue::class,
     ];
 
     /**

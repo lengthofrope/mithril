@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\EmailActionController;
 
 use App\Http\Controllers\Api\BilaController;
 use App\Http\Controllers\Api\ExportImportController;
+use App\Http\Controllers\Api\JiraActionController;
+use App\Http\Controllers\Api\JiraIssueController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\ReorderController;
@@ -52,6 +54,24 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
             Route::delete('links/{emailLink}', [EmailActionController::class, 'unlink'])->name('unlink');
         });
+    });
+
+    Route::prefix('jira-issues')->as('jira-issues.')->group(function (): void {
+        Route::get('/', [JiraIssueController::class, 'index'])->name('index');
+        Route::get('dashboard', [JiraIssueController::class, 'dashboard'])->name('dashboard');
+        Route::patch('{jiraIssue}/dismiss', [JiraIssueController::class, 'dismiss'])->name('dismiss');
+        Route::patch('{jiraIssue}/undismiss', [JiraIssueController::class, 'undismiss'])->name('undismiss');
+
+        Route::get('{jiraIssue}/prefill/{type}', [JiraActionController::class, 'prefill'])
+            ->name('prefill')
+            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+
+        Route::post('{jiraIssue}/create/{type}', [JiraActionController::class, 'create'])
+            ->name('create')
+            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+
+        Route::delete('{jiraIssue}/links/{jiraIssueLink}', [JiraActionController::class, 'unlink'])
+            ->name('unlink');
     });
 
     Route::prefix('calendar-events/{calendarEvent}')->as('calendar-events.')->group(function (): void {

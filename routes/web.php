@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Web\AboutController;
 use App\Http\Controllers\Web\JiraAuthController;
+use App\Http\Controllers\Web\JiraPageController;
 use App\Http\Controllers\Web\MicrosoftAuthController;
 use App\Http\Controllers\Web\AnalyticsPageController;
 use App\Http\Controllers\Web\BilaPageController;
@@ -119,6 +120,8 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/prep-items', [BilaPageController::class, 'storePrepItem'])->name('prep-items.store');
     Route::patch('/prep-items/{bilaPrepItem}', [BilaPageController::class, 'updatePrepItem'])->name('prep-items.update');
     Route::delete('/prep-items/{bilaPrepItem}', [BilaPageController::class, 'destroyPrepItem'])->name('prep-items.destroy');
+
+    Route::get('/jira', [JiraPageController::class, 'index'])->name('jira.index');
 
     Route::get('/analytics', [AnalyticsPageController::class, 'index'])->name('analytics.index');
     Route::get('/analytics/widget-data', [AnalyticsPageController::class, 'widgetData'])->name('analytics.widget-data');

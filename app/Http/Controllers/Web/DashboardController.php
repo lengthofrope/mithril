@@ -48,6 +48,7 @@ class DashboardController extends Controller
         $upcoming = $this->buildUpcomingSection($userTz, $user);
         $dashboardWidgets = AnalyticsWidget::forDashboard()->get();
 
+        $isJiraConnected = $request->user()->hasJiraConnection();
         $isMicrosoftConnected = $request->user()->hasMicrosoftConnection();
 
         $calendarEvents = $isMicrosoftConnected
@@ -86,6 +87,7 @@ class DashboardController extends Controller
             'dashboardWidgets' => $dashboardWidgets,
             'calendarEvents' => $calendarEvents,
             'flaggedEmails' => $flaggedEmails,
+            'isJiraConnected' => $isJiraConnected,
             'isMicrosoftConnected' => $isMicrosoftConnected,
             'userTimezone' => $userTz,
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),

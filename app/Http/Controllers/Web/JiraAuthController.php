@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\JiraIssue;
+use App\Models\JiraIssueLink;
 use App\Services\JiraCloudService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -96,6 +98,16 @@ class JiraAuthController extends Controller
     public function disconnect(Request $request): RedirectResponse
     {
         $user = $request->user();
+
+        $issueIds = JiraIssue::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->pluck('id');
+
+        JiraIssueLink::whereIn('jira_issue_id', $issueIds)->delete();
+
+        JiraIssue::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->delete();
 
         $this->jiraCloudService->revokeAccess($user);
 

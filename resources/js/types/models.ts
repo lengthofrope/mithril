@@ -315,5 +315,50 @@ interface EmailLink {
     created_at: string;
 }
 
+/**
+ * Mirrors the `jira_issues` Eloquent model.
+ */
+interface JiraIssue {
+    id: number;
+    jira_issue_id: string;
+    issue_key: string;
+    summary: string;
+    description_preview: string | null;
+    project_key: string;
+    project_name: string;
+    issue_type: string;
+    status_name: string;
+    status_category: string;
+    priority_name: string | null;
+    assignee_name: string | null;
+    assignee_email: string | null;
+    reporter_name: string | null;
+    reporter_email: string | null;
+    labels: string[] | null;
+    web_url: string;
+    sources: string[];
+    updated_in_jira_at: string;
+    is_dismissed: boolean;
+    synced_at: string;
+    jira_issue_links?: JiraIssueLink[];
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Mirrors the `jira_issue_links` Eloquent model.
+ */
+interface JiraIssueLink {
+    id: number;
+    jira_issue_id: number | null;
+    issue_key: string;
+    issue_summary: string | null;
+    linkable_type: string;
+    linkable_id: number;
+    linkable?: Bila | Task | FollowUp | Note;
+    created_at: string;
+    updated_at: string;
+}
+
 export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink };

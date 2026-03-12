@@ -106,12 +106,6 @@ class JiraSyncService
         $fields          = $rawIssue['fields'] ?? [];
         $descriptionText = $this->extractDescriptionPreview($fields['description'] ?? null);
 
-        $siteUrl = str_replace(
-            ['api.atlassian.com/ex/jira/', '/rest/api/3'],
-            ['', ''],
-            config('jira.api_base_url') . $user->jira_cloud_id
-        );
-
         return [
             'jira_issue_id'      => $rawIssue['id'],
             'issue_key'          => $rawIssue['key'],

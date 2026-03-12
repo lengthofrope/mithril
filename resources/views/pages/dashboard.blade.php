@@ -275,7 +275,7 @@
             </div>
         </div>
 
-        {{-- Upcoming calendar + Flagged emails (Office 365) --}}
+        {{-- Upcoming calendar + Flagged emails (Office 365) + Jira --}}
         <div class="flex flex-col gap-6">
             @if($calendarEvents !== null)
                 <x-tl.calendar-upcoming :events="$calendarEvents" :timezone="$userTimezone" />
@@ -283,6 +283,10 @@
 
             @if($flaggedEmails !== null)
                 <x-tl.email-flagged-widget :emails="$flaggedEmails" />
+            @endif
+
+            @if($isJiraConnected)
+                <x-tl.jira-widget />
             @endif
         </div>
     </div>

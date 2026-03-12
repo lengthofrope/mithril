@@ -1,7 +1,7 @@
 # Jira Cloud Integration
 
 **Created:** 2026-03-12
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort
 
 ## Problem Statement
@@ -253,47 +253,47 @@ sequenceDiagram
 ### Phase 3: Browse Page & Dashboard Widget
 - **Goal:** Users can browse synced Jira issues and see a dashboard widget
 - **Specs:**
-  - [ ] `/jira` page renders with all synced issues
-  - [ ] Issues can be filtered by source (assigned/mentioned/watched/all)
-  - [ ] Issues can be filtered by status category (open/in progress/done)
-  - [ ] Issues are grouped by project
-  - [ ] Each issue card shows: key, summary, status, priority, assignee, project, issue type (text badge), updated date
-  - [ ] Each issue card has a link to open in Jira (web_url)
-  - [ ] Issues can be dismissed and un-dismissed
-  - [ ] Dashboard widget shows assigned issues not in "done" status, ordered by priority + updated date
-  - [ ] Dashboard widget limit is configurable per user (default: 5)
-  - [ ] Dashboard widget shows count of total assigned open issues
-  - [ ] Navigation menu includes Jira link (with icon)
-  - [ ] Empty state when no Jira connection or no issues
+  - [x] `/jira` page renders with all synced issues
+  - [x] Issues can be filtered by source (assigned/mentioned/watched/all)
+  - [x] Issues can be filtered by status category (open/in progress/done)
+  - [x] Issues are grouped by project
+  - [x] Each issue card shows: key, summary, status, priority, assignee, project, issue type (text badge), updated date
+  - [x] Each issue card has a link to open in Jira (web_url)
+  - [x] Issues can be dismissed and un-dismissed
+  - [x] Dashboard widget shows assigned issues not in "done" status, ordered by priority + updated date
+  - [x] Dashboard widget limit is configurable per user (default: 5)
+  - [x] Dashboard widget shows count of total assigned open issues
+  - [x] Navigation menu includes Jira link (with icon)
+  - [x] Empty state when no Jira connection or no issues
 - **Files:** `JiraPageController`, `JiraIssueController` (API), `jira-page.ts`, Blade views, dashboard widget, `MenuHelper`
 
 ### Phase 4: Resource Creation & Linking
 - **Goal:** Users can create tasks/follow-ups/notes/bilas from Jira issues
 - **Specs:**
-  - [ ] `JiraActionService::resolveTeamMember()` matches assignee/reporter email to TeamMember
-  - [ ] `JiraActionService::buildPrefillData()` returns correct prefill for each resource type
-  - [ ] Task prefill: title = summary, maps Jira priority to task priority (Highest→Urgent, High→High, Medium→Medium, Low/Lowest→Low)
-  - [ ] Follow-up prefill: description = summary, default follow_up_date = 3 days
-  - [ ] Note prefill: title = issue key + summary, content = description_preview
-  - [ ] Bila prefill: prep_item_content = summary, requires team member match
-  - [ ] `JiraActionService::linkResource()` creates `JiraIssueLink` (prevents duplicates)
-  - [ ] `JiraActionController` API: GET prefill, POST create, DELETE unlink
-  - [ ] Action menu component shows on each issue card
-  - [ ] Linked resources shown as badges on issue cards
-  - [ ] Links can be removed without deleting the resource
-  - [ ] Creating a bila from a non-team-member issue returns appropriate error
+  - [x] `JiraActionService::resolveTeamMember()` matches assignee/reporter email to TeamMember
+  - [x] `JiraActionService::buildPrefillData()` returns correct prefill for each resource type
+  - [x] Task prefill: title = summary, maps Jira priority to task priority (Highest→Urgent, High→High, Medium→Medium, Low/Lowest→Low)
+  - [x] Follow-up prefill: description = summary, default follow_up_date = 3 days
+  - [x] Note prefill: title = issue key + summary, content = description_preview
+  - [x] Bila prefill: prep_item_content = summary, requires team member match
+  - [x] `JiraActionService::linkResource()` creates `JiraIssueLink` (prevents duplicates)
+  - [x] `JiraActionController` API: GET prefill, POST create, DELETE unlink
+  - [x] Action menu component shows on each issue card
+  - [x] Linked resources shown as badges on issue cards
+  - [x] Links can be removed without deleting the resource
+  - [x] Creating a bila from a non-team-member issue returns appropriate error
 - **Files:** `JiraActionService`, `JiraActionController`, `jira-actions.ts`, `jira-actions.blade.php`, API routes
 
 ### Phase 5: Data Pruning & Polish
 - **Goal:** Stale data is cleaned up, integration is production-ready
 - **Specs:**
-  - [ ] `DataPruningService` prunes dismissed Jira issues beyond retention period
-  - [ ] `DataPruningService` prunes orphaned `jira_issue_links`
-  - [ ] `DataPruningService` prunes stale issues (synced_at > 30 days) as safety net
-  - [ ] Jira connection status visible on settings page matches actual connection state
-  - [ ] Disconnecting Jira clears all cached issues and links for the user
-  - [ ] Factory for `JiraIssue` model exists for testing
-  - [ ] All existing tests still pass after integration
+  - [x] `DataPruningService` prunes dismissed Jira issues beyond retention period
+  - [x] `DataPruningService` prunes orphaned `jira_issue_links`
+  - [x] `DataPruningService` prunes stale issues (synced_at > 30 days) as safety net
+  - [x] Jira connection status visible on settings page matches actual connection state
+  - [x] Disconnecting Jira clears all cached issues and links for the user
+  - [x] Factory for `JiraIssue` model exists for testing
+  - [x] All existing tests still pass after integration
 
 ## Parallelization
 
