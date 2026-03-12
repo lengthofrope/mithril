@@ -138,29 +138,3 @@ describe('EmailLink model', function (): void {
         expect(EmailLink::count())->toBe(0);
     });
 });
-
-describe('User email preferences', function (): void {
-    it('defaults email_source_flagged to true', function (): void {
-        $user = User::factory()->create();
-
-        expect($user->fresh()->email_source_flagged)->toBeTrue();
-    });
-
-    it('defaults email_source_categorized to false', function (): void {
-        $user = User::factory()->create();
-
-        expect($user->fresh()->email_source_categorized)->toBeFalse();
-    });
-
-    it('defaults email_source_category_name to Mithril', function (): void {
-        $user = User::factory()->create();
-
-        expect($user->fresh()->email_source_category_name)->toBe('Mithril');
-    });
-
-    it('defaults email_source_unread to false', function (): void {
-        $user = User::factory()->create();
-
-        expect($user->fresh()->email_source_unread)->toBeFalse();
-    });
-});

@@ -157,25 +157,6 @@ class SettingsController extends Controller
     }
 
     /**
-     * Update the authenticated user's email source preferences.
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function updateEmailSources(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'email_source_flagged' => ['sometimes', 'boolean'],
-            'email_source_categorized' => ['sometimes', 'boolean'],
-            'email_source_unread' => ['sometimes', 'boolean'],
-        ]);
-
-        $request->user()->update($validated);
-
-        return response()->json(['success' => true]);
-    }
-
-    /**
      * Display the task settings sub-page with categories and groups.
      *
      * @param Request $request
