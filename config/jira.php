@@ -10,6 +10,7 @@ return [
     'scopes' => [
         'read:jira-work',
         'read:jira-user',
+        'read:me',
         'offline_access',
     ],
 

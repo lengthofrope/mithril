@@ -122,10 +122,10 @@ class JiraCloudService
         $this->ensureValidToken($user);
 
         $response = Http::withToken($user->jira_access_token)
-            ->get($this->apiUrl($user, '/rest/api/3/search'), [
+            ->post($this->apiUrl($user, '/rest/api/3/search/jql'), [
                 'jql'        => $jql,
                 'maxResults' => $maxResults,
-                'fields'     => 'summary,description,project,issuetype,status,priority,assignee,reporter,labels,updated',
+                'fields'     => ['summary', 'description', 'project', 'issuetype', 'status', 'priority', 'assignee', 'reporter', 'labels', 'updated'],
             ]);
 
         $this->assertSuccessfulApiResponse($response);
