@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/settings/prune-after-days', [SettingsController::class, 'updatePruneAfterDays'])->name('settings.updatePruneAfterDays');
     Route::post('/settings/prune', [SettingsController::class, 'prune'])->name('settings.prune');
     Route::patch('/settings/dashboard-widgets', [SettingsController::class, 'updateDashboardWidgets'])->name('settings.updateDashboardWidgets');
+    Route::patch('/settings/sidebar-collapsed', [SettingsController::class, 'updateSidebarCollapsed'])->name('settings.updateSidebarCollapsed');
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
     Route::post('/tasks/move', [TaskPageController::class, 'move'])->name('tasks.move');
 

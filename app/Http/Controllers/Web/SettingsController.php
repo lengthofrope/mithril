@@ -157,6 +157,23 @@ class SettingsController extends Controller
     }
 
     /**
+     * Update the authenticated user's sidebar collapsed preference.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateSidebarCollapsed(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'sidebar_collapsed' => ['required', 'boolean'],
+        ]);
+
+        $request->user()->update(['sidebar_collapsed' => $validated['sidebar_collapsed']]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Display the task settings sub-page with categories and groups.
      *
      * @param Request $request
