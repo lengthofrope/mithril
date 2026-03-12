@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-03-13
+
+### Added
+
+- **Jira Cloud integration** — Connect your Atlassian account via OAuth 2.0 (3LO) to sync Jira issues; `SyncJiraIssuesJob` runs on schedule; `jira:sync-issues` Artisan command for manual sync
+- **Jira browse page** — Dedicated `/jira` page showing all synced issues grouped by project, with source tabs (assigned/mentioned/watched), status category filters, and project dropdown
+- **Jira dashboard widget** — Open issues assigned to you displayed on the dashboard, ordered by priority
+- **Jira resource linking** — Create tasks, follow-ups, notes, or bilas directly from Jira issues with prefilled data (priority mapping, team member matching by email); linked resources shown as colored pills on issue cards
+- **Jira dismiss/undismiss** — Dismiss irrelevant issues from the browse page; toggle visibility with "Show dismissed" link
+- **Jira data pruning** — Dismissed issues pruned after user's retention period; stale unsynced issues (>30 days) cleaned up automatically
+- **Jira disconnect cleanup** — Disconnecting Jira removes all cached issues and links for the user
+
+### Changed
+
+- **Navigation** — Jira menu item conditionally shown when a Jira account is connected
+- **Data pruning** — Extended `DataPruningService` and `PruneResult` to include Jira issue cleanup and orphaned link removal
+- **Jira search API** — Migrated from deprecated `GET /rest/api/3/search` to `POST /rest/api/3/search/jql` endpoint
+
 ## [1.5.0] - 2026-03-12
 
 ### Added
