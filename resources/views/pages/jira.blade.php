@@ -17,48 +17,49 @@
         <div x-data="jiraPage({ dismissEndpoint: '/api/v1/jira-issues' })">
             <section class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                 {{-- Header with filter tabs and count --}}
-                <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-                    <div class="flex items-center gap-3">
-                        <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Jira Issues</h2>
-                        @php $activeSource = request('source', 'assigned'); @endphp
-                        <div class="flex gap-1">
-                            @foreach(['assigned', 'mentioned', 'watched'] as $source)
-                                <a href="{{ route('jira.index', array_merge(request()->query(), ['source' => $source])) }}"
-                                    class="rounded-md px-2.5 py-1 text-xs font-medium capitalize transition {{ $activeSource === $source ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                    {{ $source }}
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        {{-- Status category filter --}}
-                        <div class="flex gap-1">
-                            @foreach(['new' => 'Open', 'indeterminate' => 'In Progress', 'done' => 'Done'] as $cat => $catLabel)
-                                <a href="{{ route('jira.index', array_merge(request()->query(), ['status_category' => request('status_category') === $cat ? null : $cat])) }}"
-                                    class="rounded-md px-2.5 py-1 text-xs font-medium transition {{ request('status_category') === $cat ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                    {{ $catLabel }}
-                                </a>
-                            @endforeach
-                        </div>
+                <div class="flex flex-wrap items-center gap-3 border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Jira Issues</h2>
 
-                        {{-- Project filter --}}
-                        @if(count($projectOptions) > 1)
-                            <select
-                                @change="selectProject($event.target.value)"
-                                class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                                aria-label="Filter by project"
-                            >
-                                <option value="">All projects</option>
-                                @foreach($projectOptions as $option)
-                                    <option value="{{ $option['value'] }}" @selected(request('project_key') === $option['value'])>{{ $option['label'] }}</option>
-                                @endforeach
-                            </select>
-                        @endif
-
-                        <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
-                            {{ $issues->count() }}
-                        </span>
+                    @php $activeSource = request('source', 'assigned'); @endphp
+                    <div class="flex gap-1">
+                        @foreach(['assigned', 'mentioned', 'watched'] as $source)
+                            <a href="{{ route('jira.index', array_merge(request()->query(), ['source' => $source])) }}"
+                                class="rounded-md px-2.5 py-1 text-xs font-medium capitalize transition {{ $activeSource === $source ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                {{ $source }}
+                            </a>
+                        @endforeach
                     </div>
+
+                    <span class="mx-1 hidden h-4 w-px bg-gray-200 dark:bg-gray-700 sm:inline-block" aria-hidden="true"></span>
+
+                    {{-- Status category filter --}}
+                    <div class="flex gap-1">
+                        @foreach(['new' => 'Open', 'indeterminate' => 'In Progress', 'done' => 'Done'] as $cat => $catLabel)
+                            <a href="{{ route('jira.index', array_merge(request()->query(), ['status_category' => request('status_category') === $cat ? null : $cat])) }}"
+                                class="rounded-md px-2.5 py-1 text-xs font-medium transition {{ request('status_category') === $cat ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                {{ $catLabel }}
+                            </a>
+                        @endforeach
+                    </div>
+
+                    {{-- Project filter --}}
+                    @if(count($projectOptions) > 1)
+                        <select
+                            @change="selectProject($event.target.value)"
+                            class="min-w-0 max-w-[12rem] truncate rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                            aria-label="Filter by project"
+                            title="{{ collect($projectOptions)->firstWhere('value', request('project_key'))['label'] ?? 'All projects' }}"
+                        >
+                            <option value="">All projects</option>
+                            @foreach($projectOptions as $option)
+                                <option value="{{ $option['value'] }}" title="{{ $option['label'] }}" @selected(request('project_key') === $option['value'])>{{ $option['label'] }}</option>
+                            @endforeach
+                        </select>
+                    @endif
+
+                    <span class="ml-auto rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
+                        {{ $issues->count() }}
+                    </span>
                 </div>
 
                 {{-- Empty state --}}

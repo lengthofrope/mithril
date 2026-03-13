@@ -12,9 +12,9 @@
 
     {{-- Content column --}}
     <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-1.5">
+        <div class="flex min-w-0 items-center gap-1.5">
             <span class="shrink-0 text-xs font-mono font-medium text-gray-500 dark:text-gray-400">{{ $issue->issue_key }}</span>
-            <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
+            <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90" title="{{ $issue->summary }}">
                 {{ $issue->summary }}
             </p>
         </div>
