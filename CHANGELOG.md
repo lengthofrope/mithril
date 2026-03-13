@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Heading font** — Replaced Cormorant Garamond with Philosopher for headings; more readable while retaining the elvish/fantasy character
+- **Inline SVG logos** — Logo components now render inline SVG instead of `<img>` tags, ensuring custom fonts display correctly; extracted to reusable `<x-tl.logo>` Blade component
 - **Jira privacy compliance** — Removed personal data storage (assignee/reporter names and emails) from the Jira integration to comply with the Atlassian User Privacy Developer Guide; only Atlassian account IDs are stored, with display names resolved on demand via the Jira bulk user API and cached for 1 hour
 - **Jira URL construction** — Site URL now correctly extracted from the OAuth accessible-resources response instead of using the cloud ID as subdomain
 - **Jira team member resolution** — Team members are now matched to Jira users by `jira_account_id` instead of email; auto-populated on first resource creation, or linkable manually in member settings
