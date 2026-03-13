@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **System broadcast notifications** — Admins can send dismissable notifications to all users via `notification:send` Artisan command; supports info/warning/success/error variants, optional links, and auto-expiry; displayed as alert banners at the top of every page with smooth dismiss animation
 - **Jira Cloud integration** — Connect your Atlassian account via OAuth 2.0 (3LO) to sync Jira issues; `SyncJiraIssuesJob` runs on schedule; `jira:sync-issues` Artisan command for manual sync
 - **Jira browse page** — Dedicated `/jira` page showing all synced issues grouped by project, with source tabs (assigned/mentioned/watched), status category filters, and project dropdown
 - **Jira dashboard widget** — Open issues assigned to you displayed on the dashboard, ordered by priority
