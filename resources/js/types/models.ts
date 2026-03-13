@@ -360,5 +360,26 @@ interface JiraIssueLink {
     updated_at: string;
 }
 
-export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink };
+/**
+ * Visual variant for system notifications.
+ */
+type NotificationVariant = 'info' | 'warning' | 'success' | 'error';
+
+/**
+ * Mirrors the `system_notifications` Eloquent model.
+ */
+interface SystemNotification {
+    id: number;
+    title: string;
+    message: string;
+    variant: NotificationVariant;
+    link_url: string | null;
+    link_text: string | null;
+    is_active: boolean;
+    expires_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification };

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\JiraActionController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\JiraIssueController;
+use App\Http\Controllers\Api\SystemNotificationController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\ReorderController;
@@ -83,6 +84,9 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
         Route::delete('{jiraIssue}/links/{jiraIssueLink}', [JiraActionController::class, 'unlink'])
             ->name('unlink');
     });
+
+    Route::patch('system-notifications/{systemNotification}/dismiss', [SystemNotificationController::class, 'dismiss'])
+        ->name('system-notifications.dismiss');
 
     Route::prefix('calendar-events/{calendarEvent}')->as('calendar-events.')->group(function (): void {
         Route::get('prefill/{type}', [CalendarActionController::class, 'prefill'])
