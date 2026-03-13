@@ -16,12 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Jira dismiss/undismiss** — Dismiss irrelevant issues from the browse page; toggle visibility with "Show dismissed" link
 - **Jira data pruning** — Dismissed issues pruned after user's retention period; stale unsynced issues (>30 days) cleaned up automatically
 - **Jira disconnect cleanup** — Disconnecting Jira removes all cached issues and links for the user
+- **Manual sync buttons** — Refresh buttons on Jira, calendar, and email pages (both browse pages and dashboard widgets) that trigger a sync job and automatically reload once complete; polls `synced_at` timestamp to detect job completion
+- **Sync status API** — `GET /api/v1/sync/{type}/status` endpoint returns the latest `synced_at` timestamp for polling sync completion
+- **Calendar empty days** — Calendar page now shows all 7 days including weekends and days without events, instead of hiding empty days
 
 ### Changed
 
 - **Navigation** — Jira menu item conditionally shown when a Jira account is connected
 - **Data pruning** — Extended `DataPruningService` and `PruneResult` to include Jira issue cleanup and orphaned link removal
 - **Jira search API** — Migrated from deprecated `GET /rest/api/3/search` to `POST /rest/api/3/search/jql` endpoint
+- **Jira default filters** — Browse page defaults to "assigned" source tab and hides done issues unless the Done filter is explicitly selected
+- **Jira project dropdown** — Only shows projects matching the active source and status filters; selected project persists in dropdown even when other filters produce no results; switching projects preserves all active filters
+- **Jira header layout** — Single-line non-wrapping header with the project dropdown shrinking to fit available space; filter tabs and count badge stay fixed
+- **Jira dismiss/undismiss** — Migrated from Alpine v2 `__x.$data` pattern to `$dispatch` events for Alpine v3 compatibility
+- **Jira dashboard widget** — Stretches to match the height of adjacent dashboard columns
+- **Layout flex constraint** — Added `min-w-0` to the main content flex wrapper in the app layout, enabling `truncate` to work correctly throughout the app for long text
+- **Jira issue card** — Long issue summaries now truncate properly with ellipsis instead of causing horizontal scrollbars
 
 ## [1.5.0] - 2026-03-12
 
