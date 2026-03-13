@@ -15,7 +15,7 @@
         </div>
     @else
         <div x-data="jiraPage({ dismissEndpoint: '/api/v1/jira-issues' })">
-            <section class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <section class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                 {{-- Header with filter tabs and count --}}
                 <div class="flex flex-wrap items-center gap-3 border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Jira Issues</h2>
@@ -71,7 +71,7 @@
 
                 {{-- Issues grouped by project --}}
                 @foreach($groupedIssues as $projectKey => $projectIssues)
-                    <div>
+                    <div class="min-w-0">
                         <div class="flex w-full items-center justify-between bg-gray-50 px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
                             <span>
                                 {{ $projectIssues->first()->project_name }}

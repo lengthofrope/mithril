@@ -134,7 +134,7 @@
         @include('layouts.backdrop')
         @include('layouts.sidebar')
 
-        <div class="flex-1"
+        <div class="min-w-0 flex-1"
             x-init="requestAnimationFrame(() => $el.classList.add('transition-all', 'duration-300', 'ease-in-out'))"
             :class="{
                 'xl:ml-[290px]': $store.sidebar.isExpanded,
