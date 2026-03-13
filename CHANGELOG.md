@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2] - 2026-03-13
+
+### Changed
+
+- **Jira privacy compliance** — Removed personal data storage (assignee/reporter names and emails) from the Jira integration to comply with the Atlassian User Privacy Developer Guide; only Atlassian account IDs are stored, with display names resolved on demand via the Jira bulk user API and cached for 1 hour
+- **Jira URL construction** — Site URL now correctly extracted from the OAuth accessible-resources response instead of using the cloud ID as subdomain
+- **Jira team member resolution** — Team members are now matched to Jira users by `jira_account_id` instead of email; auto-populated on first resource creation, or linkable manually in member settings
+
 ## [1.6.1] - 2026-03-13
 
 ### Fixed
@@ -29,10 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Jira Cloud integration** — Connect your Atlassian account via OAuth 2.0 (3LO) to sync Jira issues; `SyncJiraIssuesJob` runs on schedule; `jira:sync-issues` Artisan command for manual sync
 - **Jira browse page** — Dedicated `/jira` page showing all synced issues grouped by project, with source tabs (assigned/mentioned/watched), status category filters, and project dropdown
 - **Jira dashboard widget** — Open issues assigned to you displayed on the dashboard, ordered by priority
-- **Jira resource linking** — Create tasks, follow-ups, notes, or bilas directly from Jira issues with prefilled data (priority mapping, team member matching by email); linked resources shown as colored pills on issue cards
+- **Jira resource linking** — Create tasks, follow-ups, notes, or bilas directly from Jira issues with prefilled data (priority mapping, team member matching by account ID); linked resources shown as colored pills on issue cards
 - **Jira dismiss/undismiss** — Dismiss irrelevant issues from the browse page; toggle visibility with "Show dismissed" link
 - **Jira data pruning** — Dismissed issues pruned after user's retention period; stale unsynced issues (>30 days) cleaned up automatically
 - **Jira disconnect cleanup** — Disconnecting Jira removes all cached issues and links for the user
+- **Jira team member linking** — Link team members to their Jira account via `jira_account_id` field on the member profile; auto-populated on first resource creation, or set manually in settings
 - **Manual sync buttons** — Refresh buttons on Jira, calendar, and email pages (both browse pages and dashboard widgets) that trigger a sync job and automatically reload once complete; polls `synced_at` timestamp to detect job completion
 - **Sync status API** — `GET /api/v1/sync/{type}/status` endpoint returns the latest `synced_at` timestamp for polling sync completion
 - **Calendar empty days** — Calendar page now shows all 7 days including weekends and days without events, instead of hiding empty days
@@ -47,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Jira header layout** — Single-line non-wrapping header with the project dropdown shrinking to fit available space; filter tabs and count badge stay fixed
 - **Jira dismiss/undismiss** — Migrated from Alpine v2 `__x.$data` pattern to `$dispatch` events for Alpine v3 compatibility
 - **Jira dashboard widget** — Stretches to match the height of adjacent dashboard columns
+- **Jira privacy compliance** — No personal data (names, emails) stored from Jira; only Atlassian account IDs are persisted, with display names resolved on demand via the Jira bulk user API and cached for 1 hour; compliant with the Atlassian User Privacy Developer Guide for Marketplace listing
+- **Jira URL construction** — Site URL now correctly extracted from the OAuth accessible-resources response instead of using the cloud ID as subdomain
 - **Layout flex constraint** — Added `min-w-0` to the main content flex wrapper in the app layout, enabling `truncate` to work correctly throughout the app for long text
 - **Jira issue card** — Long issue summaries now truncate properly with ellipsis instead of causing horizontal scrollbars
 

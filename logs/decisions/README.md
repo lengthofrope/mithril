@@ -19,3 +19,4 @@
 | 015 | backend, microsoft, email, sync, graph-api | Email sync fetches all inbox emails with per-message source tagging | Email Integration | Accepted | 2026-03-12 |
 | 016 | backend, frontend, email, ux, microsoft | Remove email dismiss functionality | Email Integration | Accepted | 2026-03-12 |
 | 017 | backend, frontend, artisan, notifications, broadcast | System broadcast notifications | Operations | Accepted | 2026-03-13 |
+| 018 | backend, frontend, jira, privacy, atlassian, caching, api | Remove personal data from Jira integration for Atlassian Marketplace compliance | Jira Privacy Compliance | Accepted | 2026-03-13 |
