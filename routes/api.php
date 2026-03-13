@@ -44,6 +44,9 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
         Route::post('jira', [SyncController::class, 'jira'])->name('jira');
         Route::post('calendar', [SyncController::class, 'calendar'])->name('calendar');
         Route::post('emails', [SyncController::class, 'emails'])->name('emails');
+        Route::get('{type}/status', [SyncController::class, 'status'])
+            ->name('status')
+            ->whereIn('type', ['jira', 'calendar', 'emails']);
     });
 
     Route::prefix('emails')->as('emails.')->group(function (): void {
