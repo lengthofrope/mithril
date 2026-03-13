@@ -83,11 +83,25 @@
             />
 
             @if($task->deadline)
-                <span class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                @php
+                    $deadlineDate = \Carbon\Carbon::parse($task->deadline)->startOfDay();
+                    $deadlineColorClass = match(true) {
+                        $deadlineDate->isPast() && !$deadlineDate->isToday() => 'text-red-600 dark:text-red-400',
+                        $deadlineDate->isToday() => 'text-orange-600 dark:text-orange-400',
+                        default => 'text-gray-500 dark:text-gray-400',
+                    };
+                    $deadlineLabel = match(true) {
+                        $deadlineDate->isToday() => 'Today',
+                        $deadlineDate->isTomorrow() => 'Tomorrow',
+                        $deadlineDate->isPast() => 'Overdue · ' . $deadlineDate->format('d M Y'),
+                        default => $deadlineDate->format('d M Y'),
+                    };
+                @endphp
+                <span class="flex items-center gap-1 text-xs {{ $deadlineColorClass }}">
                     <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    {{ \Carbon\Carbon::parse($task->deadline)->format('d M Y') }}
+                    {{ $deadlineLabel }}
                 </span>
             @endif
 
@@ -99,13 +113,13 @@
                 </span>
             @endif
 
-            @if(isset($task->member) && $task->member)
-                <span class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                    <x-tl.team-member-avatar :member="$task->member" size="sm" />
-                    {{ $task->member->name }}
-                </span>
-            @endif
         </div>
+
+        @if($task->teamMember || $task->team)
+            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                {{ collect([$task->teamMember?->name, $task->team?->name])->filter()->implode(' · ') }}
+            </p>
+        @endif
     </div>
 
     <a

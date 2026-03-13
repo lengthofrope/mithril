@@ -7,6 +7,8 @@ use App\Enums\TaskStatus;
 use App\Models\Bila;
 use App\Models\FollowUp;
 use App\Models\Task;
+use App\Models\Team;
+use App\Models\TeamMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -60,6 +62,7 @@ test('dashboard passes counters array to view', function () {
     expect($response->viewData('counters'))->toBeArray()->toHaveKeys([
         'open_tasks',
         'urgent_tasks',
+        'overdue_tasks',
         'overdue_follow_ups',
         'today_follow_ups',
         'bilas_this_week',
@@ -158,6 +161,66 @@ test('todayTasks contains tasks with deadline today and not done', function () {
     expect($response->viewData('todayTasks'))->toHaveCount(1);
 });
 
+test('todayTasks includes overdue tasks with past deadlines', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create();
+
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDays(3)->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDay()->toDateString(), 'status' => TaskStatus::InProgress]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDays(2)->toDateString(), 'status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('todayTasks'))->toHaveCount(3);
+});
+
+test('todayTasks orders overdue tasks before today tasks by deadline ascending', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create();
+
+    $todayTask = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open]);
+    $oldOverdue = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDays(5)->toDateString(), 'status' => TaskStatus::Open]);
+    $recentOverdue = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDay()->toDateString(), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $tasks = $response->viewData('todayTasks');
+    expect($tasks->pluck('id')->all())->toBe([$oldOverdue->id, $recentOverdue->id, $todayTask->id]);
+});
+
+test('todayTasks excludes tasks without a deadline', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create();
+
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => null, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDay()->toDateString(), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('todayTasks'))->toHaveCount(1);
+});
+
+test('counters overdue_tasks counts tasks with past deadlines that are not done', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create();
+
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDays(2)->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDay()->toDateString(), 'status' => TaskStatus::InProgress]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->subDays(3)->toDateString(), 'status' => TaskStatus::Done]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->addDay()->toDateString(), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    expect($response->viewData('counters')['overdue_tasks'])->toBe(2);
+});
+
 test('todayFollowUps contains overdue and today non-done follow-ups', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
@@ -221,6 +284,7 @@ test('dashboard counters are zero when no data exists', function () {
     $counters = $response->viewData('counters');
     expect($counters['open_tasks'])->toBe(0);
     expect($counters['urgent_tasks'])->toBe(0);
+    expect($counters['overdue_tasks'])->toBe(0);
     expect($counters['overdue_follow_ups'])->toBe(0);
     expect($counters['today_follow_ups'])->toBe(0);
     expect($counters['bilas_this_week'])->toBe(0);
@@ -428,7 +492,7 @@ test('dashboard shows today-only title when upcoming tasks is null', function ()
 
     $response = $this->actingAs($user)->get('/');
 
-    $response->assertSee('Tasks due today');
+    $response->assertSee('Tasks needing attention');
 });
 
 test('dashboard shows dynamic title when upcoming follow-ups are configured and exist', function () {
@@ -453,4 +517,28 @@ test('dashboard shows dynamic title when upcoming bilas are configured and exist
     $response = $this->actingAs($user)->get('/');
 
     $response->assertSee('Upcoming bilas');
+});
+
+test('todayTasks eager-loads teamMember and team relationships', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id, 'name' => 'Alpha Squad']);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id, 'name' => 'Jane Doe']);
+
+    Task::factory()->create([
+        'user_id' => $user->id,
+        'deadline' => now(USER_TZ)->toDateString(),
+        'status' => TaskStatus::Open,
+        'team_id' => $team->id,
+        'team_member_id' => $member->id,
+    ]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $task = $response->viewData('todayTasks')->first();
+    expect($task->relationLoaded('teamMember'))->toBeTrue();
+    expect($task->relationLoaded('team'))->toBeTrue();
+    expect($task->teamMember->name)->toBe('Jane Doe');
+    expect($task->team->name)->toBe('Alpha Squad');
 });
