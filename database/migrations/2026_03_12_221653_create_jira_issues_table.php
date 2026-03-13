@@ -33,9 +33,9 @@ return new class extends Migration
             $table->json('labels')->nullable();
             $table->string('web_url', 2048);
             $table->json('sources');
-            $table->timestamp('updated_in_jira_at');
+            $table->timestamp('updated_in_jira_at')->useCurrent();
             $table->boolean('is_dismissed')->default(false);
-            $table->timestamp('synced_at');
+            $table->timestamp('synced_at')->useCurrent();
             $table->timestamps();
 
             $table->unique(['user_id', 'jira_issue_id']);
