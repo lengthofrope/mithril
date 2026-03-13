@@ -2,6 +2,6 @@
 <rect width="48" height="48" rx="12" fill="#2f7358"/>
 <path d="M24 6L12 12V22.5C12 30.38 17.1 37.73 24 39.75C30.9 37.73 36 30.38 36 22.5V12L24 6Z" fill="white" fill-opacity="0.9"/>
 <path d="M24 6L12 12V22.5C12 30.38 17.1 37.73 24 39.75V6Z" fill="white"/>
-<text x="58" y="24" font-family="'Cormorant Garamond', Georgia, serif" font-size="26" font-weight="600" fill="white">Mithril</text>
+<text x="58" y="24" font-family="'Philosopher', Georgia, serif" font-size="26" font-weight="600" fill="white">Mithril</text>
 <text x="58" y="42" font-family="Outfit, system-ui, sans-serif" font-size="12" font-weight="400" fill="rgba(255,255,255,0.7)" font-style="italic">Lightweight armor for team leads</text>
 </svg>

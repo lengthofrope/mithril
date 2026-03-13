@@ -1,0 +1,14 @@
+<svg class="dark:hidden" width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mithril — Lightweight armor for team leads">
+<rect width="32" height="32" rx="8" fill="#2f7358"/>
+<path d="M16 4L8 8V15C8 20.25 11.4 25.15 16 26.5C20.6 25.15 24 20.25 24 15V8L16 4Z" fill="white" fill-opacity="0.9"/>
+<path d="M16 4L8 8V15C8 20.25 11.4 25.15 16 26.5V4Z" fill="white"/>
+<text x="40" y="16" font-family="'Philosopher', Georgia, serif" font-size="17" font-weight="600" fill="#1e1d19">Mithril</text>
+<text x="40" y="28" font-family="Outfit, system-ui, sans-serif" font-size="8.5" font-weight="400" fill="#8e8a82" font-style="italic">Lightweight armor for team leads</text>
+</svg>
+<svg class="hidden dark:block" width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mithril — Lightweight armor for team leads">
+<rect width="32" height="32" rx="8" fill="#2f7358"/>
+<path d="M16 4L8 8V15C8 20.25 11.4 25.15 16 26.5C20.6 25.15 24 20.25 24 15V8L16 4Z" fill="white" fill-opacity="0.9"/>
+<path d="M16 4L8 8V15C8 20.25 11.4 25.15 16 26.5V4Z" fill="white"/>
+<text x="40" y="16" font-family="'Philosopher', Georgia, serif" font-size="17" font-weight="600" fill="#f9f7f3">Mithril</text>
+<text x="40" y="28" font-family="Outfit, system-ui, sans-serif" font-size="8.5" font-weight="400" fill="#8e8a82" font-style="italic">Lightweight armor for team leads</text>
+</svg>

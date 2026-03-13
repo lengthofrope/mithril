@@ -69,11 +69,9 @@
     <div class="pt-8 pb-7 flex"
         :class="isCollapsed ? 'xl:justify-center' : 'justify-start'">
         <a href="/">
-            <img x-show="!isCollapsed"
-                class="dark:hidden" src="/images/logo/logo.svg" alt="Mithril" width="210" height="32" />
-            <img x-show="!isCollapsed"
-                class="hidden dark:block" src="/images/logo/logo-dark.svg" alt="Mithril" width="210"
-                height="32" />
+            <span x-show="!isCollapsed">
+                <x-tl.logo />
+            </span>
             <img x-show="isCollapsed"
                 src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" />
 

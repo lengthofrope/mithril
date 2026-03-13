@@ -50,8 +50,7 @@
 
             <!-- Logo (mobile only) -->
             <a href="/" class="xl:hidden">
-                <img class="dark:hidden" src="/images/logo/logo.svg" alt="Mithril" width="210" height="32" />
-                <img class="hidden dark:block" src="/images/logo/logo-dark.svg" alt="Mithril" width="210" height="32" />
+                <x-tl.logo />
             </a>
 
             <!-- Application Menu Toggle (mobile only) -->

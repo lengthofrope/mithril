@@ -14,7 +14,8 @@
 
     <!-- Preload custom fonts to prevent FOUT during view transitions -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/outfit/outfit-latin.woff2" crossorigin>
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/cormorant-garamond/cormorant-garamond-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/philosopher/philosopher-400-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/philosopher/philosopher-700-latin.woff2" crossorigin>
 
     <!-- Block rendering until main content is in the DOM (prevents FOUC during view transitions) -->
     <link rel="expect" blocking="render" href="#app-content">
