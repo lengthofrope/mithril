@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-03-13
+
+### Fixed
+
+- **Dashboard missing overdue tasks** — Tasks with past deadlines were invisible on the dashboard; now shown alongside today's tasks, ordered by deadline ascending (oldest overdue first)
+- **Task card team member not displayed** — Task cards never showed the assigned team member due to referencing a non-existent `member` relationship instead of `teamMember`; now displays member name and team name as plain text below the status pills
+- **Task card deadline styling** — Deadlines now color-coded: red for overdue (with "Overdue" prefix), orange for today, default gray for future; includes "Today"/"Tomorrow" labels for nearby dates
+
+### Added
+
+- **Overdue tasks counter** — New "Overdue tasks" counter card on the dashboard replacing the "Urgent tasks" card, showing the count of non-done tasks with past deadlines
+
+### Changed
+
+- **Dashboard task section header** — Renamed from "Tasks due today" to "Tasks needing attention" to reflect the broader scope including overdue items
+
 ## [1.6.0] - 2026-03-13
 
 ### Added
