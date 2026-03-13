@@ -31,7 +31,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('system_notification_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->timestamp('dismissed_at');
+            $table->timestamp('dismissed_at')->useCurrent();
 
             $table->unique(['system_notification_id', 'user_id']);
         });
