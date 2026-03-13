@@ -37,40 +37,57 @@ class JiraPageController extends Controller
             ]);
         }
 
+        $source = $request->input('source', 'assigned');
+
         $query = JiraIssue::query()
             ->with('jiraIssueLinks')
+            ->whereJsonContains('sources', $source)
             ->orderByDesc('updated_in_jira_at');
 
         if (!$request->boolean('show_dismissed')) {
             $query->where('is_dismissed', false);
         }
 
-        if ($request->filled('source')) {
-            $query->whereJsonContains('sources', $request->input('source'));
-        }
-
         if ($request->filled('status_category')) {
             $query->where('status_category', $request->input('status_category'));
+        } else {
+            $query->where('status_category', '!=', 'done');
         }
 
-        if ($request->filled('project_key')) {
-            $query->where('project_key', $request->input('project_key'));
-        }
+        $allFilteredIssues = $query->get();
 
-        $issues = $query->get();
-        $groupedIssues = $issues->groupBy('project_key');
-
-        $projectOptions = JiraIssue::query()
-            ->where('is_dismissed', false)
-            ->select('project_key', 'project_name')
-            ->distinct()
-            ->orderBy('project_name')
-            ->get()
+        $projectOptions = $allFilteredIssues
+            ->unique('project_key')
+            ->sortBy('project_name')
             ->map(fn (JiraIssue $issue): array => [
                 'value' => $issue->project_key,
                 'label' => $issue->project_name,
             ])
-            ->all();
+            ->values();
+
+        $selectedProjectKey = $request->input('project_key');
+
+        if ($selectedProjectKey && !$projectOptions->contains('value', $selectedProjectKey)) {
+            $selectedProject = JiraIssue::query()
+                ->where('project_key', $selectedProjectKey)
+                ->first(['project_key', 'project_name']);
+
+            if ($selectedProject) {
+                $projectOptions->push([
+                    'value' => $selectedProject->project_key,
+                    'label' => $selectedProject->project_name,
+                ]);
+                $projectOptions = $projectOptions->sortBy('label')->values();
+            }
+        }
+
+        $projectOptions = $projectOptions->all();
+
+        $issues = $selectedProjectKey
+            ? $allFilteredIssues->where('project_key', $selectedProjectKey)->values()
+            : $allFilteredIssues;
+
+        $groupedIssues = $issues->groupBy('project_key');
 
         return view('pages.jira', [
             'title'          => 'Jira',

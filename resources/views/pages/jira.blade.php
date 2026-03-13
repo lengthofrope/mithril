@@ -20,14 +20,11 @@
                 <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <div class="flex items-center gap-3">
                         <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Jira Issues</h2>
+                        @php $activeSource = request('source', 'assigned'); @endphp
                         <div class="flex gap-1">
-                            <a href="{{ route('jira.index') }}"
-                                class="rounded-md px-2.5 py-1 text-xs font-medium transition {{ !request('source') ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                All
-                            </a>
                             @foreach(['assigned', 'mentioned', 'watched'] as $source)
                                 <a href="{{ route('jira.index', array_merge(request()->query(), ['source' => $source])) }}"
-                                    class="rounded-md px-2.5 py-1 text-xs font-medium capitalize transition {{ request('source') === $source ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                    class="rounded-md px-2.5 py-1 text-xs font-medium capitalize transition {{ $activeSource === $source ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
                                     {{ $source }}
                                 </a>
                             @endforeach

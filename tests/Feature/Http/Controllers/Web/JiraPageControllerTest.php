@@ -35,9 +35,9 @@ test('jira page shows empty state for disconnected user', function (): void {
 });
 
 test('jira page filters by source', function (): void {
-    JiraIssue::factory()->for($this->user)->create(['sources' => ['assigned']]);
-    JiraIssue::factory()->for($this->user)->create(['sources' => ['mentioned']]);
-    JiraIssue::factory()->for($this->user)->create(['sources' => ['watched']]);
+    JiraIssue::factory()->for($this->user)->create(['sources' => ['assigned'], 'status_category' => 'new']);
+    JiraIssue::factory()->for($this->user)->create(['sources' => ['mentioned'], 'status_category' => 'new']);
+    JiraIssue::factory()->for($this->user)->create(['sources' => ['watched'], 'status_category' => 'new']);
 
     $response = $this->actingAs($this->user)
         ->get('/jira?source=assigned');
@@ -65,8 +65,8 @@ test('jira page filters by status category', function (): void {
 });
 
 test('jira page filters by project key', function (): void {
-    JiraIssue::factory()->for($this->user)->create(['project_key' => 'PROJ']);
-    JiraIssue::factory()->for($this->user)->create(['project_key' => 'OTHER']);
+    JiraIssue::factory()->for($this->user)->create(['project_key' => 'PROJ', 'status_category' => 'new']);
+    JiraIssue::factory()->for($this->user)->create(['project_key' => 'OTHER', 'status_category' => 'new']);
 
     $response = $this->actingAs($this->user)
         ->get('/jira?project_key=PROJ');
@@ -79,8 +79,8 @@ test('jira page filters by project key', function (): void {
 });
 
 test('jira page groups issues by project', function (): void {
-    JiraIssue::factory()->for($this->user)->create(['project_key' => 'PROJ', 'project_name' => 'Project A']);
-    JiraIssue::factory()->for($this->user)->count(2)->create(['project_key' => 'OTHER', 'project_name' => 'Project B']);
+    JiraIssue::factory()->for($this->user)->create(['project_key' => 'PROJ', 'project_name' => 'Project A', 'status_category' => 'new']);
+    JiraIssue::factory()->for($this->user)->count(2)->create(['project_key' => 'OTHER', 'project_name' => 'Project B', 'status_category' => 'new']);
 
     $response = $this->actingAs($this->user)
         ->get('/jira');
@@ -91,8 +91,8 @@ test('jira page groups issues by project', function (): void {
 });
 
 test('jira page hides dismissed issues by default', function (): void {
-    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => false]);
-    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => true]);
+    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => false, 'status_category' => 'new']);
+    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => true, 'status_category' => 'new']);
 
     $response = $this->actingAs($this->user)
         ->get('/jira');
@@ -102,8 +102,8 @@ test('jira page hides dismissed issues by default', function (): void {
 });
 
 test('jira page shows dismissed issues when filter is set', function (): void {
-    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => false]);
-    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => true]);
+    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => false, 'status_category' => 'new']);
+    JiraIssue::factory()->for($this->user)->create(['is_dismissed' => true, 'status_category' => 'new']);
 
     $response = $this->actingAs($this->user)
         ->get('/jira?show_dismissed=1');
@@ -113,8 +113,8 @@ test('jira page shows dismissed issues when filter is set', function (): void {
 });
 
 test('jira page provides project options for filter', function (): void {
-    JiraIssue::factory()->for($this->user)->create(['project_key' => 'PROJ', 'project_name' => 'Project A']);
-    JiraIssue::factory()->for($this->user)->create(['project_key' => 'OTHER', 'project_name' => 'Project B']);
+    JiraIssue::factory()->for($this->user)->create(['project_key' => 'PROJ', 'project_name' => 'Project A', 'status_category' => 'new']);
+    JiraIssue::factory()->for($this->user)->create(['project_key' => 'OTHER', 'project_name' => 'Project B', 'status_category' => 'new']);
 
     $response = $this->actingAs($this->user)
         ->get('/jira');
