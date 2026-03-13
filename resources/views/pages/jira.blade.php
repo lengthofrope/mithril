@@ -87,7 +87,7 @@
                         </div>
                         <div class="divide-y divide-gray-100 dark:divide-gray-800">
                             @foreach($projectIssues as $issue)
-                                @include('pages.jira._issue-card', ['issue' => $issue])
+                                @include('pages.jira._issue-card', ['issue' => $issue, 'userNames' => $userNames])
                             @endforeach
                         </div>
                     </div>

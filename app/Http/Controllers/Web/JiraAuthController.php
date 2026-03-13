@@ -70,6 +70,7 @@ class JiraAuthController extends Controller
             $user = $request->user();
 
             $user->jira_cloud_id          = $tokenResponse->cloudId;
+            $user->jira_site_url          = $tokenResponse->siteUrl;
             $user->jira_account_id        = $tokenResponse->accountId;
             $user->jira_access_token      = $tokenResponse->accessToken;
             $user->jira_refresh_token     = $tokenResponse->refreshToken;

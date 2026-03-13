@@ -270,6 +270,7 @@ class TeamPageController extends Controller
             'role'               => ['sometimes', 'nullable', 'string', 'max:255'],
             'email'              => ['sometimes', 'nullable', 'email', 'max:255'],
             'notes'              => ['sometimes', 'nullable', 'string'],
+            'jira_account_id'    => ['sometimes', 'nullable', 'string', 'max:128'],
             'status'             => ['sometimes', 'string', Rule::in(array_column(MemberStatus::cases(), 'value'))],
             'bila_interval_days' => ['sometimes', 'integer', 'min:1'],
             'next_bila_date'     => ['sometimes', 'nullable', 'date'],

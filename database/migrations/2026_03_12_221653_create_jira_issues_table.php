@@ -26,10 +26,8 @@ return new class extends Migration
             $table->string('status_name', 100);
             $table->string('status_category', 50);
             $table->string('priority_name', 50)->nullable();
-            $table->string('assignee_name')->nullable();
-            $table->string('assignee_email')->nullable();
-            $table->string('reporter_name')->nullable();
-            $table->string('reporter_email')->nullable();
+            $table->string('assignee_account_id', 128)->nullable();
+            $table->string('reporter_account_id', 128)->nullable();
             $table->json('labels')->nullable();
             $table->string('web_url', 2048);
             $table->json('sources');

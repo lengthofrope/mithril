@@ -10,6 +10,7 @@ use App\Services\JiraActionService;
 beforeEach(function (): void {
     $this->user = User::factory()->create([
         'jira_cloud_id'        => 'test-cloud-id',
+        'jira_site_url'        => 'https://test.atlassian.net',
         'jira_access_token'    => 'test-token',
         'jira_refresh_token'   => 'test-refresh',
         'jira_token_expires_at' => now()->addHour(),
@@ -18,14 +19,14 @@ beforeEach(function (): void {
     $this->service = app(JiraActionService::class);
 });
 
-test('resolveTeamMember matches assignee email against team member email', function (): void {
+test('resolveTeamMember matches assignee account ID against team member jira_account_id', function (): void {
     $member = TeamMember::factory()->create([
-        'user_id' => $this->user->id,
-        'email'   => 'john@example.com',
+        'user_id'          => $this->user->id,
+        'jira_account_id'  => 'jira-acc-123',
     ]);
 
     $issue = JiraIssue::factory()->for($this->user)->create([
-        'assignee_email' => 'john@example.com',
+        'assignee_account_id' => 'jira-acc-123',
     ]);
 
     $result = $this->service->resolveTeamMember($issue);
@@ -34,42 +35,14 @@ test('resolveTeamMember matches assignee email against team member email', funct
     expect($result->id)->toBe($member->id);
 });
 
-test('resolveTeamMember matches assignee email against microsoft_email', function (): void {
-    $member = TeamMember::factory()->create([
-        'user_id'         => $this->user->id,
-        'email'           => 'john@internal.com',
-        'microsoft_email' => 'john@example.com',
+test('resolveTeamMember returns null when no jira_account_id match', function (): void {
+    TeamMember::factory()->create([
+        'user_id'          => $this->user->id,
+        'jira_account_id'  => null,
     ]);
 
     $issue = JiraIssue::factory()->for($this->user)->create([
-        'assignee_email' => 'john@example.com',
-    ]);
-
-    $result = $this->service->resolveTeamMember($issue);
-
-    expect($result)->not->toBeNull();
-    expect($result->id)->toBe($member->id);
-});
-
-test('resolveTeamMember is case insensitive', function (): void {
-    $member = TeamMember::factory()->create([
-        'user_id' => $this->user->id,
-        'email'   => 'John@Example.com',
-    ]);
-
-    $issue = JiraIssue::factory()->for($this->user)->create([
-        'assignee_email' => 'john@example.com',
-    ]);
-
-    $result = $this->service->resolveTeamMember($issue);
-
-    expect($result)->not->toBeNull();
-    expect($result->id)->toBe($member->id);
-});
-
-test('resolveTeamMember returns null when no match', function (): void {
-    $issue = JiraIssue::factory()->for($this->user)->create([
-        'assignee_email' => 'unknown@example.com',
+        'assignee_account_id' => 'jira-acc-unknown',
     ]);
 
     $result = $this->service->resolveTeamMember($issue);
@@ -77,12 +50,83 @@ test('resolveTeamMember returns null when no match', function (): void {
     expect($result)->toBeNull();
 });
 
-test('resolveTeamMember returns null when assignee email is null', function (): void {
+test('resolveTeamMember returns null when assignee account ID is null', function (): void {
     $issue = JiraIssue::factory()->for($this->user)->create([
-        'assignee_email' => null,
+        'assignee_account_id' => null,
     ]);
 
     $result = $this->service->resolveTeamMember($issue);
+
+    expect($result)->toBeNull();
+});
+
+test('resolveTeamMember falls back to email lookup via JiraUserService', function (): void {
+    $member = TeamMember::factory()->create([
+        'user_id'          => $this->user->id,
+        'email'            => 'alice@example.com',
+        'jira_account_id'  => null,
+    ]);
+
+    $issue = JiraIssue::factory()->for($this->user)->create([
+        'assignee_account_id' => 'jira-acc-fallback',
+    ]);
+
+    $mockCloud = Mockery::mock(\App\Services\JiraCloudService::class);
+    $mockCloud->shouldReceive('fetchUsersBulk')
+        ->once()
+        ->andReturn(collect([
+            ['accountId' => 'jira-acc-fallback', 'displayName' => 'Alice', 'emailAddress' => 'alice@example.com'],
+        ]));
+
+    $service = new JiraActionService($mockCloud);
+    $result  = $service->resolveTeamMember($issue);
+
+    expect($result)->not->toBeNull()
+        ->and($result->id)->toBe($member->id);
+
+    $member->refresh();
+    expect($member->jira_account_id)->toBe('jira-acc-fallback');
+});
+
+test('resolveTeamMember auto-populates jira_account_id on matched team member', function (): void {
+    $member = TeamMember::factory()->create([
+        'user_id'          => $this->user->id,
+        'email'            => 'bob@example.com',
+        'jira_account_id'  => null,
+    ]);
+
+    $issue = JiraIssue::factory()->for($this->user)->create([
+        'assignee_account_id' => 'jira-acc-bob',
+    ]);
+
+    $mockCloud = Mockery::mock(\App\Services\JiraCloudService::class);
+    $mockCloud->shouldReceive('fetchUsersBulk')
+        ->once()
+        ->andReturn(collect([
+            ['accountId' => 'jira-acc-bob', 'displayName' => 'Bob', 'emailAddress' => 'bob@example.com'],
+        ]));
+
+    $service = new JiraActionService($mockCloud);
+    $service->resolveTeamMember($issue);
+
+    $member->refresh();
+    expect($member->jira_account_id)->toBe('jira-acc-bob');
+});
+
+test('resolveTeamMember email fallback returns null when email not available', function (): void {
+    $issue = JiraIssue::factory()->for($this->user)->create([
+        'assignee_account_id' => 'jira-acc-private',
+    ]);
+
+    $mockCloud = Mockery::mock(\App\Services\JiraCloudService::class);
+    $mockCloud->shouldReceive('fetchUsersBulk')
+        ->once()
+        ->andReturn(collect([
+            ['accountId' => 'jira-acc-private', 'displayName' => 'Private User'],
+        ]));
+
+    $service = new JiraActionService($mockCloud);
+    $result  = $service->resolveTeamMember($issue);
 
     expect($result)->toBeNull();
 });
@@ -141,13 +185,13 @@ test('buildPrefillData returns correct note prefill', function (): void {
 
 test('buildPrefillData returns correct bila prefill with team member', function (): void {
     $member = TeamMember::factory()->create([
-        'user_id' => $this->user->id,
-        'email'   => 'john@example.com',
+        'user_id'          => $this->user->id,
+        'jira_account_id'  => 'jira-acc-123',
     ]);
 
     $issue = JiraIssue::factory()->for($this->user)->create([
-        'summary'        => 'Discuss architecture',
-        'assignee_email' => 'john@example.com',
+        'summary'             => 'Discuss architecture',
+        'assignee_account_id' => 'jira-acc-123',
     ]);
 
     $data = $this->service->buildPrefillData($issue, 'bila');
@@ -158,7 +202,7 @@ test('buildPrefillData returns correct bila prefill with team member', function 
 
 test('buildPrefillData throws for bila without team member match', function (): void {
     $issue = JiraIssue::factory()->for($this->user)->create([
-        'assignee_email' => 'nobody@example.com',
+        'assignee_account_id' => 'no-match-acc',
     ]);
 
     $this->service->buildPrefillData($issue, 'bila');

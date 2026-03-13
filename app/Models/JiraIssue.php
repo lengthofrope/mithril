@@ -24,10 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string                       $status_name
  * @property string                       $status_category
  * @property string|null                  $priority_name
- * @property string|null                  $assignee_name
- * @property string|null                  $assignee_email
- * @property string|null                  $reporter_name
- * @property string|null                  $reporter_email
+ * @property string|null                  $assignee_account_id
+ * @property string|null                  $reporter_account_id
  * @property array<int, string>|null      $labels
  * @property string                       $web_url
  * @property array<int, string>           $sources
@@ -58,10 +56,8 @@ class JiraIssue extends Model
         'status_name',
         'status_category',
         'priority_name',
-        'assignee_name',
-        'assignee_email',
-        'reporter_name',
-        'reporter_email',
+        'assignee_account_id',
+        'reporter_account_id',
         'labels',
         'web_url',
         'sources',

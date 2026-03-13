@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('role')->nullable();
             $table->string('email')->nullable();
+            $table->string('jira_account_id', 128)->nullable();
             $table->text('notes')->nullable();
             $table->string('status', 30)->default('available');
             $table->string('avatar_path', 500)->nullable();

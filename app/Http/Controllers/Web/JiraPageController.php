@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\JiraIssue;
+use App\Services\JiraUserService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -18,6 +19,13 @@ use Illuminate\Http\Request;
 class JiraPageController extends Controller
 {
     /**
+     * @param JiraUserService $jiraUserService
+     */
+    public function __construct(
+        private readonly JiraUserService $jiraUserService,
+    ) {}
+
+    /**
      * Display the Jira issues browse page.
      *
      * @param Request $request
@@ -25,7 +33,8 @@ class JiraPageController extends Controller
      */
     public function index(Request $request): View
     {
-        $isJiraConnected = $request->user()->hasJiraConnection();
+        $user = $request->user();
+        $isJiraConnected = $user->hasJiraConnection();
 
         if (!$isJiraConnected) {
             return view('pages.jira', [
@@ -34,6 +43,7 @@ class JiraPageController extends Controller
                 'issues'         => collect(),
                 'groupedIssues'  => collect(),
                 'projectOptions' => [],
+                'userNames'      => [],
             ]);
         }
 
@@ -86,12 +96,25 @@ class JiraPageController extends Controller
 
         $groupedIssues = $issues->groupBy('project_key');
 
+        $accountIds = $issues
+            ->flatMap(fn (JiraIssue $issue): array => [
+                $issue->assignee_account_id,
+                $issue->reporter_account_id,
+            ])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $userNames = $this->jiraUserService->resolveDisplayNames($user, $accountIds);
+
         return view('pages.jira', [
             'title'          => 'Jira',
             'isJiraConnected' => true,
             'issues'         => $issues,
             'groupedIssues'  => $groupedIssues,
             'projectOptions' => $projectOptions,
+            'userNames'      => $userNames,
         ]);
     }
 }

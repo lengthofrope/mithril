@@ -253,6 +253,15 @@
                                 </span>
                             </div>
                         @endif
+                        @if(auth()->user()->hasJiraConnection())
+                            <x-tl.auto-save-field
+                                :endpoint="route('members.update', $member->id)"
+                                field="jira_account_id"
+                                :value="$member->jira_account_id ?? ''"
+                                type="text"
+                                label="Jira account ID"
+                            />
+                        @endif
                         <div class="grid gap-4 sm:grid-cols-2">
                             <x-tl.auto-save-field
                                 :endpoint="route('members.update', $member->id)"
