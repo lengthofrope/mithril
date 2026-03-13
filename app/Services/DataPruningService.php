@@ -11,6 +11,8 @@ use App\Models\CalendarEventLink;
 use App\Models\Email;
 use App\Models\EmailLink;
 use App\Models\FollowUp;
+use App\Models\JiraIssue;
+use App\Models\JiraIssueLink;
 use App\Models\Task;
 use App\Models\User;
 
@@ -62,7 +64,40 @@ class DataPruningService
             })
             ->delete();
 
-        return new PruneResult($tasksDeleted, $followUpsDeleted, $emailsDeleted);
+        $jiraIssuesDeleted = $this->pruneJiraIssues($user, $cutoff);
+
+        JiraIssueLink::whereDoesntHave('linkable')
+            ->where(function ($query) use ($user): void {
+                $query->whereNull('jira_issue_id')
+                    ->orWhereHas('jiraIssue', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id));
+            })
+            ->delete();
+
+        return new PruneResult($tasksDeleted, $followUpsDeleted, $emailsDeleted, $jiraIssuesDeleted);
+    }
+
+    /**
+     * Prune Jira issues: dismissed beyond retention + stale (synced_at > 30 days).
+     *
+     * @param User $user   The user whose Jira issues to prune.
+     * @param \Illuminate\Support\Carbon $cutoff The retention cutoff date.
+     * @return int Number of Jira issues deleted.
+     */
+    private function pruneJiraIssues(User $user, \Illuminate\Support\Carbon $cutoff): int
+    {
+        $dismissed = JiraIssue::withoutGlobalScope('user')
+            ->where('user_id', $user->id)
+            ->where('is_dismissed', true)
+            ->where('updated_at', '<', $cutoff)
+            ->delete();
+
+        $stale = JiraIssue::withoutGlobalScope('user')
+            ->where('user_id', $user->id)
+            ->where('is_dismissed', false)
+            ->where('synced_at', '<', now()->subDays(30))
+            ->delete();
+
+        return $dismissed + $stale;
     }
 
     /**

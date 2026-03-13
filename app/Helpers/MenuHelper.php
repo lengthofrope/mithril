@@ -46,6 +46,14 @@ class MenuHelper
             ];
         }
 
+        if (self::hasJiraConnection()) {
+            $items[] = [
+                'icon' => 'jira',
+                'name' => 'Jira',
+                'path' => '/jira',
+            ];
+        }
+
         $items[] = ['separator' => true];
 
         $items[] = [
@@ -139,6 +147,18 @@ class MenuHelper
     }
 
     /**
+     * Determine whether the authenticated user has an active Jira connection.
+     *
+     * @return bool
+     */
+    private static function hasJiraConnection(): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null && $user->hasJiraConnection();
+    }
+
+    /**
      * Remove adjacent, leading, and trailing separator items from the list.
      *
      * @param array<int, array<string, mixed>> $items
@@ -223,6 +243,8 @@ class MenuHelper
             'analytics' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 20V10M12 20V4M6 20V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'email' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7L10.94 11.3375C11.5885 11.7428 12.4115 11.7428 13.06 11.3375L20 7M5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'jira' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.005 2L6.5 7.505l2.84 2.84L12.005 7.68l2.665 2.665 2.84-2.84L12.005 2zM6.5 7.505L2 12.005l4.5 4.5 2.84-2.84L6.68 11l2.66-2.655L6.5 7.505zM17.51 7.505l-2.84 2.84L17.32 13l-2.65 2.655 2.84 2.84 4.5-4.5-4.5-4.49zM12.005 16.32l-2.665-2.665-2.84 2.84L12.005 22l5.505-5.505-2.84-2.84-2.665 2.665z" fill="currentColor"/></svg>',
 
         ];
 

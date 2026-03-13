@@ -10,13 +10,15 @@ namespace App\DataTransferObjects;
 final readonly class PruneResult
 {
     /**
-     * @param int $tasksDeleted     Number of completed tasks pruned.
-     * @param int $followUpsDeleted Number of completed follow-ups pruned.
-     * @param int $emailsDeleted    Number of dismissed emails pruned.
+     * @param int $tasksDeleted      Number of completed tasks pruned.
+     * @param int $followUpsDeleted  Number of completed follow-ups pruned.
+     * @param int $emailsDeleted     Number of dismissed emails pruned.
+     * @param int $jiraIssuesDeleted Number of dismissed/stale Jira issues pruned.
      */
     public function __construct(
         public int $tasksDeleted,
         public int $followUpsDeleted,
         public int $emailsDeleted = 0,
+        public int $jiraIssuesDeleted = 0,
     ) {}
 }

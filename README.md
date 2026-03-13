@@ -34,6 +34,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 - **Notes** — Markdown with live preview, tags, pinning, full-text search
 - **Weekly Reflection** — Auto-generated summary + free-form reflection
 - **Analytics** — Configurable dashboard with charts and widgets
+- **Jira Cloud** — Browse assigned/mentioned/watched issues, create resources from issues, dismiss/undismiss, auto-sync
 - **E-mail** — Inbox sync from Microsoft 365, flagged email widget, resource linking to tasks/follow-ups/notes/bilas
 - **Office 365** — Calendar sync, team member availability, and email integration via Microsoft Graph API
 - **PWA** — Service worker, offline fallback, push notifications, installable
@@ -148,25 +149,54 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
       - Change **Status source** to **Auto (Office 365)**
       - Their availability status will sync every 5 minutes based on their Outlook calendar
 
-8. **Set up the cron job**
+8. **Configure Jira Cloud integration (optional)**
 
-   Laravel's task scheduler needs a single cron entry on your server. This runs scheduled tasks including the daily analytics snapshot, calendar sync (every 5 min), availability sync (every 5 min), and email sync.
+   To enable browsing and linking Jira issues:
+
+   a. **Create an OAuth 2.0 (3LO) app** in the [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/):
+      - Click **Create** > **OAuth 2.0 integration**
+      - Name: `Mithril` (or any name)
+      - Under **Authorization** > **OAuth 2.0 (3LO)**, click **Configure**
+      - Callback URL: `https://your-domain.com/auth/jira/callback`
+      - Click **Save changes**
+
+   b. **Add API scopes:**
+      - Go to **Permissions** > **Jira API** > **Configure**
+      - Add scopes: `read:jira-work`, `read:jira-user`
+      - The `offline_access` scope is requested automatically for refresh tokens
+
+   c. **Copy credentials:**
+      - Go to **Settings** to find your **Client ID** and **Secret**
+
+   d. **Set environment variables** in `.env`:
+
+      ```dotenv
+      JIRA_CLIENT_ID=<Client ID from Settings page>
+      JIRA_CLIENT_SECRET=<Secret from Settings page>
+      JIRA_REDIRECT_URI="${APP_URL}/auth/jira/callback"
+      ```
+
+   e. **Connect your account** in the app at **Settings** > **Jira Cloud** > **Connect Jira**
+
+9. **Set up the cron job**
+
+   Laravel's task scheduler needs a single cron entry on your server. This runs scheduled tasks including the daily analytics snapshot, calendar sync (every 5 min), availability sync (every 5 min), email sync, and Jira sync.
 
    ```bash
    * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
    ```
 
-9. **Start a queue worker**
+10. **Start a queue worker**
 
-   The calendar, availability, and email sync jobs run on the queue. Start a worker:
+    The calendar, availability, email sync, and Jira sync jobs run on the queue. Start a worker:
 
-   ```bash
-   php artisan queue:work --sleep=3 --tries=3
-   ```
+    ```bash
+    php artisan queue:work --sleep=3 --tries=3
+    ```
 
-   For production, use a process manager like Supervisor to keep the worker running. See the [Laravel Queue documentation](https://laravel.com/docs/queues#supervisor-configuration) for a Supervisor config example.
+    For production, use a process manager like Supervisor to keep the worker running. See the [Laravel Queue documentation](https://laravel.com/docs/queues#supervisor-configuration) for a Supervisor config example.
 
-10. **Start the application**
+11. **Start the application**
 
    For development, use the combined dev command that starts the Laravel server, queue worker, log viewer, and Vite dev server simultaneously:
 
@@ -198,6 +228,7 @@ php artisan microsoft:sync-calendars    # Manually sync calendars for all connec
 php artisan microsoft:sync-availability # Manually sync team member availability
 php artisan microsoft:detect-members    # Check manual members for O365 mailbox and upgrade
 php artisan sync:emails                 # Manually sync emails for all connected users
+php artisan jira:sync-issues            # Manually sync Jira issues for all connected users
 ```
 
 ### Verification

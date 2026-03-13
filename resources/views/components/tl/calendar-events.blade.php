@@ -36,11 +36,28 @@
     /**
      * Group an event collection by a human-readable day label.
      *
+     * Generates all 7 days in the window so that empty days (weekends, quiet days)
+     * are still visible in the calendar view.
+     *
      * @param \Illuminate\Database\Eloquent\Collection $collection
      * @return array<string, \Illuminate\Database\Eloquent\Collection>
      */
     $groupByDay = function (\Illuminate\Database\Eloquent\Collection $collection) use ($now, $timezone): array {
         $groups = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $day = $now->copy()->addDays($i)->startOfDay();
+
+            if ($day->isToday()) {
+                $label = 'Today';
+            } elseif ($day->isTomorrow()) {
+                $label = 'Tomorrow';
+            } else {
+                $label = $day->format('l, d F');
+            }
+
+            $groups[$label] = collect();
+        }
 
         foreach ($collection as $event) {
             $localStart = $event->start_at->timezone($timezone);
@@ -149,11 +166,17 @@
             Calendar
         </h2>
 
-        @if($events->isNotEmpty())
-            <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
-                {{ $events->count() }}
-            </span>
-        @endif
+        <div class="flex items-center gap-2">
+            @if($isMicrosoftConnected)
+                <x-tl.sync-button endpoint="/api/v1/sync/calendar" />
+            @endif
+
+            @if($events->isNotEmpty())
+                <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
+                    {{ $events->count() }}
+                </span>
+            @endif
+        </div>
     </div>
 
     {{-- Body --}}
@@ -166,10 +189,6 @@
             >
                 Go to Settings
             </a>
-        </p>
-    @elseif($events->isEmpty())
-        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-            No events scheduled for the rest of this week.
         </p>
     @else
         {{-- Today & Tomorrow: side by side on desktop --}}
@@ -197,6 +216,11 @@
 
                         {{-- Events --}}
                         <div x-show="open" x-collapse class="divide-y divide-gray-100 dark:divide-gray-800">
+                            @if($dayEvents->isEmpty())
+                                <p class="px-5 py-3 text-sm text-gray-400 dark:text-gray-500">
+                                    No events
+                                </p>
+                            @endif
                             @php $hasPastEvent = false; $nowLineInserted = false; @endphp
                             @foreach($dayEvents as $event)
                                 @php
@@ -314,6 +338,11 @@
 
                         {{-- Events --}}
                         <div x-show="open" x-collapse class="divide-y divide-gray-100 dark:divide-gray-800">
+                            @if($dayEvents->isEmpty())
+                                <p class="px-5 py-3 text-sm text-gray-400 dark:text-gray-500">
+                                    No events
+                                </p>
+                            @endif
                             @foreach($dayEvents as $event)
                                 @php
                                     $happening = $isHappening($event);

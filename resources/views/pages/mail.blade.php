@@ -34,11 +34,14 @@
                             </template>
                         </div>
                     </div>
-                    <span
-                        x-show="!isLoading && emails.length > 0"
-                        x-text="emails.length"
-                        class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400"
-                    ></span>
+                    <div class="flex items-center gap-2">
+                        <x-tl.sync-button endpoint="/api/v1/sync/emails" />
+                        <span
+                            x-show="!isLoading && emails.length > 0"
+                            x-text="emails.length"
+                            class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400"
+                        ></span>
+                    </div>
                 </div>
 
                 {{-- Loading state --}}

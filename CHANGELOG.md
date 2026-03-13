@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-03-13
+
+### Added
+
+- **System broadcast notifications** — Admins can send dismissable notifications to all users via `notification:send` Artisan command; supports info/warning/success/error variants, optional links, and auto-expiry; displayed as alert banners at the top of every page with smooth dismiss animation
+- **Jira Cloud integration** — Connect your Atlassian account via OAuth 2.0 (3LO) to sync Jira issues; `SyncJiraIssuesJob` runs on schedule; `jira:sync-issues` Artisan command for manual sync
+- **Jira browse page** — Dedicated `/jira` page showing all synced issues grouped by project, with source tabs (assigned/mentioned/watched), status category filters, and project dropdown
+- **Jira dashboard widget** — Open issues assigned to you displayed on the dashboard, ordered by priority
+- **Jira resource linking** — Create tasks, follow-ups, notes, or bilas directly from Jira issues with prefilled data (priority mapping, team member matching by email); linked resources shown as colored pills on issue cards
+- **Jira dismiss/undismiss** — Dismiss irrelevant issues from the browse page; toggle visibility with "Show dismissed" link
+- **Jira data pruning** — Dismissed issues pruned after user's retention period; stale unsynced issues (>30 days) cleaned up automatically
+- **Jira disconnect cleanup** — Disconnecting Jira removes all cached issues and links for the user
+- **Manual sync buttons** — Refresh buttons on Jira, calendar, and email pages (both browse pages and dashboard widgets) that trigger a sync job and automatically reload once complete; polls `synced_at` timestamp to detect job completion
+- **Sync status API** — `GET /api/v1/sync/{type}/status` endpoint returns the latest `synced_at` timestamp for polling sync completion
+- **Calendar empty days** — Calendar page now shows all 7 days including weekends and days without events, instead of hiding empty days
+
+### Changed
+
+- **Navigation** — Jira menu item conditionally shown when a Jira account is connected
+- **Data pruning** — Extended `DataPruningService` and `PruneResult` to include Jira issue cleanup and orphaned link removal
+- **Jira search API** — Migrated from deprecated `GET /rest/api/3/search` to `POST /rest/api/3/search/jql` endpoint
+- **Jira default filters** — Browse page defaults to "assigned" source tab and hides done issues unless the Done filter is explicitly selected
+- **Jira project dropdown** — Only shows projects matching the active source and status filters; selected project persists in dropdown even when other filters produce no results; switching projects preserves all active filters
+- **Jira header layout** — Single-line non-wrapping header with the project dropdown shrinking to fit available space; filter tabs and count badge stay fixed
+- **Jira dismiss/undismiss** — Migrated from Alpine v2 `__x.$data` pattern to `$dispatch` events for Alpine v3 compatibility
+- **Jira dashboard widget** — Stretches to match the height of adjacent dashboard columns
+- **Layout flex constraint** — Added `min-w-0` to the main content flex wrapper in the app layout, enabling `truncate` to work correctly throughout the app for long text
+- **Jira issue card** — Long issue summaries now truncate properly with ellipsis instead of causing horizontal scrollbars
+
 ## [1.5.0] - 2026-03-12
 
 ### Added

@@ -10,6 +10,10 @@ use App\Http\Controllers\Api\EmailActionController;
 
 use App\Http\Controllers\Api\BilaController;
 use App\Http\Controllers\Api\ExportImportController;
+use App\Http\Controllers\Api\JiraActionController;
+use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\Api\JiraIssueController;
+use App\Http\Controllers\Api\SystemNotificationController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\ReorderController;
@@ -37,6 +41,15 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::get('export', [ExportImportController::class, 'export']);
     Route::post('import', [ExportImportController::class, 'import']);
 
+    Route::prefix('sync')->as('sync.')->group(function (): void {
+        Route::post('jira', [SyncController::class, 'jira'])->name('jira');
+        Route::post('calendar', [SyncController::class, 'calendar'])->name('calendar');
+        Route::post('emails', [SyncController::class, 'emails'])->name('emails');
+        Route::get('{type}/status', [SyncController::class, 'status'])
+            ->name('status')
+            ->whereIn('type', ['jira', 'calendar', 'emails']);
+    });
+
     Route::prefix('emails')->as('emails.')->group(function (): void {
         Route::get('/', [EmailActionController::class, 'index'])->name('index');
         Route::get('dashboard', [EmailActionController::class, 'dashboard'])->name('dashboard');
@@ -53,6 +66,27 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
             Route::delete('links/{emailLink}', [EmailActionController::class, 'unlink'])->name('unlink');
         });
     });
+
+    Route::prefix('jira-issues')->as('jira-issues.')->group(function (): void {
+        Route::get('/', [JiraIssueController::class, 'index'])->name('index');
+        Route::get('dashboard', [JiraIssueController::class, 'dashboard'])->name('dashboard');
+        Route::patch('{jiraIssue}/dismiss', [JiraIssueController::class, 'dismiss'])->name('dismiss');
+        Route::patch('{jiraIssue}/undismiss', [JiraIssueController::class, 'undismiss'])->name('undismiss');
+
+        Route::get('{jiraIssue}/prefill/{type}', [JiraActionController::class, 'prefill'])
+            ->name('prefill')
+            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+
+        Route::post('{jiraIssue}/create/{type}', [JiraActionController::class, 'create'])
+            ->name('create')
+            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+
+        Route::delete('{jiraIssue}/links/{jiraIssueLink}', [JiraActionController::class, 'unlink'])
+            ->name('unlink');
+    });
+
+    Route::patch('system-notifications/{systemNotification}/dismiss', [SystemNotificationController::class, 'dismiss'])
+        ->name('system-notifications.dismiss');
 
     Route::prefix('calendar-events/{calendarEvent}')->as('calendar-events.')->group(function (): void {
         Route::get('prefill/{type}', [CalendarActionController::class, 'prefill'])
