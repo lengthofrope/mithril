@@ -24,6 +24,7 @@ import { emailActions } from './components/email-actions';
 import { emailPage } from './components/email-page';
 import { jiraPage } from './components/jira-page';
 import { jiraActions } from './components/jira-actions';
+import { syncButton } from './components/sync-button';
 
 declare global {
     interface Window {
@@ -54,6 +55,7 @@ Alpine.data('emailActions', emailActions as Parameters<typeof Alpine.data>[1]);
 Alpine.data('emailPage', emailPage as Parameters<typeof Alpine.data>[1]);
 Alpine.data('jiraPage', jiraPage as Parameters<typeof Alpine.data>[1]);
 Alpine.data('jiraActions', jiraActions as Parameters<typeof Alpine.data>[1]);
+Alpine.data('syncButton', syncButton as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

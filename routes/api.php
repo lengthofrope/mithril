@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\EmailActionController;
 use App\Http\Controllers\Api\BilaController;
 use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\JiraActionController;
+use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\JiraIssueController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\NoteController;
@@ -38,6 +39,12 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
     Route::get('export', [ExportImportController::class, 'export']);
     Route::post('import', [ExportImportController::class, 'import']);
+
+    Route::prefix('sync')->as('sync.')->group(function (): void {
+        Route::post('jira', [SyncController::class, 'jira'])->name('jira');
+        Route::post('calendar', [SyncController::class, 'calendar'])->name('calendar');
+        Route::post('emails', [SyncController::class, 'emails'])->name('emails');
+    });
 
     Route::prefix('emails')->as('emails.')->group(function (): void {
         Route::get('/', [EmailActionController::class, 'index'])->name('index');

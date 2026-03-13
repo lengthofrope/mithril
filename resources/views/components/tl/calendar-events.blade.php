@@ -166,11 +166,17 @@
             Calendar
         </h2>
 
-        @if($events->isNotEmpty())
-            <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
-                {{ $events->count() }}
-            </span>
-        @endif
+        <div class="flex items-center gap-2">
+            @if($isMicrosoftConnected)
+                <x-tl.sync-button endpoint="/api/v1/sync/calendar" />
+            @endif
+
+            @if($events->isNotEmpty())
+                <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
+                    {{ $events->count() }}
+                </span>
+            @endif
+        </div>
     </div>
 
     {{-- Body --}}

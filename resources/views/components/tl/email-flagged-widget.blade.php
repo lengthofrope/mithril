@@ -33,6 +33,7 @@
     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
         <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Flagged emails</h2>
         <div class="flex items-center gap-2">
+            <x-tl.sync-button endpoint="/api/v1/sync/emails" />
             <span class="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
                 {{ $emails->count() }}
             </span>

@@ -43,6 +43,7 @@
     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
         <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Jira Issues</h2>
         <div class="flex items-center gap-2">
+            <x-tl.sync-button endpoint="/api/v1/sync/jira" />
             <span
                 x-show="!isLoading && total > 0"
                 x-text="total"

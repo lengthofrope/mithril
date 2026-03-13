@@ -60,9 +60,12 @@
                         </select>
                     @endif
 
-                    <span class="ml-auto shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
-                        {{ $issues->count() }}
-                    </span>
+                    <div class="ml-auto flex shrink-0 items-center gap-2">
+                        <x-tl.sync-button endpoint="/api/v1/sync/jira" />
+                        <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
+                            {{ $issues->count() }}
+                        </span>
+                    </div>
                 </div>
 
                 {{-- Empty state --}}
