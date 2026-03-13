@@ -36,10 +36,11 @@
                     <span class="mx-1 hidden h-4 w-px bg-gray-200 dark:bg-gray-700 sm:inline-block" aria-hidden="true"></span>
 
                     {{-- Status category filter --}}
+                    @php $activeStatus = request('status_category', 'new'); @endphp
                     <div class="flex shrink-0 gap-1">
                         @foreach(['new' => 'Open', 'indeterminate' => 'In Progress', 'done' => 'Done'] as $cat => $catLabel)
-                            <a href="{{ route('jira.index', array_merge(request()->query(), ['status_category' => request('status_category') === $cat ? null : $cat])) }}"
-                                class="rounded-md px-2.5 py-1 text-xs font-medium transition {{ request('status_category') === $cat ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                            <a href="{{ route('jira.index', array_merge(request()->query(), ['status_category' => $cat])) }}"
+                                class="rounded-md px-2.5 py-1 text-xs font-medium transition {{ $activeStatus === $cat ? 'bg-brand-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
                                 {{ $catLabel }}
                             </a>
                         @endforeach
