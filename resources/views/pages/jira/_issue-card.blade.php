@@ -88,7 +88,7 @@
         @if($issue->is_dismissed)
             <button
                 type="button"
-                x-on:click="$root.closest('[x-data*=jiraPage]').__x.$data.undismiss({{ $issue->id }})"
+                x-on:click="$dispatch('jira-undismiss', { id: {{ $issue->id }} })"
                 class="flex h-6 w-6 items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 title="Restore" aria-label="Restore issue"
             >
@@ -97,7 +97,7 @@
         @else
             <button
                 type="button"
-                x-on:click="$root.closest('[x-data*=jiraPage]').__x.$data.dismiss({{ $issue->id }})"
+                x-on:click="$dispatch('jira-dismiss', { id: {{ $issue->id }} })"
                 class="flex h-6 w-6 items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 title="Dismiss" aria-label="Dismiss issue"
             >
