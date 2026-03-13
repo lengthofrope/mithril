@@ -70,9 +70,9 @@ class SearchController extends Controller
     private function searchTasks(string $term): \Illuminate\Support\Collection
     {
         return Task::search($term)
-            ->with(['teamMember', 'taskCategory'])
+            ->with(['teamMember', 'taskCategory', 'team'])
             ->limit(self::RESULTS_PER_TYPE)
-            ->get(['id', 'title', 'status', 'priority', 'deadline', 'team_member_id', 'task_category_id']);
+            ->get(['id', 'title', 'status', 'priority', 'deadline', 'team_id', 'team_member_id', 'task_category_id']);
     }
 
     /**

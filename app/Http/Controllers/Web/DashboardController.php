@@ -122,10 +122,10 @@ class DashboardController extends Controller
      */
     private function buildTodaySection(string $timezone): array
     {
-        $tasksDueToday = Task::whereDate('deadline', now($timezone)->toDateString())
+        $tasksDueToday = Task::whereDate('deadline', '<=', now($timezone)->toDateString())
             ->whereNotIn('status', [TaskStatus::Done->value])
-            ->orderBySortOrder()
-            ->with(['teamMember', 'taskCategory'])
+            ->orderBy('deadline')
+            ->with(['teamMember', 'taskCategory', 'team'])
             ->get();
 
         $overdueFollowUps = FollowUp::where(function ($query) {
@@ -163,7 +163,7 @@ class DashboardController extends Controller
             ? Task::whereDate('deadline', '>', $todayDate)
                 ->whereNotIn('status', [TaskStatus::Done->value])
                 ->orderBy('deadline')
-                ->with(['teamMember', 'taskCategory'])
+                ->with(['teamMember', 'taskCategory', 'team'])
                 ->limit($user->dashboard_upcoming_tasks)
                 ->get()
             : new Collection();

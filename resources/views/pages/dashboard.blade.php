@@ -58,11 +58,11 @@
             </x-tl.counter-card>
 
             <x-tl.counter-card
-                title="Urgent tasks"
-                :count="$counters['urgent_tasks']"
+                title="Overdue tasks"
+                :count="$counters['overdue_tasks']"
                 color="red"
-                :link="route('tasks.index', ['priority' => 'urgent'])"
-                counterKey="urgent_tasks"
+                :link="route('tasks.index')"
+                counterKey="overdue_tasks"
             >
                 <x-slot name="icon">
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -108,7 +108,7 @@
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
-                    {{ $upcomingTasks->isNotEmpty() ? 'Upcoming tasks' : 'Tasks due today' }}
+                    {{ $upcomingTasks->isNotEmpty() ? 'Upcoming tasks' : 'Tasks needing attention' }}
                 </h2>
                 <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
                     {{ $todayTasks->count() + $upcomingTasks->count() }}

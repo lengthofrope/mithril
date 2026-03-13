@@ -26,6 +26,9 @@ class DashboardStatsService
         $urgentTaskCount = Task::where('priority', Priority::Urgent->value)
             ->whereNotIn('status', [TaskStatus::Done->value])
             ->count();
+        $overdueTaskCount = Task::whereDate('deadline', '<', now()->toDateString())
+            ->whereNotIn('status', [TaskStatus::Done->value])
+            ->count();
         $overdueFollowUpCount = FollowUp::overdue()->count();
         $todayFollowUpCount = FollowUp::dueToday()->count();
         $upcomingBilaCount = Bila::where('is_done', false)
@@ -37,6 +40,7 @@ class DashboardStatsService
         return [
             'open_tasks' => $openTaskCount,
             'urgent_tasks' => $urgentTaskCount,
+            'overdue_tasks' => $overdueTaskCount,
             'overdue_follow_ups' => $overdueFollowUpCount,
             'today_follow_ups' => $todayFollowUpCount,
             'bilas_this_week' => $upcomingBilaCount,
