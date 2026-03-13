@@ -286,7 +286,7 @@
             @endif
 
             @if($isJiraConnected)
-                <x-tl.jira-widget />
+                <x-tl.jira-widget class="flex-1" />
             @endif
         </div>
     </div>
