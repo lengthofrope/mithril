@@ -9,11 +9,26 @@ function getCSRFToken(): string {
 /**
  * Alpine.js component for the Jira issues browse page.
  *
- * Handles dismiss/undismiss actions via API calls and updates the DOM.
+ * Handles dismiss/undismiss actions and project filter navigation.
  */
 function jiraPage(config: { dismissEndpoint: string }): Record<string, unknown> {
     return {
         dismissEndpoint: config.dismissEndpoint,
+
+        /**
+         * Navigate to the same page with a different project_key, preserving all other query params.
+         */
+        selectProject(projectKey: string): void {
+            const url = new URL(window.location.href);
+
+            if (projectKey) {
+                url.searchParams.set('project_key', projectKey);
+            } else {
+                url.searchParams.delete('project_key');
+            }
+
+            window.location.href = url.toString();
+        },
 
         /**
          * Dismiss a Jira issue via API.

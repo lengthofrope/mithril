@@ -44,7 +44,7 @@
                         {{-- Project filter --}}
                         @if(count($projectOptions) > 1)
                             <select
-                                onchange="if(this.value) window.location='{{ route('jira.index') }}?project_key='+this.value; else window.location='{{ route('jira.index') }}';"
+                                @change="selectProject($event.target.value)"
                                 class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                                 aria-label="Filter by project"
                             >
