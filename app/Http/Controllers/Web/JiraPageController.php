@@ -48,11 +48,8 @@ class JiraPageController extends Controller
             $query->where('is_dismissed', false);
         }
 
-        if ($request->filled('status_category')) {
-            $query->where('status_category', $request->input('status_category'));
-        } else {
-            $query->where('status_category', '!=', 'done');
-        }
+        $statusCategory = $request->input('status_category', 'new');
+        $query->where('status_category', $statusCategory);
 
         $allFilteredIssues = $query->get();
 
