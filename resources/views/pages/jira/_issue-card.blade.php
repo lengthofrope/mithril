@@ -1,5 +1,5 @@
 <div
-    x-data="jiraActions({{ $issue->id }}, @js($issue->jiraIssueLinks?->toArray() ?? []), {{ $issue->assignee_email ? 'true' : 'false' }})"
+    x-data="jiraActions({{ $issue->id }}, @js($issue->jiraIssueLinks?->toArray() ?? []), {{ $issue->assignee_account_id ? 'true' : 'false' }})"
     class="flex items-start gap-3 px-5 py-3 {{ $issue->is_dismissed ? 'opacity-50' : '' }}"
     role="row"
 >
@@ -44,8 +44,8 @@
             @endif
 
             {{-- Assignee --}}
-            @if($issue->assignee_name)
-                <span>{{ $issue->assignee_name }}</span>
+            @if($issue->assignee_account_id && isset($userNames[$issue->assignee_account_id]))
+                <span>{{ $userNames[$issue->assignee_account_id] }}</span>
             @endif
 
             {{-- Updated date --}}

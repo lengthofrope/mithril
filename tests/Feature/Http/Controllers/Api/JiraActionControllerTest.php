@@ -56,13 +56,13 @@ test('prefill returns note prefill data', function (): void {
 
 test('prefill returns bila prefill data with team member', function (): void {
     TeamMember::factory()->create([
-        'user_id' => $this->user->id,
-        'email'   => 'john@example.com',
+        'user_id'          => $this->user->id,
+        'jira_account_id'  => 'jira-acc-123',
     ]);
 
     $issue = JiraIssue::factory()->for($this->user)->create([
-        'summary'        => 'Discuss architecture',
-        'assignee_email' => 'john@example.com',
+        'summary'             => 'Discuss architecture',
+        'assignee_account_id' => 'jira-acc-123',
     ]);
 
     $this->actingAs($this->user)
@@ -73,7 +73,7 @@ test('prefill returns bila prefill data with team member', function (): void {
 
 test('prefill returns error for bila without team member', function (): void {
     $issue = JiraIssue::factory()->for($this->user)->create([
-        'assignee_email' => 'nobody@example.com',
+        'assignee_account_id' => 'no-match-acc',
     ]);
 
     $this->actingAs($this->user)

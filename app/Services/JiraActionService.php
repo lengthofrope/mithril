@@ -12,8 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Handles the business logic for creating and linking resources to Jira issues.
  *
- * Resolves team members by email, builds pre-fill data for resource creation,
- * and manages polymorphic links between Jira issues and application resources.
+ * Resolves team members by Jira account ID (with email fallback),
+ * builds pre-fill data for resource creation, and manages polymorphic
+ * links between Jira issues and application resources.
  */
 class JiraActionService
 {
@@ -31,28 +32,39 @@ class JiraActionService
     ];
 
     /**
-     * Resolve which team member matches the issue's assignee email.
+     * Create a new JiraActionService instance.
      *
-     * Compares assignee_email against TeamMember.email and TeamMember.microsoft_email
-     * (case-insensitive). Returns null if no match.
+     * @param JiraCloudService $jiraCloudService
+     */
+    public function __construct(
+        private readonly JiraCloudService $jiraCloudService,
+    ) {}
+
+    /**
+     * Resolve which team member matches the issue's assignee.
+     *
+     * First matches by jira_account_id. If no match, fetches the email from
+     * the Jira API as a best-effort fallback and matches against email columns.
+     * When the fallback succeeds, auto-populates jira_account_id for future matches.
      *
      * @param JiraIssue $issue The Jira issue to resolve the assignee for.
      * @return TeamMember|null The matched team member, or null.
      */
     public function resolveTeamMember(JiraIssue $issue): ?TeamMember
     {
-        if ($issue->assignee_email === null) {
+        if ($issue->assignee_account_id === null) {
             return null;
         }
 
-        $email = strtolower($issue->assignee_email);
-
-        return TeamMember::query()
-            ->where(function ($query) use ($email): void {
-                $query->whereRaw('LOWER(email) = ?', [$email])
-                      ->orWhereRaw('LOWER(microsoft_email) = ?', [$email]);
-            })
+        $member = TeamMember::query()
+            ->where('jira_account_id', $issue->assignee_account_id)
             ->first();
+
+        if ($member !== null) {
+            return $member;
+        }
+
+        return $this->resolveByEmailFallback($issue);
     }
 
     /**
@@ -112,6 +124,44 @@ class JiraActionService
                 'issue_summary' => $issue->summary,
             ],
         );
+    }
+
+    /**
+     * Attempt to resolve a team member by fetching their email from the Jira API.
+     *
+     * If matched, auto-populates the jira_account_id on the team member for future lookups.
+     *
+     * @param JiraIssue $issue The Jira issue with assignee_account_id set.
+     * @return TeamMember|null The matched team member, or null.
+     */
+    private function resolveByEmailFallback(JiraIssue $issue): ?TeamMember
+    {
+        try {
+            $user  = $issue->user ?? auth()->user();
+            $users = $this->jiraCloudService->fetchUsersBulk($user, [$issue->assignee_account_id]);
+
+            $email = $users->first()['emailAddress'] ?? null;
+
+            if ($email === null) {
+                return null;
+            }
+
+            $email  = strtolower($email);
+            $member = TeamMember::query()
+                ->where(function ($query) use ($email): void {
+                    $query->whereRaw('LOWER(email) = ?', [$email])
+                          ->orWhereRaw('LOWER(microsoft_email) = ?', [$email]);
+                })
+                ->first();
+
+            if ($member !== null) {
+                $member->update(['jira_account_id' => $issue->assignee_account_id]);
+            }
+
+            return $member;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

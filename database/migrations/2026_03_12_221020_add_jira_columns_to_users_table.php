@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('jira_cloud_id')->nullable()->after('microsoft_token_expires_at');
-            $table->string('jira_account_id')->nullable()->after('jira_cloud_id');
+            $table->string('jira_site_url', 2048)->nullable()->after('jira_cloud_id');
+            $table->string('jira_account_id')->nullable()->after('jira_site_url');
             $table->text('jira_access_token')->nullable()->after('jira_account_id');
             $table->text('jira_refresh_token')->nullable()->after('jira_access_token');
             $table->timestamp('jira_token_expires_at')->nullable()->after('jira_refresh_token');
@@ -30,6 +31,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
                 'jira_cloud_id',
+                'jira_site_url',
                 'jira_account_id',
                 'jira_access_token',
                 'jira_refresh_token',

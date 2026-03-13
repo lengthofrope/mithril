@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string|null $role
  * @property string|null $email
+ * @property string|null $jira_account_id
  * @property string|null $notes
  * @property MemberStatus $status
  * @property string|null $microsoft_email
@@ -55,6 +56,7 @@ class TeamMember extends Model
         'name',
         'role',
         'email',
+        'jira_account_id',
         'notes',
         'status',
         'microsoft_email',

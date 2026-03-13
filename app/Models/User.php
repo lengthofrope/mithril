@@ -37,6 +37,7 @@ class User extends Authenticatable
         'microsoft_refresh_token',
         'microsoft_token_expires_at',
         'jira_cloud_id',
+        'jira_site_url',
         'jira_account_id',
         'jira_access_token',
         'jira_refresh_token',

@@ -71,6 +71,7 @@ test('callback exchanges code for tokens and updates user', function () {
         refreshToken: 'test-refresh-token',
         expiresAt:    $expiresAt,
         cloudId:      'cloud-id-abc',
+        siteUrl:      'https://mysite.atlassian.net',
         accountId:    'account-id-xyz',
     );
 
@@ -140,6 +141,7 @@ test('disconnect clears all jira credentials from user', function () {
         ->once()
         ->andReturnUsing(function (User $resolvedUser): void {
             $resolvedUser->jira_cloud_id          = null;
+            $resolvedUser->jira_site_url          = null;
             $resolvedUser->jira_account_id        = null;
             $resolvedUser->jira_access_token      = null;
             $resolvedUser->jira_refresh_token     = null;

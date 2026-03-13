@@ -41,6 +41,51 @@ test('syncIssues upserts assigned issues into jira_issues table', function () {
         ->and($issues->first()->sources)->toContain('assigned');
 });
 
+test('syncIssues stores account IDs instead of personal data', function () {
+    $mockService = Mockery::mock(JiraCloudService::class);
+
+    $mockService->shouldReceive('searchIssues')
+        ->times(3)
+        ->andReturn(
+            collect([makeRawIssue('10001', 'PROJ-1', 'Test issue')]),
+            collect([]),
+            collect([]),
+        );
+
+    $syncService = new JiraSyncService($mockService);
+    $syncService->syncIssues($this->user);
+
+    $issue = JiraIssue::withoutGlobalScopes()
+        ->where('user_id', $this->user->id)
+        ->first();
+
+    expect($issue->assignee_account_id)->toBe('assignee-acc-123')
+        ->and($issue->reporter_account_id)->toBe('reporter-acc-456');
+});
+
+test('syncIssues constructs web_url from user jira_site_url', function () {
+    $this->user->update(['jira_site_url' => 'https://mysite.atlassian.net']);
+
+    $mockService = Mockery::mock(JiraCloudService::class);
+
+    $mockService->shouldReceive('searchIssues')
+        ->times(3)
+        ->andReturn(
+            collect([makeRawIssue('10001', 'PROJ-1', 'Test issue')]),
+            collect([]),
+            collect([]),
+        );
+
+    $syncService = new JiraSyncService($mockService);
+    $syncService->syncIssues($this->user);
+
+    $issue = JiraIssue::withoutGlobalScopes()
+        ->where('user_id', $this->user->id)
+        ->first();
+
+    expect($issue->web_url)->toBe('https://mysite.atlassian.net/browse/PROJ-1');
+});
+
 test('syncIssues merges sources when issue matches multiple queries', function () {
     $mockService = Mockery::mock(JiraCloudService::class);
 
@@ -209,8 +254,8 @@ function makeRawIssue(string $id, string $key, string $summary): array
             'issuetype'   => ['name' => 'Task'],
             'status'      => ['name' => 'Open', 'statusCategory' => ['key' => 'new']],
             'priority'    => ['name' => 'Medium'],
-            'assignee'    => ['displayName' => 'John Doe', 'emailAddress' => 'john@example.com'],
-            'reporter'    => ['displayName' => 'Jane Doe', 'emailAddress' => 'jane@example.com'],
+            'assignee'    => ['accountId' => 'assignee-acc-123', 'displayName' => 'John Doe', 'emailAddress' => 'john@example.com'],
+            'reporter'    => ['accountId' => 'reporter-acc-456', 'displayName' => 'Jane Doe', 'emailAddress' => 'jane@example.com'],
             'labels'      => ['backend'],
             'updated'     => now()->toIso8601String(),
         ],

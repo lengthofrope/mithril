@@ -62,7 +62,7 @@ class JiraCloudService
         $accessToken = $body['access_token'];
         $expiresAt   = now()->addSeconds((int) $body['expires_in']);
 
-        $cloudId   = $this->fetchCloudId($accessToken);
+        [$cloudId, $siteUrl] = $this->fetchCloudIdAndSiteUrl($accessToken);
         $accountId = $this->fetchAccountId($accessToken);
 
         return new JiraTokenResponse(
@@ -70,6 +70,7 @@ class JiraCloudService
             refreshToken: $body['refresh_token'],
             expiresAt:    $expiresAt,
             cloudId:      $cloudId,
+            siteUrl:      $siteUrl,
             accountId:    $accountId,
         );
     }
@@ -134,6 +135,40 @@ class JiraCloudService
     }
 
     /**
+     * Fetch user details in bulk from the Jira Cloud REST API.
+     *
+     * @param User              $user       The user whose Jira connection should be used.
+     * @param array<int,string> $accountIds Atlassian account IDs to resolve.
+     * @return Collection<int, array<string, mixed>> The user records from Jira.
+     */
+    public function fetchUsersBulk(User $user, array $accountIds): Collection
+    {
+        if (empty($accountIds)) {
+            return collect();
+        }
+
+        $this->ensureValidToken($user);
+
+        $query = collect($accountIds)
+            ->map(fn (string $id) => 'accountId=' . urlencode($id))
+            ->implode('&');
+
+        $url = $this->apiUrl($user, '/rest/api/3/user/bulk') . '?' . $query . '&maxResults=200';
+
+        try {
+            $response = Http::withToken($user->jira_access_token)->get($url);
+
+            if ($response->failed()) {
+                return collect();
+            }
+
+            return collect($response->json('values', []));
+        } catch (\Throwable) {
+            return collect();
+        }
+    }
+
+    /**
      * Revoke all stored Jira credentials from the user record.
      *
      * @param User $user The user whose Jira access should be cleared.
@@ -167,13 +202,13 @@ class JiraCloudService
     }
 
     /**
-     * Fetch the first accessible Jira Cloud site ID for the given access token.
+     * Fetch the first accessible Jira Cloud site ID and URL for the given access token.
      *
      * @param string $accessToken A valid Bearer access token.
-     * @return string The Cloud site ID.
+     * @return array{0: string, 1: string} The Cloud site ID and URL.
      * @throws RuntimeException When no accessible resources are found.
      */
-    private function fetchCloudId(string $accessToken): string
+    private function fetchCloudIdAndSiteUrl(string $accessToken): array
     {
         $response = Http::withToken($accessToken)
             ->get(config('jira.resources_url'));
@@ -184,7 +219,10 @@ class JiraCloudService
             );
         }
 
-        return $response->json('0.id');
+        return [
+            $response->json('0.id'),
+            rtrim($response->json('0.url', ''), '/'),
+        ];
     }
 
     /**
@@ -239,6 +277,7 @@ class JiraCloudService
     private function clearJiraCredentials(User $user): void
     {
         $user->jira_cloud_id          = null;
+        $user->jira_site_url          = null;
         $user->jira_account_id        = null;
         $user->jira_access_token      = null;
         $user->jira_refresh_token     = null;

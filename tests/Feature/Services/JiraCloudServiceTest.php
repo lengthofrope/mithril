@@ -186,6 +186,70 @@ test('hasJiraConnection returns false when cloud ID is null', function () {
     expect($user->hasJiraConnection())->toBeFalse();
 });
 
+test('fetchUsersBulk returns user data from bulk endpoint', function () {
+    $user = User::factory()->create([
+        'jira_cloud_id'         => 'cloud-id-123',
+        'jira_account_id'       => 'account-abc',
+        'jira_access_token'     => 'valid-token',
+        'jira_refresh_token'    => 'valid-refresh',
+        'jira_token_expires_at' => now()->addHour(),
+    ]);
+
+    Http::fake([
+        'api.atlassian.com/ex/jira/cloud-id-123/rest/api/3/user/bulk*' => Http::response([
+            'values' => [
+                ['accountId' => 'acc-1', 'displayName' => 'Alice Smith', 'active' => true],
+                ['accountId' => 'acc-2', 'displayName' => 'Bob Jones', 'active' => true],
+            ],
+        ], 200),
+    ]);
+
+    $service = new JiraCloudService();
+    $result  = $service->fetchUsersBulk($user, ['acc-1', 'acc-2']);
+
+    expect($result)->toHaveCount(2)
+        ->and($result->first()['displayName'])->toBe('Alice Smith');
+});
+
+test('fetchUsersBulk returns empty collection on rate limit', function () {
+    $user = User::factory()->create([
+        'jira_cloud_id'         => 'cloud-id-123',
+        'jira_account_id'       => 'account-abc',
+        'jira_access_token'     => 'valid-token',
+        'jira_refresh_token'    => 'valid-refresh',
+        'jira_token_expires_at' => now()->addHour(),
+    ]);
+
+    Http::fake([
+        'api.atlassian.com/ex/jira/cloud-id-123/rest/api/3/user/bulk*' => Http::response('', 429, [
+            'Retry-After' => '30',
+        ]),
+    ]);
+
+    $service = new JiraCloudService();
+    $result  = $service->fetchUsersBulk($user, ['acc-1']);
+
+    expect($result)->toBeEmpty();
+});
+
+test('fetchUsersBulk returns empty collection for empty input', function () {
+    $user = User::factory()->create([
+        'jira_cloud_id'         => 'cloud-id-123',
+        'jira_account_id'       => 'account-abc',
+        'jira_access_token'     => 'valid-token',
+        'jira_refresh_token'    => 'valid-refresh',
+        'jira_token_expires_at' => now()->addHour(),
+    ]);
+
+    Http::fake();
+
+    $service = new JiraCloudService();
+    $result  = $service->fetchUsersBulk($user, []);
+
+    expect($result)->toBeEmpty();
+    Http::assertNothingSent();
+});
+
 test('ensureValidToken refreshes expired token before API call', function () {
     $user = User::factory()->create([
         'jira_cloud_id'          => 'cloud-id-123',

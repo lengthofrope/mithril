@@ -33,7 +33,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamp('dismissed_at')->useCurrent();
 
-            $table->unique(['system_notification_id', 'user_id']);
+            $table->unique(['system_notification_id', 'user_id'], 'sys_notif_user_unique');
         });
     }
 

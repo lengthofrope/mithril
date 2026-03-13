@@ -7,8 +7,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\JiraIssue;
+use App\Services\JiraUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 /**
  * API controller for Jira issue operations.
@@ -19,6 +21,13 @@ use Illuminate\Http\Request;
 class JiraIssueController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * @param JiraUserService $jiraUserService
+     */
+    public function __construct(
+        private readonly JiraUserService $jiraUserService,
+    ) {}
 
     /**
      * List all non-dismissed Jira issues with optional filters.
@@ -47,7 +56,11 @@ class JiraIssueController extends Controller
             $query->where('project_key', $request->input('project_key'));
         }
 
-        return $this->successResponse($query->get());
+        $issues = $query->get();
+
+        return $this->successResponse(
+            $this->appendUserNames($request, $issues),
+        );
     }
 
     /**
@@ -73,7 +86,7 @@ class JiraIssueController extends Controller
         $issues = $query->limit($limit)->get();
 
         return $this->successResponse([
-            'issues' => $issues,
+            'issues' => $this->appendUserNames($request, $issues),
             'total'  => $total,
         ]);
     }
@@ -106,5 +119,53 @@ class JiraIssueController extends Controller
         $jiraIssue->update(['is_dismissed' => false]);
 
         return $this->successResponse($jiraIssue->fresh(), 'Issue restored.');
+    }
+
+    /**
+     * Resolve display names for all account IDs in a collection of issues.
+     *
+     * @param Request                     $request
+     * @param Collection<int, JiraIssue>  $issues
+     * @return array<string, string>
+     */
+    private function resolveUserNames(Request $request, Collection $issues): array
+    {
+        $user = $request->user();
+
+        if (!$user->hasJiraConnection()) {
+            return [];
+        }
+
+        $accountIds = $issues
+            ->flatMap(fn (JiraIssue $issue): array => [
+                $issue->assignee_account_id,
+                $issue->reporter_account_id,
+            ])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $this->jiraUserService->resolveDisplayNames($user, $accountIds);
+    }
+
+    /**
+     * Append resolved user names to each issue in the collection.
+     *
+     * @param Request                     $request
+     * @param Collection<int, JiraIssue>  $issues
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function appendUserNames(Request $request, Collection $issues): Collection
+    {
+        $userNames = $this->resolveUserNames($request, $issues);
+
+        return $issues->map(fn (JiraIssue $issue) => array_merge(
+            $issue->toArray(),
+            [
+                'assignee_name' => $userNames[$issue->assignee_account_id] ?? null,
+                'reporter_name' => $userNames[$issue->reporter_account_id] ?? null,
+            ],
+        ));
     }
 }

@@ -33,7 +33,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['linkable_type', 'linkable_id']);
-            $table->unique(['calendar_event_id', 'linkable_type', 'linkable_id']);
+            $table->unique(['calendar_event_id', 'linkable_type', 'linkable_id'], 'cal_event_linkable_unique');
         });
     }
 
