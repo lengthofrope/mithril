@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-03-14
+
+### Added
+
+- **Activity feed** — Chronological activity feed on all resource detail pages (tasks, follow-ups, notes, bilas) with support for markdown comments, URL links with optional title/description, and file attachments (max 10 MB each, max 5 per activity); displayed in a responsive sidebar (1/3 width on desktop, full width on mobile)
+- **File attachments** — Upload files via drag & drop or file picker; images show inline preview thumbnails; all files served via signed download URLs with 30-minute expiry; private storage in `storage/app/private/attachments/`
+- **Storage quota** — Per-user attachment storage limit (default 1 GB, configurable via `ATTACHMENT_MAX_STORAGE_MB` in `.env`); upload rejected with 422 when quota exceeded
+- **System events** — Automatic activity feed entries when tracked fields change: status, priority, is_done, snoozed_until; human-readable descriptions (e.g. "Status changed: open → done") with old/new values in metadata
+- **Refreshable polling component** — Generic `refreshable` Alpine.js component for ETag-based HTML partial polling; pauses when browser tab is inactive, resumes with immediate refresh on focus; debounces rapid `data-changed` triggers (300ms)
+- **Dashboard section polling** — Dashboard tasks, follow-ups, bilas, calendar, and email sections now poll for background updates (30s/60s intervals) via the refreshable component with ETag-based 304 responses
+- **List page polling** — Tasks list and follow-ups timeline pages wrapped in refreshable components (30s polling) for background sync updates
+- **Topic-scoped data-changed events** — `apiClient.dispatchDataChanged(topic?)` method for targeted UI refresh; refreshable component filters by topic when configured
+- **Skeleton loading placeholders** — Dashboard section skeletons shown during initial lazy-load with pulse animation
+- **Orphaned attachment cleanup** — `attachments:clean-orphaned` artisan command scheduled weekly to find and delete attachments without a parent activity, including physical file removal
+- **Activity & Attachment factories** — Full factory support with states for all four activity types (comment, link, attachment, system); database seeder includes sample activities
+
+### Changed
+
+- **Detail page layouts** — Task, follow-up, note, and bila detail pages now use a 2-column grid layout (2/3 content + 1/3 activity feed) on desktop
+- **PartialController** — New controller serving ETag-cached HTML fragments for activity feeds and all dashboard sections
+- **ADR-019** — Documented removal of FK constraint on `attachments.activity_id` in favor of application-level integrity with weekly cleanup command
+
 ## [1.6.2] - 2026-03-13
 
 ### Changed
