@@ -1,7 +1,7 @@
 # Activity Feed & Polling System
 
 **Created:** 2026-03-14
-**Status:** Approved
+**Status:** In Progress
 **Author:** Bas de Kort
 
 ## Problem Statement
@@ -170,19 +170,19 @@ attachments
 **Goal:** Activity and Attachment models with trait, fully tested.
 
 **Specs:**
-- [ ] Migration creates `activities` table with morph columns, string type, text body, text metadata
-- [ ] Migration creates `attachments` table with FK to activities
-- [ ] Migration is compatible with both MariaDB and SQLite (no enum columns, no JSON columns)
-- [ ] `ActivityType` enum exists with values: `comment`, `attachment`, `link`, `system`
-- [ ] `Activity` model uses `BelongsToUser` trait, casts metadata to array, has morph relation
-- [ ] `Activity` model has scopes: `ofType()`, `chronological()`, `latestFirst()`
-- [ ] `Activity` model has helper methods: `isComment()`, `isLink()`, `isAttachment()`, `isSystem()`, `getUrl()`, `getLinkTitle()`
-- [ ] `Attachment` model has helpers: `isImage()`, `isPdf()`, `humanSize()`, `downloadUrl()`
-- [ ] `Attachment` model deletes physical file on model deletion (via `deleting` event)
-- [ ] `HasActivityFeed` trait provides `activities()` morph relation
-- [ ] `HasActivityFeed` trait provides `addComment()`, `addLink()`, `logSystemEvent()`, `getActivityFeed()` methods
-- [ ] Task, FollowUp, Note, Bila models use `HasActivityFeed` trait
-- [ ] Factory exists for Activity and Attachment models
+- [x] Migration creates `activities` table with morph columns, string type, text body, text metadata
+- [x] Migration creates `attachments` table with FK to activities
+- [x] Migration is compatible with both MariaDB and SQLite (no enum columns, no JSON columns)
+- [x] `ActivityType` enum exists with values: `comment`, `attachment`, `link`, `system`
+- [x] `Activity` model uses `BelongsToUser` trait, casts metadata to array, has morph relation
+- [x] `Activity` model has scopes: `ofType()`, `chronological()`, `latestFirst()`
+- [x] `Activity` model has helper methods: `isComment()`, `isLink()`, `isAttachment()`, `isSystem()`, `getUrl()`, `getLinkTitle()`
+- [x] `Attachment` model has helpers: `isImage()`, `isPdf()`, `humanSize()`, `downloadUrl()`
+- [x] `Attachment` model deletes physical file on model deletion (via `deleting` event)
+- [x] `HasActivityFeed` trait provides `activities()` morph relation
+- [x] `HasActivityFeed` trait provides `addComment()`, `addLink()`, `logSystemEvent()`, `getActivityFeed()` methods
+- [x] Task, FollowUp, Note, Bila models use `HasActivityFeed` trait
+- [x] Factory exists for Activity and Attachment models
 
 **Files:** `database/migrations/`, `app/Enums/ActivityType.php`, `app/Models/Activity.php`, `app/Models/Attachment.php`, `app/Models/Traits/HasActivityFeed.php`, `app/Models/Task.php`, `app/Models/FollowUp.php`, `app/Models/Note.php`, `app/Models/Bila.php`, `database/factories/`
 
@@ -309,3 +309,9 @@ attachments
 1. **Should the `refreshable` component also be used for the tasks list page and follow-ups timeline?** Yes — include in Phase 4 scope. Wire up tasks list and follow-ups timeline to use `refreshable` for filter changes and background sync updates.
 2. **Should system events track field changes beyond status/priority?** No for now. Keep it to status, priority, completion, and snooze. May expand in the future.
 3. **Maximum attachment storage per user?** Yes — 1 GB default, configurable via `ATTACHMENT_MAX_STORAGE_MB` in `.env`. Upload endpoint must check current usage before accepting new files. Admin can adjust the limit without code changes.
+
+## Parallelization
+
+**Strategy:** Sequential
+
+All phases have significant inter-dependencies (models → controllers → observers → UI → dashboard). Execute sequentially with the lead.

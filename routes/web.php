@@ -143,4 +143,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/auth/jira/redirect', [JiraAuthController::class, 'redirect'])->name('jira.redirect');
     Route::get('/auth/jira/callback', [JiraAuthController::class, 'callback'])->name('jira.callback');
     Route::delete('/auth/jira', [JiraAuthController::class, 'disconnect'])->name('jira.disconnect');
+
+    Route::get('attachments/{attachment}/download', fn () => abort(501))
+        ->name('attachments.download')
+        ->middleware('signed');
 });

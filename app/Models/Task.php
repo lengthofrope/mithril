@@ -9,6 +9,7 @@ use App\Enums\RecurrenceInterval;
 use App\Enums\TaskStatus;
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
+use App\Models\Traits\HasActivityFeed;
 use App\Models\Traits\HasFollowUp;
 use App\Models\Traits\HasResourceLinks;
 use App\Models\Traits\HasSortOrder;
@@ -49,6 +50,7 @@ class Task extends Model
 {
     use BelongsToUser;
     use Filterable;
+    use HasActivityFeed;
     use HasFactory;
     use HasFollowUp;
     use HasResourceLinks;

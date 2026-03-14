@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
+use App\Models\Traits\HasActivityFeed;
 use App\Models\Traits\HasResourceLinks;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +31,7 @@ class Note extends Model
 {
     use BelongsToUser;
     use Filterable;
+    use HasActivityFeed;
     use HasFactory;
     use HasResourceLinks;
     use Searchable;
