@@ -20,3 +20,4 @@
 | 016 | backend, frontend, email, ux, microsoft | Remove email dismiss functionality | Email Integration | Accepted | 2026-03-12 |
 | 017 | backend, frontend, artisan, notifications, broadcast | System broadcast notifications | Operations | Accepted | 2026-03-13 |
 | 018 | backend, frontend, jira, privacy, atlassian, caching, api | Remove personal data from Jira integration for Atlassian Marketplace compliance | Jira Privacy Compliance | Accepted | 2026-03-13 |
+| 019 | backend, database, attachments, data-integrity | Remove FK constraint on attachments.activity_id | Activity Feed & Polling | Accepted | 2026-03-14 |
