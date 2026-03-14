@@ -105,172 +105,38 @@
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
         {{-- Tasks --}}
-        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
-                    {{ $upcomingTasks->isNotEmpty() ? 'Upcoming tasks' : 'Tasks needing attention' }}
-                </h2>
-                <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
-                    {{ $todayTasks->count() + $upcomingTasks->count() }}
-                </span>
-            </div>
-
-            <div class="divide-y divide-gray-100 dark:divide-gray-800">
-                @forelse($todayTasks as $task)
-                    <div class="px-5 py-3">
-                        <x-tl.task-card :task="$task" :draggable="false" />
-                    </div>
-                @empty
-                    @if($upcomingTasks->isEmpty())
-                        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                            No tasks due today.
-                        </p>
-                    @else
-                        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                            All clear for today.
-                        </p>
-                    @endif
-                @endforelse
-
-                @if($upcomingTasks->isNotEmpty())
-                    <div class="elvish-divider mx-5">
-                        <span class="elvish-divider-leaf"></span>
-                    </div>
-
-                    @foreach($upcomingTasks as $task)
-                        <div class="px-5 py-3">
-                            <x-tl.task-card :task="$task" :draggable="false" />
-                        </div>
-                    @endforeach
-                @endif
+        <div
+            x-data="refreshable({ url: '{{ route('partials.dashboard.tasks') }}', topics: ['tasks'], pollInterval: 30000 })"
+        >
+            <div data-refresh-target>
+                @include('partials.dashboard.tasks', [
+                    'todayTasks' => $todayTasks,
+                    'upcomingTasks' => $upcomingTasks,
+                ])
             </div>
         </div>
 
         {{-- Follow-ups + Bilas (app-specific) --}}
         <div class="flex flex-col gap-6">
-            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-                <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
-                        {{ $upcomingFollowUps->isNotEmpty() ? 'Upcoming follow-ups' : 'Follow-ups needing attention' }}
-                    </h2>
-                    <span class="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-600 dark:bg-orange-500/15 dark:text-orange-400">
-                        {{ $todayFollowUps->count() + $upcomingFollowUps->count() }}
-                    </span>
-                </div>
-
-                <div class="divide-y divide-gray-100 dark:divide-gray-800">
-                    @forelse($todayFollowUps as $followUp)
-                        <div class="px-5 py-3">
-                            <x-tl.follow-up-card :followUp="$followUp" />
-                        </div>
-                    @empty
-                        @if($upcomingFollowUps->isEmpty())
-                            <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                                No follow-ups today.
-                            </p>
-                        @else
-                            <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                                All clear for today.
-                            </p>
-                        @endif
-                    @endforelse
-
-                    @if($upcomingFollowUps->isNotEmpty())
-                        <div class="elvish-divider mx-5">
-                            <span class="elvish-divider-leaf"></span>
-                        </div>
-
-                        @foreach($upcomingFollowUps as $followUp)
-                            <div class="px-5 py-3">
-                                <x-tl.follow-up-card :followUp="$followUp" />
-                            </div>
-                        @endforeach
-                    @endif
+            <div
+                x-data="refreshable({ url: '{{ route('partials.dashboard.follow-ups') }}', topics: ['follow_ups'], pollInterval: 30000 })"
+            >
+                <div data-refresh-target>
+                    @include('partials.dashboard.follow-ups', [
+                        'todayFollowUps' => $todayFollowUps,
+                        'upcomingFollowUps' => $upcomingFollowUps,
+                    ])
                 </div>
             </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-                <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
-                        {{ $upcomingBilas->isNotEmpty() ? 'Upcoming bilas' : 'Bilas today' }}
-                    </h2>
-                    <span class="rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-600 dark:bg-purple-500/15 dark:text-purple-400">
-                        {{ $todayBilas->count() + $upcomingBilas->count() }}
-                    </span>
-                </div>
-
-                <div class="divide-y divide-gray-100 dark:divide-gray-800">
-                    @forelse($todayBilas as $bila)
-                        <a
-                            href="{{ route('bilas.show', $bila->id) }}"
-                            class="flex items-center gap-3 px-5 py-3 transition hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-                        >
-                            @if($bila->teamMember)
-                                <x-tl.team-member-avatar :member="$bila->teamMember" size="sm" />
-                                <div class="min-w-0 flex-1">
-                                    <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                        {{ $bila->teamMember->name }}
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $bila->scheduled_date->format('d M Y') }}
-                                    </p>
-                                </div>
-                            @else
-                                <div class="min-w-0 flex-1">
-                                    <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                        Bila #{{ $bila->id }}
-                                    </p>
-                                </div>
-                            @endif
-                            <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M9 18l6-6-6-6"/>
-                            </svg>
-                        </a>
-                    @empty
-                        @if($upcomingBilas->isEmpty())
-                            <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                                No bilas scheduled today.
-                            </p>
-                        @else
-                            <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                                All clear for today.
-                            </p>
-                        @endif
-                    @endforelse
-
-                    @if($upcomingBilas->isNotEmpty())
-                        <div class="elvish-divider mx-5">
-                            <span class="elvish-divider-leaf"></span>
-                        </div>
-
-                        @foreach($upcomingBilas as $bila)
-                            <a
-                                href="{{ route('bilas.show', $bila->id) }}"
-                                class="flex items-center gap-3 px-5 py-3 transition hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-                            >
-                                @if($bila->teamMember)
-                                    <x-tl.team-member-avatar :member="$bila->teamMember" size="sm" />
-                                    <div class="min-w-0 flex-1">
-                                        <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {{ $bila->teamMember->name }}
-                                        </p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $bila->scheduled_date->format('d M Y') }}
-                                        </p>
-                                    </div>
-                                @else
-                                    <div class="min-w-0 flex-1">
-                                        <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                            Bila #{{ $bila->id }}
-                                        </p>
-                                    </div>
-                                @endif
-                                <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M9 18l6-6-6-6"/>
-                                </svg>
-                            </a>
-                        @endforeach
-                    @endif
+            <div
+                x-data="refreshable({ url: '{{ route('partials.dashboard.bilas') }}', topics: ['bilas'], pollInterval: 30000 })"
+            >
+                <div data-refresh-target>
+                    @include('partials.dashboard.bilas', [
+                        'todayBilas' => $todayBilas,
+                        'upcomingBilas' => $upcomingBilas,
+                    ])
                 </div>
             </div>
         </div>
@@ -278,11 +144,30 @@
         {{-- Upcoming calendar + Flagged emails (Office 365) + Jira --}}
         <div class="flex flex-col gap-6">
             @if($calendarEvents !== null)
-                <x-tl.calendar-upcoming :events="$calendarEvents" :timezone="$userTimezone" />
+                <div
+                    x-data="refreshable({ url: '{{ route('partials.dashboard.calendar') }}', topics: ['calendar'], pollInterval: 60000 })"
+                >
+                    <div data-refresh-target>
+                        @include('partials.dashboard.calendar', [
+                            'calendarEvents' => $calendarEvents,
+                            'userTimezone' => $userTimezone,
+                            'isMicrosoftConnected' => $isMicrosoftConnected,
+                        ])
+                    </div>
+                </div>
             @endif
 
             @if($flaggedEmails !== null)
-                <x-tl.email-flagged-widget :emails="$flaggedEmails" />
+                <div
+                    x-data="refreshable({ url: '{{ route('partials.dashboard.emails') }}', topics: ['emails'], pollInterval: 30000 })"
+                >
+                    <div data-refresh-target>
+                        @include('partials.dashboard.emails', [
+                            'flaggedEmails' => $flaggedEmails,
+                            'isMicrosoftConnected' => $isMicrosoftConnected,
+                        ])
+                    </div>
+                </div>
             @endif
 
             @if($isJiraConnected)

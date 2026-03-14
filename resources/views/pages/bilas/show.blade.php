@@ -62,7 +62,7 @@
         @endif
     </div>
 
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {{-- Prep items --}}
         <div
             class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
@@ -253,6 +253,15 @@
 
                 <x-tl.auto-save-status />
             </div>
+        </div>
+
+        {{-- Activity feed sidebar --}}
+        <div>
+            <x-tl.activity-feed
+                :parent="$bila"
+                parentType="bilas"
+                :activities="$bila->getActivityFeed()"
+            />
         </div>
     </div>
 

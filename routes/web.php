@@ -153,6 +153,14 @@ Route::middleware('auth')->group(function (): void {
     Route::get('partials/tasks', [PartialController::class, 'tasksList'])->name('partials.tasks');
     Route::get('partials/follow-ups', [PartialController::class, 'followUpsList'])->name('partials.follow-ups');
 
+    Route::prefix('partials/dashboard')->as('partials.dashboard.')->group(function (): void {
+        Route::get('tasks', [PartialController::class, 'dashboardTasks'])->name('tasks');
+        Route::get('follow-ups', [PartialController::class, 'dashboardFollowUps'])->name('follow-ups');
+        Route::get('bilas', [PartialController::class, 'dashboardBilas'])->name('bilas');
+        Route::get('calendar', [PartialController::class, 'dashboardCalendar'])->name('calendar');
+        Route::get('emails', [PartialController::class, 'dashboardEmails'])->name('emails');
+    });
+
     Route::get('partials/{type}/{id}/activity-feed', [PartialController::class, 'activityFeed'])
         ->name('partials.activity-feed')
         ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'bilas']);

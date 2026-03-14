@@ -247,19 +247,19 @@ attachments
 **Goal:** Activity feed component rendered on all four detail pages.
 
 **Specs:**
-- [ ] `<x-tl.activity-feed>` Blade component accepts `$parent`, `$parentType`, `$activities`
-- [ ] Input area has three tabs: Comment (textarea + markdown hint), Link (URL + title inputs), File (drop zone)
-- [ ] `activityInput` Alpine component handles submit for all three types
-- [ ] File upload uses raw `fetch` with `FormData` (not `apiClient`) to support multipart
-- [ ] Drop zone supports drag & drop with visual feedback
-- [ ] File list shows selected files with remove button, enforces max 5 limit client-side
-- [ ] After successful submit, dispatches `data-changed` to trigger feed refresh
-- [ ] Feed items render differently per type: markdown for comments, clickable card for links, file cards with download for attachments, subtle italic for system events
-- [ ] Each item shows user name, relative timestamp, and type indicator icon
-- [ ] Non-system items show a delete button on hover (only for own items)
-- [ ] Image attachments show inline preview thumbnail
-- [ ] Detail pages gain a 2-column layout: main content (2/3) + activity feed sidebar (1/3)
-- [ ] Activity feed is wrapped in `refreshable` component with 30s polling
+- [x] `<x-tl.activity-feed>` Blade component accepts `$parent`, `$parentType`, `$activities`
+- [x] Input area has three tabs: Comment (textarea + markdown hint), Link (URL + title inputs), File (drop zone)
+- [x] `activityInput` Alpine component handles submit for all three types
+- [x] File upload uses raw `fetch` with `FormData` (not `apiClient`) to support multipart
+- [x] Drop zone supports drag & drop with visual feedback
+- [x] File list shows selected files with remove button, enforces max 5 limit client-side
+- [x] After successful submit, dispatches `data-changed` to trigger feed refresh
+- [x] Feed items render differently per type: markdown for comments, clickable card for links, file cards with download for attachments, subtle italic for system events
+- [x] Each item shows user name, relative timestamp, and type indicator icon
+- [x] Non-system items show a delete button on hover (only for own items)
+- [x] Image attachments show inline preview thumbnail
+- [x] Detail pages gain a 2-column layout: main content (2/3) + activity feed sidebar (1/3)
+- [x] Activity feed is wrapped in `refreshable` component with 30s polling
 
 **Files:** `resources/views/components/tl/activity-feed.blade.php`, `resources/views/components/tl/activity-item.blade.php`, `resources/views/partials/activity-feed.blade.php`, `resources/js/components/activity-input.ts`, `resources/js/app.ts`, `resources/js/types/models.ts`, `resources/views/pages/tasks/show.blade.php`, `resources/views/pages/follow-ups/show.blade.php`, `resources/views/pages/notes/show.blade.php`, `resources/views/pages/bilas/show.blade.php`
 
@@ -268,14 +268,14 @@ attachments
 **Goal:** Dashboard sections lazy-load with skeletons and poll for updates.
 
 **Specs:**
-- [ ] `DashboardController` extracts section data into reusable methods (counters, calendar, flagged emails)
-- [ ] `PartialController` has endpoints for each dashboard section
-- [ ] Skeleton Blade partials created for counters, calendar, and email sections
-- [ ] Dashboard wraps each section in `refreshable` with `lazy: true`
-- [ ] Counters poll every 15s, calendar every 60s, emails every 30s
-- [ ] Sections show a subtle loading indicator on refresh (not on initial lazy load)
-- [ ] Stale-while-revalidate: current content stays visible during refresh with translucent overlay
-- [ ] Existing `liveCounter` components on dashboard still work (backward compatible)
+- [x] `DashboardController` extracts section data into reusable methods (counters, calendar, flagged emails)
+- [x] `PartialController` has endpoints for each dashboard section
+- [x] Skeleton Blade partials created for counters, calendar, and email sections
+- [x] Dashboard wraps each section in `refreshable` with `lazy: true`
+- [x] Counters poll every 15s, calendar every 60s, emails every 30s
+- [x] Sections show a subtle loading indicator on refresh (not on initial lazy load)
+- [x] Stale-while-revalidate: current content stays visible during refresh with translucent overlay
+- [x] Existing `liveCounter` components on dashboard still work (backward compatible)
 
 **Files:** `app/Http/Controllers/Web/DashboardController.php`, `app/Http/Controllers/Web/PartialController.php`, `resources/views/partials/dashboard/*.blade.php`, `resources/views/partials/skeletons/*.blade.php`, `resources/views/pages/dashboard.blade.php`, `routes/web.php`
 
