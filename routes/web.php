@@ -5,7 +5,9 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Web\AttachmentController;
 use App\Http\Controllers\Web\AboutController;
+use App\Http\Controllers\Web\PartialController;
 use App\Http\Controllers\Web\JiraAuthController;
 use App\Http\Controllers\Web\JiraPageController;
 use App\Http\Controllers\Web\MicrosoftAuthController;
@@ -144,7 +146,14 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/auth/jira/callback', [JiraAuthController::class, 'callback'])->name('jira.callback');
     Route::delete('/auth/jira', [JiraAuthController::class, 'disconnect'])->name('jira.disconnect');
 
-    Route::get('attachments/{attachment}/download', fn () => abort(501))
+    Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])
         ->name('attachments.download')
         ->middleware('signed');
+
+    Route::get('partials/tasks', [PartialController::class, 'tasksList'])->name('partials.tasks');
+    Route::get('partials/follow-ups', [PartialController::class, 'followUpsList'])->name('partials.follow-ups');
+
+    Route::get('partials/{type}/{id}/activity-feed', [PartialController::class, 'activityFeed'])
+        ->name('partials.activity-feed')
+        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'bilas']);
 });

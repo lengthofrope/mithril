@@ -53,7 +53,7 @@ async function executeRequest<T>(
     }
 
     if (MUTATING_METHODS.has(method)) {
-        window.dispatchEvent(new CustomEvent('data-changed'));
+        window.dispatchEvent(new CustomEvent('data-changed', { detail: {} }));
     }
 
     return json as ApiResponse<T>;
@@ -90,6 +90,18 @@ class ApiClient {
      */
     public async delete<T>(url: string): Promise<ApiResponse<T>> {
         return executeRequest<T>('DELETE', url);
+    }
+
+    /**
+     * Dispatches a `data-changed` window event with an optional topic so that
+     * refreshable components can filter by relevant domain area.
+     */
+    public dispatchDataChanged(topic?: string): void {
+        window.dispatchEvent(
+            new CustomEvent('data-changed', {
+                detail: topic !== undefined ? { topic } : {},
+            }),
+        );
     }
 }
 

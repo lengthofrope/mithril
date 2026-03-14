@@ -26,6 +26,8 @@ import { jiraPage } from './components/jira-page';
 import { jiraActions } from './components/jira-actions';
 import { syncButton } from './components/sync-button';
 import { systemNotification } from './components/system-notification';
+import { refreshable } from './components/refreshable';
+import { activityInput } from './components/activity-input';
 
 declare global {
     interface Window {
@@ -58,6 +60,8 @@ Alpine.data('jiraPage', jiraPage as Parameters<typeof Alpine.data>[1]);
 Alpine.data('jiraActions', jiraActions as Parameters<typeof Alpine.data>[1]);
 Alpine.data('syncButton', syncButton as Parameters<typeof Alpine.data>[1]);
 Alpine.data('systemNotification', systemNotification as Parameters<typeof Alpine.data>[1]);
+Alpine.data('refreshable', refreshable as Parameters<typeof Alpine.data>[1]);
+Alpine.data('activityInput', activityInput as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

@@ -191,18 +191,18 @@ attachments
 **Goal:** Full CRUD for activities via API, file upload and signed download working.
 
 **Specs:**
-- [ ] `ActivityController` uses model-map pattern (like `AutoSaveController`) to resolve parent resource
-- [ ] `POST /api/v1/{type}/{id}/activities` creates comment, link, or attachment activity based on request content
-- [ ] `PATCH /api/v1/{type}/{id}/activities/{activity}` updates body only
-- [ ] `DELETE /api/v1/{type}/{id}/activities/{activity}` deletes activity + cascades attachments
-- [ ] Controller verifies activity belongs to the resolved parent resource
-- [ ] `ActivityRequest` validates: body (max 10000), url (valid URL, max 2048), files (max 5, max 10MB each)
-- [ ] `AttachmentController` serves file downloads via signed URL with 30-minute expiry
-- [ ] Attachment download verifies ownership through activity → parent → user chain
-- [ ] Files stored in `storage/app/private/attachments/{Y}/{m}/` on local disk
-- [ ] Upload endpoint checks user's total attachment storage against `ATTACHMENT_MAX_STORAGE_MB` (default 1024, configurable in `.env`); rejects with 422 if quota exceeded
-- [ ] All endpoints return standard `ApiResponse` format
-- [ ] Routes registered with `whereIn` constraint for type parameter
+- [x] `ActivityController` uses model-map pattern (like `AutoSaveController`) to resolve parent resource
+- [x] `POST /api/v1/{type}/{id}/activities` creates comment, link, or attachment activity based on request content
+- [x] `PATCH /api/v1/{type}/{id}/activities/{activity}` updates body only
+- [x] `DELETE /api/v1/{type}/{id}/activities/{activity}` deletes activity + cascades attachments
+- [x] Controller verifies activity belongs to the resolved parent resource
+- [x] `ActivityRequest` validates: body (max 10000), url (valid URL, max 2048), files (max 5, max 10MB each)
+- [x] `AttachmentController` serves file downloads via signed URL with 30-minute expiry
+- [x] Attachment download verifies ownership through activity → parent → user chain
+- [x] Files stored in `storage/app/private/attachments/{Y}/{m}/` on local disk
+- [x] Upload endpoint checks user's total attachment storage against `ATTACHMENT_MAX_STORAGE_MB` (default 1024, configurable in `.env`); rejects with 422 if quota exceeded
+- [x] All endpoints return standard `ApiResponse` format
+- [x] Routes registered with `whereIn` constraint for type parameter
 
 **Files:** `app/Http/Controllers/Api/ActivityController.php`, `app/Http/Controllers/Api/AttachmentController.php`, `app/Http/Requests/ActivityRequest.php`, `config/attachments.php`, `.env.example`, `routes/api.php`, `routes/web.php`
 
@@ -211,12 +211,12 @@ attachments
 **Goal:** Status/priority/completion changes automatically log to the activity feed.
 
 **Specs:**
-- [ ] Observer listens to `updated` event on models with `HasActivityFeed`
-- [ ] Tracks changes to: `status`, `priority`, `completed_at`, `snoozed_until`, `is_done`
-- [ ] Creates system-type activity with human-readable description (e.g. "Status changed: open → done")
-- [ ] System activities have metadata with `action` and `changes` keys
-- [ ] System activities use the authenticated user (or null for background jobs)
-- [ ] Does not create activity when no tracked fields changed
+- [x] Observer listens to `updated` event on models with `HasActivityFeed`
+- [x] Tracks changes to: `status`, `priority`, `completed_at`, `snoozed_until`, `is_done`
+- [x] Creates system-type activity with human-readable description (e.g. "Status changed: open → done")
+- [x] System activities have metadata with `action` and `changes` keys
+- [x] System activities use the authenticated user (or null for background jobs)
+- [x] Does not create activity when no tracked fields changed
 
 **Files:** `app/Observers/ActivityObserver.php`, `app/Providers/AppServiceProvider.php`
 
@@ -225,20 +225,20 @@ attachments
 **Goal:** Generic polling infrastructure that any page section can use.
 
 **Specs:**
-- [ ] `refreshable` Alpine component accepts: `url`, `topics` (optional string array), `lazy` (boolean), `pollInterval` (ms, default 15000)
-- [ ] On init: optionally fetches content (lazy mode), starts polling timer
-- [ ] Listens to `data-changed` window event; if topics provided, only refreshes when event detail matches
-- [ ] Fetches URL with `Accept: text/html` and `If-None-Match` ETag header
-- [ ] On 304: no DOM update. On 200: swaps `[data-refresh-target]` innerHTML
-- [ ] Pauses polling when `document.hidden` is true; resumes + immediate refresh on visibility
-- [ ] Debounces rapid `data-changed` triggers (300ms)
-- [ ] `PartialController` has private `withETag()` helper that renders view, computes ETag from HTML hash, returns 304 on match
-- [ ] `PartialController::activityFeed()` returns rendered activity feed partial for a given resource
-- [ ] `apiClient` `data-changed` event gains optional `detail.topic` field (backward compatible)
-- [ ] Existing `liveCounter` and `analyticsChart` listeners continue to work unchanged
+- [x] `refreshable` Alpine component accepts: `url`, `topics` (optional string array), `lazy` (boolean), `pollInterval` (ms, default 15000)
+- [x] On init: optionally fetches content (lazy mode), starts polling timer
+- [x] Listens to `data-changed` window event; if topics provided, only refreshes when event detail matches
+- [x] Fetches URL with `Accept: text/html` and `If-None-Match` ETag header
+- [x] On 304: no DOM update. On 200: swaps `[data-refresh-target]` innerHTML
+- [x] Pauses polling when `document.hidden` is true; resumes + immediate refresh on visibility
+- [x] Debounces rapid `data-changed` triggers (300ms)
+- [x] `PartialController` has private `withETag()` helper that renders view, computes ETag from HTML hash, returns 304 on match
+- [x] `PartialController::activityFeed()` returns rendered activity feed partial for a given resource
+- [x] `apiClient` `data-changed` event gains optional `detail.topic` field (backward compatible)
+- [x] Existing `liveCounter` and `analyticsChart` listeners continue to work unchanged
 
-- [ ] Tasks list page (`/tasks`) wrapped in `refreshable` with topic `tasks`, poll 30s
-- [ ] Follow-ups timeline page (`/follow-ups`) wrapped in `refreshable` with topic `follow_ups`, poll 30s
+- [x] Tasks list page (`/tasks`) wrapped in `refreshable` with topic `tasks`, poll 30s
+- [x] Follow-ups timeline page (`/follow-ups`) wrapped in `refreshable` with topic `follow_ups`, poll 30s
 
 **Files:** `resources/js/components/refreshable.ts`, `resources/js/app.ts`, `resources/js/utils/api-client.ts`, `app/Http/Controllers/Web/PartialController.php`, `routes/web.php`, `resources/views/pages/tasks/index.blade.php`, `resources/views/pages/follow-ups/index.blade.php`
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AgreementController;
 use App\Http\Controllers\Api\AutoSaveController;
 use App\Http\Controllers\Api\CalendarActionController;
@@ -34,6 +35,14 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);
+
+    Route::prefix('{type}/{id}/activities')
+        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'bilas'])
+        ->group(function (): void {
+            Route::post('/', [ActivityController::class, 'store']);
+            Route::patch('{activity}', [ActivityController::class, 'update']);
+            Route::delete('{activity}', [ActivityController::class, 'destroy']);
+        });
 
     Route::get('counters', CounterController::class)->name('counters');
     Route::get('search', [SearchController::class, 'search']);

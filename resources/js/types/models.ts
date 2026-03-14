@@ -381,5 +381,43 @@ interface SystemNotification {
     updated_at: string;
 }
 
-export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification };
+/**
+ * Activity types in the activity feed.
+ */
+type ActivityType = 'comment' | 'attachment' | 'link' | 'system';
+
+/**
+ * Mirrors the `activities` Eloquent model.
+ */
+interface Activity {
+    id: number;
+    user_id: number;
+    activityable_type: string;
+    activityable_id: number;
+    type: ActivityType;
+    body: string | null;
+    metadata: Record<string, unknown> | null;
+    created_at: string;
+    updated_at: string;
+    attachments?: Attachment[];
+}
+
+/**
+ * Mirrors the `attachments` Eloquent model.
+ */
+interface Attachment {
+    id: number;
+    user_id: number;
+    activity_id: number;
+    filename: string;
+    path: string;
+    disk: string;
+    mime_type: string;
+    size: number;
+    download_url?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant, ActivityType };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification, Activity, Attachment };
