@@ -30,7 +30,7 @@ return new class extends Migration
         Schema::create('attachments', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('activity_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('activity_id');
             $table->string('filename');
             $table->string('path');
             $table->string('disk')->default('local');

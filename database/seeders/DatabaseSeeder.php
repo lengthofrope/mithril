@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\ActivityType;
 use App\Enums\FollowUpStatus;
 use App\Enums\MemberStatus;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
+use App\Models\Activity;
 use App\Models\Agreement;
 use App\Models\Bila;
 use App\Models\BilaPrepItem;
@@ -50,6 +52,7 @@ class DatabaseSeeder extends Seeder
         $this->createAgreements($allMembers, $admin->id);
         $this->createNotes($teamAlpha, $teamBeta, $allMembers, $admin->id);
         $this->createWeeklyReflection($admin->id);
+        $this->createActivities($tasks, $admin->id);
     }
 
     /**
@@ -621,5 +624,83 @@ class DatabaseSeeder extends Seeder
             'summary' => 'Focused on backend architecture setup and team onboarding. Most tasks are on track.',
             'reflection' => "Good energy in both teams this week. Need to keep an eye on Marcus's auth refactor scope — risk of expanding. Elena is doing great work on CI/CD.",
         ]);
+    }
+
+    /**
+     * Create sample activities (comments, links, and system events) on tasks.
+     *
+     * @param list<Task> $tasks
+     * @param int $userId
+     * @return void
+     */
+    private function createActivities(array $tasks, int $userId): void
+    {
+        $activityData = [
+            [
+                'task' => $tasks[0],
+                'type' => ActivityType::Comment,
+                'body' => 'Initial implementation is underway. Greeting widget draft is looking good.',
+                'metadata' => null,
+            ],
+            [
+                'task' => $tasks[0],
+                'type' => ActivityType::Link,
+                'body' => null,
+                'metadata' => [
+                    'url' => 'https://tailwindcss.com/docs/customizing-colors',
+                    'title' => 'Tailwind CSS — Customizing Colors',
+                ],
+            ],
+            [
+                'task' => $tasks[1],
+                'type' => ActivityType::Comment,
+                'body' => 'Reproduced the bug locally. Root cause appears to be a missing redirect after login.',
+                'metadata' => null,
+            ],
+            [
+                'task' => $tasks[5],
+                'type' => ActivityType::System,
+                'body' => null,
+                'metadata' => [
+                    'action' => 'status_changed',
+                    'changes' => ['status' => ['open', 'in_progress']],
+                ],
+            ],
+            [
+                'task' => $tasks[6],
+                'type' => ActivityType::Comment,
+                'body' => 'Migration plan drafted. Running test queries against the staging MariaDB instance.',
+                'metadata' => null,
+            ],
+            [
+                'task' => $tasks[7],
+                'type' => ActivityType::System,
+                'body' => null,
+                'metadata' => [
+                    'action' => 'status_changed',
+                    'changes' => ['status' => ['in_progress', 'done']],
+                ],
+            ],
+            [
+                'task' => $tasks[2],
+                'type' => ActivityType::Link,
+                'body' => null,
+                'metadata' => [
+                    'url' => 'https://laravel.com/docs/authentication',
+                    'title' => 'Laravel Authentication Docs',
+                ],
+            ],
+        ];
+
+        foreach ($activityData as $data) {
+            Activity::create([
+                'user_id' => $userId,
+                'activityable_type' => Task::class,
+                'activityable_id' => $data['task']->id,
+                'type' => $data['type'],
+                'body' => $data['body'],
+                'metadata' => $data['metadata'],
+            ]);
+        }
     }
 }

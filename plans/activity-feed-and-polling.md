@@ -1,7 +1,7 @@
 # Activity Feed & Polling System
 
 **Created:** 2026-03-14
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort
 
 ## Problem Statement
@@ -284,12 +284,12 @@ attachments
 **Goal:** Maintenance tooling and edge case handling.
 
 **Specs:**
-- [ ] `CleanOrphanedAttachments` artisan command finds and deletes attachments without an activity
-- [ ] Command also deletes physical files on the configured disk
-- [ ] Command is scheduled weekly in `routes/console.php` (or `Kernel`)
-- [ ] Attachment model added to `AutoSaveController` model map (if body editing needed)
-- [ ] Activity model factory supports all four types for seeding
-- [ ] `DatabaseSeeder` creates sample activities for demo data
+- [x] `CleanOrphanedAttachments` artisan command finds and deletes attachments without an activity
+- [x] Command also deletes physical files on the configured disk
+- [x] Command is scheduled weekly in `routes/console.php` (or `Kernel`)
+- [~] Attachment model added to `AutoSaveController` model map (if body editing needed) — not needed, no auto-save fields on attachments
+- [x] Activity model factory supports all four types for seeding
+- [x] `DatabaseSeeder` creates sample activities for demo data
 
 **Files:** `app/Console/Commands/CleanOrphanedAttachments.php`, `routes/console.php`, `database/seeders/`
 
