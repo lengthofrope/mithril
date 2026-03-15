@@ -77,7 +77,7 @@ class AnalyticsSnapshotService
         foreach (self::TASK_STATUS_METRICS as $metric => $meta) {
             $series[] = [
                 'name' => $meta['name'],
-                'data' => $this->buildSeriesData($labels, $rows, $metric),
+                'data' => $this->computeDeltas($this->buildSeriesData($labels, $rows, $metric)),
             ];
             $colors[] = $meta['color'];
         }
@@ -140,7 +140,7 @@ class AnalyticsSnapshotService
         foreach (self::FOLLOW_UP_STATUS_METRICS as $metric => $meta) {
             $series[] = [
                 'name' => $meta['name'],
-                'data' => $this->buildSeriesData($labels, $rows, $metric),
+                'data' => $this->computeDeltas($this->buildSeriesData($labels, $rows, $metric)),
             ];
             $colors[] = $meta['color'];
         }

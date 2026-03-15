@@ -65,12 +65,24 @@ describe('AnalyticsSnapshotService', function (): void {
             expect($result->labels)->toHaveCount(90);
         });
 
-        it('fills snapshot data into the correct series positions', function (): void {
+        it('computes daily deltas from absolute snapshot values', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-04',
+                'metric'        => 'tasks_status_open',
+                'value'         => 8,
+            ]);
             AnalyticsSnapshot::factory()->create([
                 'user_id'       => $this->user->id,
                 'snapshot_date' => '2026-03-05',
                 'metric'        => 'tasks_status_open',
                 'value'         => 10,
+            ]);
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-04',
+                'metric'        => 'tasks_status_done',
+                'value'         => 1,
             ]);
             AnalyticsSnapshot::factory()->create([
                 'user_id'       => $this->user->id,
@@ -84,9 +96,30 @@ describe('AnalyticsSnapshotService', function (): void {
             $openSeries = $result->series[0]['data'];
             $doneSeries = $result->series[3]['data'];
 
-            $dateIndex = array_search('2026-03-05', $result->labels);
-            expect($openSeries[$dateIndex])->toBe(10);
-            expect($doneSeries[$dateIndex])->toBe(3);
+            $dayIndex5 = array_search('2026-03-05', $result->labels);
+            expect($openSeries[$dayIndex5])->toBe(2);
+            expect($doneSeries[$dayIndex5])->toBe(2);
+        });
+
+        it('clamps negative deltas to zero', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-04',
+                'metric'        => 'tasks_status_open',
+                'value'         => 10,
+            ]);
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-05',
+                'metric'        => 'tasks_status_open',
+                'value'         => 7,
+            ]);
+
+            $result = $this->service->tasksOverTime($this->user->id, '7d');
+
+            $openSeries = $result->series[0]['data'];
+            $dayIndex5  = array_search('2026-03-05', $result->labels);
+            expect($openSeries[$dayIndex5])->toBe(0);
         });
 
         it('defaults to zero for dates without snapshots', function (): void {
@@ -193,7 +226,13 @@ describe('AnalyticsSnapshotService', function (): void {
             expect($result->colors)->toHaveCount(3);
         });
 
-        it('fills snapshot data into the correct series positions', function (): void {
+        it('computes daily deltas from absolute snapshot values', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-05',
+                'metric'        => 'follow_ups_status_open',
+                'value'         => 3,
+            ]);
             AnalyticsSnapshot::factory()->create([
                 'user_id'       => $this->user->id,
                 'snapshot_date' => '2026-03-06',
@@ -205,7 +244,7 @@ describe('AnalyticsSnapshotService', function (): void {
 
             $openSeries = $result->series[0]['data'];
             $dateIndex  = array_search('2026-03-06', $result->labels);
-            expect($openSeries[$dateIndex])->toBe(7);
+            expect($openSeries[$dateIndex])->toBe(4);
         });
     });
 
@@ -218,12 +257,25 @@ describe('AnalyticsSnapshotService', function (): void {
     });
 
     describe('live data for today', function (): void {
-        it('uses live task counts for today instead of snapshot data', function (): void {
-            Task::factory()->count(3)->create([
+        it('uses live task counts for today delta', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-07',
+                'metric'        => 'tasks_status_open',
+                'value'         => 5,
+            ]);
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-07',
+                'metric'        => 'tasks_status_done',
+                'value'         => 1,
+            ]);
+
+            Task::factory()->count(8)->create([
                 'user_id' => $this->user->id,
                 'status'  => TaskStatus::Open,
             ]);
-            Task::factory()->count(2)->create([
+            Task::factory()->count(3)->create([
                 'user_id' => $this->user->id,
                 'status'  => TaskStatus::Done,
             ]);
@@ -239,7 +291,20 @@ describe('AnalyticsSnapshotService', function (): void {
             expect($doneSeries[$todayIndex])->toBe(2);
         });
 
-        it('uses live follow-up counts for today instead of snapshot data', function (): void {
+        it('uses live follow-up counts for today delta', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-07',
+                'metric'        => 'follow_ups_status_open',
+                'value'         => 2,
+            ]);
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-07',
+                'metric'        => 'follow_ups_status_snoozed',
+                'value'         => 0,
+            ]);
+
             FollowUp::factory()->count(4)->create([
                 'user_id' => $this->user->id,
                 'status'  => FollowUpStatus::Open,
@@ -256,28 +321,8 @@ describe('AnalyticsSnapshotService', function (): void {
 
             $openSeries    = $result->series[0]['data'];
             $snoozedSeries = $result->series[1]['data'];
-            expect($openSeries[$todayIndex])->toBe(4);
-            expect($snoozedSeries[$todayIndex])->toBe(1);
-        });
-
-        it('prefers live data over stale snapshot for today', function (): void {
-            AnalyticsSnapshot::factory()->create([
-                'user_id'       => $this->user->id,
-                'snapshot_date' => '2026-03-08',
-                'metric'        => 'tasks_status_open',
-                'value'         => 99,
-            ]);
-
-            Task::factory()->count(2)->create([
-                'user_id' => $this->user->id,
-                'status'  => TaskStatus::Open,
-            ]);
-
-            $result = $this->service->tasksOverTime($this->user->id, '7d');
-
-            $todayIndex = array_search('2026-03-08', $result->labels);
-            $openSeries = $result->series[0]['data'];
             expect($openSeries[$todayIndex])->toBe(2);
+            expect($snoozedSeries[$todayIndex])->toBe(1);
         });
 
         it('uses live data for taskActivity today delta', function (): void {
@@ -315,7 +360,13 @@ describe('AnalyticsSnapshotService', function (): void {
             expect($completedSeries[$todayIndex])->toBe(2);
         });
 
-        it('does not affect historical snapshot data', function (): void {
+        it('does not affect historical snapshot deltas', function (): void {
+            AnalyticsSnapshot::factory()->create([
+                'user_id'       => $this->user->id,
+                'snapshot_date' => '2026-03-04',
+                'metric'        => 'tasks_status_open',
+                'value'         => 5,
+            ]);
             AnalyticsSnapshot::factory()->create([
                 'user_id'       => $this->user->id,
                 'snapshot_date' => '2026-03-05',
@@ -332,7 +383,7 @@ describe('AnalyticsSnapshotService', function (): void {
 
             $historicalIndex = array_search('2026-03-05', $result->labels);
             $openSeries     = $result->series[0]['data'];
-            expect($openSeries[$historicalIndex])->toBe(10);
+            expect($openSeries[$historicalIndex])->toBe(5);
         });
     });
 });
