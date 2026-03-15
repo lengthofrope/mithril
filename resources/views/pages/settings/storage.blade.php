@@ -3,16 +3,53 @@
 @section('content')
     <x-common.page-breadcrumb :items="$breadcrumbs" />
 
+    @if(session('status'))
+        <div class="mb-4 rounded-lg bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400" role="alert">
+            {{ session('status') }}
+        </div>
+    @endif
+
     @php
         $usedMb = round($usedBytes / 1024 / 1024, 1);
         $maxMb = round($maxBytes / 1024 / 1024);
         $percentage = $maxBytes > 0 ? min(100, round($usedBytes / $maxBytes * 100, 1)) : 0;
+
         $parentTypeLabels = [
-            'App\\Models\\Task' => 'Task',
-            'App\\Models\\FollowUp' => 'Follow-up',
-            'App\\Models\\Note' => 'Note',
-            'App\\Models\\Bila' => 'Bila',
+            \App\Models\Task::class => 'Task',
+            \App\Models\FollowUp::class => 'Follow-up',
+            \App\Models\Note::class => 'Note',
+            \App\Models\Bila::class => 'Bila',
         ];
+
+        $parentRouteNames = [
+            \App\Models\Task::class => 'tasks.show',
+            \App\Models\FollowUp::class => 'follow-ups.show',
+            \App\Models\Note::class => 'notes.show',
+            \App\Models\Bila::class => 'bilas.show',
+        ];
+
+        $getParentTitle = function ($activity) {
+            $parent = $activity?->activityable;
+            if (!$parent) return null;
+
+            return match (true) {
+                $parent instanceof \App\Models\Task => $parent->title,
+                $parent instanceof \App\Models\FollowUp => $parent->description,
+                $parent instanceof \App\Models\Note => $parent->title,
+                $parent instanceof \App\Models\Bila => 'Bila' . ($parent->scheduled_date ? ' — ' . $parent->scheduled_date->format('d M Y') : ''),
+                default => null,
+            };
+        };
+
+        $getParentUrl = function ($activity) use ($parentRouteNames) {
+            $parent = $activity?->activityable;
+            if (!$parent) return null;
+
+            $routeName = $parentRouteNames[get_class($parent)] ?? null;
+            if (!$routeName) return null;
+
+            return route($routeName, $parent);
+        };
     @endphp
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
@@ -51,6 +88,43 @@
                     </p>
                 </div>
             </div>
+
+            @if($orphanedCount > 0)
+                @php
+                    $orphanedMb = round($orphanedBytes / 1024 / 1024, 1);
+                    $orphanedDisplay = $orphanedBytes < 1048576
+                        ? round($orphanedBytes / 1024, 1) . ' KB'
+                        : $orphanedMb . ' MB';
+                @endphp
+                <div class="rounded-xl border border-warning-200 bg-warning-25 dark:border-warning-900/50 dark:bg-warning-900/10">
+                    <div class="p-5 space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="mt-0.5 shrink-0" aria-hidden="true">
+                                <svg class="h-5 w-5 text-warning-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                    {{ $orphanedCount }} orphaned {{ $orphanedCount === 1 ? 'file' : 'files' }}
+                                </p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $orphanedDisplay }} can be freed — {{ $orphanedCount === 1 ? 'this file belongs' : 'these files belong' }} to a resource that has been deleted.
+                                </p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('settings.purgeOrphaned') }}">
+                            @csrf
+                            <button
+                                type="submit"
+                                class="w-full rounded-lg border border-warning-300 bg-white px-4 py-2 text-sm font-medium text-warning-700 transition hover:bg-warning-50 dark:border-warning-800 dark:bg-transparent dark:text-warning-400 dark:hover:bg-warning-900/20"
+                            >
+                                Remove orphaned files (free {{ $orphanedDisplay }})
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
 
         </div>
 
@@ -116,13 +190,29 @@
                                 <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
                                     {{ $attachment->filename }}
                                 </p>
-                                <p class="text-xs text-gray-400 dark:text-gray-500">
+                                <p class="truncate text-xs text-gray-400 dark:text-gray-500">
                                     {{ $attachment->humanSize() }}
-                                    @if($attachment->activity)
-                                        · {{ $parentTypeLabels[$attachment->activity->activityable_type] ?? 'Unknown' }}
-                                    @endif
                                     · {{ $attachment->created_at->diffForHumans() }}
                                 </p>
+                                @if($attachment->activity)
+                                    @php
+                                        $typeLabel = $parentTypeLabels[$attachment->activity->activityable_type] ?? null;
+                                        $parentTitle = $getParentTitle($attachment->activity);
+                                        $parentUrl = $getParentUrl($attachment->activity);
+                                    @endphp
+                                    @if($typeLabel)
+                                        <p class="mt-0.5 truncate text-xs text-gray-400 dark:text-gray-500">
+                                            {{ $typeLabel }}:
+                                            @if($parentUrl && $parentTitle)
+                                                <a href="{{ $parentUrl }}" class="text-brand-600 underline-offset-2 hover:underline dark:text-brand-400">{{ $parentTitle }}</a>
+                                            @elseif($parentTitle)
+                                                {{ $parentTitle }}
+                                            @else
+                                                <span class="italic">deleted</span>
+                                            @endif
+                                        </p>
+                                    @endif
+                                @endif
                             </div>
 
                             <button

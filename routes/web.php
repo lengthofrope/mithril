@@ -99,6 +99,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
     Route::get('/settings/storage', [SettingsController::class, 'storage'])->name('settings.storage');
+    Route::post('/settings/storage/purge-orphaned', [SettingsController::class, 'purgeOrphaned'])->name('settings.purgeOrphaned');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
     Route::patch('/settings/timezone', [SettingsController::class, 'updateTimezone'])->name('settings.updateTimezone');
     Route::patch('/settings/prune-after-days', [SettingsController::class, 'updatePruneAfterDays'])->name('settings.updatePruneAfterDays');

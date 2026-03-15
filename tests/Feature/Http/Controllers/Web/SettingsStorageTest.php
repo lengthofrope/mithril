@@ -43,6 +43,8 @@ describe('Settings storage page', function (): void {
         $response->assertViewHas('usedBytes');
         $response->assertViewHas('maxBytes');
         $response->assertViewHas('attachments');
+        $response->assertViewHas('orphanedBytes');
+        $response->assertViewHas('orphanedCount');
     });
 
     it('calculates correct storage usage for the user', function (): void {
@@ -106,6 +108,139 @@ describe('Settings storage page', function (): void {
         $response = $this->actingAs($user)->get('/settings/storage');
 
         $response->assertViewHas('usedBytes', 0);
+    });
+
+    it('calculates orphaned bytes for attachments whose parent resource was deleted', function (): void {
+        $user = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $user->id]);
+
+        $activity = Activity::create([
+            'user_id' => $user->id,
+            'activityable_type' => Task::class,
+            'activityable_id' => $task->id,
+            'type' => ActivityType::Attachment,
+        ]);
+
+        Attachment::create([
+            'user_id' => $user->id,
+            'activity_id' => $activity->id,
+            'filename' => 'linked.pdf',
+            'path' => 'attachments/linked.pdf',
+            'disk' => 'local',
+            'mime_type' => 'application/pdf',
+            'size' => 2000,
+        ]);
+
+        $orphanedActivity = Activity::create([
+            'user_id' => $user->id,
+            'activityable_type' => Task::class,
+            'activityable_id' => 99999,
+            'type' => ActivityType::Attachment,
+        ]);
+
+        Attachment::create([
+            'user_id' => $user->id,
+            'activity_id' => $orphanedActivity->id,
+            'filename' => 'orphaned.pdf',
+            'path' => 'attachments/orphaned.pdf',
+            'disk' => 'local',
+            'mime_type' => 'application/pdf',
+            'size' => 5000,
+        ]);
+
+        $response = $this->actingAs($user)->get('/settings/storage');
+
+        $response->assertViewHas('orphanedBytes', 5000);
+        $response->assertViewHas('orphanedCount', 1);
+    });
+});
+
+describe('Purge orphaned attachments', function (): void {
+    it('deletes all orphaned attachments and their files', function (): void {
+        Storage::fake('local');
+        Storage::disk('local')->put('attachments/orphaned.pdf', 'content');
+        Storage::disk('local')->put('attachments/linked.pdf', 'content');
+
+        $user = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $user->id]);
+
+        $linkedActivity = Activity::create([
+            'user_id' => $user->id,
+            'activityable_type' => Task::class,
+            'activityable_id' => $task->id,
+            'type' => ActivityType::Attachment,
+        ]);
+
+        $linkedAttachment = Attachment::create([
+            'user_id' => $user->id,
+            'activity_id' => $linkedActivity->id,
+            'filename' => 'linked.pdf',
+            'path' => 'attachments/linked.pdf',
+            'disk' => 'local',
+            'mime_type' => 'application/pdf',
+            'size' => 1024,
+        ]);
+
+        $orphanedActivity = Activity::create([
+            'user_id' => $user->id,
+            'activityable_type' => Task::class,
+            'activityable_id' => 99999,
+            'type' => ActivityType::Attachment,
+        ]);
+
+        $orphanedAttachment = Attachment::create([
+            'user_id' => $user->id,
+            'activity_id' => $orphanedActivity->id,
+            'filename' => 'orphaned.pdf',
+            'path' => 'attachments/orphaned.pdf',
+            'disk' => 'local',
+            'mime_type' => 'application/pdf',
+            'size' => 5000,
+        ]);
+
+        $response = $this->actingAs($user)->post('/settings/storage/purge-orphaned');
+
+        $response->assertRedirect(route('settings.storage'));
+        expect(Attachment::find($orphanedAttachment->id))->toBeNull();
+        expect(Attachment::find($linkedAttachment->id))->not->toBeNull();
+        expect(Activity::find($orphanedActivity->id))->toBeNull();
+        Storage::disk('local')->assertMissing('attachments/orphaned.pdf');
+        Storage::disk('local')->assertExists('attachments/linked.pdf');
+    });
+
+    it('does not delete another users orphaned attachments', function (): void {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $orphanedActivity = Activity::create([
+            'user_id' => $other->id,
+            'activityable_type' => Task::class,
+            'activityable_id' => 99999,
+            'type' => ActivityType::Attachment,
+        ]);
+
+        $attachment = Attachment::create([
+            'user_id' => $other->id,
+            'activity_id' => $orphanedActivity->id,
+            'filename' => 'other.pdf',
+            'path' => 'attachments/other.pdf',
+            'disk' => 'local',
+            'mime_type' => 'application/pdf',
+            'size' => 1024,
+        ]);
+
+        $this->actingAs($user)->post('/settings/storage/purge-orphaned');
+
+        expect(Attachment::withoutGlobalScopes()->find($attachment->id))->not->toBeNull();
+    });
+
+    it('redirects with message when no orphaned files exist', function (): void {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post('/settings/storage/purge-orphaned');
+
+        $response->assertRedirect(route('settings.storage'));
+        $response->assertSessionHas('status');
     });
 });
 

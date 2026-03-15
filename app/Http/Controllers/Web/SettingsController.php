@@ -187,9 +187,13 @@ class SettingsController extends Controller
         $maxBytes = config('attachments.max_storage_mb') * 1024 * 1024;
 
         $attachments = Attachment::where('user_id', $user->id)
-            ->with('activity')
+            ->with('activity.activityable')
             ->orderByDesc('created_at')
             ->get();
+
+        $orphaned = $attachments->filter(
+            fn (Attachment $a) => !$a->activity || !$a->activity->activityable,
+        );
 
         return view('pages.settings.storage', [
             'title' => 'Storage',
@@ -200,7 +204,43 @@ class SettingsController extends Controller
             'usedBytes' => $usedBytes,
             'maxBytes' => $maxBytes,
             'attachments' => $attachments,
+            'orphanedBytes' => (int) $orphaned->sum('size'),
+            'orphanedCount' => $orphaned->count(),
         ]);
+    }
+
+    /**
+     * Delete all attachments whose parent resource no longer exists.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function purgeOrphaned(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $attachments = Attachment::where('user_id', $user->id)
+            ->with('activity.activityable')
+            ->get();
+
+        $deleted = 0;
+
+        foreach ($attachments as $attachment) {
+            if (!$attachment->activity || !$attachment->activity->activityable) {
+                $activity = $attachment->activity;
+                $attachment->delete();
+                $deleted++;
+
+                if ($activity && $activity->attachments()->count() === 0) {
+                    $activity->delete();
+                }
+            }
+        }
+
+        return redirect()->route('settings.storage')
+            ->with('status', $deleted > 0
+                ? "Removed {$deleted} orphaned " . ($deleted === 1 ? 'file' : 'files') . '.'
+                : 'No orphaned files found.');
     }
 
     /**
