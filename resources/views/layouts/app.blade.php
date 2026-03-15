@@ -27,7 +27,7 @@
     {{-- <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> --}}
 
     <!-- Theme Store -->
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         document.addEventListener('alpine:init', () => {
             Alpine.store('theme', {
                 init() {
@@ -89,7 +89,7 @@
     </script>
 
     <!-- Apply dark mode class on <html> before body renders to prevent flash -->
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         (function() {
             var savedTheme = localStorage.getItem('theme');
             if (savedTheme !== 'light') {
@@ -99,7 +99,7 @@
     </script>
 
     <!-- Set view transition click origin (must be in <head> as parser-blocking script) -->
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         window.addEventListener('pagereveal', function(e) {
             if (!e.viewTransition) return;
             var x = sessionStorage.getItem('click-x') || '50%';
@@ -155,7 +155,7 @@
 
 @stack('scripts')
 
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js').catch(function() {});

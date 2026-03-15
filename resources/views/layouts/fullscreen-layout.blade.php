@@ -17,7 +17,7 @@
     {{-- <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> --}}
 
     <!-- Theme Store -->
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         document.addEventListener('alpine:init', () => {
             Alpine.store('theme', {
                 init() {
@@ -65,7 +65,7 @@
     </script>
 
     <!-- Apply dark mode immediately to prevent flash -->
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         (function() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme !== 'light') {

@@ -12,7 +12,7 @@
 
     @vite(['resources/css/app.css'])
 
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         (function() {
             var savedTheme = localStorage.getItem('theme');
             if (savedTheme !== 'light') {

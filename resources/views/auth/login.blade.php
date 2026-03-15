@@ -14,7 +14,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
 
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         (function() {
             var savedTheme = localStorage.getItem('theme');
             if (savedTheme !== 'light') {
@@ -135,7 +135,7 @@
 
 </body>
 
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
     document.addEventListener('click', function(e) {
         var x = e.clientX;
         var y = e.clientY;
