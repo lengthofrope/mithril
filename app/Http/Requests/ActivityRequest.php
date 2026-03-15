@@ -34,7 +34,7 @@ class ActivityRequest extends FormRequest
             'url'        => ['required_if:type,link', 'nullable', 'url', 'max:2048'],
             'link_title' => ['nullable', 'string', 'max:255'],
             'files'      => ['required_if:type,attachment', 'nullable', 'array', 'max:5'],
-            'files.*'    => ['file', 'max:10240'],
+            'files.*'    => ['file', 'max:10240', 'mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,gz'],
         ];
     }
 }

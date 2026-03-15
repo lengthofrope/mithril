@@ -23,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -76,9 +77,13 @@ class ExportImportController extends Controller
 
         $data = $request->input('data');
 
-        DB::transaction(function () use ($data): void {
-            $this->truncateAllTables();
-            $this->insertAll($data);
+        $userId = auth()->id();
+
+        $this->withoutForeignKeyChecks(function () use ($data, $userId): void {
+            DB::transaction(function () use ($data, $userId): void {
+                $this->deleteAllUserData($userId);
+                $this->insertAll($data);
+            });
         });
 
         return $this->successResponse(null, 'Import successful.');
@@ -109,9 +114,13 @@ class ExportImportController extends Controller
                 ->with('error', 'The file does not contain a valid export structure.');
         }
 
-        DB::transaction(function () use ($parsed): void {
-            $this->truncateAllTables();
-            $this->insertAll($parsed['data']);
+        $userId = auth()->id();
+
+        $this->withoutForeignKeyChecks(function () use ($parsed, $userId): void {
+            DB::transaction(function () use ($parsed, $userId): void {
+                $this->deleteAllUserData($userId);
+                $this->insertAll($parsed['data']);
+            });
         });
 
         return redirect()->route('settings.index')
@@ -146,34 +155,41 @@ class ExportImportController extends Controller
     }
 
     /**
-     * Truncate all managed tables in reverse dependency order.
+     * Delete all data belonging to the given user in reverse dependency order.
      *
      * @return void
      */
-    private function truncateAllTables(): void
+    private function deleteAllUserData(int $userId): void
     {
-        match (DB::getDriverName()) {
-            'sqlite' => DB::statement('PRAGMA foreign_keys = OFF'),
-            default => DB::statement('SET FOREIGN_KEY_CHECKS=0'),
-        };
+        NoteTag::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        Note::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        BilaPrepItem::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        Bila::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        Agreement::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        FollowUp::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        Task::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        TaskGroup::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        TaskCategory::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        TeamMember::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        Team::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        WeeklyReflection::withoutGlobalScopes()->where('user_id', $userId)->delete();
+    }
 
-        NoteTag::truncate();
-        Note::truncate();
-        BilaPrepItem::truncate();
-        Bila::truncate();
-        Agreement::truncate();
-        FollowUp::truncate();
-        Task::truncate();
-        TaskGroup::truncate();
-        TaskCategory::truncate();
-        TeamMember::truncate();
-        Team::truncate();
-        WeeklyReflection::truncate();
+    /**
+     * Disable foreign key checks for the duration of a callback, then re-enable.
+     *
+     * @param callable $callback
+     * @return void
+     */
+    private function withoutForeignKeyChecks(callable $callback): void
+    {
+        Schema::disableForeignKeyConstraints();
 
-        match (DB::getDriverName()) {
-            'sqlite' => DB::statement('PRAGMA foreign_keys = ON'),
-            default => DB::statement('SET FOREIGN_KEY_CHECKS=1'),
-        };
+        try {
+            $callback();
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
     }
 
     /**
@@ -223,8 +239,9 @@ class ExportImportController extends Controller
 
         foreach (array_chunk($data[$key], 500) as $chunk) {
             $rows = array_map(function (array $row) use ($allowedFields, $userId, $dateCasts): array {
-                $filtered = array_intersect_key($row, array_flip($allowedFields));
-                unset($filtered['id'], $filtered['user_id']);
+                $allowed = array_merge($allowedFields, ['id']);
+                $filtered = array_intersect_key($row, array_flip($allowed));
+                unset($filtered['user_id']);
                 $filtered['user_id'] = $userId;
                 $filtered = $this->normalizeDateValues($filtered, $dateCasts);
 

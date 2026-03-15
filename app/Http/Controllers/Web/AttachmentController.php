@@ -28,10 +28,16 @@ class AttachmentController extends Controller
     {
         $model = Attachment::findOrFail($attachment);
 
+        $headers = ['Content-Type' => $model->mime_type];
+
+        if (str_starts_with($model->mime_type, 'image/svg')) {
+            $headers['Content-Disposition'] = 'attachment; filename="' . $model->filename . '"';
+        }
+
         return Storage::disk($model->disk)->response(
             $model->path,
             $model->filename,
-            ['Content-Type' => $model->mime_type],
+            $headers,
         );
     }
 

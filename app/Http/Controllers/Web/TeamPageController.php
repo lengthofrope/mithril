@@ -112,7 +112,7 @@ class TeamPageController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'color' => ['nullable', 'string', 'max:20'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{3,6}$/'],
         ]);
 
         Team::create($validated);
@@ -132,7 +132,7 @@ class TeamPageController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'color' => ['nullable', 'string', 'max:20'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{3,6}$/'],
         ]);
 
         $team->update($validated);

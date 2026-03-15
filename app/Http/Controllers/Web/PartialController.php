@@ -339,7 +339,7 @@ class PartialController extends Controller
     private function withETag(Request $request, string $viewName, array $data): Response
     {
         $html = View::make($viewName, $data)->render();
-        $etag = '"' . md5($html) . '"';
+        $etag = '"' . hash('xxh128', $html) . '"';
 
         if ($request->header('If-None-Match') === $etag) {
             return response('', 304);

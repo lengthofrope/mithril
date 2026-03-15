@@ -230,7 +230,8 @@ class ActivityController extends Controller
         $directory = 'attachments/' . now()->format('Y/m');
 
         foreach ($files as $file) {
-            $uniqueName = uniqid('', true) . '_' . $file->getClientOriginalName();
+            $extension = $file->guessExtension() ?? 'bin';
+            $uniqueName = uniqid('', true) . '.' . $extension;
             $path = $file->storeAs($directory, $uniqueName, 'local');
 
             Attachment::create([

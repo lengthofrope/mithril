@@ -194,9 +194,9 @@ test('login without 2fa redirects to dashboard as usual', function () {
     $response->assertRedirect(route('dashboard'));
 });
 
-// --- Remember-me bypasses 2FA challenge ---
+// --- Remember-me still requires 2FA challenge ---
 
-test('user restored via remember token skips two-factor challenge', function () {
+test('user restored via remember token still requires two-factor challenge', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create([
         'two_factor_secret' => encrypt('TESTSECRET'),
@@ -209,9 +209,8 @@ test('user restored via remember token skips two-factor challenge', function () 
 
     $response = $this->withCookies([$cookieName => $recaller])->get('/');
 
-    $response->assertOk();
-    expect(Auth::viaRemember())->toBeTrue();
-    expect(session('two_factor_authenticated'))->toBeTrue();
+    $response->assertRedirect(route('two-factor.challenge'));
+    expect(session('two_factor_authenticated'))->toBeNull();
 });
 
 // --- Logout clears 2FA session ---

@@ -14,8 +14,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 /**
@@ -55,15 +55,9 @@ class SettingsController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'theme_preference' => ['required', 'string', 'in:light,dark'],
-            'current_password' => ['required_with:password', 'nullable', 'string'],
+            'current_password' => ['required_with:password', 'current_password'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
-
-        if (isset($validated['current_password']) && $validated['current_password'] !== '') {
-            if (!Hash::check($validated['current_password'], $user->password)) {
-                return back()->withErrors(['current_password' => 'The current password is incorrect.']);
-            }
-        }
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
@@ -269,7 +263,7 @@ class SettingsController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'color' => ['nullable', 'string', 'max:7'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{3,6}$/'],
         ]);
 
         TaskGroup::create($validated);
@@ -299,7 +293,7 @@ class SettingsController extends Controller
     public function storeCategory(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:task_categories,name'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('task_categories', 'name')->where('user_id', auth()->id())],
         ]);
 
         TaskCategory::create($validated);

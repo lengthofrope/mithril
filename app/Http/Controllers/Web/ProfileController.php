@@ -48,15 +48,9 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'current_password' => ['required_with:password', 'nullable', 'string'],
+            'current_password' => ['required_with:password', 'current_password'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
-
-        if (isset($validated['current_password']) && $validated['current_password'] !== '') {
-            if (!Hash::check($validated['current_password'], $user->password)) {
-                return back()->withErrors(['current_password' => 'The current password is incorrect.']);
-            }
-        }
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];

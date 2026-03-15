@@ -35,7 +35,7 @@ class AutoSaveRequest extends FormRequest
             'model' => ['required', 'string', 'alpha_dash'],
             'id' => ['required', 'integer', 'min:1'],
             'field' => ['required', 'string', 'alpha_dash'],
-            'value' => ['present'],
+            'value' => ['present', 'nullable', 'max:10000'],
         ];
     }
 }

@@ -76,11 +76,11 @@ class TwoFactorController extends Controller
 
         $secret = $google2fa->generateSecretKey();
 
-        $user->update([
+        $user->forceFill([
             'two_factor_secret' => encrypt($secret),
             'two_factor_recovery_codes' => encrypt(json_encode($this->generateRecoveryCodes())),
             'two_factor_confirmed_at' => null,
-        ]);
+        ])->save();
 
         return redirect()->route('profile.index')->with('two_factor_setup', true);
     }
@@ -112,9 +112,9 @@ class TwoFactorController extends Controller
                 ->withErrors(['code' => 'The provided code is invalid.']);
         }
 
-        $user->update([
+        $user->forceFill([
             'two_factor_confirmed_at' => now(),
-        ]);
+        ])->save();
 
         return redirect()->route('profile.index')->with('status', 'Two-factor authentication enabled successfully.');
     }
@@ -131,11 +131,11 @@ class TwoFactorController extends Controller
             'current_password' => ['required', 'string', 'current_password'],
         ]);
 
-        $request->user()->update([
+        $request->user()->forceFill([
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
-        ]);
+        ])->save();
 
         return redirect()->route('profile.index')->with('status', 'Two-factor authentication has been disabled.');
     }
@@ -203,9 +203,9 @@ class TwoFactorController extends Controller
             fn (string $code) => $code !== $recoveryCode,
         ));
 
-        $user->update([
+        $user->forceFill([
             'two_factor_recovery_codes' => encrypt(json_encode($remainingCodes)),
-        ]);
+        ])->save();
 
         $request->session()->put('two_factor_authenticated', true);
 
