@@ -56,9 +56,13 @@ function getDateLabel(dateString: string): string {
 
 /**
  * Group emails by date label, preserving received_at order within each group.
+ *
+ * When the total email count is below the collapse threshold, all groups
+ * default to open since collapsing adds no value for small inboxes.
  */
 function groupByDate(emails: Email[]): DateGroup[] {
     const order = ['Today', 'Yesterday', 'This week', 'Older'];
+    const collapseThreshold = 15;
     const groups: Record<string, Email[]> = {};
 
     for (const email of emails) {
@@ -67,13 +71,19 @@ function groupByDate(emails: Email[]): DateGroup[] {
         groups[label].push(email);
     }
 
+    let cumulative = 0;
+
     return order
         .filter((label) => groups[label]?.length)
-        .map((label) => ({
-            label,
-            emails: groups[label],
-            defaultOpen: label === 'Today' || label === 'Yesterday',
-        }));
+        .map((label) => {
+            cumulative += groups[label].length;
+
+            return {
+                label,
+                emails: groups[label],
+                defaultOpen: cumulative < collapseThreshold,
+            };
+        });
 }
 
 /**
