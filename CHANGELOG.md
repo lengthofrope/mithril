@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Email sync pagination** — Email sync now follows Microsoft Graph `@odata.nextLink` pagination to fetch all inbox messages instead of only the first 50
+- **Dashboard responsive columns** — When both Jira and Outlook integrations are disconnected, the dashboard switches from a 3-column to a 2-column layout instead of showing an empty third column
+- **Email date group collapsing** — Older email groups on the mail page now only collapse when the cumulative email count exceeds 15; small inboxes show all groups expanded
+- **Sidebar logo size** — Increased logo from 210 to 250 width for better visibility
 - **Navigation** — Moved Bila's menu item below Teams for better logical grouping (previously between Notes and the separator)
 - **Robots.txt** — Blocked all crawlers from indexing the site (`Disallow: /`)
 - **Default theme** — New users default to dark mode instead of following OS preference; existing users who explicitly chose light mode keep their preference
@@ -54,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Email sync crash on special characters** — Email sync failed with `SQLSTATE[22007]: Incorrect string value` when Microsoft Graph returned body previews containing invalid UTF-8 byte sequences (e.g. lone `\xE2` bytes); all text fields are now sanitized via `mb_convert_encoding()` before database upsert
+- **Email body preview truncation** — `substr()` could split multi-byte UTF-8 characters (em-dashes, curly quotes) at the 500-character boundary, producing invalid bytes that MariaDB rejected; replaced with `mb_substr()`
 - **Broken attachment thumbnails** — Image thumbnails in the activity feed showed a broken image icon because the download URL was unsigned (403) and served with `Content-Disposition: attachment`; now uses signed inline preview URLs
 - **Attachment download 403** — Clicking attachment links returned "Invalid signature" because the Blade template generated unsigned URLs instead of calling the model's `downloadUrl()` method
 
