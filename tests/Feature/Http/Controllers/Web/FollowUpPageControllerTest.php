@@ -211,6 +211,25 @@ test('convert to task redirects back for non-AJAX requests', function () {
     expect($followUp->fresh()->status)->toBe(FollowUpStatus::Done);
 });
 
+test('convert to task copies follow_up_date as deadline', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Deadline follow-up',
+        'follow_up_date' => '2026-04-15',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/follow-ups/{$followUp->id}/convert");
+
+    $this->assertDatabaseHas('tasks', [
+        'title' => 'Deadline follow-up',
+        'deadline' => '2026-04-15 00:00:00',
+    ]);
+});
+
 test('follow-up index returns only the partial for AJAX requests', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();

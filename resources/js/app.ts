@@ -28,6 +28,7 @@ import { syncButton } from './components/sync-button';
 import { systemNotification } from './components/system-notification';
 import { refreshable } from './components/refreshable';
 import { activityInput } from './components/activity-input';
+import { followUpActions } from './components/follow-up-actions';
 
 declare global {
     interface Window {
@@ -62,6 +63,7 @@ Alpine.data('syncButton', syncButton as Parameters<typeof Alpine.data>[1]);
 Alpine.data('systemNotification', systemNotification as Parameters<typeof Alpine.data>[1]);
 Alpine.data('refreshable', refreshable as Parameters<typeof Alpine.data>[1]);
 Alpine.data('activityInput', activityInput as Parameters<typeof Alpine.data>[1]);
+Alpine.data('followUpActions', followUpActions as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

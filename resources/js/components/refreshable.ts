@@ -55,11 +55,11 @@ function refreshable(config: RefreshableConfig): Record<string, unknown> {
             }, pollIntervalMs);
 
             const debouncedRefresh = debounce((event: Event) => {
-                if (config.topics && config.topics.length > 0) {
-                    const customEvent = event as CustomEvent<{ topic?: string }>;
-                    const topic = customEvent.detail?.topic;
+                const customEvent = event as CustomEvent<{ topic?: string }>;
+                const topic = customEvent.detail?.topic;
 
-                    if (!topic || !config.topics.includes(topic)) {
+                if (topic && config.topics && config.topics.length > 0) {
+                    if (!config.topics.includes(topic)) {
                         return;
                     }
                 }

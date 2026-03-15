@@ -223,6 +223,7 @@ class FollowUpPageController extends Controller
             'user_id' => $request->user()->id,
             'title' => $followUp->description,
             'team_member_id' => $followUp->team_member_id,
+            'deadline' => $followUp->follow_up_date,
         ]);
 
         $followUp->update(['status' => FollowUpStatus::Done]);
