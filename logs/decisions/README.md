@@ -21,3 +21,6 @@
 | 017 | backend, frontend, artisan, notifications, broadcast | System broadcast notifications | Operations | Accepted | 2026-03-13 |
 | 018 | backend, frontend, jira, privacy, atlassian, caching, api | Remove personal data from Jira integration for Atlassian Marketplace compliance | Jira Privacy Compliance | Accepted | 2026-03-13 |
 | 019 | backend, database, attachments, data-integrity | Remove FK constraint on attachments.activity_id | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 020 | backend, frontend, polymorphic, observer, activity-feed, traits | Polymorphic activity feed with observer-based system event logging | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 021 | backend, services, polymorphic, security, conversion, global-scopes | MetadataTransferService bypasses BelongsToUser scope for entity conversion | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 022 | backend, frontend, storage, attachments, artisan, settings | Storage management with quota enforcement and dual cleanup strategy | Activity Feed & Polling | Accepted | 2026-03-14 |
