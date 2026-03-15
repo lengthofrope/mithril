@@ -60,8 +60,8 @@ class EmailSyncService
     {
         $bodyPreview = $graphMessage['body_preview'] ?? null;
 
-        if ($bodyPreview !== null && strlen($bodyPreview) > 500) {
-            $bodyPreview = substr($bodyPreview, 0, 500);
+        if ($bodyPreview !== null && mb_strlen($bodyPreview) > 500) {
+            $bodyPreview = mb_substr($bodyPreview, 0, 500);
         }
 
         return [

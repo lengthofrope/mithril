@@ -244,13 +244,14 @@ class MicrosoftGraphService
     }
 
     /**
-     * Fetch filtered messages from the user's inbox.
+     * Fetch filtered messages from the user's inbox, following pagination.
      *
-     * Includes flag.dueDateTime in $select for deadline extraction.
+     * Follows @odata.nextLink to retrieve all pages. A safety cap of 10 pages
+     * prevents runaway loops on extremely large inboxes.
      *
      * @param User   $user   The user whose messages should be fetched.
      * @param string $filter OData filter string for the messages query.
-     * @param int    $top    Maximum number of messages to retrieve.
+     * @param int    $top    Number of messages per page.
      * @return Collection<int, array<string, mixed>> Normalised message records.
      * @throws RuntimeException When the Graph request fails.
      */
@@ -267,12 +268,28 @@ class MicrosoftGraphService
             $params['$filter'] = $filter;
         }
 
-        $response = Http::withToken($user->microsoft_access_token)
-            ->get(config('microsoft.graph_url') . 'me/mailFolders/Inbox/messages', $params);
+        $allMessages = [];
+        $url         = config('microsoft.graph_url') . 'me/mailFolders/Inbox/messages';
+        $maxPages    = 10;
 
-        $this->assertSuccessfulGraphResponse($response);
+        for ($page = 0; $page < $maxPages; $page++) {
+            $response = Http::withToken($user->microsoft_access_token)
+                ->get($url, $page === 0 ? $params : []);
 
-        return collect($response->json('value', []))
+            $this->assertSuccessfulGraphResponse($response);
+
+            $allMessages = array_merge($allMessages, $response->json('value', []));
+
+            $nextLink = $response->json()['@odata.nextLink'] ?? null;
+
+            if ($nextLink === null) {
+                break;
+            }
+
+            $url = $nextLink;
+        }
+
+        return collect($allMessages)
             ->map(fn (array $message): array => $this->normaliseMessage($message))
             ->sortByDesc('received_at')
             ->values();

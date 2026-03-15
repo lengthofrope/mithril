@@ -120,6 +120,31 @@ describe('EmailSyncService::normalizeMessage()', function (): void {
 
         expect(strlen($normalized['body_preview']))->toBe(500);
     });
+
+    it('truncates body_preview safely without splitting multi-byte characters', function (): void {
+        $service = app(EmailSyncService::class);
+
+        $body = str_repeat('A', 499) . '—';
+
+        $normalized = $service->normalizeMessage([
+            'microsoft_message_id' => 'AAMkMB123',
+            'subject'              => 'Multi-byte boundary',
+            'sender_name'          => null,
+            'sender_email'         => null,
+            'received_at'          => '2026-03-12T10:00:00Z',
+            'body_preview'         => $body,
+            'is_read'              => true,
+            'is_flagged'           => false,
+            'flag_due_date'        => null,
+            'categories'           => [],
+            'importance'           => 'normal',
+            'has_attachments'      => false,
+            'web_link'             => null,
+        ], []);
+
+        expect(mb_strlen($normalized['body_preview']))->toBeLessThanOrEqual(500)
+            ->and(mb_detect_encoding($normalized['body_preview'], 'UTF-8', true))->toBe('UTF-8');
+    });
 });
 
 describe('EmailSyncService::syncEmails()', function (): void {

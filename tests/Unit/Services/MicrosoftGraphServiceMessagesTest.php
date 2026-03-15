@@ -164,6 +164,100 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
         });
     });
 
+    it('paginates through all pages via @odata.nextLink', function (): void {
+        $user = User::factory()->create([
+            'microsoft_id'               => 'ms-id-123',
+            'microsoft_access_token'     => 'valid-token',
+            'microsoft_refresh_token'    => 'valid-refresh',
+            'microsoft_token_expires_at' => now()->addHour(),
+        ]);
+
+        $graphUrl = config('microsoft.graph_url');
+
+        Http::fakeSequence()
+            ->push([
+                'value'            => [
+                    [
+                        'id'               => 'msg-page1',
+                        'subject'          => 'Page 1 message',
+                        'from'             => ['emailAddress' => ['name' => 'Alice', 'address' => 'alice@example.com']],
+                        'receivedDateTime' => '2026-03-15T10:00:00Z',
+                        'bodyPreview'      => '',
+                        'isRead'           => true,
+                        'flag'             => ['flagStatus' => 'notFlagged'],
+                        'categories'       => [],
+                        'importance'       => 'normal',
+                        'hasAttachments'   => false,
+                        'webLink'          => null,
+                    ],
+                ],
+                '@odata.nextLink' => $graphUrl . 'me/mailFolders/Inbox/messages?$skip=1',
+            ])
+            ->push([
+                'value' => [
+                    [
+                        'id'               => 'msg-page2',
+                        'subject'          => 'Page 2 message',
+                        'from'             => ['emailAddress' => ['name' => 'Bob', 'address' => 'bob@example.com']],
+                        'receivedDateTime' => '2026-03-15T09:00:00Z',
+                        'bodyPreview'      => '',
+                        'isRead'           => false,
+                        'flag'             => ['flagStatus' => 'notFlagged'],
+                        'categories'       => [],
+                        'importance'       => 'normal',
+                        'hasAttachments'   => false,
+                        'webLink'          => null,
+                    ],
+                ],
+            ]);
+
+        $service = app(MicrosoftGraphService::class);
+        $result  = $service->getMyMessages($user);
+
+        expect($result)->toHaveCount(2)
+            ->and($result[0]['microsoft_message_id'])->toBe('msg-page1')
+            ->and($result[1]['microsoft_message_id'])->toBe('msg-page2');
+    });
+
+    it('stops pagination at a safe maximum to prevent infinite loops', function (): void {
+        $user = User::factory()->create([
+            'microsoft_id'               => 'ms-id-123',
+            'microsoft_access_token'     => 'valid-token',
+            'microsoft_refresh_token'    => 'valid-refresh',
+            'microsoft_token_expires_at' => now()->addHour(),
+        ]);
+
+        $graphUrl = config('microsoft.graph_url');
+
+        $sequence = Http::fakeSequence();
+
+        for ($i = 0; $i < 15; $i++) {
+            $sequence->push([
+                'value'            => [
+                    [
+                        'id'               => "msg-page{$i}",
+                        'subject'          => "Page {$i}",
+                        'from'             => ['emailAddress' => ['name' => 'Test', 'address' => 'test@example.com']],
+                        'receivedDateTime' => '2026-03-15T10:00:00Z',
+                        'bodyPreview'      => '',
+                        'isRead'           => true,
+                        'flag'             => ['flagStatus' => 'notFlagged'],
+                        'categories'       => [],
+                        'importance'       => 'normal',
+                        'hasAttachments'   => false,
+                        'webLink'          => null,
+                    ],
+                ],
+                '@odata.nextLink' => $graphUrl . "me/mailFolders/Inbox/messages?\$skip={$i}",
+            ]);
+        }
+
+        $service = app(MicrosoftGraphService::class);
+        $result  = $service->getMyMessages($user);
+
+        expect($result->count())->toBeLessThanOrEqual(500);
+    });
+
     it('throws RuntimeException on API failure', function (): void {
         $user = User::factory()->create([
             'microsoft_id'               => 'ms-id-123',
