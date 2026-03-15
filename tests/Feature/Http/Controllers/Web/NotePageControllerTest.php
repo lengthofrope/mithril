@@ -230,6 +230,47 @@ test('store accepts team_id and team_member_id', function () {
     ]);
 });
 
+test('store defaults date to today when not provided', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/notes', [
+        'title' => 'Note without date',
+    ]);
+
+    $note = Note::where('user_id', $user->id)->where('title', 'Note without date')->first();
+    expect($note->date->toDateString())->toBe(now()->toDateString());
+});
+
+test('store accepts a custom date', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/notes', [
+        'title' => 'Backdated note',
+        'date' => '2026-01-15',
+    ]);
+
+    $note = Note::where('user_id', $user->id)->where('title', 'Backdated note')->first();
+    expect($note->date->toDateString())->toBe('2026-01-15');
+});
+
+test('update can change the date via AJAX', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $note = Note::factory()->create(['user_id' => $user->id, 'date' => '2026-03-01']);
+
+    $response = $this->actingAs($user)
+        ->patch(
+            "/notes/{$note->id}",
+            ['date' => '2026-03-10'],
+            ['X-Requested-With' => 'XMLHttpRequest', 'Accept' => 'application/json'],
+        );
+
+    $response->assertOk();
+    expect($note->fresh()->date->toDateString())->toBe('2026-03-10');
+});
+
 test('store defaults title to Untitled when empty', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();

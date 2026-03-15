@@ -51,6 +51,7 @@ class NoteRequest extends FormRequest
             'team_id' => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'is_pinned' => ['boolean'],
+            'date' => ['nullable', 'date'],
         ];
     }
 }

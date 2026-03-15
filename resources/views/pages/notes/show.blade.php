@@ -22,6 +22,17 @@
                     />
                 </div>
 
+                {{-- Date --}}
+                <div class="mb-6">
+                    <x-tl.auto-save-field
+                        :endpoint="$noteEndpoint"
+                        field="date"
+                        :value="$note->date?->toDateString() ?? ''"
+                        type="date"
+                        label="Date"
+                    />
+                </div>
+
                 {{-- Row: Team + Member (linked filtering) --}}
                 <div
                     class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2"

@@ -108,6 +108,7 @@ class NotePageController extends Controller
             'content'        => ['nullable', 'string'],
             'team_id'        => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'date'           => ['nullable', 'date'],
         ]);
 
         $note = Note::create([
@@ -116,6 +117,7 @@ class NotePageController extends Controller
             'content'        => $validated['content'] ?? '',
             'team_id'        => $validated['team_id'] ?? null,
             'team_member_id' => $validated['team_member_id'] ?? null,
+            'date'           => $validated['date'] ?? now()->toDateString(),
         ]);
 
         return redirect()->route('notes.show', $note);
@@ -136,6 +138,7 @@ class NotePageController extends Controller
             'team_id'        => ['sometimes', 'nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'team_member_id' => ['sometimes', 'nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'is_pinned'      => ['sometimes', 'boolean'],
+            'date'           => ['sometimes', 'nullable', 'date'],
         ]);
 
         $note->update($validated);
