@@ -86,10 +86,10 @@ class SettingsController extends Controller
     public function updatePruneAfterDays(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'prune_after_days' => ['nullable', 'integer', 'min:30', 'max:365'],
+            'prune_after_days' => ['required', 'integer', 'min:30', 'max:365'],
         ]);
 
-        $request->user()->update(['prune_after_days' => $validated['prune_after_days'] ?? null]);
+        $request->user()->update(['prune_after_days' => $validated['prune_after_days']]);
 
         return response()->json(['success' => true]);
     }

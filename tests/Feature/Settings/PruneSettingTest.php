@@ -42,16 +42,17 @@ test('setting prune_after_days above 365 is rejected', function () {
         ->assertJsonValidationErrors('prune_after_days');
 });
 
-test('clearing prune_after_days disables pruning', function () {
+test('clearing prune_after_days is rejected because pruning is always active', function () {
     $this->user->update(['prune_after_days' => 90]);
 
     $response = $this->patchJson(route('settings.updatePruneAfterDays'), [
         'prune_after_days' => null,
     ]);
 
-    $response->assertOk();
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors('prune_after_days');
     $this->user->refresh();
-    expect($this->user->prune_after_days)->toBeNull();
+    expect($this->user->prune_after_days)->toBe(90);
 });
 
 test('manual prune button triggers pruning and shows results', function () {

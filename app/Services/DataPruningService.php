@@ -33,7 +33,7 @@ class DataPruningService
      */
     public function pruneForUser(User $user): PruneResult
     {
-        $cutoff = now()->subDays($user->prune_after_days);
+        $cutoff = now()->subDays($user->prune_after_days ?? 90);
 
         $tasksDeleted = Task::withoutGlobalScope('user')
             ->where('user_id', $user->id)
@@ -108,7 +108,7 @@ class DataPruningService
      */
     public function countForUser(User $user): PruneResult
     {
-        $cutoff = now()->subDays($user->prune_after_days);
+        $cutoff = now()->subDays($user->prune_after_days ?? 90);
 
         $tasksCount = Task::withoutGlobalScope('user')
             ->where('user_id', $user->id)

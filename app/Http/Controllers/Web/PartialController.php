@@ -150,12 +150,14 @@ class PartialController extends Controller
             ->with(['teamMember', 'taskCategory', 'team'])
             ->get();
 
-        $upcomingTasks = $user->dashboard_upcoming_tasks
+        $taskLimit = $user->dashboard_upcoming_tasks ?? 5;
+
+        $upcomingTasks = $taskLimit > 0
             ? Task::whereDate('deadline', '>', $todayDate)
                 ->whereNotIn('status', [TaskStatus::Done->value])
                 ->orderBy('deadline')
                 ->with(['teamMember', 'taskCategory', 'team'])
-                ->limit($user->dashboard_upcoming_tasks)
+                ->limit($taskLimit)
                 ->get()
             : new Collection();
 
@@ -191,12 +193,14 @@ class PartialController extends Controller
             ->orderBy('follow_up_date')
             ->get();
 
-        $upcomingFollowUps = $user->dashboard_upcoming_follow_ups
+        $followUpLimit = $user->dashboard_upcoming_follow_ups ?? 5;
+
+        $upcomingFollowUps = $followUpLimit > 0
             ? FollowUp::whereDate('follow_up_date', '>', $todayDate)
                 ->where('status', '!=', FollowUpStatus::Done->value)
                 ->with('teamMember')
                 ->orderBy('follow_up_date')
-                ->limit($user->dashboard_upcoming_follow_ups)
+                ->limit($followUpLimit)
                 ->get()
             : new Collection();
 
@@ -231,12 +235,14 @@ class PartialController extends Controller
             ->orderBy('scheduled_date')
             ->get();
 
-        $upcomingBilas = $user->dashboard_upcoming_bilas
+        $bilaLimit = $user->dashboard_upcoming_bilas ?? 5;
+
+        $upcomingBilas = $bilaLimit > 0
             ? Bila::where('is_done', false)
                 ->whereDate('scheduled_date', '>', $todayDate)
                 ->with(['teamMember', 'prepItems'])
                 ->orderBy('scheduled_date')
-                ->limit($user->dashboard_upcoming_bilas)
+                ->limit($bilaLimit)
                 ->get()
             : new Collection();
 

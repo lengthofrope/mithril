@@ -159,30 +159,34 @@ class DashboardController extends Controller
     {
         $todayDate = now($timezone)->toDateString();
 
-        $upcomingTasks = $user->dashboard_upcoming_tasks
+        $taskLimit = $user->dashboard_upcoming_tasks ?? 5;
+        $followUpLimit = $user->dashboard_upcoming_follow_ups ?? 5;
+        $bilaLimit = $user->dashboard_upcoming_bilas ?? 5;
+
+        $upcomingTasks = $taskLimit > 0
             ? Task::whereDate('deadline', '>', $todayDate)
                 ->whereNotIn('status', [TaskStatus::Done->value])
                 ->orderBy('deadline')
                 ->with(['teamMember', 'taskCategory', 'team'])
-                ->limit($user->dashboard_upcoming_tasks)
+                ->limit($taskLimit)
                 ->get()
             : new Collection();
 
-        $upcomingFollowUps = $user->dashboard_upcoming_follow_ups
+        $upcomingFollowUps = $followUpLimit > 0
             ? FollowUp::whereDate('follow_up_date', '>', $todayDate)
                 ->where('status', '!=', FollowUpStatus::Done->value)
                 ->with('teamMember')
                 ->orderBy('follow_up_date')
-                ->limit($user->dashboard_upcoming_follow_ups)
+                ->limit($followUpLimit)
                 ->get()
             : new Collection();
 
-        $upcomingBilas = $user->dashboard_upcoming_bilas
+        $upcomingBilas = $bilaLimit > 0
             ? Bila::where('is_done', false)
                 ->whereDate('scheduled_date', '>', $todayDate)
                 ->with(['teamMember', 'prepItems'])
                 ->orderBy('scheduled_date')
-                ->limit($user->dashboard_upcoming_bilas)
+                ->limit($bilaLimit)
                 ->get()
             : new Collection();
 

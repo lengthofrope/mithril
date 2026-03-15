@@ -124,9 +124,9 @@
             <div
                 class="p-5 space-y-4"
                 x-data="{
-                    tasks: '{{ $user->dashboard_upcoming_tasks ?? '' }}',
-                    followUps: '{{ $user->dashboard_upcoming_follow_ups ?? '' }}',
-                    bilas: '{{ $user->dashboard_upcoming_bilas ?? '' }}',
+                    tasks: '{{ $user->dashboard_upcoming_tasks ?? 5 }}',
+                    followUps: '{{ $user->dashboard_upcoming_follow_ups ?? 5 }}',
+                    bilas: '{{ $user->dashboard_upcoming_bilas ?? 5 }}',
                     saving: false,
                     saved: false,
                     error: '',
@@ -258,13 +258,10 @@
             <div
                 class="p-5 space-y-4"
                 x-data="{
-                    days: '{{ $user->prune_after_days ?? '' }}',
+                    days: '{{ $user->prune_after_days ?? 90 }}',
                     saving: false,
                     saved: false,
                     error: '',
-                    get isConfigured() {
-                        return this.days !== '' && parseInt(this.days) >= 30;
-                    },
                     async save() {
                         this.saving = true;
                         this.saved = false;
@@ -278,7 +275,7 @@
                                     'Accept': 'application/json',
                                 },
                                 body: JSON.stringify({
-                                    prune_after_days: this.days === '' ? null : parseInt(this.days),
+                                    prune_after_days: parseInt(this.days) || 90,
                                 }),
                             });
                             if (response.ok) {
@@ -297,7 +294,7 @@
                 <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">Auto-delete completed items after</p>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Completed tasks and follow-ups older than this will be automatically removed. Analytics history is preserved.</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Completed tasks, follow-ups, and dismissed emails older than this are automatically removed. Analytics history is preserved.</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <input
@@ -306,7 +303,7 @@
                             x-on:change="save()"
                             min="30"
                             max="365"
-                            placeholder="Off"
+                            required
                             class="w-20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
                             aria-label="Retention period in days"
                         >
@@ -331,9 +328,6 @@
                 </div>
 
                 <div
-                    x-show="isConfigured"
-                    x-transition
-                    x-cloak
                     class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-800"
                 >
                     <div>
