@@ -302,7 +302,7 @@
                                     Convert to follow-up
                                 </h2>
                                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    This will mark the task as done and create a linked follow-up. Continue?
+                                    This will mark the task as done and create a linked follow-up. All comments, links, and files will be transferred. Continue?
                                 </p>
                                 <div class="mt-6 flex items-center justify-end gap-3">
                                     <button
