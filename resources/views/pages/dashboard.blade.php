@@ -102,7 +102,8 @@
     </div>
 
     {{-- Today section --}}
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    @php $hasThirdColumn = $isMicrosoftConnected || $isJiraConnected; @endphp
+    <div class="grid grid-cols-1 gap-6 {{ $hasThirdColumn ? 'xl:grid-cols-3' : 'xl:grid-cols-2' }}">
 
         {{-- Tasks --}}
         <div
@@ -142,38 +143,40 @@
         </div>
 
         {{-- Upcoming calendar + Flagged emails (Office 365) + Jira --}}
-        <div class="flex flex-col gap-6">
-            @if($calendarEvents !== null)
-                <div
-                    x-data="refreshable({ url: '{{ route('partials.dashboard.calendar') }}', topics: ['calendar'], pollInterval: 60000 })"
-                >
-                    <div data-refresh-target>
-                        @include('partials.dashboard.calendar', [
-                            'calendarEvents' => $calendarEvents,
-                            'userTimezone' => $userTimezone,
-                            'isMicrosoftConnected' => $isMicrosoftConnected,
-                        ])
+        @if($hasThirdColumn)
+            <div class="flex flex-col gap-6">
+                @if($calendarEvents !== null)
+                    <div
+                        x-data="refreshable({ url: '{{ route('partials.dashboard.calendar') }}', topics: ['calendar'], pollInterval: 60000 })"
+                    >
+                        <div data-refresh-target>
+                            @include('partials.dashboard.calendar', [
+                                'calendarEvents' => $calendarEvents,
+                                'userTimezone' => $userTimezone,
+                                'isMicrosoftConnected' => $isMicrosoftConnected,
+                            ])
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            @if($flaggedEmails !== null)
-                <div
-                    x-data="refreshable({ url: '{{ route('partials.dashboard.emails') }}', topics: ['emails'], pollInterval: 30000 })"
-                >
-                    <div data-refresh-target>
-                        @include('partials.dashboard.emails', [
-                            'flaggedEmails' => $flaggedEmails,
-                            'isMicrosoftConnected' => $isMicrosoftConnected,
-                        ])
+                @if($flaggedEmails !== null)
+                    <div
+                        x-data="refreshable({ url: '{{ route('partials.dashboard.emails') }}', topics: ['emails'], pollInterval: 30000 })"
+                    >
+                        <div data-refresh-target>
+                            @include('partials.dashboard.emails', [
+                                'flaggedEmails' => $flaggedEmails,
+                                'isMicrosoftConnected' => $isMicrosoftConnected,
+                            ])
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            @if($isJiraConnected)
-                <x-tl.jira-widget class="flex-1" />
-            @endif
-        </div>
+                @if($isJiraConnected)
+                    <x-tl.jira-widget class="flex-1" />
+                @endif
+            </div>
+        @endif
     </div>
 
     {{-- Analytics widgets --}}
