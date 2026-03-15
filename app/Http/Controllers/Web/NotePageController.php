@@ -48,7 +48,7 @@ class NotePageController extends Controller
             ->when($teamId, fn ($q) => $q->where('team_id', $teamId))
             ->when($teamMemberId, fn ($q) => $q->where('team_member_id', $teamMemberId))
             ->orderByDesc('is_pinned')
-            ->orderByDesc('updated_at')
+            ->orderByDesc('date')
             ->get();
 
         $allTags = NoteTag::query()
@@ -86,12 +86,19 @@ class NotePageController extends Controller
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
 
+        $allTags = NoteTag::query()
+            ->select('tag')
+            ->distinct()
+            ->orderBy('tag')
+            ->pluck('tag');
+
         return view('pages.notes.show', [
             'title' => $note->title,
             'note' => $note,
             'breadcrumbs' => (new BreadcrumbBuilder())->forNote($note)->build(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name, 'team_id' => (string) $m->team_id])->all(),
+            'allTags' => $allTags,
         ]);
     }
 
@@ -108,6 +115,7 @@ class NotePageController extends Controller
             'content'        => ['nullable', 'string'],
             'team_id'        => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'date'           => ['nullable', 'date'],
         ]);
 
         $note = Note::create([
@@ -116,6 +124,7 @@ class NotePageController extends Controller
             'content'        => $validated['content'] ?? '',
             'team_id'        => $validated['team_id'] ?? null,
             'team_member_id' => $validated['team_member_id'] ?? null,
+            'date'           => $validated['date'] ?? now()->toDateString(),
         ]);
 
         return redirect()->route('notes.show', $note);
@@ -136,6 +145,7 @@ class NotePageController extends Controller
             'team_id'        => ['sometimes', 'nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'team_member_id' => ['sometimes', 'nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'is_pinned'      => ['sometimes', 'boolean'],
+            'date'           => ['sometimes', 'nullable', 'date'],
         ]);
 
         $note->update($validated);

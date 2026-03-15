@@ -25,10 +25,14 @@ class AboutController extends Controller
     {
         $changelog = $this->parseChangelog();
 
+        $maxReleases = 10;
+        $allReleases = $changelog['releases'];
+
         return view('pages.about.index', [
             'title' => 'About',
             'currentVersion' => $changelog['currentVersion'],
-            'releases' => $changelog['releases'],
+            'releases' => array_slice($allReleases, 0, $maxReleases),
+            'hasMoreReleases' => count($allReleases) > $maxReleases,
         ]);
     }
 

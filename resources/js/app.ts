@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import { initTextareaAutosize } from './utils/textarea-autosize';
 
 import { autoSaveField } from './components/auto-save-field';
 import { autoSaveForm } from './components/auto-save-form';
@@ -26,6 +27,10 @@ import { jiraPage } from './components/jira-page';
 import { jiraActions } from './components/jira-actions';
 import { syncButton } from './components/sync-button';
 import { systemNotification } from './components/system-notification';
+import { refreshable } from './components/refreshable';
+import { activityInput } from './components/activity-input';
+import { followUpActions } from './components/follow-up-actions';
+import { tagEditor } from './components/tag-editor';
 
 declare global {
     interface Window {
@@ -58,9 +63,14 @@ Alpine.data('jiraPage', jiraPage as Parameters<typeof Alpine.data>[1]);
 Alpine.data('jiraActions', jiraActions as Parameters<typeof Alpine.data>[1]);
 Alpine.data('syncButton', syncButton as Parameters<typeof Alpine.data>[1]);
 Alpine.data('systemNotification', systemNotification as Parameters<typeof Alpine.data>[1]);
+Alpine.data('refreshable', refreshable as Parameters<typeof Alpine.data>[1]);
+Alpine.data('activityInput', activityInput as Parameters<typeof Alpine.data>[1]);
+Alpine.data('followUpActions', followUpActions as Parameters<typeof Alpine.data>[1]);
+Alpine.data('tagEditor', tagEditor as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 
 window.Alpine = Alpine;
 
 Alpine.start();
+initTextareaAutosize();

@@ -52,6 +52,14 @@ describe('Note model', function (): void {
 
             expect($note->fresh()->is_pinned)->toBeFalse();
         });
+
+        it('casts date to a date instance', function (): void {
+            $user = User::factory()->create();
+            $note = Note::create(['title' => 'Dated note', 'content' => '', 'date' => '2026-03-15', 'user_id' => $user->id]);
+
+            expect($note->fresh()->date)->toBeInstanceOf(\Illuminate\Support\Carbon::class)
+                ->and($note->fresh()->date->toDateString())->toBe('2026-03-15');
+        });
     });
 
     describe('relationships', function (): void {

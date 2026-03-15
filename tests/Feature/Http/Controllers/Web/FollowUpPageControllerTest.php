@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use App\Enums\FollowUpStatus;
+use App\Models\Activity;
+use App\Models\CalendarEventLink;
+use App\Models\EmailLink;
 use App\Models\FollowUp;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
@@ -193,7 +197,7 @@ test('snooze redirects back for non-AJAX requests', function () {
         ->toBe(now()->addDays(3)->toDateString());
 });
 
-test('convert to task redirects back for non-AJAX requests', function () {
+test('convert to task redirects to new task for non-AJAX requests', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
     $followUp = FollowUp::factory()->create([
@@ -203,12 +207,51 @@ test('convert to task redirects back for non-AJAX requests', function () {
     ]);
 
     $response = $this->actingAs($user)
-        ->from('/follow-ups')
         ->post("/follow-ups/{$followUp->id}/convert");
 
-    $response->assertRedirect('/follow-ups');
-    $this->assertDatabaseHas('tasks', ['title' => 'Follow up on meeting notes']);
+    $task = Task::where('title', 'Follow up on meeting notes')->first();
+    $response->assertRedirect(route('tasks.show', $task));
     expect($followUp->fresh()->status)->toBe(FollowUpStatus::Done);
+});
+
+test('convert to task returns task URL for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'AJAX convert test',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->postJson("/follow-ups/{$followUp->id}/convert");
+
+    $task = Task::where('title', 'AJAX convert test')->first();
+    $response->assertOk()
+        ->assertJson([
+            'success' => true,
+            'data' => ['task_url' => route('tasks.show', $task)],
+        ]);
+    expect($followUp->fresh()->status)->toBe(FollowUpStatus::Done);
+});
+
+test('convert to task copies follow_up_date as deadline', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Deadline follow-up',
+        'follow_up_date' => '2026-04-15',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/follow-ups/{$followUp->id}/convert");
+
+    $this->assertDatabaseHas('tasks', [
+        'title' => 'Deadline follow-up',
+        'deadline' => '2026-04-15 00:00:00',
+    ]);
 });
 
 test('follow-up index returns only the partial for AJAX requests', function () {
@@ -426,4 +469,71 @@ test('show returns 404 for another users follow-up', function () {
     $response = $this->actingAs($user)->get("/follow-ups/{$followUp->id}");
 
     $response->assertNotFound();
+});
+
+test('convert to task transfers activities to the new task', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Transfer activities test',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    Activity::factory()->count(2)->create([
+        'user_id' => $user->id,
+        'activityable_type' => FollowUp::class,
+        'activityable_id' => $followUp->id,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/follow-ups/{$followUp->id}/convert");
+
+    $task = Task::where('title', 'Transfer activities test')->first();
+    expect($task->activities)->toHaveCount(2);
+    expect($followUp->fresh()->activities()->whereNot('type', \App\Enums\ActivityType::System)->count())->toBe(0);
+});
+
+test('convert to task transfers calendar event links to the new task', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Transfer links test',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    CalendarEventLink::factory()->create([
+        'linkable_type' => FollowUp::class,
+        'linkable_id' => $followUp->id,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/follow-ups/{$followUp->id}/convert");
+
+    $task = Task::where('title', 'Transfer links test')->first();
+    expect(CalendarEventLink::where('linkable_type', Task::class)->where('linkable_id', $task->id)->count())->toBe(1);
+    expect(CalendarEventLink::where('linkable_type', FollowUp::class)->where('linkable_id', $followUp->id)->count())->toBe(0);
+});
+
+test('convert to task transfers email links to the new task', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'Transfer email links test',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    EmailLink::factory()->create([
+        'linkable_type' => FollowUp::class,
+        'linkable_id' => $followUp->id,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/follow-ups/{$followUp->id}/convert");
+
+    $task = Task::where('title', 'Transfer email links test')->first();
+    expect(EmailLink::where('linkable_type', Task::class)->where('linkable_id', $task->id)->count())->toBe(1);
+    expect(EmailLink::where('linkable_type', FollowUp::class)->where('linkable_id', $followUp->id)->count())->toBe(0);
 });

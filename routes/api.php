@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AgreementController;
+use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\AutoSaveController;
 use App\Http\Controllers\Api\CalendarActionController;
 use App\Http\Controllers\Api\CounterController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Api\JiraIssueController;
 use App\Http\Controllers\Api\SystemNotificationController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\NoteTagController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\TaskController;
@@ -32,8 +35,20 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::apiResource('bilas', BilaController::class);
     Route::apiResource('agreements', AgreementController::class);
 
+    Route::put('notes/{note}/tags', [NoteTagController::class, 'sync'])->name('notes.tags.sync');
+
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);
+
+    Route::prefix('{type}/{id}/activities')
+        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'bilas'])
+        ->group(function (): void {
+            Route::post('/', [ActivityController::class, 'store']);
+            Route::patch('{activity}', [ActivityController::class, 'update']);
+            Route::delete('{activity}', [ActivityController::class, 'destroy']);
+        });
+
+    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
     Route::get('counters', CounterController::class)->name('counters');
     Route::get('search', [SearchController::class, 'search']);

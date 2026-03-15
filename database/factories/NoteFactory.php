@@ -25,6 +25,7 @@ class NoteFactory extends Factory
             'team_id' => null,
             'team_member_id' => null,
             'is_pinned' => false,
+            'date' => now()->toDateString(),
         ];
     }
 }

@@ -11,6 +11,7 @@ use App\Models\Task;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Services\BreadcrumbBuilder;
+use App\Services\MetadataTransferService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -75,7 +76,7 @@ class FollowUpPageController extends Controller
             'later' => $upcoming,
         ];
 
-        if ($request->ajax()) {
+        if ($request->wantsJson()) {
             return view('partials.follow-ups-list', [
                 'sections' => $sections,
             ]);
@@ -157,7 +158,7 @@ class FollowUpPageController extends Controller
     {
         $followUp->delete();
 
-        if ($request->ajax()) {
+        if ($request->wantsJson()) {
             return response()->json(['success' => true]);
         }
 
@@ -177,7 +178,7 @@ class FollowUpPageController extends Controller
     {
         $followUp->update(['status' => FollowUpStatus::Done]);
 
-        if ($request->ajax()) {
+        if ($request->wantsJson()) {
             return response()->json(['success' => true]);
         }
 
@@ -201,7 +202,7 @@ class FollowUpPageController extends Controller
             'follow_up_date' => now()->addDays((int) $request->input('days'))->toDateString(),
         ]);
 
-        if ($request->ajax()) {
+        if ($request->wantsJson()) {
             return response()->json(['success' => true]);
         }
 
@@ -217,20 +218,25 @@ class FollowUpPageController extends Controller
      * @param FollowUp $followUp
      * @return JsonResponse|RedirectResponse
      */
-    public function convertToTask(Request $request, FollowUp $followUp): JsonResponse|RedirectResponse
+    public function convertToTask(Request $request, FollowUp $followUp, MetadataTransferService $metadataTransfer): JsonResponse|RedirectResponse
     {
-        Task::create([
+        $task = Task::create([
             'user_id' => $request->user()->id,
             'title' => $followUp->description,
             'team_member_id' => $followUp->team_member_id,
+            'deadline' => $followUp->follow_up_date,
         ]);
 
+        $metadataTransfer->transfer($followUp, $task);
         $followUp->update(['status' => FollowUpStatus::Done]);
 
-        if ($request->ajax()) {
-            return response()->json(['success' => true]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => ['task_url' => route('tasks.show', $task)],
+            ]);
         }
 
-        return redirect()->back();
+        return redirect()->route('tasks.show', $task);
     }
 }

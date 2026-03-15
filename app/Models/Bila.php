@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\BelongsToUser;
+use App\Models\Traits\HasActivityFeed;
 use App\Models\Traits\HasResourceLinks;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Bila extends Model
 {
     use BelongsToUser;
+    use HasActivityFeed;
     use HasFactory;
     use HasResourceLinks;
 

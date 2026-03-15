@@ -1,8 +1,8 @@
 import type { ApiResponse, ApiError } from '../types/api';
 
-type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-const MUTATING_METHODS: ReadonlySet<HttpMethod> = new Set(['POST', 'PATCH', 'DELETE']);
+const MUTATING_METHODS: ReadonlySet<HttpMethod> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 /**
  * Reads the CSRF token from the meta tag injected by Laravel's Blade layout.
@@ -53,7 +53,7 @@ async function executeRequest<T>(
     }
 
     if (MUTATING_METHODS.has(method)) {
-        window.dispatchEvent(new CustomEvent('data-changed'));
+        window.dispatchEvent(new CustomEvent('data-changed', { detail: {} }));
     }
 
     return json as ApiResponse<T>;
@@ -86,10 +86,29 @@ class ApiClient {
     }
 
     /**
+     * Sends a PUT request with a JSON body.
+     */
+    public async put<T>(url: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
+        return executeRequest<T>('PUT', url, body);
+    }
+
+    /**
      * Sends a DELETE request.
      */
     public async delete<T>(url: string): Promise<ApiResponse<T>> {
         return executeRequest<T>('DELETE', url);
+    }
+
+    /**
+     * Dispatches a `data-changed` window event with an optional topic so that
+     * refreshable components can filter by relevant domain area.
+     */
+    public dispatchDataChanged(topic?: string): void {
+        window.dispatchEvent(
+            new CustomEvent('data-changed', {
+                detail: topic !== undefined ? { topic } : {},
+            }),
+        );
     }
 }
 

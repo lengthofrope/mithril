@@ -39,3 +39,8 @@ Schedule::command('jira:sync-issues')
     ->everyFiveMinutes()
     ->name('jira.sync-issues')
     ->withoutOverlapping();
+
+Schedule::command('attachments:clean-orphaned')
+    ->weekly()
+    ->name('attachments.clean-orphaned')
+    ->withoutOverlapping();

@@ -9,7 +9,10 @@ use App\Events\TaskStatusChanged;
 use App\Listeners\CreateFollowUpOnWaiting;
 use App\Listeners\CreateRecurringTaskOccurrence;
 use App\Listeners\ScheduleNextBila;
+use App\Models\Bila;
+use App\Models\FollowUp;
 use App\Models\Task;
+use App\Observers\ActivityObserver;
 use App\Observers\TaskObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -41,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Task::observe(TaskObserver::class);
+        Task::observe(ActivityObserver::class);
+        FollowUp::observe(ActivityObserver::class);
+        Bila::observe(ActivityObserver::class);
 
         Event::listen(TaskStatusChanged::class, CreateFollowUpOnWaiting::class);
         Event::listen(TaskStatusChanged::class, CreateRecurringTaskOccurrence::class);

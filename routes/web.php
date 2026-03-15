@@ -5,7 +5,9 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Web\AttachmentController;
 use App\Http\Controllers\Web\AboutController;
+use App\Http\Controllers\Web\PartialController;
 use App\Http\Controllers\Web\JiraAuthController;
 use App\Http\Controllers\Web\JiraPageController;
 use App\Http\Controllers\Web\MicrosoftAuthController;
@@ -45,6 +47,8 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/tasks', [TaskPageController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/kanban', [TaskPageController::class, 'kanban'])->name('tasks.kanban');
     Route::get('/tasks/{task}', [TaskPageController::class, 'show'])->name('tasks.show');
+    Route::post('/tasks/{task}/convert-to-follow-up', [TaskPageController::class, 'convertToFollowUp'])->name('tasks.convert-to-follow-up');
+    Route::post('/tasks/{task}/create-follow-up', [TaskPageController::class, 'createFollowUp'])->name('tasks.create-follow-up');
 
     Route::get('/follow-ups', [FollowUpPageController::class, 'index'])->name('follow-ups.index');
     Route::post('/follow-ups', [FollowUpPageController::class, 'store'])->name('follow-ups.store');
@@ -94,6 +98,8 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
+    Route::get('/settings/storage', [SettingsController::class, 'storage'])->name('settings.storage');
+    Route::post('/settings/storage/purge-orphaned', [SettingsController::class, 'purgeOrphaned'])->name('settings.purgeOrphaned');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
     Route::patch('/settings/timezone', [SettingsController::class, 'updateTimezone'])->name('settings.updateTimezone');
     Route::patch('/settings/prune-after-days', [SettingsController::class, 'updatePruneAfterDays'])->name('settings.updatePruneAfterDays');
@@ -143,4 +149,27 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/auth/jira/redirect', [JiraAuthController::class, 'redirect'])->name('jira.redirect');
     Route::get('/auth/jira/callback', [JiraAuthController::class, 'callback'])->name('jira.callback');
     Route::delete('/auth/jira', [JiraAuthController::class, 'disconnect'])->name('jira.disconnect');
+
+    Route::get('attachments/{attachment}/preview', [AttachmentController::class, 'preview'])
+        ->name('attachments.preview')
+        ->middleware('signed');
+
+    Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])
+        ->name('attachments.download')
+        ->middleware('signed');
+
+    Route::get('partials/tasks', [PartialController::class, 'tasksList'])->name('partials.tasks');
+    Route::get('partials/follow-ups', [PartialController::class, 'followUpsList'])->name('partials.follow-ups');
+
+    Route::prefix('partials/dashboard')->as('partials.dashboard.')->group(function (): void {
+        Route::get('tasks', [PartialController::class, 'dashboardTasks'])->name('tasks');
+        Route::get('follow-ups', [PartialController::class, 'dashboardFollowUps'])->name('follow-ups');
+        Route::get('bilas', [PartialController::class, 'dashboardBilas'])->name('bilas');
+        Route::get('calendar', [PartialController::class, 'dashboardCalendar'])->name('calendar');
+        Route::get('emails', [PartialController::class, 'dashboardEmails'])->name('emails');
+    });
+
+    Route::get('partials/{type}/{id}/activity-feed', [PartialController::class, 'activityFeed'])
+        ->name('partials.activity-feed')
+        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'bilas']);
 });

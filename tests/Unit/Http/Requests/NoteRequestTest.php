@@ -18,6 +18,7 @@ test('note request rules method returns expected rule keys', function () {
         'team_id',
         'team_member_id',
         'is_pinned',
+        'date',
     ]);
 });
 
@@ -119,6 +120,25 @@ test('note request fails when team_member_id references nonexistent record', fun
 
     expect($validator->fails())->toBeTrue();
     expect($validator->errors()->has('team_member_id'))->toBeTrue();
+});
+
+test('note request passes when date is a valid date string', function () {
+    $validator = Validator::make(
+        ['title' => 'My Note', 'date' => '2026-03-15'],
+        (new NoteRequest())->rules()
+    );
+
+    expect($validator->passes())->toBeTrue();
+});
+
+test('note request fails when date is not a valid date', function () {
+    $validator = Validator::make(
+        ['title' => 'My Note', 'date' => 'not-a-date'],
+        (new NoteRequest())->rules()
+    );
+
+    expect($validator->fails())->toBeTrue();
+    expect($validator->errors()->has('date'))->toBeTrue();
 });
 
 test('note request passes when is_pinned is a boolean', function (bool $pinned) {

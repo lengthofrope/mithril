@@ -65,12 +65,6 @@ class PruneOldData extends Command
             return self::FAILURE;
         }
 
-        if ($user->prune_after_days === null) {
-            $this->info("User [{$email}] has no prune retention period configured. Skipping.");
-
-            return self::SUCCESS;
-        }
-
         $this->pruneUser($service, $user, $isDryRun);
 
         return self::SUCCESS;
@@ -85,10 +79,10 @@ class PruneOldData extends Command
      */
     private function pruneAllConfiguredUsers(DataPruningService $service, bool $isDryRun): int
     {
-        $users = User::whereNotNull('prune_after_days')->get();
+        $users = User::all();
 
         if ($users->isEmpty()) {
-            $this->info('No users with pruning configured.');
+            $this->info('No users found.');
 
             return self::SUCCESS;
         }

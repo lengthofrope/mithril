@@ -32,7 +32,7 @@
                     </div>
                     <div class="flex shrink-0 items-center gap-2">
                         <span class="text-xs text-gray-400 dark:text-gray-500">
-                            {{ \Carbon\Carbon::parse($note->updated_at)->format('d M') }}
+                            {{ $note->date?->format('d M') ?? '' }}
                         </span>
                         <a
                             href="{{ route('notes.show', $note) }}"

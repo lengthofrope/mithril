@@ -25,7 +25,9 @@
     </div>
 
     {{-- Results --}}
-    <div id="follow-ups-results">
-        @include('partials.follow-ups-list', ['sections' => $sections])
+    <div x-data="refreshable({ url: '{{ route('partials.follow-ups') }}', topics: ['follow_ups'], pollInterval: 30000 })">
+        <div id="follow-ups-results" data-refresh-target>
+            @include('partials.follow-ups-list', ['sections' => $sections])
+        </div>
     </div>
 @endsection

@@ -194,8 +194,10 @@
         </div>
 
         {{-- Results container --}}
-        <div id="tasks-results">
-            @include('partials.tasks-list', ['taskGroups' => $taskGroups])
+        <div x-data="refreshable({ url: '{{ route('partials.tasks') }}', topics: ['tasks'], pollInterval: 30000 })">
+            <div id="tasks-results" data-refresh-target>
+                @include('partials.tasks-list', ['taskGroups' => $taskGroups])
+            </div>
         </div>
     </div>
 @endsection

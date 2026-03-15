@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attachment;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Services\BreadcrumbBuilder;
@@ -86,10 +87,10 @@ class SettingsController extends Controller
     public function updatePruneAfterDays(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'prune_after_days' => ['nullable', 'integer', 'min:30', 'max:365'],
+            'prune_after_days' => ['required', 'integer', 'min:30', 'max:365'],
         ]);
 
-        $request->user()->update(['prune_after_days' => $validated['prune_after_days'] ?? null]);
+        $request->user()->update(['prune_after_days' => $validated['prune_after_days']]);
 
         return response()->json(['success' => true]);
     }
@@ -171,6 +172,75 @@ class SettingsController extends Controller
         $request->user()->update(['sidebar_collapsed' => $validated['sidebar_collapsed']]);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Display the storage management sub-page with usage and attachment list.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function storage(Request $request): View
+    {
+        $user = $request->user();
+        $usedBytes = (int) Attachment::where('user_id', $user->id)->sum('size');
+        $maxBytes = config('attachments.max_storage_mb') * 1024 * 1024;
+
+        $attachments = Attachment::where('user_id', $user->id)
+            ->with('activity.activityable')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $orphaned = $attachments->filter(
+            fn (Attachment $a) => !$a->activity || !$a->activity->activityable,
+        );
+
+        return view('pages.settings.storage', [
+            'title' => 'Storage',
+            'breadcrumbs' => (new BreadcrumbBuilder())
+                ->forPage('Settings', route('settings.index'))
+                ->addCrumb('Storage')
+                ->build(),
+            'usedBytes' => $usedBytes,
+            'maxBytes' => $maxBytes,
+            'attachments' => $attachments,
+            'orphanedBytes' => (int) $orphaned->sum('size'),
+            'orphanedCount' => $orphaned->count(),
+        ]);
+    }
+
+    /**
+     * Delete all attachments whose parent resource no longer exists.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function purgeOrphaned(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $attachments = Attachment::where('user_id', $user->id)
+            ->with('activity.activityable')
+            ->get();
+
+        $deleted = 0;
+
+        foreach ($attachments as $attachment) {
+            if (!$attachment->activity || !$attachment->activity->activityable) {
+                $activity = $attachment->activity;
+                $attachment->delete();
+                $deleted++;
+
+                if ($activity && $activity->attachments()->count() === 0) {
+                    $activity->delete();
+                }
+            }
+        }
+
+        return redirect()->route('settings.storage')
+            ->with('status', $deleted > 0
+                ? "Removed {$deleted} orphaned " . ($deleted === 1 ? 'file' : 'files') . '.'
+                : 'No orphaned files found.');
     }
 
     /**

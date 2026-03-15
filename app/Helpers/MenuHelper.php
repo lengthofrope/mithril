@@ -77,15 +77,15 @@ class MenuHelper
             'path' => '/notes',
         ];
 
+        $items[] = ['separator' => true];
+
+        $items[] = self::buildTeamsItem();
+
         $items[] = [
             'icon' => 'bila',
             'name' => "Bila's",
             'path' => '/bilas',
         ];
-
-        $items[] = ['separator' => true];
-
-        $items[] = self::buildTeamsItem();
 
         $items[] = [
             'icon' => 'weekly',

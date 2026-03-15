@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
+use App\Models\Traits\HasActivityFeed;
 use App\Models\Traits\HasResourceLinks;
 use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property int|null $team_id
  * @property int|null $team_member_id
  * @property bool $is_pinned
+ * @property \Illuminate\Support\Carbon|null $date
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -30,6 +32,7 @@ class Note extends Model
 {
     use BelongsToUser;
     use Filterable;
+    use HasActivityFeed;
     use HasFactory;
     use HasResourceLinks;
     use Searchable;
@@ -45,6 +48,7 @@ class Note extends Model
         'team_id',
         'team_member_id',
         'is_pinned',
+        'date',
     ];
 
     /**
@@ -74,6 +78,7 @@ class Note extends Model
     {
         return [
             'is_pinned' => 'boolean',
+            'date' => 'date',
         ];
     }
 
