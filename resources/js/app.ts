@@ -30,6 +30,7 @@ import { systemNotification } from './components/system-notification';
 import { refreshable } from './components/refreshable';
 import { activityInput } from './components/activity-input';
 import { followUpActions } from './components/follow-up-actions';
+import { tagEditor } from './components/tag-editor';
 
 declare global {
     interface Window {
@@ -65,6 +66,7 @@ Alpine.data('systemNotification', systemNotification as Parameters<typeof Alpine
 Alpine.data('refreshable', refreshable as Parameters<typeof Alpine.data>[1]);
 Alpine.data('activityInput', activityInput as Parameters<typeof Alpine.data>[1]);
 Alpine.data('followUpActions', followUpActions as Parameters<typeof Alpine.data>[1]);
+Alpine.data('tagEditor', tagEditor as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

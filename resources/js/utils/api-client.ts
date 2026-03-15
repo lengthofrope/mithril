@@ -1,8 +1,8 @@
 import type { ApiResponse, ApiError } from '../types/api';
 
-type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-const MUTATING_METHODS: ReadonlySet<HttpMethod> = new Set(['POST', 'PATCH', 'DELETE']);
+const MUTATING_METHODS: ReadonlySet<HttpMethod> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 /**
  * Reads the CSRF token from the meta tag injected by Laravel's Blade layout.
@@ -83,6 +83,13 @@ class ApiClient {
      */
     public async patch<T>(url: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
         return executeRequest<T>('PATCH', url, body);
+    }
+
+    /**
+     * Sends a PUT request with a JSON body.
+     */
+    public async put<T>(url: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
+        return executeRequest<T>('PUT', url, body);
     }
 
     /**

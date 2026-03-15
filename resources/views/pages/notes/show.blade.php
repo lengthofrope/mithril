@@ -112,16 +112,42 @@
                     />
                 </div>
 
-                {{-- Tags (read-only display) --}}
-                @if($note->tags->isNotEmpty())
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        @foreach($note->tags as $tag)
-                            <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                                {{ $tag->tag }}
+                {{-- Tags --}}
+                <div
+                    class="mt-6"
+                    x-data="tagEditor({
+                        endpoint: '{{ $noteEndpoint }}/tags',
+                        initialTags: @js($note->tags->pluck('tag')->values()->all()),
+                    })"
+                >
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
+                    <div class="flex flex-wrap items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-blue-500">
+                        <template x-for="(tag, index) in tags" :key="tag">
+                            <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-white/5 dark:text-gray-300">
+                                <span x-text="tag"></span>
+                                <button
+                                    type="button"
+                                    x-on:click="removeTag(index)"
+                                    class="ml-0.5 text-gray-400 transition hover:text-red-500 dark:hover:text-red-400"
+                                    aria-label="Remove tag"
+                                >
+                                    <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
                             </span>
-                        @endforeach
+                        </template>
+                        <input
+                            type="text"
+                            x-model="input"
+                            x-on:keydown="handleKeydown($event)"
+                            x-on:blur="addTag()"
+                            placeholder="Add tag…"
+                            class="min-w-[6rem] flex-1 border-0 bg-transparent p-0 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-white/90 dark:placeholder:text-gray-500"
+                        >
                     </div>
-                @endif
+                    <x-tl.auto-save-status />
+                </div>
             </div>
 
             {{-- Actions --}}

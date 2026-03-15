@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\JiraIssueController;
 use App\Http\Controllers\Api\SystemNotificationController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\NoteTagController;
 use App\Http\Controllers\Api\ReorderController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\TaskController;
@@ -33,6 +34,8 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::apiResource('follow-ups', FollowUpController::class);
     Route::apiResource('bilas', BilaController::class);
     Route::apiResource('agreements', AgreementController::class);
+
+    Route::put('notes/{note}/tags', [NoteTagController::class, 'sync'])->name('notes.tags.sync');
 
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);
