@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\FollowUpStatus;
 use App\Models\FollowUp;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
@@ -193,7 +194,7 @@ test('snooze redirects back for non-AJAX requests', function () {
         ->toBe(now()->addDays(3)->toDateString());
 });
 
-test('convert to task redirects back for non-AJAX requests', function () {
+test('convert to task redirects to new task for non-AJAX requests', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
     $followUp = FollowUp::factory()->create([
@@ -203,11 +204,31 @@ test('convert to task redirects back for non-AJAX requests', function () {
     ]);
 
     $response = $this->actingAs($user)
-        ->from('/follow-ups')
         ->post("/follow-ups/{$followUp->id}/convert");
 
-    $response->assertRedirect('/follow-ups');
-    $this->assertDatabaseHas('tasks', ['title' => 'Follow up on meeting notes']);
+    $task = Task::where('title', 'Follow up on meeting notes')->first();
+    $response->assertRedirect(route('tasks.show', $task));
+    expect($followUp->fresh()->status)->toBe(FollowUpStatus::Done);
+});
+
+test('convert to task returns task URL for AJAX requests', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $followUp = FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'description' => 'AJAX convert test',
+        'status' => FollowUpStatus::Open,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->postJson("/follow-ups/{$followUp->id}/convert");
+
+    $task = Task::where('title', 'AJAX convert test')->first();
+    $response->assertOk()
+        ->assertJson([
+            'success' => true,
+            'data' => ['task_url' => route('tasks.show', $task)],
+        ]);
     expect($followUp->fresh()->status)->toBe(FollowUpStatus::Done);
 });
 

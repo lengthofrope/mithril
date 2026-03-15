@@ -112,7 +112,46 @@
                     &larr; Back to follow-ups
                 </a>
 
-                <div class="ml-auto">
+                <div class="ml-auto flex items-center gap-2">
+                    <div
+                        x-data="{ isConverting: false }"
+                        class="inline"
+                    >
+                        <button
+                            type="button"
+                            x-bind:disabled="isConverting"
+                            x-on:click="
+                                if (isConverting) return;
+                                isConverting = true;
+                                try {
+                                    const response = await fetch('{{ route('follow-ups.convert', $followUp->id) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                        },
+                                        credentials: 'same-origin',
+                                        body: JSON.stringify({}),
+                                    });
+                                    const json = await response.json();
+                                    if (json.success && json.data?.task_url) {
+                                        window.location.href = json.data.task_url;
+                                    }
+                                } finally {
+                                    isConverting = false;
+                                }
+                            "
+                            class="flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-700/50 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
+                        >
+                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            Convert to task
+                        </button>
+                    </div>
+
                     <form method="POST" action="{{ route('follow-ups.destroy', $followUp->id) }}" class="inline">
                         @csrf
                         @method('DELETE')
