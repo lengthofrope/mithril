@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] - 2026-03-14 - Unreleased
+## [1.7.0] - 2026-03-15 - Unreleased
 
 ### Added
 
@@ -20,11 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Skeleton loading placeholders** — Dashboard section skeletons shown during initial lazy-load with pulse animation
 - **Orphaned attachment cleanup** — `attachments:clean-orphaned` artisan command scheduled weekly to find and delete attachments without a parent activity, including physical file removal
 - **Activity & Attachment factories** — Full factory support with states for all four activity types (comment, link, attachment, system); database seeder includes sample activities
+- **Task → Follow-up conversion** — Convert a task to a follow-up from the task detail page; marks the task as done, creates a linked follow-up with deadline carried over as follow-up date, and transfers all metadata (comments, links, files, calendar event links, email links); styled confirmation modal
+- **Create follow-up from task** — Generate a linked follow-up from a task without closing the task; the follow-up inherits the task's team member and deadline, and links back to the originating task
+- **Linked follow-ups on task detail** — Task detail page shows all linked follow-ups with status badges and click-through navigation
+- **Linked task on follow-up detail** — Follow-up detail page shows the originating task (when linked) with click-through navigation
+- **`MetadataTransferService`** — Reusable service for transferring polymorphic metadata (activities, calendar event links, email links) between models during entity conversion
 
 ### Changed
 
 - **Detail page layouts** — Task, follow-up, note, and bila detail pages now use a 2-column grid layout (2/3 content + 1/3 activity feed) on desktop
 - **PartialController** — New controller serving ETag-cached HTML fragments for activity feeds and all dashboard sections
+- **Follow-up card AJAX actions** — Dashboard follow-up card buttons (Done, Snooze) now use AJAX requests instead of form submissions, preventing full page reloads; the `refreshable` component picks up changes immediately via topic-scoped `data-changed` events
+- **Refreshable topic filtering** — Topic check moved before the debounce in the `refreshable` component, fixing an issue where rapid back-to-back events with different topics (e.g. `follow_ups` then `tasks`) would only process the last one
+- **Refreshable wildcard events** — `data-changed` events without a topic now trigger all `refreshable` components (previously ignored by topic-filtered components), so inline status changes on task cards immediately refresh the dashboard
+- **Follow-up → Task conversion** — Now transfers all metadata (comments, links, files, calendar/email links) to the new task; confirmation modal added on detail page; copies `follow_up_date` as task deadline; redirects to new task instead of back
+- **Convert to task removed from dashboard cards** — Conversion only accessible from detail pages where the full confirmation modal and metadata transfer are available
+- **Data pruning always active** — Data pruning can no longer be disabled; defaults to 90 days; settings input is required (30–365 days); "Prune now" button always visible; `data:prune` command runs for all users
+- **Dashboard widget defaults** — Dashboard upcoming items (tasks, follow-ups, bilas) default to 5 when not configured, instead of being disabled; can still be set to 0 to disable
 
 ## [1.6.2] - 2026-03-13
 
