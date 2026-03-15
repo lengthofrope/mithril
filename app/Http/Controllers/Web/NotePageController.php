@@ -48,7 +48,7 @@ class NotePageController extends Controller
             ->when($teamId, fn ($q) => $q->where('team_id', $teamId))
             ->when($teamMemberId, fn ($q) => $q->where('team_member_id', $teamMemberId))
             ->orderByDesc('is_pinned')
-            ->orderByDesc('updated_at')
+            ->orderByDesc('date')
             ->get();
 
         $allTags = NoteTag::query()
