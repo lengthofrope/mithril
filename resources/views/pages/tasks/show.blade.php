@@ -227,14 +227,14 @@
                         </button>
                     </div>
 
-                    <div x-data="{ isProcessing: false }" class="inline">
-                        <button
-                            type="button"
-                            x-bind:disabled="isProcessing"
-                            x-on:click="
-                                if (isProcessing) return;
-                                if (!confirm('This will mark the task as done and create a follow-up. Continue?')) return;
-                                isProcessing = true;
+                    <div
+                        x-data="{
+                            isOpen: false,
+                            isProcessing: false,
+                            async doConvert() {
+                                if (this.isProcessing) return;
+                                this.isProcessing = true;
+                                this.isOpen = false;
                                 try {
                                     const response = await fetch('{{ route('tasks.convert-to-follow-up', $task) }}', {
                                         method: 'POST',
@@ -252,9 +252,16 @@
                                         window.location.href = json.data.follow_up_url;
                                     }
                                 } finally {
-                                    isProcessing = false;
+                                    this.isProcessing = false;
                                 }
-                            "
+                            },
+                        }"
+                        class="inline"
+                    >
+                        <button
+                            type="button"
+                            x-bind:disabled="isProcessing"
+                            x-on:click="isOpen = true"
                             class="flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-700/50 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
                         >
                             <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -262,6 +269,59 @@
                             </svg>
                             Convert to follow-up
                         </button>
+
+                        {{-- Confirmation modal --}}
+                        <div
+                            x-show="isOpen"
+                            x-cloak
+                            x-on:keydown.escape.window="isOpen = false"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="convert-dialog-title"
+                        >
+                            <div x-on:click="isOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+                            <div
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                x-on:click.stop
+                                class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                            >
+                                <h2 id="convert-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
+                                    Convert to follow-up
+                                </h2>
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                    This will mark the task as done and create a linked follow-up. Continue?
+                                </p>
+                                <div class="mt-6 flex items-center justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        x-on:click="isOpen = false"
+                                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-on:click="doConvert()"
+                                        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
+                                    >
+                                        Convert
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
