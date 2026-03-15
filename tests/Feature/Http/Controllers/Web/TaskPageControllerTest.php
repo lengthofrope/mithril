@@ -5,6 +5,9 @@ declare(strict_types=1);
 use App\Enums\FollowUpStatus;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
+use App\Models\Activity;
+use App\Models\CalendarEventLink;
+use App\Models\EmailLink;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\TaskGroup;
@@ -408,4 +411,71 @@ test('task show displays linked follow-ups', function () {
 
     $response->assertOk();
     $response->assertSee('Linked follow-up');
+});
+
+test('convert to follow-up transfers activities to the new follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $task = Task::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Transfer activities test',
+        'status' => TaskStatus::Open,
+    ]);
+
+    Activity::factory()->count(3)->create([
+        'user_id' => $user->id,
+        'activityable_type' => Task::class,
+        'activityable_id' => $task->id,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/tasks/{$task->id}/convert-to-follow-up");
+
+    $followUp = FollowUp::where('description', 'Transfer activities test')->first();
+    expect($followUp->activities)->toHaveCount(3);
+    expect($task->fresh()->activities()->whereNot('type', \App\Enums\ActivityType::System)->count())->toBe(0);
+});
+
+test('convert to follow-up transfers calendar event links', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $task = Task::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Transfer cal links test',
+        'status' => TaskStatus::Open,
+    ]);
+
+    CalendarEventLink::factory()->create([
+        'linkable_type' => Task::class,
+        'linkable_id' => $task->id,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/tasks/{$task->id}/convert-to-follow-up");
+
+    $followUp = FollowUp::where('description', 'Transfer cal links test')->first();
+    expect(CalendarEventLink::where('linkable_type', FollowUp::class)->where('linkable_id', $followUp->id)->count())->toBe(1);
+    expect(CalendarEventLink::where('linkable_type', Task::class)->where('linkable_id', $task->id)->count())->toBe(0);
+});
+
+test('convert to follow-up transfers email links', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $task = Task::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Transfer email links test',
+        'status' => TaskStatus::Open,
+    ]);
+
+    EmailLink::factory()->create([
+        'linkable_type' => Task::class,
+        'linkable_id' => $task->id,
+    ]);
+
+    $this->actingAs($user)
+        ->post("/tasks/{$task->id}/convert-to-follow-up");
+
+    $followUp = FollowUp::where('description', 'Transfer email links test')->first();
+    expect(EmailLink::where('linkable_type', FollowUp::class)->where('linkable_id', $followUp->id)->count())->toBe(1);
+    expect(EmailLink::where('linkable_type', Task::class)->where('linkable_id', $task->id)->count())->toBe(0);
 });

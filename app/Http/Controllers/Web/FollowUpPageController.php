@@ -11,6 +11,7 @@ use App\Models\Task;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Services\BreadcrumbBuilder;
+use App\Services\MetadataTransferService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -217,7 +218,7 @@ class FollowUpPageController extends Controller
      * @param FollowUp $followUp
      * @return JsonResponse|RedirectResponse
      */
-    public function convertToTask(Request $request, FollowUp $followUp): JsonResponse|RedirectResponse
+    public function convertToTask(Request $request, FollowUp $followUp, MetadataTransferService $metadataTransfer): JsonResponse|RedirectResponse
     {
         $task = Task::create([
             'user_id' => $request->user()->id,
@@ -226,6 +227,7 @@ class FollowUpPageController extends Controller
             'deadline' => $followUp->follow_up_date,
         ]);
 
+        $metadataTransfer->transfer($followUp, $task);
         $followUp->update(['status' => FollowUpStatus::Done]);
 
         if ($request->wantsJson()) {

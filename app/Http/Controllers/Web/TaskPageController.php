@@ -15,6 +15,7 @@ use App\Models\TaskGroup;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Services\BreadcrumbBuilder;
+use App\Services\MetadataTransferService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -278,10 +279,11 @@ class TaskPageController extends Controller
      * @param Task $task
      * @return JsonResponse|RedirectResponse
      */
-    public function convertToFollowUp(Request $request, Task $task): JsonResponse|RedirectResponse
+    public function convertToFollowUp(Request $request, Task $task, MetadataTransferService $metadataTransfer): JsonResponse|RedirectResponse
     {
         $followUp = $this->createFollowUpFromTask($request, $task);
 
+        $metadataTransfer->transfer($task, $followUp);
         $task->update(['status' => TaskStatus::Done]);
 
         if ($request->wantsJson()) {
