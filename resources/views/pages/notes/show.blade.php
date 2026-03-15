@@ -114,10 +114,11 @@
 
                 {{-- Tags --}}
                 <div
-                    class="mt-6"
+                    class="relative mt-6"
                     x-data="tagEditor({
                         endpoint: '{{ $noteEndpoint }}/tags',
                         initialTags: @js($note->tags->pluck('tag')->values()->all()),
+                        allTags: @js($allTags->values()->all()),
                     })"
                 >
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
@@ -141,11 +142,32 @@
                             type="text"
                             x-model="input"
                             x-on:keydown="handleKeydown($event)"
-                            x-on:blur="addTag()"
+                            x-on:input="handleInput()"
+                            x-on:blur="setTimeout(() => { showSuggestions = false; addTag(); }, 150)"
                             placeholder="Add tag…"
                             class="min-w-[6rem] flex-1 border-0 bg-transparent p-0 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-white/90 dark:placeholder:text-gray-500"
                         >
                     </div>
+
+                    {{-- Autocomplete suggestions --}}
+                    <div
+                        x-show="showSuggestions && suggestions.length > 0"
+                        x-cloak
+                        class="absolute z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+                    >
+                        <template x-for="(suggestion, sIndex) in suggestions" :key="suggestion">
+                            <button
+                                type="button"
+                                x-text="suggestion"
+                                x-on:mousedown.prevent="selectSuggestion(suggestion)"
+                                :class="sIndex === selectedIndex
+                                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                                    : 'text-gray-700 dark:text-gray-300'"
+                                class="block w-full px-3 py-1.5 text-left text-sm transition hover:bg-gray-50 dark:hover:bg-white/5"
+                            ></button>
+                        </template>
+                    </div>
+
                     <x-tl.auto-save-status />
                 </div>
             </div>

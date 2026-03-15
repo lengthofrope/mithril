@@ -86,12 +86,19 @@ class NotePageController extends Controller
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
 
+        $allTags = NoteTag::query()
+            ->select('tag')
+            ->distinct()
+            ->orderBy('tag')
+            ->pluck('tag');
+
         return view('pages.notes.show', [
             'title' => $note->title,
             'note' => $note,
             'breadcrumbs' => (new BreadcrumbBuilder())->forNote($note)->build(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name, 'team_id' => (string) $m->team_id])->all(),
+            'allTags' => $allTags,
         ]);
     }
 
