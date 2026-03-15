@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+[x-cloak] {
+  display: none !important;
+}
+
 /* Self-hosted fonts — Philosopher & Outfit */
 @font-face {
   font-family: 'Philosopher';
