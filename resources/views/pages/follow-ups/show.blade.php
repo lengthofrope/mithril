@@ -226,17 +226,33 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('follow-ups.destroy', $followUp->id) }}" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button
-                            type="submit"
-                            onclick="return confirm('Delete this follow-up?')"
-                            class="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                        >
-                            Delete follow-up
-                        </button>
-                    </form>
+                    <x-tl.confirm-dialog-modal
+                        title="Delete follow-up"
+                        message="This will permanently delete this follow-up and all its activity, comments, links, and attachments. This cannot be undone."
+                        triggerId="del-follow-up-{{ $followUp->id }}"
+                    >
+                        <x-slot name="trigger">
+                            <button
+                                type="button"
+                                class="flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                            >
+                                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                </svg>
+                                Delete follow-up
+                            </button>
+                        </x-slot>
+                        <x-slot name="form">
+                            <form
+                                id="confirm-form-del-follow-up-{{ $followUp->id }}"
+                                method="POST"
+                                action="{{ route('follow-ups.destroy', $followUp->id) }}"
+                            >
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        </x-slot>
+                    </x-tl.confirm-dialog-modal>
                 </div>
             </div>
         </div>
