@@ -199,7 +199,7 @@ class FollowUpPageController extends Controller
         $request->validate(['days' => ['required', 'integer', 'min:1']]);
 
         $followUp->update([
-            'follow_up_date' => now()->addDays((int) $request->input('days'))->toDateString(),
+            'follow_up_date' => $followUp->follow_up_date->addDays((int) $request->input('days'))->toDateString(),
         ]);
 
         if ($request->wantsJson()) {

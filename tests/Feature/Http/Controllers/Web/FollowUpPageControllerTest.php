@@ -179,12 +179,12 @@ test('mark done returns JSON for AJAX requests', function () {
     $response->assertJson(['success' => true]);
 });
 
-test('snooze redirects back for non-AJAX requests', function () {
+test('snooze adds days relative to the existing follow_up_date, not today', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
     $followUp = FollowUp::factory()->create([
         'user_id' => $user->id,
-        'follow_up_date' => now()->toDateString(),
+        'follow_up_date' => now()->addDays(7)->toDateString(),
         'status' => FollowUpStatus::Open,
     ]);
 
@@ -194,7 +194,7 @@ test('snooze redirects back for non-AJAX requests', function () {
 
     $response->assertRedirect('/follow-ups');
     expect($followUp->fresh()->follow_up_date->toDateString())
-        ->toBe(now()->addDays(3)->toDateString());
+        ->toBe(now()->addDays(10)->toDateString());
 });
 
 test('convert to task redirects to new task for non-AJAX requests', function () {
