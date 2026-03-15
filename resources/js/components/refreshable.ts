@@ -54,7 +54,11 @@ function refreshable(config: RefreshableConfig): Record<string, unknown> {
                 void this.fetchContent();
             }, pollIntervalMs);
 
-            const debouncedRefresh = debounce((event: Event) => {
+            const debouncedFetch = debounce(() => {
+                void this.fetchContent();
+            }, DATA_CHANGED_DEBOUNCE_MS);
+
+            dataChangedHandler = (event: Event) => {
                 const customEvent = event as CustomEvent<{ topic?: string }>;
                 const topic = customEvent.detail?.topic;
 
@@ -64,10 +68,8 @@ function refreshable(config: RefreshableConfig): Record<string, unknown> {
                     }
                 }
 
-                void this.fetchContent();
-            }, DATA_CHANGED_DEBOUNCE_MS);
-
-            dataChangedHandler = debouncedRefresh;
+                debouncedFetch();
+            };
             window.addEventListener('data-changed', dataChangedHandler);
 
             visibilityHandler = () => {
