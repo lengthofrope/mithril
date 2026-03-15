@@ -141,7 +141,7 @@
         <div class="shrink-0 pt-1">
             <button
                 type="button"
-                x-on:click="deleteActivity({{ $activity->id }})"
+                x-on:click="$dispatch('confirm-delete-activity', { id: {{ $activity->id }} })"
                 class="rounded p-1 text-gray-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:text-gray-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                 aria-label="Delete activity"
             >

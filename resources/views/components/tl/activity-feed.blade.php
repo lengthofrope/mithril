@@ -3,6 +3,7 @@
 <div
     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
     x-data="activityInput({ parentType: '{{ $parentType }}', parentId: {{ $parent->id }} })"
+    x-on:confirm-delete-activity="confirmDelete($event.detail.id)"
 >
     {{-- Card header --}}
     <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
@@ -193,6 +194,56 @@
         >
             <div data-refresh-target>
                 @include('partials.activity-feed', ['activities' => $activities])
+            </div>
+        </div>
+
+        {{-- Delete confirmation modal --}}
+        <div
+            x-show="confirmDeleteId !== null"
+            x-cloak
+            x-on:keydown.escape.window="cancelDelete()"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirm deletion"
+        >
+            <div x-on:click="cancelDelete()" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+            <div
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                x-on:click.stop
+                class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+            >
+                <h2 class="text-base font-semibold text-gray-900 dark:text-white">Delete this activity?</h2>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">This will permanently remove this entry and any attached files.</p>
+
+                <div class="mt-6 flex items-center justify-end gap-3">
+                    <button
+                        type="button"
+                        x-on:click="cancelDelete()"
+                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        x-on:click="deleteActivity()"
+                        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
+                    >
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     </div>

@@ -143,8 +143,17 @@
                     class="divide-y divide-gray-100 dark:divide-gray-800"
                     x-data="{
                         deleting: null,
-                        async deleteAttachment(id) {
-                            if (this.deleting) return;
+                        confirmDeleteId: null,
+                        confirmDelete(id) {
+                            this.confirmDeleteId = id;
+                        },
+                        cancelDelete() {
+                            this.confirmDeleteId = null;
+                        },
+                        async doDelete() {
+                            const id = this.confirmDeleteId;
+                            if (!id || this.deleting) return;
+                            this.confirmDeleteId = null;
                             this.deleting = id;
                             try {
                                 const response = await fetch('/api/v1/attachments/' + id, {
@@ -155,7 +164,6 @@
                                     },
                                 });
                                 if (response.ok) {
-                                    document.getElementById('attachment-' + id)?.remove();
                                     window.location.reload();
                                 }
                             } finally {
@@ -217,7 +225,7 @@
 
                             <button
                                 type="button"
-                                x-on:click="deleteAttachment({{ $attachment->id }})"
+                                x-on:click="confirmDelete({{ $attachment->id }})"
                                 x-bind:disabled="deleting === {{ $attachment->id }}"
                                 class="shrink-0 rounded p-1.5 text-gray-300 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                                 aria-label="Delete {{ $attachment->filename }}"
@@ -228,6 +236,56 @@
                             </button>
                         </div>
                     @endforeach
+
+                    {{-- Delete confirmation modal --}}
+                    <div
+                        x-show="confirmDeleteId !== null"
+                        x-cloak
+                        x-on:keydown.escape.window="cancelDelete()"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Confirm deletion"
+                    >
+                        <div x-on:click="cancelDelete()" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <h2 class="text-base font-semibold text-gray-900 dark:text-white">Delete this file?</h2>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">This will permanently remove the file from storage.</p>
+
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="cancelDelete()"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    x-on:click="doDelete()"
+                                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>

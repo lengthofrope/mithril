@@ -192,13 +192,36 @@ function activityInput(config: ActivityInputConfig): Record<string, unknown> {
             }
         },
 
+        confirmDeleteId: null as number | null,
+
         /**
-         * Deletes an activity entry via the API.
+         * Shows the confirm dialog for deleting an activity.
+         */
+        confirmDelete(this: { confirmDeleteId: number | null }, activityId: number): void {
+            this.confirmDeleteId = activityId;
+        },
+
+        /**
+         * Cancels the pending delete confirmation.
+         */
+        cancelDelete(this: { confirmDeleteId: number | null }): void {
+            this.confirmDeleteId = null;
+        },
+
+        /**
+         * Deletes the confirmed activity entry via the API.
          */
         async deleteActivity(
-            this: { error: string | null },
-            activityId: number,
+            this: { error: string | null; confirmDeleteId: number | null },
         ): Promise<void> {
+            const activityId = this.confirmDeleteId;
+
+            if (!activityId) {
+                return;
+            }
+
+            this.confirmDeleteId = null;
+
             try {
                 await apiClient.delete(
                     `/api/v1/${config.parentType}/${config.parentId}/activities/${activityId}`,

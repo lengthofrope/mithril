@@ -19,6 +19,8 @@ class AttachmentController extends Controller
     /**
      * Delete an attachment and clean up its parent activity if orphaned.
      *
+     * Logs a system event on the parent resource when the file is removed.
+     *
      * @param int $id
      * @return JsonResponse
      */
@@ -26,11 +28,22 @@ class AttachmentController extends Controller
     {
         $attachment = Attachment::findOrFail($id);
         $activity = $attachment->activity;
+        $filename = $attachment->filename;
+
+        $parent = $activity?->activityable;
 
         $attachment->delete();
 
         if ($activity && $activity->attachments()->count() === 0) {
             $activity->delete();
+        }
+
+        if ($parent && method_exists($parent, 'logSystemEvent')) {
+            $parent->logSystemEvent(
+                "Attachment removed: {$filename}",
+                'attachment_removed',
+                ['files' => [$filename]],
+            );
         }
 
         return $this->successResponse(null, 'Attachment deleted.');

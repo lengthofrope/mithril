@@ -127,8 +127,18 @@ class ActivityController extends Controller
             ->where('activityable_id', $parent->id)
             ->firstOrFail();
 
+        $filenames = $activity->attachments->pluck('filename')->all();
+
         $activity->attachments()->each(fn (Attachment $attachment) => $attachment->delete());
         $activity->delete();
+
+        if (!empty($filenames) && method_exists($parent, 'logSystemEvent')) {
+            $label = count($filenames) === 1
+                ? "Attachment removed: {$filenames[0]}"
+                : 'Attachments removed: ' . implode(', ', $filenames);
+
+            $parent->logSystemEvent($label, 'attachment_removed', ['files' => $filenames]);
+        }
 
         return $this->successResponse(null, 'Activity deleted.');
     }
