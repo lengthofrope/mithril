@@ -66,7 +66,7 @@
         '-translate-x-full xl:translate-x-0': !$store.sidebar.isMobileOpen
     }">
     <!-- Logo Section -->
-    <div class="pt-8 pb-7 flex"
+    <div class="pt-6 pb-7 flex"
         :class="isCollapsed ? 'xl:justify-center' : 'justify-start'">
         <a href="/">
             <span x-show="!isCollapsed">
