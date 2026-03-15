@@ -145,6 +145,36 @@ describe('EmailSyncService::normalizeMessage()', function (): void {
         expect(mb_strlen($normalized['body_preview']))->toBeLessThanOrEqual(500)
             ->and(mb_detect_encoding($normalized['body_preview'], 'UTF-8', true))->toBe('UTF-8');
     });
+
+    it('strips invalid UTF-8 bytes from text fields', function (): void {
+        $service = app(EmailSyncService::class);
+
+        $invalidSubject = "Hello \xE2 world";
+        $invalidBody    = "Preview \xC0\xAF text";
+        $invalidSender  = "Alice \x80 Doe";
+
+        $normalized = $service->normalizeMessage([
+            'microsoft_message_id' => 'AAMkUTF8',
+            'subject'              => $invalidSubject,
+            'sender_name'          => $invalidSender,
+            'sender_email'         => 'alice@example.com',
+            'received_at'          => '2026-03-12T10:00:00Z',
+            'body_preview'         => $invalidBody,
+            'is_read'              => true,
+            'is_flagged'           => false,
+            'flag_due_date'        => null,
+            'categories'           => [],
+            'importance'           => 'normal',
+            'has_attachments'      => false,
+            'web_link'             => null,
+        ], []);
+
+        expect(mb_detect_encoding($normalized['subject'], 'UTF-8', true))->toBe('UTF-8')
+            ->and(mb_detect_encoding($normalized['body_preview'], 'UTF-8', true))->toBe('UTF-8')
+            ->and(mb_detect_encoding($normalized['sender_name'], 'UTF-8', true))->toBe('UTF-8')
+            ->and($normalized['subject'])->toContain('Hello')
+            ->and($normalized['subject'])->toContain('world');
+    });
 });
 
 describe('EmailSyncService::syncEmails()', function (): void {

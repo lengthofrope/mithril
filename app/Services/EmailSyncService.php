@@ -50,7 +50,8 @@ class EmailSyncService
     /**
      * Normalize a Graph API message response into an array suitable for upsert.
      *
-     * Adds sources and is_dismissed fields. Truncates body_preview to 500 chars.
+     * Sanitizes all text fields to valid UTF-8, adds source tags, and truncates
+     * body_preview to 500 characters.
      *
      * @param array<string, mixed>  $graphMessage The normalized message from MicrosoftGraphService.
      * @param array<int, string>    $sources      The matched source types for this message.
@@ -58,7 +59,7 @@ class EmailSyncService
      */
     public function normalizeMessage(array $graphMessage, array $sources): array
     {
-        $bodyPreview = $graphMessage['body_preview'] ?? null;
+        $bodyPreview = $this->sanitizeUtf8($graphMessage['body_preview'] ?? null);
 
         if ($bodyPreview !== null && mb_strlen($bodyPreview) > 500) {
             $bodyPreview = mb_substr($bodyPreview, 0, 500);
@@ -66,8 +67,8 @@ class EmailSyncService
 
         return [
             'microsoft_message_id' => $graphMessage['microsoft_message_id'],
-            'subject'              => $graphMessage['subject'],
-            'sender_name'          => $graphMessage['sender_name'],
+            'subject'              => $this->sanitizeUtf8($graphMessage['subject']),
+            'sender_name'          => $this->sanitizeUtf8($graphMessage['sender_name']),
             'sender_email'         => $graphMessage['sender_email'],
             'received_at'          => $graphMessage['received_at'],
             'body_preview'         => $bodyPreview,
@@ -82,6 +83,21 @@ class EmailSyncService
             'is_dismissed'         => false,
             'synced_at'            => now(),
         ];
+    }
+
+    /**
+     * Strip invalid UTF-8 byte sequences from a string.
+     *
+     * @param string|null $value The input string to sanitize.
+     * @return string|null The sanitized string, or null if input was null.
+     */
+    private function sanitizeUtf8(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 
     /**
