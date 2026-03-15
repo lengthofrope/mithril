@@ -56,6 +56,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data pruning always active** — Data pruning can no longer be disabled; defaults to 90 days; settings input is required (30–365 days); "Prune now" button always visible; `data:prune` command runs for all users
 - **Dashboard widget defaults** — Dashboard upcoming items (tasks, follow-ups, bilas) default to 5 when not configured, instead of being disabled; can still be set to 0 to disable
 
+### Security
+
+- **Nonce-based Content Security Policy** — Added CSP header with per-request nonce via `Vite::useCspNonce()`; all inline scripts use nonce attributes instead of `'unsafe-inline'`; blocks unauthorized script injection while allowing Alpine.js (`'unsafe-eval'`); includes `worker-src`, `frame-src`, and `frame-ancestors` directives
+- **Import data isolation** — Import no longer uses `truncate()` (which destroyed ALL users' data); replaced with user-scoped `delete()` so only the importing user's records are affected
+- **Password change verification** — Fixed bypass where submitting `current_password=""` skipped the `Hash::check` verification; now uses Laravel's built-in `current_password` validation rule
+- **2FA remember-me bypass** — Users authenticated via remember-me cookie no longer skip the two-factor challenge; 2FA is always required for new sessions
+- **File upload restrictions** — Added MIME type whitelist to attachment uploads (images, documents, archives only); previously accepted any file type including executable files and SVGs with embedded scripts
+- **SVG preview XSS prevention** — SVG attachments now served with `Content-Disposition: attachment` instead of inline, preventing embedded JavaScript execution in the browser
+- **Sensitive fields mass-assignment hardening** — Removed OAuth tokens (`microsoft_access_token`, `jira_refresh_token`, etc.), 2FA secrets, and password from `User::$fillable`; these fields are now only writable via `forceFill()` in their dedicated controllers
+- **Color input validation** — All color fields (teams, task groups) now validated with hex regex (`/^#[0-9A-Fa-f]{3,6}$/`) instead of permissive `max:20` string rule
+- **Task category unique scope** — `unique:task_categories,name` validation now scoped to the authenticated user, so different users can have categories with the same name
+- **AutoSave value constraint** — Added `nullable|max:10000` validation to the auto-save `value` field to prevent oversized payloads
+- **Attachment filename sanitization** — Stored filenames now use only the guessed extension instead of the original filename, preventing path traversal via crafted filenames
+- **ETag hash upgrade** — Replaced MD5 with xxh128 for ETag generation in `PartialController`
+
 ### Fixed
 
 - **Email sync crash on special characters** — Email sync failed with `SQLSTATE[22007]: Incorrect string value` when Microsoft Graph returned body previews containing invalid UTF-8 byte sequences (e.g. lone `\xE2` bytes); all text fields are now sanitized via `mb_convert_encoding()` before database upsert
