@@ -17,8 +17,7 @@
     <script>
         (function() {
             var savedTheme = localStorage.getItem('theme');
-            var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            if ((savedTheme || systemTheme) === 'dark') {
+            if (savedTheme !== 'light') {
                 document.documentElement.classList.add('dark');
             }
         })();
