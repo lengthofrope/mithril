@@ -7,14 +7,13 @@ interface FollowUpActionsConfig {
     id: number;
     doneUrl: string;
     snoozeUrl: string;
-    convertUrl: string;
 }
 
 /**
- * Alpine.js component that handles follow-up card actions (done, snooze,
- * convert to task) via AJAX instead of form submissions. Dispatches a
- * `data-changed` event with the `follow_ups` topic so that refreshable
- * components pick up the change without a full page reload.
+ * Alpine.js component that handles follow-up card actions (done, snooze)
+ * via AJAX instead of form submissions. Dispatches a `data-changed` event
+ * with the `follow_ups` topic so that refreshable components pick up the
+ * change without a full page reload.
  */
 function followUpActions(config: FollowUpActionsConfig): Record<string, unknown> {
     return {
@@ -52,21 +51,6 @@ function followUpActions(config: FollowUpActionsConfig): Record<string, unknown>
             }
         },
 
-        /**
-         * Converts the follow-up to a task via AJAX POST.
-         */
-        async convertToTask(this: { isProcessing: boolean }): Promise<void> {
-            if (this.isProcessing) return;
-            this.isProcessing = true;
-
-            try {
-                await sendAction(config.convertUrl, 'POST');
-                apiClient.dispatchDataChanged('follow_ups');
-                apiClient.dispatchDataChanged('tasks');
-            } finally {
-                this.isProcessing = false;
-            }
-        },
     };
 }
 

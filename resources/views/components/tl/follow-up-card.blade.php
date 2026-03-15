@@ -22,7 +22,7 @@
     class="group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
     role="listitem"
     data-href="{{ route('follow-ups.show', $followUp->id) }}"
-    x-data="followUpActions({ id: {{ $followUp->id }}, doneUrl: '{{ route('follow-ups.done', $followUp->id) }}', snoozeUrl: '{{ route('follow-ups.snooze', $followUp->id) }}', convertUrl: '{{ route('follow-ups.convert', $followUp->id) }}' })"
+    x-data="followUpActions({ id: {{ $followUp->id }}, doneUrl: '{{ route('follow-ups.done', $followUp->id) }}', snoozeUrl: '{{ route('follow-ups.snooze', $followUp->id) }}' })"
     x-on:dblclick="if (!window.getSelection()?.toString().trim()) window.location.href = $el.dataset.href"
 >
     <div class="flex items-start justify-between gap-3">
@@ -110,16 +110,5 @@
             </div>
         </div>
 
-        <button
-            type="button"
-            x-on:click="convertToTask()"
-            x-bind:disabled="isProcessing"
-            class="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800"
-        >
-            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
-            Convert to task
-        </button>
     </div>
 </div>
