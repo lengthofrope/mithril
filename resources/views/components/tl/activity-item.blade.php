@@ -86,13 +86,14 @@
                 @foreach($activity->attachments as $attachment)
                     @php
                         $isImage = str_starts_with($attachment->mime_type, 'image/');
-                        $downloadUrl = $attachment->download_url ?? route('attachments.download', $attachment->id);
+                        $downloadUrl = $attachment->downloadUrl();
+                        $previewUrl = $isImage ? $attachment->previewUrl() : null;
                     @endphp
                     <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 dark:border-gray-800 dark:bg-white/[0.03]">
                         @if($isImage)
-                            <a href="{{ $downloadUrl }}" target="_blank" rel="noopener noreferrer" class="shrink-0">
+                            <a href="{{ $previewUrl }}" target="_blank" rel="noopener noreferrer" class="shrink-0">
                                 <img
-                                    src="{{ $downloadUrl }}"
+                                    src="{{ $previewUrl }}"
                                     alt="{{ $attachment->filename }}"
                                     class="h-10 w-10 rounded object-cover"
                                     loading="lazy"

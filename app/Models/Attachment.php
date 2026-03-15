@@ -111,6 +111,20 @@ class Attachment extends Model
     }
 
     /**
+     * Generate a signed inline preview URL valid for 30 minutes.
+     *
+     * @return string
+     */
+    public function previewUrl(): string
+    {
+        return URL::signedRoute(
+            'attachments.preview',
+            ['attachment' => $this->id],
+            now()->addMinutes(30),
+        );
+    }
+
+    /**
      * Generate a signed download URL valid for 30 minutes.
      *
      * @return string

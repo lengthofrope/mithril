@@ -52,6 +52,33 @@ describe('Attachment model', function (): void {
             expect((new Attachment(['size' => 5242880]))->humanSize())->toBe('5 MB');
         });
 
+        it('generates a signed preview URL via previewUrl()', function (): void {
+            $user = User::factory()->create();
+            $task = Task::factory()->create(['user_id' => $user->id]);
+
+            $activity = Activity::create([
+                'user_id' => $user->id,
+                'activityable_type' => Task::class,
+                'activityable_id' => $task->id,
+                'type' => ActivityType::Attachment,
+            ]);
+
+            $attachment = Attachment::create([
+                'user_id' => $user->id,
+                'activity_id' => $activity->id,
+                'filename' => 'photo.jpg',
+                'path' => 'attachments/2026/03/photo.jpg',
+                'disk' => 'local',
+                'mime_type' => 'image/jpeg',
+                'size' => 2048,
+            ]);
+
+            $url = $attachment->previewUrl();
+            expect($url)->toBeString()
+                ->and($url)->toContain('signature=')
+                ->and($url)->toContain('/preview');
+        });
+
         it('generates a signed download URL via downloadUrl()', function (): void {
             $user = User::factory()->create();
             $task = Task::factory()->create(['user_id' => $user->id]);

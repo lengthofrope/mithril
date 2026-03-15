@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -15,7 +16,27 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class AttachmentController extends Controller
 {
     /**
-     * Stream the attachment file to the authenticated user.
+     * Stream the attachment file inline to the authenticated user.
+     *
+     * Serves the file with Content-Disposition: inline so browsers can
+     * render images and PDFs directly (e.g. as img src or in a new tab).
+     *
+     * @param int $attachment
+     * @return Response
+     */
+    public function preview(int $attachment): Response
+    {
+        $model = Attachment::findOrFail($attachment);
+
+        return Storage::disk($model->disk)->response(
+            $model->path,
+            $model->filename,
+            ['Content-Type' => $model->mime_type],
+        );
+    }
+
+    /**
+     * Stream the attachment file as a download to the authenticated user.
      *
      * The model is resolved manually to ensure SubstituteBindings (which runs
      * before route-level middleware) does not trigger a 404 before the signed
