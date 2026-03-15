@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attachment;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Services\BreadcrumbBuilder;
@@ -171,6 +172,35 @@ class SettingsController extends Controller
         $request->user()->update(['sidebar_collapsed' => $validated['sidebar_collapsed']]);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Display the storage management sub-page with usage and attachment list.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function storage(Request $request): View
+    {
+        $user = $request->user();
+        $usedBytes = (int) Attachment::where('user_id', $user->id)->sum('size');
+        $maxBytes = config('attachments.max_storage_mb') * 1024 * 1024;
+
+        $attachments = Attachment::where('user_id', $user->id)
+            ->with('activity')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('pages.settings.storage', [
+            'title' => 'Storage',
+            'breadcrumbs' => (new BreadcrumbBuilder())
+                ->forPage('Settings', route('settings.index'))
+                ->addCrumb('Storage')
+                ->build(),
+            'usedBytes' => $usedBytes,
+            'maxBytes' => $maxBytes,
+            'attachments' => $attachments,
+        ]);
     }
 
     /**

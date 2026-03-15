@@ -246,6 +246,17 @@
             </svg>
         </a>
 
+        {{-- Storage --}}
+        <a href="{{ route('settings.storage') }}" class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700">
+            <div>
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Storage</h2>
+                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">View file usage and manage uploaded attachments</p>
+            </div>
+            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 18l6-6-6-6"/>
+            </svg>
+        </a>
+
       </div>
 
       <div class="space-y-6">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AgreementController;
+use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\AutoSaveController;
 use App\Http\Controllers\Api\CalendarActionController;
 use App\Http\Controllers\Api\CounterController;
@@ -43,6 +44,8 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
             Route::patch('{activity}', [ActivityController::class, 'update']);
             Route::delete('{activity}', [ActivityController::class, 'destroy']);
         });
+
+    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
     Route::get('counters', CounterController::class)->name('counters');
     Route::get('search', [SearchController::class, 'search']);
