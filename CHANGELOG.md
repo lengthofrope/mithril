@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Textarea auto-resize** — All textareas across the app now automatically grow to fit their content, eliminating internal scrollbars; works on existing and dynamically added textareas via global event delegation and MutationObserver
+- **Note date field** — Notes now have an editable date field (Flatpickr date picker on the detail page); defaults to today when creating a new note; notes list sorted by date instead of `updated_at`; date displayed on note cards in the overview
+- **Note tag editor** — Interactive tag management on the note detail page replacing the read-only tag display; add tags via Enter/comma, remove by clicking ×, with autocomplete suggestions from all existing tags (arrow key navigation, click or Enter to select); auto-syncs to new `PUT /api/v1/notes/{note}/tags` endpoint
 - **Activity feed** — Chronological activity feed on all resource detail pages (tasks, follow-ups, notes, bilas) with support for markdown comments, URL links with optional title/description, and file attachments (max 10 MB each, max 5 per activity); displayed in a responsive sidebar (1/3 width on desktop, full width on mobile)
 - **File attachments** — Upload files via drag & drop or file picker; images show inline preview thumbnails; all files served via signed download URLs with 30-minute expiry; private storage in `storage/app/private/attachments/`
 - **Inline file preview** — Separate `/attachments/{id}/preview` route serving files with `Content-Disposition: inline` so image thumbnails render in the browser; download route remains for forced downloads
@@ -35,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Navigation** — Moved Bila's menu item below Teams for better logical grouping (previously between Notes and the separator)
+- **Robots.txt** — Blocked all crawlers from indexing the site (`Disallow: /`)
 - **Default theme** — New users default to dark mode instead of following OS preference; existing users who explicitly chose light mode keep their preference
 - **Confirmation modals** — Activity feed delete buttons and follow-up delete button now use styled confirmation modals (backdrop blur, escape key, fade/scale transitions) instead of browser `confirm()` dialogs
 - **Detail page layouts** — Task, follow-up, note, and bila detail pages now use a 2-column grid layout (2/3 content + 1/3 activity feed) on desktop
