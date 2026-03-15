@@ -11,23 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Activity feed** — Chronological activity feed on all resource detail pages (tasks, follow-ups, notes, bilas) with support for markdown comments, URL links with optional title/description, and file attachments (max 10 MB each, max 5 per activity); displayed in a responsive sidebar (1/3 width on desktop, full width on mobile)
 - **File attachments** — Upload files via drag & drop or file picker; images show inline preview thumbnails; all files served via signed download URLs with 30-minute expiry; private storage in `storage/app/private/attachments/`
+- **Inline file preview** — Separate `/attachments/{id}/preview` route serving files with `Content-Disposition: inline` so image thumbnails render in the browser; download route remains for forced downloads
 - **Storage quota** — Per-user attachment storage limit (default 1 GB, configurable via `ATTACHMENT_MAX_STORAGE_MB` in `.env`); upload rejected with 422 when quota exceeded
+- **Storage management page** — New settings sub-page (`/settings/storage`) showing storage usage with progress bar (color-coded: green/orange/red), file count, and a complete list of all uploaded files with filename, size, upload date, and linked parent resource (clickable link to task/follow-up/note/bila)
+- **Orphaned file cleanup** — Storage page detects files whose parent resource has been deleted and shows how much space can be freed; one-click "Remove orphaned files" button purges all orphaned attachments and their physical files
+- **Individual file deletion** — Delete individual attachments from the storage management page via `DELETE /api/v1/attachments/{id}`; automatically cleans up the parent activity when the last attachment is removed
+- **Attachment deletion system logs** — Removing attachments (from activity feed or storage page) logs a system event on the parent resource (e.g. "Attachment removed: filename.pdf") so the deletion is traceable in the activity feed
+- **Delete task** — Task detail page now has a "Delete task" button with styled confirmation modal; deletes the task and all associated activity via the existing API endpoint
 - **System events** — Automatic activity feed entries when tracked fields change: status, priority, is_done, snoozed_until; human-readable descriptions (e.g. "Status changed: open → done") with old/new values in metadata
 - **Refreshable polling component** — Generic `refreshable` Alpine.js component for ETag-based HTML partial polling; pauses when browser tab is inactive, resumes with immediate refresh on focus; debounces rapid `data-changed` triggers (300ms)
 - **Dashboard section polling** — Dashboard tasks, follow-ups, bilas, calendar, and email sections now poll for background updates (30s/60s intervals) via the refreshable component with ETag-based 304 responses
 - **List page polling** — Tasks list and follow-ups timeline pages wrapped in refreshable components (30s polling) for background sync updates
 - **Topic-scoped data-changed events** — `apiClient.dispatchDataChanged(topic?)` method for targeted UI refresh; refreshable component filters by topic when configured
 - **Skeleton loading placeholders** — Dashboard section skeletons shown during initial lazy-load with pulse animation
-- **Orphaned attachment cleanup** — `attachments:clean-orphaned` artisan command scheduled weekly to find and delete attachments without a parent activity, including physical file removal
+- **Orphaned attachment cleanup command** — `attachments:clean-orphaned` artisan command scheduled weekly to find and delete attachments without a parent activity, including physical file removal
 - **Activity & Attachment factories** — Full factory support with states for all four activity types (comment, link, attachment, system); database seeder includes sample activities
 - **Task → Follow-up conversion** — Convert a task to a follow-up from the task detail page; marks the task as done, creates a linked follow-up with deadline carried over as follow-up date, and transfers all metadata (comments, links, files, calendar event links, email links); styled confirmation modal
 - **Create follow-up from task** — Generate a linked follow-up from a task without closing the task; the follow-up inherits the task's team member and deadline, and links back to the originating task
 - **Linked follow-ups on task detail** — Task detail page shows all linked follow-ups with status badges and click-through navigation
 - **Linked task on follow-up detail** — Follow-up detail page shows the originating task (when linked) with click-through navigation
 - **`MetadataTransferService`** — Reusable service for transferring polymorphic metadata (activities, calendar event links, email links) between models during entity conversion
+- **Custom error pages** — Branded error pages (401, 403, 404, 419, 429, 500, 503) with Rivendell theme, Mithril logo, dark/light mode support, and LOTR-themed messages (e.g. "You Shall Not Pass!" for 401, "Not All Who Wander Are Lost" for 404)
 
 ### Changed
 
+- **Default theme** — New users default to dark mode instead of following OS preference; existing users who explicitly chose light mode keep their preference
+- **Confirmation modals** — Activity feed delete buttons and follow-up delete button now use styled confirmation modals (backdrop blur, escape key, fade/scale transitions) instead of browser `confirm()` dialogs
 - **Detail page layouts** — Task, follow-up, note, and bila detail pages now use a 2-column grid layout (2/3 content + 1/3 activity feed) on desktop
 - **PartialController** — New controller serving ETag-cached HTML fragments for activity feeds and all dashboard sections
 - **Follow-up card AJAX actions** — Dashboard follow-up card buttons (Done, Snooze) now use AJAX requests instead of form submissions, preventing full page reloads; the `refreshable` component picks up changes immediately via topic-scoped `data-changed` events
@@ -37,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Convert to task removed from dashboard cards** — Conversion only accessible from detail pages where the full confirmation modal and metadata transfer are available
 - **Data pruning always active** — Data pruning can no longer be disabled; defaults to 90 days; settings input is required (30–365 days); "Prune now" button always visible; `data:prune` command runs for all users
 - **Dashboard widget defaults** — Dashboard upcoming items (tasks, follow-ups, bilas) default to 5 when not configured, instead of being disabled; can still be set to 0 to disable
+
+### Fixed
+
+- **Broken attachment thumbnails** — Image thumbnails in the activity feed showed a broken image icon because the download URL was unsigned (403) and served with `Content-Disposition: attachment`; now uses signed inline preview URLs
+- **Attachment download 403** — Clicking attachment links returned "Invalid signature" because the Blade template generated unsigned URLs instead of calling the model's `downloadUrl()` method
 
 ## [1.6.2] - 2026-03-13
 
