@@ -47,6 +47,8 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/tasks', [TaskPageController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/kanban', [TaskPageController::class, 'kanban'])->name('tasks.kanban');
     Route::get('/tasks/{task}', [TaskPageController::class, 'show'])->name('tasks.show');
+    Route::post('/tasks/{task}/convert-to-follow-up', [TaskPageController::class, 'convertToFollowUp'])->name('tasks.convert-to-follow-up');
+    Route::post('/tasks/{task}/create-follow-up', [TaskPageController::class, 'createFollowUp'])->name('tasks.create-follow-up');
 
     Route::get('/follow-ups', [FollowUpPageController::class, 'index'])->name('follow-ups.index');
     Route::post('/follow-ups', [FollowUpPageController::class, 'store'])->name('follow-ups.store');

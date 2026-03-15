@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\FollowUpStatus;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
+use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
@@ -140,7 +142,7 @@ class TaskPageController extends Controller
      */
     public function show(Task $task): View
     {
-        $task->load(['teamMember.team', 'taskGroup', 'taskCategory', 'team']);
+        $task->load(['teamMember.team', 'taskGroup', 'taskCategory', 'team', 'followUps']);
 
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
@@ -267,5 +269,68 @@ class TaskPageController extends Controller
         $task->update($updates);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Convert a task into a follow-up, marking the task as done.
+     *
+     * @param Request $request
+     * @param Task $task
+     * @return JsonResponse|RedirectResponse
+     */
+    public function convertToFollowUp(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $followUp = $this->createFollowUpFromTask($request, $task);
+
+        $task->update(['status' => TaskStatus::Done]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => ['follow_up_url' => route('follow-ups.show', $followUp)],
+            ]);
+        }
+
+        return redirect()->route('follow-ups.show', $followUp);
+    }
+
+    /**
+     * Create a follow-up linked to a task without changing the task status.
+     *
+     * @param Request $request
+     * @param Task $task
+     * @return JsonResponse|RedirectResponse
+     */
+    public function createFollowUp(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $followUp = $this->createFollowUpFromTask($request, $task);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => ['follow_up_url' => route('follow-ups.show', $followUp)],
+            ]);
+        }
+
+        return redirect()->route('follow-ups.show', $followUp);
+    }
+
+    /**
+     * Create a follow-up from task data with the task linked.
+     *
+     * @param Request $request
+     * @param Task $task
+     * @return FollowUp
+     */
+    private function createFollowUpFromTask(Request $request, Task $task): FollowUp
+    {
+        return FollowUp::create([
+            'user_id' => $request->user()->id,
+            'task_id' => $task->id,
+            'description' => $task->title,
+            'team_member_id' => $task->team_member_id,
+            'follow_up_date' => $task->deadline ?? now()->toDateString(),
+            'status' => FollowUpStatus::Open->value,
+        ]);
     }
 }

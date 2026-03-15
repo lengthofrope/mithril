@@ -101,6 +101,22 @@
                         label="Waiting on"
                     />
                 </div>
+
+                {{-- Linked task --}}
+                @if($followUp->task)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Linked task</label>
+                        <a
+                            href="{{ route('tasks.show', $followUp->task) }}"
+                            class="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-800/50 dark:text-white/90 dark:hover:border-blue-600 dark:hover:text-blue-400"
+                        >
+                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            {{ $followUp->task->title }}
+                        </a>
+                    </div>
+                @endif
             </div>
 
             {{-- Actions --}}
