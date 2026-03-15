@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import { initTextareaAutosize } from './utils/textarea-autosize';
 
 import { autoSaveField } from './components/auto-save-field';
 import { autoSaveForm } from './components/auto-save-form';
@@ -70,3 +71,4 @@ Alpine.store('taskList', { showCompleted: false });
 window.Alpine = Alpine;
 
 Alpine.start();
+initTextareaAutosize();
