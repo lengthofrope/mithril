@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/meetings/{meeting}', [MeetingPageController::class, 'show'])->name('meetings.show');
     Route::patch('/meetings/{meeting}/done', [MeetingPageController::class, 'markDone'])->name('meetings.done');
     Route::patch('/meetings/{meeting}/undone', [MeetingPageController::class, 'undoDone'])->name('meetings.undone');
+    Route::patch('/meetings/{meeting}/transition', [MeetingPageController::class, 'transition'])->name('meetings.transition');
     Route::delete('/meetings/{meeting}', [MeetingPageController::class, 'destroy'])->name('meetings.destroy');
 
     Route::get('/calendar', [CalendarPageController::class, 'index'])->name('calendar.index');

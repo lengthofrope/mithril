@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\MeetingStatus;
 use App\Enums\MeetingType;
 use App\Events\MeetingScheduled;
 use App\Http\Controllers\Controller;
@@ -38,10 +39,14 @@ class MeetingPageController extends Controller
     {
         $teamMemberId = $request->get('team_member_id');
         $teamId = $request->get('team_id');
+        $type = $request->get('type');
+        $status = $request->get('status');
 
         $baseQuery = fn () => Meeting::query()
             ->when($teamMemberId, fn ($q) => $q->whereHas('attendees', fn ($sub) => $sub->where('team_member_id', $teamMemberId)))
             ->when($teamId, fn ($q) => $q->where('team_id', $teamId))
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->when($status, fn ($q) => $q->where('status', $status))
             ->with(['attendees', 'prepItems']);
 
         $upcomingMeetings = $baseQuery()
@@ -68,6 +73,25 @@ class MeetingPageController extends Controller
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
 
+        $typeOptions = array_map(
+            fn (MeetingType $t) => ['value' => $t->value, 'label' => match ($t) {
+                MeetingType::OneOnOne => '1-on-1',
+                MeetingType::Team => 'Team',
+                MeetingType::Other => 'Other',
+            }],
+            MeetingType::cases(),
+        );
+
+        $statusOptions = array_map(
+            fn (MeetingStatus $s) => ['value' => $s->value, 'label' => match ($s) {
+                MeetingStatus::Scheduled => 'Scheduled',
+                MeetingStatus::InProgress => 'In progress',
+                MeetingStatus::Completed => 'Completed',
+                MeetingStatus::Cancelled => 'Cancelled',
+            }],
+            MeetingStatus::cases(),
+        );
+
         return view('pages.meetings.index', [
             'title' => 'Meetings',
             'upcomingMeetings' => $upcomingMeetings,
@@ -75,6 +99,8 @@ class MeetingPageController extends Controller
             'selectedTeamMemberId' => $teamMemberId,
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
+            'typeOptions' => $typeOptions,
+            'statusOptions' => $statusOptions,
         ]);
     }
 
@@ -125,12 +151,18 @@ class MeetingPageController extends Controller
         $previousMeeting = $this->findAdjacentMeeting($meeting, 'previous');
         $nextMeeting = $this->findAdjacentMeeting($meeting, 'next');
 
+        $attendeeOptions = $meeting->attendees->map(fn (TeamMember $m) => [
+            'value' => $m->id,
+            'label' => $m->name,
+        ])->all();
+
         return view('pages.meetings.show', [
             'title' => $meeting->title,
             'meeting' => $meeting,
             'breadcrumbs' => (new BreadcrumbBuilder())->forMeeting($meeting)->build(),
             'previousMeeting' => $previousMeeting,
             'nextMeeting' => $nextMeeting,
+            'attendeeOptions' => $attendeeOptions,
         ]);
     }
 
@@ -188,6 +220,41 @@ class MeetingPageController extends Controller
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * Transition a meeting to a new status.
+     *
+     * @param Request $request
+     * @param Meeting $meeting
+     * @return JsonResponse
+     */
+    public function transition(Request $request, Meeting $meeting): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', Rule::enum(MeetingStatus::class)],
+        ]);
+
+        $newStatus = MeetingStatus::from($validated['status']);
+
+        $updates = ['status' => $newStatus];
+
+        if ($newStatus === MeetingStatus::InProgress && $meeting->started_at === null) {
+            $updates['started_at'] = now();
+        }
+
+        if ($newStatus === MeetingStatus::Completed) {
+            $updates['ended_at'] = now();
+            $updates['is_done'] = true;
+        }
+
+        if ($newStatus === MeetingStatus::Cancelled) {
+            $updates['is_done'] = true;
+        }
+
+        $meeting->update($updates);
+
+        return response()->json(['success' => true, 'status' => $newStatus->value]);
     }
 
     /**

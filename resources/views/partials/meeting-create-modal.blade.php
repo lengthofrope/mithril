@@ -3,6 +3,7 @@
     x-data="{
         addOpen: false,
         selectedTeamId: '',
+        selectedType: 'one_on_one',
         allMembers: @js($memberOptions),
         get filteredMembers() {
             if (!this.selectedTeamId) return this.allMembers;
@@ -46,49 +47,84 @@
             <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">Schedule a new meeting</h2>
             <form method="POST" action="{{ route('meetings.store') }}">
                 @csrf
+
+                {{-- Title --}}
+                <div class="mb-4">
+                    <label for="new-meeting-title" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Title <span class="text-red-500">*</span></label>
+                    <input
+                        id="new-meeting-title"
+                        type="text"
+                        name="title"
+                        required
+                        placeholder="Meeting title"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                    >
+                </div>
+
                 <div class="mb-4 grid grid-cols-2 gap-3">
+                    {{-- Type --}}
+                    <div>
+                        <label for="new-meeting-type" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Type <span class="text-red-500">*</span></label>
+                        <select
+                            id="new-meeting-type"
+                            name="type"
+                            x-model="selectedType"
+                            required
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                            <option value="one_on_one">1-on-1</option>
+                            <option value="team">Team</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    {{-- Date --}}
+                    <div x-data="datePicker()">
+                        <label for="new-meeting-date" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Date <span class="text-red-500">*</span></label>
+                        <input
+                            id="new-meeting-date"
+                            type="text"
+                            name="scheduled_at"
+                            x-ref="input"
+                            required
+                            value="{{ now()->addDays(7)->toDateString() }}"
+                            placeholder="YYYY-MM-DD"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                    </div>
+                </div>
+
+                <div class="mb-4 grid grid-cols-2 gap-3">
+                    {{-- Team filter --}}
                     <div>
                         <label for="new-meeting-team" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team</label>
                         <select
                             id="new-meeting-team"
+                            name="team_id"
                             x-model="selectedTeamId"
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                         >
-                            <option value="">All teams</option>
+                            <option value="">No team</option>
                             @foreach($teamOptions as $opt)
                                 <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
                             @endforeach
                         </select>
                     </div>
 
+                    {{-- Attendee --}}
                     <div>
-                        <label for="new-meeting-member" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team member <span class="text-red-500">*</span></label>
+                        <label for="new-meeting-member" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Attendee</label>
                         <select
                             id="new-meeting-member"
-                            name="team_member_id"
-                            required
+                            name="attendee_ids[]"
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                         >
-                            <option value="">Select member…</option>
+                            <option value="">No attendee</option>
                             <template x-for="member in filteredMembers" :key="member.value">
                                 <option :value="member.value" x-text="member.label"></option>
                             </template>
                         </select>
                     </div>
-                </div>
-
-                <div class="mb-4" x-data="datePicker()">
-                    <label for="new-meeting-date" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Scheduled date <span class="text-red-500">*</span></label>
-                    <input
-                        id="new-meeting-date"
-                        type="text"
-                        name="scheduled_at"
-                        x-ref="input"
-                        required
-                        value="{{ now()->addDays(7)->toDateString() }}"
-                        placeholder="YYYY-MM-DD"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
-                    >
                 </div>
 
                 <div class="flex items-center gap-2">

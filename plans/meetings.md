@@ -291,18 +291,18 @@ sequenceDiagram
 ### Phase 2: Meeting CRUD & Views
 - **Goal:** Werkende vergaderingen-pagina met index, detail, en uitgebreide prep items
 - **Specs:**
-  - [ ] MeetingPageController met index (upcoming/past, filters op team/member/type/status)
-  - [ ] Index view met filter bar, create modal (titel, type, datum, team, deelnemers)
-  - [ ] Show view met secties: info, deelnemers, prep items, notities, activity feed
-  - [ ] Prep items CRUD met type-selectie (agendapunt/vraag/actie), tijdsinschatting, toewijzing aan deelnemer
-  - [ ] Prep items sorteerbaar via drag & drop
-  - [ ] Auto-save op notes, title, scheduled_at velden
-  - [ ] Meeting status transitions: scheduled → in_progress → completed, of → cancelled
-  - [ ] Mark done / undo done functionaliteit (consistent met oude Bila)
-  - [ ] Dashboard widget bijgewerkt: "Bila's" → "Meetings" (upcoming + recent afgerond met onbeoordeelde extracties)
-  - [ ] Navigatie bijgewerkt in MenuHelper
-  - [ ] Breadcrumbs voor meeting detail pagina
-  - [ ] Previous/next meeting navigatie (per attendee voor one_on_one, per team voor team meetings)
+  - [x] MeetingPageController met index (upcoming/past, filters op team/member/type/status)
+  - [x] Index view met filter bar, create modal (titel, type, datum, team, deelnemers)
+  - [x] Show view met secties: info, deelnemers, prep items, notities, activity feed
+  - [x] Prep items CRUD met type-selectie (agendapunt/vraag/actie), tijdsinschatting, toewijzing aan deelnemer
+  - [x] Prep items sorteerbaar via drag & drop
+  - [x] Auto-save op notes, title, scheduled_at velden
+  - [x] Meeting status transitions: scheduled → in_progress → completed, of → cancelled
+  - [x] Mark done / undo done functionaliteit (consistent met oude Bila)
+  - [x] Dashboard widget bijgewerkt: "Bila's" → "Meetings" (upcoming + recent afgerond met onbeoordeelde extracties)
+  - [x] Navigatie bijgewerkt in MenuHelper
+  - [x] Breadcrumbs voor meeting detail pagina
+  - [x] Previous/next meeting navigatie (per attendee voor one_on_one, per team voor team meetings)
 - **Files:** MeetingPageController, Blade views, Blade components, MenuHelper, Dashboard partial
 
 ### Phase 3: Audio recording & upload

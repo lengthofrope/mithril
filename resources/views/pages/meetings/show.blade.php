@@ -3,32 +3,124 @@
 @section('content')
     <x-common.page-breadcrumb :items="$breadcrumbs" />
 
-    {{-- Member info + date --}}
-    <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-        @if($meeting->attendees->first())
-            <x-tl.team-member-avatar :member="$meeting->attendees->first()" size="lg" />
+    {{-- Header: title + type badge + status --}}
+    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="flex flex-wrap items-start gap-4">
             <div class="flex-1 min-w-0">
-                <h1 class="text-base font-semibold text-gray-900 dark:text-white">
-                    {{ $meeting->attendees->first()->name }}
-                </h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ $meeting->attendees->first()->role }}
-                </p>
+                {{-- Editable title --}}
+                <div x-data="autoSaveField({ endpoint: '{{ route('meetings.update', $meeting->id) }}', field: 'title' })" x-init="value = @js($meeting->title)">
+                    <label for="meeting-title" class="sr-only">Meeting title</label>
+                    <input
+                        id="meeting-title"
+                        type="text"
+                        x-model="value"
+                        class="w-full border-0 bg-transparent p-0 text-lg font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-white"
+                        placeholder="Meeting title"
+                    >
+                    <x-tl.auto-save-status />
+                </div>
+
+                {{-- Type badge + status + date --}}
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                    @php
+                        $typeBadge = match($meeting->type->value) {
+                            'one_on_one' => ['label' => '1-on-1', 'class' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'],
+                            'team' => ['label' => 'Team meeting', 'class' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'],
+                            default => ['label' => 'Other', 'class' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'],
+                        };
+                        $statusBadge = match($meeting->status->value) {
+                            'scheduled' => ['label' => 'Scheduled', 'class' => 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'],
+                            'in_progress' => ['label' => 'In progress', 'class' => 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'],
+                            'completed' => ['label' => 'Completed', 'class' => 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'],
+                            'cancelled' => ['label' => 'Cancelled', 'class' => 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'],
+                            default => ['label' => $meeting->status->value, 'class' => 'bg-gray-100 text-gray-600'],
+                        };
+                    @endphp
+
+                    <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $typeBadge['class'] }}">{{ $typeBadge['label'] }}</span>
+                    <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span>
+
+                    <span class="text-xs text-gray-400">&middot;</span>
+
+                    <div class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="h-3.5 w-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <x-tl.auto-save-field
+                            :endpoint="route('meetings.update', $meeting->id)"
+                            field="scheduled_at"
+                            :value="$meeting->scheduled_at->toDateString()"
+                            type="date"
+                            label=""
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {{-- Status transition controls --}}
+            <div
+                x-data="{
+                    currentStatus: @js($meeting->status->value),
+                    async transition(status) {
+                        const response = await fetch('{{ route('meetings.transition', $meeting->id) }}', {
+                            method: 'PATCH',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ status }),
+                        });
+
+                        if (response.ok) {
+                            this.currentStatus = status;
+                            window.location.reload();
+                        }
+                    },
+                }"
+                class="flex items-center gap-2"
+            >
+                <template x-if="currentStatus === 'scheduled'">
+                    <button
+                        type="button"
+                        x-on:click="transition('in_progress')"
+                        class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-amber-600"
+                    >Start meeting</button>
+                </template>
+
+                <template x-if="currentStatus === 'in_progress'">
+                    <button
+                        type="button"
+                        x-on:click="transition('completed')"
+                        class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-green-700"
+                    >Complete</button>
+                </template>
+
+                <template x-if="currentStatus === 'scheduled' || currentStatus === 'in_progress'">
+                    <button
+                        type="button"
+                        x-on:click="transition('cancelled')"
+                        class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                    >Cancel</button>
+                </template>
+            </div>
+        </div>
+
+        {{-- Attendees --}}
+        @if($meeting->attendees->isNotEmpty())
+            <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Attendees:</span>
+                @foreach($meeting->attendees as $attendee)
+                    <div class="flex items-center gap-2">
+                        <x-tl.team-member-avatar :member="$attendee" size="xs" />
+                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ $attendee->name }}</span>
+                        @if($attendee->role)
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ $attendee->role }}</span>
+                        @endif
+                    </div>
+                @endforeach
             </div>
         @endif
-
-        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <svg class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <x-tl.auto-save-field
-                :endpoint="route('meetings.update', $meeting->id)"
-                field="scheduled_at"
-                :value="$meeting->scheduled_at->toDateString()"
-                type="date"
-                label=""
-            />
-        </div>
     </div>
 
     {{-- Navigation to prev/next meeting --}}
@@ -41,7 +133,7 @@
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
-                Previous meeting
+                Previous
             </a>
         @else
             <div></div>
@@ -52,7 +144,7 @@
                 href="{{ route('meetings.show', $nextMeeting->id) }}"
                 class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800"
             >
-                Next meeting
+                Next
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
@@ -67,6 +159,9 @@
         <div
             class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
             x-data="{
+                newType: 'agenda_item',
+                newDuration: '',
+                newAssignee: '',
                 async addPrepItem(event) {
                     const form = event.target;
                     const formData = new FormData(form);
@@ -111,16 +206,18 @@
                 },
             }"
         >
-            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Prep items</h2>
+            </div>
 
-                <form
-                    action="{{ route('prep-items.store') }}"
-                    class="flex items-center gap-2"
-                    x-on:submit.prevent="addPrepItem($event)"
-                >
-                    <input type="hidden" name="meeting_id" value="{{ $meeting->id }}">
-                    <input type="hidden" name="team_member_id" value="{{ $meeting->attendees->first()?->id }}">
+            {{-- Add new prep item form --}}
+            <form
+                action="{{ route('prep-items.store') }}"
+                class="border-b border-gray-100 px-5 py-3 dark:border-gray-800"
+                x-on:submit.prevent="addPrepItem($event)"
+            >
+                <input type="hidden" name="meeting_id" value="{{ $meeting->id }}">
+                <div class="flex items-center gap-2">
                     <label for="new-prep-item" class="sr-only">New prep item</label>
                     <input
                         id="new-prep-item"
@@ -128,8 +225,29 @@
                         name="content"
                         placeholder="Add prep item…"
                         required
-                        class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                        class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
                     >
+                    <select name="type" x-model="newType" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        <option value="agenda_item">Agenda</option>
+                        <option value="question">Question</option>
+                        <option value="action">Action</option>
+                    </select>
+                    <input
+                        type="number"
+                        name="duration_minutes"
+                        x-model="newDuration"
+                        placeholder="Min"
+                        min="1"
+                        class="w-16 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                    >
+                    @if(count($attendeeOptions) > 0)
+                        <select name="team_member_id" x-model="newAssignee" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                            <option value="">Unassigned</option>
+                            @foreach($attendeeOptions as $opt)
+                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                            @endforeach
+                        </select>
+                    @endif
                     <button
                         type="submit"
                         class="flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
@@ -139,8 +257,8 @@
                         </svg>
                         Add
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
 
             <x-tl.sortable-container
                 modelType="meeting_prep_item"
@@ -148,6 +266,14 @@
                 :containerId="'prep-items-' . $meeting->id"
             >
                 @forelse($meeting->prepItems->sortBy('sort_order') as $prepItem)
+                    @php
+                        $typeIcon = match($prepItem->type->value) {
+                            'agenda_item' => ['icon' => 'A', 'class' => 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'],
+                            'question' => ['icon' => 'Q', 'class' => 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'],
+                            'action' => ['icon' => '!', 'class' => 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'],
+                            default => ['icon' => '?', 'class' => 'bg-gray-100 text-gray-600'],
+                        };
+                    @endphp
                     <div
                         data-id="{{ $prepItem->id }}"
                         class="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0 dark:border-gray-800"
@@ -174,9 +300,25 @@
                             aria-label="{{ $prepItem->content }}"
                         >
 
+                        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[0.625rem] font-bold {{ $typeIcon['class'] }}">
+                            {{ $typeIcon['icon'] }}
+                        </span>
+
                         <span class="flex-1 text-sm text-gray-800 dark:text-white/90 {{ $prepItem->is_discussed ? 'line-through text-gray-400 dark:text-gray-500' : '' }}">
                             {{ $prepItem->content }}
                         </span>
+
+                        @if($prepItem->duration_minutes)
+                            <span class="shrink-0 text-xs text-gray-400 dark:text-gray-500" title="Estimated duration">
+                                {{ $prepItem->duration_minutes }}m
+                            </span>
+                        @endif
+
+                        @if($prepItem->teamMember)
+                            <span class="shrink-0 text-xs text-gray-400 dark:text-gray-500">
+                                {{ $prepItem->teamMember->name }}
+                            </span>
+                        @endif
 
                         <button
                             type="button"
@@ -195,6 +337,17 @@
                     </p>
                 @endforelse
             </x-tl.sortable-container>
+
+            @if($meeting->prepItems->isNotEmpty())
+                @php
+                    $totalMinutes = $meeting->prepItems->sum('duration_minutes');
+                @endphp
+                @if($totalMinutes > 0)
+                    <div class="border-t border-gray-100 px-5 py-2 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+                        Total estimated time: {{ $totalMinutes }} min
+                    </div>
+                @endif
+            @endif
         </div>
 
         {{-- Notes --}}
