@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-03-18
+
+### Added
+
+- **Task search** — Search now works on both the task list and kanban views; previously the `search` parameter was silently dropped by the controller and the `Searchable` trait scope was never called
+- **Task overdue filter** — New "Overdue" boolean filter on task list and kanban views; shows only tasks with a deadline before today and status ≠ done; implemented via `scopeOverdue` on the Task model
+- **Task recurring filter** — New "Recurring" boolean filter on task list and kanban views; filters tasks by `is_recurring` via the existing Filterable trait
+- **Inline task group edit** — Task group can now be changed directly on the task card via an `inline-select-pill`, without opening the task detail page
+- **Kanban AJAX partial** — Kanban board markup extracted into `partials/kanban-board.blade.php`; the `kanban()` controller method now returns only the board partial for AJAX requests instead of the full page, fixing the broken layout when filtering
+- **Analytics daily deltas** — Analytics snapshots now compute daily deltas for tasks and follow-ups, enabling trend tracking over time
+- **Microsoft/Jira user attributes** — Added additional user attributes for Microsoft and Jira integration configuration
+
+### Changed
+
+- **Filter bar redesign** — Completely redesigned filter bar component used on all list pages (tasks, kanban, follow-ups, notes, bila's): search is always visible at the top; dropdown filters and boolean toggles collapse behind a "Filters" button; active filter count shown as a badge; "Clear all" link appears when filters are active; boolean filters rendered as toggleable pills instead of checkboxes; select dropdowns use `appearance-none` with custom SVG chevrons for consistent cross-browser styling; responsive 2-column grid on mobile, flex-wrap on desktop
+- **Dashboard priority sorting** — Dashboard task widgets (today + upcoming) now sort by priority within each day (urgent → high → normal → low) using a `CASE WHEN` expression, in addition to the existing deadline sort
+- **Kanban drag-and-drop** — Removed `forceFallback`, `scroll`, `scrollSensitivity`, and `scrollSpeed` options that caused a "locked in place" visual glitch; added `emptyInsertThreshold: 80` so cards can be dropped into sparse columns without needing to hover directly over an existing item; column containers now use `flex-1` to fill available height as drop targets
+- **Kanban status sync on drag** — Moving a card between kanban columns now correctly updates the status `inline-select-pill` Alpine component on the card; previously targeted a non-existent `[data-status-badge]` element
+- **Follow-up snooze logic** — Snooze now adds days to the existing `follow_up_date` instead of today's date, preserving the original schedule offset
+- **Email sync pagination** — Microsoft Graph email sync now follows `@odata.nextLink` pagination to fetch all inbox messages instead of only the first page
+- **Email group collapsing** — Older email date groups only collapse when cumulative email count exceeds 15; small inboxes show all groups expanded
+- **Dashboard responsive columns** — When both Jira and Outlook integrations are disconnected, the dashboard uses a 2-column layout instead of showing an empty third column
+
+### Security
+
+- **Nonce-based CSP** — Added Content Security Policy header with per-request nonce; all inline scripts use nonce attributes instead of `'unsafe-inline'`
+- **File upload restrictions** — MIME type whitelist on attachment uploads; hardened file handling and validation across controllers
+- **Sensitive field mass-assignment** — Removed OAuth tokens and 2FA secrets from `User::$fillable`
+
+### Fixed
+
+- **Task search broken in list view** — Search parameter was not included in `$request->only()` whitelist; `->search()` scope was never called on the query
+- **Task search breaks kanban layout** — Kanban controller had no `$request->ajax()` check, returning the full page HTML instead of a partial for filtered AJAX requests
+- **Kanban `is_private` filter ignored** — The `is_private` filter was defined in the kanban filter bar but not included in the controller's `$request->only()` whitelist
+- **Filter bar checkbox labels not clickable** — Boolean filter labels were `<span>` elements; changed to `<label>` with `for` attribute for accessibility
+
 ## [1.7.0] - 2026-03-15
 
 ### Added
