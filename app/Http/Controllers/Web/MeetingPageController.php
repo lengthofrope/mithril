@@ -146,7 +146,7 @@ class MeetingPageController extends Controller
      */
     public function show(Meeting $meeting): View
     {
-        $meeting->load(['attendees.team', 'prepItems.teamMember', 'recordings', 'transcription', 'extractions.assignee', 'team']);
+        $meeting->load(['attendees.team', 'prepItems.teamMember', 'recordings', 'transcription', 'extractions.assignee', 'calendarEventLinks.calendarEvent', 'team']);
 
         $previousMeeting = $this->findAdjacentMeeting($meeting, 'previous');
         $nextMeeting = $this->findAdjacentMeeting($meeting, 'next');

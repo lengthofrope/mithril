@@ -362,15 +362,15 @@ sequenceDiagram
 ### Phase 6: Polish & integraties
 - **Goal:** Volledige integratie met bestaande systemen en afwerking
 - **Specs:**
-  - [ ] Calendar event linking werkt voor meetings (vervangt bila linking)
-  - [ ] Email action "create meeting" werkt (vervangt "create bila")
-  - [ ] Jira action "create meeting" werkt
-  - [ ] Zoeken in meetings via global search (als die bestaat)
-  - [ ] Meeting detail toont gekoppelde calendar events
-  - [ ] Analytics: meetings per week/maand chart data (indien gewenst)
-  - [ ] Responsive design check op alle meeting views
-  - [ ] Accessibility: keyboard navigatie recording controls, ARIA labels
-  - [ ] Cleanup: verwijder alle resterende Bila-referenties uit codebase
+  - [x] Calendar event linking werkt voor meetings (vervangt bila linking)
+  - [x] Email action "create meeting" werkt (vervangt "create bila")
+  - [x] Jira action "create meeting" werkt
+  - [x] Zoeken in meetings via global search (als die bestaat)
+  - [x] Meeting detail toont gekoppelde calendar events
+  - [x] Analytics: meetings per week/maand chart data (indien gewenst)
+  - [x] Responsive design check op alle meeting views
+  - [x] Accessibility: keyboard navigatie recording controls, ARIA labels
+  - [x] Cleanup: verwijder alle resterende Bila-referenties uit codebase
 - **Files:** Calendar/Email/Jira action controllers, search integration, analytics, cleanup
 
 ## Parallelization

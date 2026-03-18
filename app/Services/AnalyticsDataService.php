@@ -9,7 +9,9 @@ use App\Enums\DataSource;
 use App\Enums\FollowUpStatus;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
+use App\Enums\MeetingType;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Task;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
@@ -64,6 +66,7 @@ class AnalyticsDataService
             DataSource::TasksByDeadline  => $this->tasksByDeadline($timezone),
             DataSource::FollowUpsByStatus  => $this->followUpsByStatus(),
             DataSource::FollowUpsByUrgency => $this->followUpsByUrgency($timezone),
+            DataSource::MeetingsByType     => $this->meetingsByType(),
             default => throw new \InvalidArgumentException("Unhandled source: {$source->value}"),
         };
     }
@@ -399,6 +402,26 @@ class AnalyticsDataService
             labels: ['Overdue', 'Today', 'This Week', 'Later'],
             series: [$overdue, $dueToday, $thisWeek, $later],
             colors: ['#ef4444', '#f97316', '#f59e0b', '#9ca3af'],
+        );
+    }
+
+    /**
+     * Meetings grouped by type (1-on-1, team, other).
+     *
+     * @return ChartData
+     */
+    private function meetingsByType(): ChartData
+    {
+        $counts = [];
+
+        foreach (MeetingType::cases() as $type) {
+            $counts[$type->value] = Meeting::where('type', $type)->count();
+        }
+
+        return new ChartData(
+            labels: ['1-on-1', 'Team', 'Other'],
+            series: array_values($counts),
+            colors: ['#3b82f6', '#a855f7', '#9ca3af'],
         );
     }
 }
