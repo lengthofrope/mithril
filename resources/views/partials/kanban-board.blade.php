@@ -54,7 +54,7 @@
 
                 <div
                     data-kanban-status="{{ $column['status'] }}"
-                    class="flex flex-col gap-2 border-t border-gray-100 p-3 min-h-32 max-h-[calc(100vh-16rem)] overflow-y-auto dark:border-gray-800"
+                    class="flex flex-1 flex-col gap-2 border-t border-gray-100 p-3 min-h-32 dark:border-gray-800"
                     role="list"
                     aria-label="{{ $column['label'] }} tasks"
                 >

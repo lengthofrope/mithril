@@ -16,33 +16,25 @@ interface SortableKanbanConfig {
 }
 
 /**
- * Maps status keys to their display labels and CSS classes (must match status-badge.blade.php).
+ * Updates the inline-select-pill Alpine component for the status field on a card.
  */
-const statusStyles: Record<string, { label: string; colorClass: string }> = {
-    open:        { label: 'Open',        colorClass: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400' },
-    in_progress: { label: 'In Progress', colorClass: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400' },
-    waiting:     { label: 'Waiting',     colorClass: 'bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400' },
-    done:        { label: 'Done',        colorClass: 'bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-500' },
-};
+function updateInlineStatus(card: HTMLElement, field: string, newValue: string): void {
+    const pills = card.querySelectorAll<HTMLElement>('[x-data*="inlineSelect"]');
 
-/**
- * Updates the status badge inside a card element to reflect the new status.
- */
-function updateStatusBadge(card: HTMLElement, status: string): void {
-    const badge = card.querySelector<HTMLElement>('[data-status-badge]');
+    for (const pill of pills) {
+        const alpineData = (pill as unknown as { _x_dataStack?: Array<Record<string, unknown>> })._x_dataStack?.[0];
 
-    if (badge === null) {
-        return;
+        if (alpineData === undefined) {
+            continue;
+        }
+
+        const xData = pill.getAttribute('x-data') ?? '';
+
+        if (xData.includes(`field: '${field}'`)) {
+            alpineData['value'] = newValue;
+            return;
+        }
     }
-
-    const style = statusStyles[status];
-
-    if (style === undefined) {
-        return;
-    }
-
-    badge.className = `inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${style.colorClass}`;
-    badge.textContent = style.label;
 }
 
 /**
@@ -80,10 +72,7 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
                     group: config.containerSelector,
                     animation: 150,
                     handle: '.drag-handle',
-                    scroll: true,
-                    scrollSensitivity: 80,
-                    scrollSpeed: 12,
-                    forceFallback: true,
+                    emptyInsertThreshold: 80,
                     onEnd(event: Sortable.SortableEvent): void {
                         void self.handleMove(event);
                     },
@@ -142,7 +131,7 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
                     });
 
                     if (toStatus !== null) {
-                        updateStatusBadge(item, toStatus);
+                        updateInlineStatus(item, config.statusField, toStatus);
                     }
                 }
             } catch (err) {
