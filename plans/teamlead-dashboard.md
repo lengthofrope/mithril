@@ -1,5 +1,8 @@
 # Prompt: Team Lead Dashboard — Browser Startpagina & PWA
 
+**Status:** Complete
+**Author:** Bas de Kort
+
 ## Context
 
 Ik ben een technisch team lead en zoek een persoonlijke startpagina voor mijn browser die mij helpt bij het dagelijks managen van mijn teams. Outlook-taken en eenvoudige todo-lijsten schieten tekort: ik mis opvolgingsmogelijkheden, context per teamlid, overzicht over wat er speelt, en de mogelijkheid om privénotities en gevoelige taken afgeschermd te houden.
