@@ -1,33 +1,33 @@
 <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
         <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
-            {{ $upcomingBilas->isNotEmpty() ? 'Upcoming bilas' : 'Bilas today' }}
+            {{ $upcomingMeetings->isNotEmpty() ? 'Upcoming meetings' : 'Meetings today' }}
         </h2>
         <span class="rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-600 dark:bg-purple-500/15 dark:text-purple-400">
-            {{ $todayBilas->count() + $upcomingBilas->count() }}
+            {{ $todayMeetings->count() + $upcomingMeetings->count() }}
         </span>
     </div>
 
     <div class="divide-y divide-gray-100 dark:divide-gray-800">
-        @forelse($todayBilas as $bila)
+        @forelse($todayMeetings as $meeting)
             <a
-                href="{{ route('bilas.show', $bila->id) }}"
+                href="{{ route('meetings.show', $meeting->id) }}"
                 class="flex items-center gap-3 px-5 py-3 transition hover:bg-gray-50 dark:hover:bg-white/[0.02]"
             >
-                @if($bila->teamMember)
-                    <x-tl.team-member-avatar :member="$bila->teamMember" size="sm" />
+                @if($meeting->attendees->first())
+                    <x-tl.team-member-avatar :member="$meeting->attendees->first()" size="sm" />
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                            {{ $bila->teamMember->name }}
+                            {{ $meeting->attendees->first()->name }}
                         </p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
-                            {{ $bila->scheduled_date->format('d M Y') }}
+                            {{ $meeting->scheduled_at->format('d M Y') }}
                         </p>
                     </div>
                 @else
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                            Bila #{{ $bila->id }}
+                            Meeting #{{ $meeting->id }}
                         </p>
                     </div>
                 @endif
@@ -36,9 +36,9 @@
                 </svg>
             </a>
         @empty
-            @if($upcomingBilas->isEmpty())
+            @if($upcomingMeetings->isEmpty())
                 <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                    No bilas scheduled today.
+                    No meetings scheduled today.
                 </p>
             @else
                 <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
@@ -47,30 +47,30 @@
             @endif
         @endforelse
 
-        @if($upcomingBilas->isNotEmpty())
+        @if($upcomingMeetings->isNotEmpty())
             <div class="elvish-divider mx-5">
                 <span class="elvish-divider-leaf"></span>
             </div>
 
-            @foreach($upcomingBilas as $bila)
+            @foreach($upcomingMeetings as $meeting)
                 <a
-                    href="{{ route('bilas.show', $bila->id) }}"
+                    href="{{ route('meetings.show', $meeting->id) }}"
                     class="flex items-center gap-3 px-5 py-3 transition hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                 >
-                    @if($bila->teamMember)
-                        <x-tl.team-member-avatar :member="$bila->teamMember" size="sm" />
+                    @if($meeting->attendees->first())
+                        <x-tl.team-member-avatar :member="$meeting->attendees->first()" size="sm" />
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                {{ $bila->teamMember->name }}
+                                {{ $meeting->attendees->first()->name }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ $bila->scheduled_date->format('d M Y') }}
+                                {{ $meeting->scheduled_at->format('d M Y') }}
                             </p>
                         </div>
                     @else
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                Bila #{{ $bila->id }}
+                                Meeting #{{ $meeting->id }}
                             </p>
                         </div>
                     @endif

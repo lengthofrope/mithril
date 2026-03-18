@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Models\Bila;
 use App\Models\Email;
 use App\Models\EmailLink;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Note;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -84,16 +84,16 @@ class EmailLinkFactory extends Factory
     }
 
     /**
-     * Configure the link to point to a specific Bila.
+     * Configure the link to point to a specific Meeting.
      *
-     * @param Bila $bila The bila to link to.
+     * @param Meeting $meeting The meeting to link to.
      * @return static
      */
-    public function forBila(Bila $bila): static
+    public function forMeeting(Meeting $meeting): static
     {
         return $this->state([
-            'linkable_type' => Bila::class,
-            'linkable_id'   => $bila->id,
+            'linkable_type' => Meeting::class,
+            'linkable_id'   => $meeting->id,
         ]);
     }
 }

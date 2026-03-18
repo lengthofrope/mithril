@@ -19,6 +19,16 @@ type RecurrenceInterval = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom'
 type FollowUpStatus = 'open' | 'snoozed' | 'done';
 
 /**
+ * Meeting type — distinguishes 1-on-1s from team and other meeting formats.
+ */
+type MeetingType = 'one_on_one' | 'team' | 'other';
+
+/**
+ * Meeting lifecycle status.
+ */
+type MeetingStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+
+/**
  * Team member availability status.
  */
 type MemberStatus = 'available' | 'absent' | 'partially_available';
@@ -48,8 +58,8 @@ interface TeamMember {
     notes: string | null;
     status: MemberStatus;
     avatar_path: string | null;
-    bila_interval_days: number | null;
-    next_bila_date: string | null;
+    meeting_interval_days: number | null;
+    next_meeting_date: string | null;
     sort_order: number;
     created_at: string;
     updated_at: string;
@@ -109,26 +119,37 @@ interface FollowUp {
 }
 
 /**
- * Mirrors the `bilas` Eloquent model.
+ * Mirrors the `meetings` Eloquent model.
  */
-interface Bila {
+interface Meeting {
     id: number;
-    team_member_id: number;
-    scheduled_date: string;
+    user_id: number;
+    team_id: number | null;
+    title: string;
+    type: MeetingType;
+    status: MeetingStatus;
+    scheduled_at: string;
+    started_at: string | null;
+    ended_at: string | null;
     notes: string | null;
+    summary: string | null;
+    transcription_language: string;
+    output_language: string | null;
     is_done: boolean;
     created_at: string;
     updated_at: string;
 }
 
 /**
- * Mirrors the `bila_prep_items` Eloquent model.
+ * Mirrors the `meeting_prep_items` Eloquent model.
  */
-interface BilaPrepItem {
+interface MeetingPrepItem {
     id: number;
-    team_member_id: number;
-    bila_id: number | null;
+    meeting_id: number;
+    team_member_id: number | null;
     content: string;
+    type: 'agenda_item' | 'question' | 'action';
+    duration_minutes: number | null;
     is_discussed: boolean;
     sort_order: number;
 }
@@ -265,7 +286,7 @@ interface CalendarEventLink {
     calendar_event_id: number;
     linkable_type: string;
     linkable_id: number;
-    linkable?: Bila | Task | FollowUp | Note;
+    linkable?: Meeting | Task | FollowUp | Note;
     created_at: string;
 }
 
@@ -311,7 +332,7 @@ interface EmailLink {
     email_subject: string | null;
     linkable_type: string;
     linkable_id: number;
-    linkable?: Bila | Task | FollowUp | Note;
+    linkable?: Meeting | Task | FollowUp | Note;
     created_at: string;
 }
 
@@ -355,7 +376,7 @@ interface JiraIssueLink {
     issue_summary: string | null;
     linkable_type: string;
     linkable_id: number;
-    linkable?: Bila | Task | FollowUp | Note;
+    linkable?: Meeting | Task | FollowUp | Note;
     created_at: string;
     updated_at: string;
 }
@@ -419,5 +440,5 @@ interface Attachment {
     updated_at: string;
 }
 
-export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant, ActivityType };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Bila, BilaPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification, Activity, Attachment };
+export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, MeetingType, MeetingStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant, ActivityType };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Meeting, MeetingPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification, Activity, Attachment };

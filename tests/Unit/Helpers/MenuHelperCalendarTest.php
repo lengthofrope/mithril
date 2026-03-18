@@ -55,17 +55,17 @@ describe('MenuHelper calendar item', function (): void {
         expect($calendarIndex)->toBe($dashboardIndex + 1);
     });
 
-    it('uses a unique bila icon for Bilas menu item', function (): void {
+    it('uses a unique meeting icon for Meetings menu item', function (): void {
         $user = User::factory()->create(['microsoft_id' => 'ms-123']);
         $this->actingAs($user);
 
         $items = MenuHelper::getMainNavItems();
 
-        $bilasItem = collect($items)->firstWhere('name', "Bila's");
+        $meetingsItem = collect($items)->firstWhere('name', 'Meetings');
         $calendarItem = collect($items)->firstWhere('name', 'Calendar');
 
-        expect($bilasItem['icon'])->toBe('bila');
+        expect($meetingsItem['icon'])->toBe('meeting');
         expect($calendarItem['icon'])->toBe('calendar');
-        expect($bilasItem['icon'])->not->toBe($calendarItem['icon']);
+        expect($meetingsItem['icon'])->not->toBe($calendarItem['icon']);
     });
 });

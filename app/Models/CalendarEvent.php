@@ -125,13 +125,13 @@ class CalendarEvent extends Model
     }
 
     /**
-     * Get all linked Bilas through the polymorphic pivot.
+     * Get all linked Meetings through the polymorphic pivot.
      *
-     * @return MorphToMany<Bila>
+     * @return MorphToMany<Meeting>
      */
-    public function linkedBilas(): MorphToMany
+    public function linkedMeetings(): MorphToMany
     {
-        return $this->morphedByMany(Bila::class, 'linkable', 'calendar_event_links');
+        return $this->morphedByMany(Meeting::class, 'linkable', 'calendar_event_links');
     }
 
     /**

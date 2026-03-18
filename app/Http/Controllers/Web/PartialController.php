@@ -7,8 +7,8 @@ namespace App\Http\Controllers\Web;
 use App\Enums\FollowUpStatus;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Bila;
 use App\Models\CalendarEvent;
+use App\Models\Meeting;
 use App\Models\Email;
 use App\Models\FollowUp;
 use App\Models\Note;
@@ -48,7 +48,7 @@ class PartialController extends Controller
         'tasks'      => Task::class,
         'follow-ups' => FollowUp::class,
         'notes'      => Note::class,
-        'bilas'      => Bila::class,
+        'meetings'   => Meeting::class,
     ];
 
     /**
@@ -228,43 +228,43 @@ class PartialController extends Controller
     }
 
     /**
-     * Return the dashboard bilas section partial for polling.
+     * Return the dashboard meetings section partial for polling.
      *
-     * Loads bilas scheduled today and upcoming bilas for the authenticated
+     * Loads meetings scheduled today and upcoming meetings for the authenticated
      * user. Returns a conditional response using ETag caching.
      *
      * @param Request $request
      * @return Response
      */
-    public function dashboardBilas(Request $request): Response
+    public function dashboardMeetings(Request $request): Response
     {
         $user = $request->user();
         $timezone = $user->getEffectiveTimezone();
         $todayDate = now($timezone)->toDateString();
 
-        $todayBilas = Bila::where('is_done', false)
-            ->whereDate('scheduled_date', $todayDate)
-            ->with(['teamMember', 'prepItems'])
-            ->orderBy('scheduled_date')
+        $todayMeetings = Meeting::where('is_done', false)
+            ->whereDate('scheduled_at', $todayDate)
+            ->with(['attendees', 'prepItems'])
+            ->orderBy('scheduled_at')
             ->get();
 
-        $bilaLimit = $user->dashboard_upcoming_bilas ?? 5;
+        $meetingLimit = $user->dashboard_upcoming_meetings ?? 5;
 
-        $upcomingBilas = $bilaLimit > 0
-            ? Bila::where('is_done', false)
-                ->whereDate('scheduled_date', '>', $todayDate)
-                ->with(['teamMember', 'prepItems'])
-                ->orderBy('scheduled_date')
-                ->limit($bilaLimit)
+        $upcomingMeetings = $meetingLimit > 0
+            ? Meeting::where('is_done', false)
+                ->whereDate('scheduled_at', '>', $todayDate)
+                ->with(['attendees', 'prepItems'])
+                ->orderBy('scheduled_at')
+                ->limit($meetingLimit)
                 ->get()
             : new Collection();
 
         return $this->withETag(
             $request,
-            'partials.dashboard.bilas',
+            'partials.dashboard.meetings',
             [
-                'todayBilas' => $todayBilas,
-                'upcomingBilas' => $upcomingBilas,
+                'todayMeetings' => $todayMeetings,
+                'upcomingMeetings' => $upcomingMeetings,
             ],
         );
     }

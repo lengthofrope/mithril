@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Events\BilaScheduled;
+use App\Events\MeetingScheduled;
 use App\Events\TaskStatusChanged;
 use App\Listeners\CreateFollowUpOnWaiting;
 use App\Listeners\CreateRecurringTaskOccurrence;
-use App\Listeners\ScheduleNextBila;
-use App\Models\Bila;
+use App\Listeners\ScheduleNextMeeting;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Task;
 use App\Observers\ActivityObserver;
 use App\Observers\TaskObserver;
@@ -46,11 +46,11 @@ class AppServiceProvider extends ServiceProvider
         Task::observe(TaskObserver::class);
         Task::observe(ActivityObserver::class);
         FollowUp::observe(ActivityObserver::class);
-        Bila::observe(ActivityObserver::class);
+        Meeting::observe(ActivityObserver::class);
 
         Event::listen(TaskStatusChanged::class, CreateFollowUpOnWaiting::class);
         Event::listen(TaskStatusChanged::class, CreateRecurringTaskOccurrence::class);
-        Event::listen(BilaScheduled::class, ScheduleNextBila::class);
+        Event::listen(MeetingScheduled::class, ScheduleNextMeeting::class);
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
     }

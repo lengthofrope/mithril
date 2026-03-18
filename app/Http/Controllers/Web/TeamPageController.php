@@ -78,7 +78,7 @@ class TeamPageController extends Controller
             'team',
             'tasks' => fn ($q) => $q->orderBySortOrder(),
             'followUps' => fn ($q) => $q->orderBy('follow_up_date'),
-            'bilas' => fn ($q) => $q->orderBy('scheduled_date', 'desc'),
+            'meetings' => fn ($q) => $q->orderBy('scheduled_at', 'desc'),
             'agreements' => fn ($q) => $q->orderBy('agreed_date', 'desc'),
         ]);
 
@@ -95,7 +95,7 @@ class TeamPageController extends Controller
             'breadcrumbs' => (new BreadcrumbBuilder())->forTeamMember($teamMember)->build(),
             'memberTasks' => $teamMember->tasks,
             'memberFollowUps' => $teamMember->followUps,
-            'memberBilas' => $teamMember->bilas,
+            'memberMeetings' => $teamMember->meetings,
             'memberAgreements' => $teamMember->agreements,
             'memberNotes' => $memberNotes,
         ]);
@@ -272,8 +272,8 @@ class TeamPageController extends Controller
             'notes'              => ['sometimes', 'nullable', 'string'],
             'jira_account_id'    => ['sometimes', 'nullable', 'string', 'max:128'],
             'status'             => ['sometimes', 'string', Rule::in(array_column(MemberStatus::cases(), 'value'))],
-            'bila_interval_days' => ['sometimes', 'integer', 'min:1'],
-            'next_bila_date'     => ['sometimes', 'nullable', 'date'],
+            'meeting_interval_days' => ['sometimes', 'integer', 'min:1'],
+            'next_meeting_date'     => ['sometimes', 'nullable', 'date'],
         ]);
 
         unset($validated['status_source'], $validated['microsoft_email']);

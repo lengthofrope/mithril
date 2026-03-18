@@ -5,14 +5,14 @@
 
     {{-- Member info + date --}}
     <div class="mb-6 flex flex-wrap items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-        @if($bila->teamMember)
-            <x-tl.team-member-avatar :member="$bila->teamMember" size="lg" />
+        @if($meeting->attendees->first())
+            <x-tl.team-member-avatar :member="$meeting->attendees->first()" size="lg" />
             <div class="flex-1 min-w-0">
                 <h1 class="text-base font-semibold text-gray-900 dark:text-white">
-                    {{ $bila->teamMember->name }}
+                    {{ $meeting->attendees->first()->name }}
                 </h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ $bila->teamMember->role }}
+                    {{ $meeting->attendees->first()->role }}
                 </p>
             </div>
         @endif
@@ -22,37 +22,37 @@
                 <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
             <x-tl.auto-save-field
-                :endpoint="route('bilas.update', $bila->id)"
-                field="scheduled_date"
-                :value="$bila->scheduled_date->toDateString()"
+                :endpoint="route('meetings.update', $meeting->id)"
+                field="scheduled_at"
+                :value="$meeting->scheduled_at->toDateString()"
                 type="date"
                 label=""
             />
         </div>
     </div>
 
-    {{-- Navigation to prev/next bila --}}
+    {{-- Navigation to prev/next meeting --}}
     <div class="mb-6 flex items-center justify-between">
-        @if($previousBila)
+        @if($previousMeeting)
             <a
-                href="{{ route('bilas.show', $previousBila->id) }}"
+                href="{{ route('meetings.show', $previousMeeting->id) }}"
                 class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800"
             >
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
-                Previous bila
+                Previous meeting
             </a>
         @else
             <div></div>
         @endif
 
-        @if($nextBila)
+        @if($nextMeeting)
             <a
-                href="{{ route('bilas.show', $nextBila->id) }}"
+                href="{{ route('meetings.show', $nextMeeting->id) }}"
                 class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800"
             >
-                Next bila
+                Next meeting
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
@@ -119,8 +119,8 @@
                     class="flex items-center gap-2"
                     x-on:submit.prevent="addPrepItem($event)"
                 >
-                    <input type="hidden" name="bila_id" value="{{ $bila->id }}">
-                    <input type="hidden" name="team_member_id" value="{{ $bila->team_member_id }}">
+                    <input type="hidden" name="meeting_id" value="{{ $meeting->id }}">
+                    <input type="hidden" name="team_member_id" value="{{ $meeting->attendees->first()?->id }}">
                     <label for="new-prep-item" class="sr-only">New prep item</label>
                     <input
                         id="new-prep-item"
@@ -143,11 +143,11 @@
             </div>
 
             <x-tl.sortable-container
-                modelType="bila_prep_item"
+                modelType="meeting_prep_item"
                 :endpoint="route('reorder')"
-                :containerId="'prep-items-' . $bila->id"
+                :containerId="'prep-items-' . $meeting->id"
             >
-                @forelse($bila->prepItems->sortBy('sort_order') as $prepItem)
+                @forelse($meeting->prepItems->sortBy('sort_order') as $prepItem)
                     <div
                         data-id="{{ $prepItem->id }}"
                         class="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0 dark:border-gray-800"
@@ -207,9 +207,9 @@
                 class="p-5"
                 x-data="Object.assign(
                     markdownEditor({ field: 'notes' }),
-                    autoSaveField({ endpoint: '{{ route('bilas.update', $bila->id) }}', field: 'notes' })
+                    autoSaveField({ endpoint: '{{ route('meetings.update', $meeting->id) }}', field: 'notes' })
                 )"
-                x-init="content = @js($bila->notes ?? ''); value = content;"
+                x-init="content = @js($meeting->notes ?? ''); value = content;"
             >
                 {{-- Editor/preview toggle --}}
                 <div class="mb-3 flex items-center gap-2">
@@ -232,9 +232,9 @@
                 </div>
 
                 <div x-show="!isPreview">
-                    <label for="bila-notes-editor" class="sr-only">Bila notes</label>
+                    <label for="meeting-notes-editor" class="sr-only">Meeting notes</label>
                     <textarea
-                        id="bila-notes-editor"
+                        id="meeting-notes-editor"
                         name="notes"
                         x-model="content"
                         x-on:input="value = content"
@@ -258,9 +258,9 @@
         {{-- Activity feed sidebar --}}
         <div>
             <x-tl.activity-feed
-                :parent="$bila"
-                parentType="bilas"
-                :activities="$bila->getActivityFeed()"
+                :parent="$meeting"
+                parentType="meetings"
+                :activities="$meeting->getActivityFeed()"
             />
         </div>
     </div>
@@ -268,15 +268,15 @@
     {{-- Actions --}}
     <div class="mt-4 flex items-center gap-3">
         <a
-            href="{{ route('bilas.index') }}"
+            href="{{ route('meetings.index') }}"
             class="text-sm text-blue-600 hover:underline dark:text-blue-400"
         >
-            &larr; Back to bilas
+            &larr; Back to meetings
         </a>
 
         <div class="ml-auto flex items-center gap-2">
-            @if(!$bila->is_done)
-                <form method="POST" action="{{ route('bilas.done', $bila->id) }}" class="inline">
+            @if(!$meeting->is_done)
+                <form method="POST" action="{{ route('meetings.done', $meeting->id) }}" class="inline">
                     @csrf
                     @method('PATCH')
                     <button
@@ -287,7 +287,7 @@
                     </button>
                 </form>
             @else
-                <form method="POST" action="{{ route('bilas.undone', $bila->id) }}" class="inline">
+                <form method="POST" action="{{ route('meetings.undone', $meeting->id) }}" class="inline">
                     @csrf
                     @method('PATCH')
                     <button
@@ -299,15 +299,15 @@
                 </form>
             @endif
 
-            <form method="POST" action="{{ route('bilas.destroy', $bila->id) }}" class="inline">
+            <form method="POST" action="{{ route('meetings.destroy', $meeting->id) }}" class="inline">
                 @csrf
                 @method('DELETE')
                 <button
                     type="submit"
-                    onclick="return confirm('Delete this bila?')"
+                    onclick="return confirm('Delete this meeting?')"
                     class="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
                 >
-                    Delete bila
+                    Delete meeting
                 </button>
             </form>
         </div>

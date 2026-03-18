@@ -54,7 +54,7 @@ test('prefill returns note prefill data', function (): void {
         ->assertJsonPath('data.title', 'PROJ-123 Sprint planning');
 });
 
-test('prefill returns bila prefill data with team member', function (): void {
+test('prefill returns meeting prefill data with team member', function (): void {
     TeamMember::factory()->create([
         'user_id'          => $this->user->id,
         'jira_account_id'  => 'jira-acc-123',
@@ -66,18 +66,18 @@ test('prefill returns bila prefill data with team member', function (): void {
     ]);
 
     $this->actingAs($this->user)
-        ->getJson("/api/v1/jira-issues/{$issue->id}/prefill/bila")
+        ->getJson("/api/v1/jira-issues/{$issue->id}/prefill/meeting")
         ->assertOk()
         ->assertJsonPath('data.prep_item_content', 'Discuss architecture');
 });
 
-test('prefill returns error for bila without team member', function (): void {
+test('prefill returns error for meeting without team member', function (): void {
     $issue = JiraIssue::factory()->for($this->user)->create([
         'assignee_account_id' => 'no-match-acc',
     ]);
 
     $this->actingAs($this->user)
-        ->getJson("/api/v1/jira-issues/{$issue->id}/prefill/bila")
+        ->getJson("/api/v1/jira-issues/{$issue->id}/prefill/meeting")
         ->assertStatus(422)
         ->assertJsonPath('success', false);
 });

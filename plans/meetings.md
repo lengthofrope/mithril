@@ -1,7 +1,7 @@
 # Meetings — Vergaderingen met opname, transcriptie & AI-extractie
 
 **Created:** 2026-03-18
-**Status:** Approved / TODO
+**Status:** In Progress
 **Author:** Bas de Kort
 
 ## Problem Statement
@@ -270,22 +270,22 @@ sequenceDiagram
 ### Phase 1: Data model & Bila-migratie
 - **Goal:** Meeting model als drop-in vervanging voor Bila, met alle data gemigreerd
 - **Specs:**
-  - [ ] Meeting model met BelongsToUser, HasActivityFeed, HasResourceLinks, Filterable, Searchable traits
-  - [ ] MeetingAttendee model met meeting_id + team_member_id
-  - [ ] MeetingPrepItem model met BelongsToUser, HasSortOrder, type/duration_minutes/assignee velden
-  - [ ] MeetingType, MeetingStatus, PrepItemType enums
-  - [ ] Migratie: `bilas` → `meetings` tabel (scheduled_date → scheduled_at, team_member_id → attendee record, type=one_on_one)
-  - [ ] Migratie: `bila_prep_items` → `meeting_prep_items` (type=agenda_item default, bila_id → meeting_id)
-  - [ ] Migratie: TeamMember `next_bila_date` → `next_meeting_date`, `bila_interval_days` → `meeting_interval_days`
-  - [ ] Migratie: meeting_id FK toevoegen aan tasks, follow_ups, agreements tabellen
-  - [ ] Migratie: preferred_output_language toevoegen aan users tabel
-  - [ ] TeamMember relatie bijgewerkt: `bilas()` → `meetings()` via attendees pivot
-  - [ ] Bila model, BilaController, BilaPageController verwijderd
-  - [ ] Alle modelMaps bijgewerkt (AutoSave, Reorder, Activity, Partial controllers)
-  - [ ] Routes bijgewerkt (web + api), inclusief email/jira/calendar action whereIn clauses
-  - [ ] BilaScheduled event → MeetingScheduled event
-  - [ ] Factory + seeder voor Meeting model
-  - [ ] Alle bestaande Bila-tests herschreven voor Meeting
+  - [x] Meeting model met BelongsToUser, HasActivityFeed, HasResourceLinks, Filterable, Searchable traits
+  - [x] MeetingAttendee model met meeting_id + team_member_id
+  - [x] MeetingPrepItem model met BelongsToUser, HasSortOrder, type/duration_minutes/assignee velden
+  - [x] MeetingType, MeetingStatus, PrepItemType enums
+  - [x] Migratie: `bilas` → `meetings` tabel (scheduled_date → scheduled_at, team_member_id → attendee record, type=one_on_one)
+  - [x] Migratie: `bila_prep_items` → `meeting_prep_items` (type=agenda_item default, bila_id → meeting_id)
+  - [x] Migratie: TeamMember `next_bila_date` → `next_meeting_date`, `bila_interval_days` → `meeting_interval_days`
+  - [x] Migratie: meeting_id FK toevoegen aan tasks, follow_ups, agreements tabellen
+  - [x] Migratie: preferred_output_language toevoegen aan users tabel
+  - [x] TeamMember relatie bijgewerkt: `bilas()` → `meetings()` via attendees pivot
+  - [x] Bila model, BilaController, BilaPageController verwijderd
+  - [x] Alle modelMaps bijgewerkt (AutoSave, Reorder, Activity, Partial controllers)
+  - [x] Routes bijgewerkt (web + api), inclusief email/jira/calendar action whereIn clauses
+  - [x] BilaScheduled event → MeetingScheduled event
+  - [x] Factory + seeder voor Meeting model
+  - [x] Alle bestaande Bila-tests herschreven voor Meeting
 - **Files:** Models, Enums, Migrations, Controllers, Routes, Factories, Tests
 
 ### Phase 2: Meeting CRUD & Views
@@ -372,6 +372,22 @@ sequenceDiagram
   - [ ] Accessibility: keyboard navigatie recording controls, ARIA labels
   - [ ] Cleanup: verwijder alle resterende Bila-referenties uit codebase
 - **Files:** Calendar/Email/Jira action controllers, search integration, analytics, cleanup
+
+## Parallelization
+
+**Strategy:** Sequential
+
+All phases have strong inter-dependencies. Each phase builds on the previous:
+
+- **Phase 1** is foundational — all models, migrations, enums, and the Bila→Meeting migration must complete before anything else
+- **Phase 2** creates the MeetingPageController and show/index views that **Phase 3** must extend with recording UI
+- **Phase 3** creates the MeetingRecording model that **Phase 4** depends on for transcription input
+- **Phase 4** creates MeetingTranscription that **Phase 5** uses for AI extraction
+- **Phase 6** integrates everything and cleans up
+
+Within Phase 1, there's also tight coupling: models → migrations → factory → seeder → tests all reference each other. The Bila→Meeting data migration must run after the new tables exist.
+
+**Decision:** Execute sequentially with the lead.
 
 ## Out of Scope
 

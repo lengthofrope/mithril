@@ -10,8 +10,8 @@ use App\Http\Requests\ActivityRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\Activity;
 use App\Models\Attachment;
-use App\Models\Bila;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Note;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Storage;
  * API controller for managing activity feed entries on parent models.
  *
  * Supports comments, links, and file attachments on tasks, follow-ups,
- * notes, and bilas via a shared polymorphic endpoint.
+ * notes, and meetings via a shared polymorphic endpoint.
  */
 class ActivityController extends Controller
 {
@@ -38,7 +38,7 @@ class ActivityController extends Controller
         'tasks'       => Task::class,
         'follow-ups'  => FollowUp::class,
         'notes'       => Note::class,
-        'bilas'       => Bila::class,
+        'meetings'    => Meeting::class,
     ];
 
     /**

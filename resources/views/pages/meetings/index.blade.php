@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Bila's" />
+    <x-common.page-breadcrumb pageTitle="Meetings" />
 
     {{-- Filter bar --}}
     <div class="mb-6">
         <x-tl.filter-bar
-            :endpoint="route('bilas.index')"
-            results-selector="#bilas-results"
+            :endpoint="route('meetings.index')"
+            results-selector="#meetings-results"
             :filters="[
                 ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
                 ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
@@ -17,17 +17,17 @@
 
     {{-- Toolbar --}}
     <div class="mb-6 flex items-center justify-end">
-        @include('partials.bila-create-modal', [
+        @include('partials.meeting-create-modal', [
             'teamOptions' => $teamOptions,
             'memberOptions' => $memberOptions,
         ])
     </div>
 
-    {{-- Bilas list --}}
-    <div id="bilas-results">
-        @include('partials.bilas-list', [
-            'upcomingBilas' => $upcomingBilas,
-            'pastBilas' => $pastBilas,
+    {{-- Meetings list --}}
+    <div id="meetings-results">
+        @include('partials.meetings-list', [
+            'upcomingMeetings' => $upcomingMeetings,
+            'pastMeetings' => $pastMeetings,
         ])
     </div>
 @endsection

@@ -12,7 +12,7 @@ use App\Http\Controllers\Web\JiraAuthController;
 use App\Http\Controllers\Web\JiraPageController;
 use App\Http\Controllers\Web\MicrosoftAuthController;
 use App\Http\Controllers\Web\AnalyticsPageController;
-use App\Http\Controllers\Web\BilaPageController;
+use App\Http\Controllers\Web\MeetingPageController;
 use App\Http\Controllers\Web\CalendarPageController;
 use App\Http\Controllers\Web\EmailPageController;
 use App\Http\Controllers\Web\DashboardController;
@@ -73,12 +73,12 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/notes/{note}', [NotePageController::class, 'update'])->name('notes.update');
     Route::delete('/notes/{note}', [NotePageController::class, 'destroy'])->name('notes.destroy');
 
-    Route::get('/bilas', [BilaPageController::class, 'index'])->name('bilas.index');
-    Route::post('/bilas', [BilaPageController::class, 'store'])->name('bilas.store');
-    Route::get('/bilas/{bila}', [BilaPageController::class, 'show'])->name('bilas.show');
-    Route::patch('/bilas/{bila}/done', [BilaPageController::class, 'markDone'])->name('bilas.done');
-    Route::patch('/bilas/{bila}/undone', [BilaPageController::class, 'undoDone'])->name('bilas.undone');
-    Route::delete('/bilas/{bila}', [BilaPageController::class, 'destroy'])->name('bilas.destroy');
+    Route::get('/meetings', [MeetingPageController::class, 'index'])->name('meetings.index');
+    Route::post('/meetings', [MeetingPageController::class, 'store'])->name('meetings.store');
+    Route::get('/meetings/{meeting}', [MeetingPageController::class, 'show'])->name('meetings.show');
+    Route::patch('/meetings/{meeting}/done', [MeetingPageController::class, 'markDone'])->name('meetings.done');
+    Route::patch('/meetings/{meeting}/undone', [MeetingPageController::class, 'undoDone'])->name('meetings.undone');
+    Route::delete('/meetings/{meeting}', [MeetingPageController::class, 'destroy'])->name('meetings.destroy');
 
     Route::get('/calendar', [CalendarPageController::class, 'index'])->name('calendar.index');
     Route::get('/mail', [EmailPageController::class, 'index'])->name('mail.index');
@@ -109,7 +109,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
     Route::post('/tasks/move', [TaskPageController::class, 'move'])->name('tasks.move');
 
-    Route::patch('/bilas/{bila}', [BilaPageController::class, 'update'])->name('bilas.update');
+    Route::patch('/meetings/{meeting}', [MeetingPageController::class, 'update'])->name('meetings.update');
 
     Route::patch('/members/{teamMember}', [TeamPageController::class, 'updateMember'])->name('members.update');
     Route::post('/members/{teamMember}/avatar', [TeamPageController::class, 'uploadMemberAvatar'])->name('members.avatar.upload');
@@ -123,9 +123,9 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/task-groups', [SettingsController::class, 'storeTaskGroup'])->name('task-groups.store');
     Route::delete('/task-groups/{taskGroup}', [SettingsController::class, 'destroyTaskGroup'])->name('task-groups.destroy');
 
-    Route::post('/prep-items', [BilaPageController::class, 'storePrepItem'])->name('prep-items.store');
-    Route::patch('/prep-items/{bilaPrepItem}', [BilaPageController::class, 'updatePrepItem'])->name('prep-items.update');
-    Route::delete('/prep-items/{bilaPrepItem}', [BilaPageController::class, 'destroyPrepItem'])->name('prep-items.destroy');
+    Route::post('/prep-items', [MeetingPageController::class, 'storePrepItem'])->name('prep-items.store');
+    Route::patch('/prep-items/{meetingPrepItem}', [MeetingPageController::class, 'updatePrepItem'])->name('prep-items.update');
+    Route::delete('/prep-items/{meetingPrepItem}', [MeetingPageController::class, 'destroyPrepItem'])->name('prep-items.destroy');
 
     Route::get('/jira', [JiraPageController::class, 'index'])->name('jira.index');
 
@@ -164,12 +164,12 @@ Route::middleware('auth')->group(function (): void {
     Route::prefix('partials/dashboard')->as('partials.dashboard.')->group(function (): void {
         Route::get('tasks', [PartialController::class, 'dashboardTasks'])->name('tasks');
         Route::get('follow-ups', [PartialController::class, 'dashboardFollowUps'])->name('follow-ups');
-        Route::get('bilas', [PartialController::class, 'dashboardBilas'])->name('bilas');
+        Route::get('meetings', [PartialController::class, 'dashboardMeetings'])->name('meetings');
         Route::get('calendar', [PartialController::class, 'dashboardCalendar'])->name('calendar');
         Route::get('emails', [PartialController::class, 'dashboardEmails'])->name('emails');
     });
 
     Route::get('partials/{type}/{id}/activity-feed', [PartialController::class, 'activityFeed'])
         ->name('partials.activity-feed')
-        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'bilas']);
+        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'meetings']);
 });

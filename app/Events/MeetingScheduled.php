@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Events;
 
-use App\Models\Bila;
+use App\Models\Meeting;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Fired when a bila (1-on-1 meeting) is scheduled.
+ * Fired when a meeting is scheduled.
  */
-class BilaScheduled
+class MeetingScheduled
 {
     use Dispatchable;
     use InteractsWithSockets;
@@ -21,9 +21,9 @@ class BilaScheduled
     /**
      * Create the event.
      *
-     * @param Bila $bila The bila that was scheduled.
+     * @param Meeting $meeting The meeting that was scheduled.
      */
     public function __construct(
-        public readonly Bila $bila,
+        public readonly Meeting $meeting,
     ) {}
 }

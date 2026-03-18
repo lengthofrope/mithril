@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use App\Enums\MemberStatus;
 use App\Models\Agreement;
-use App\Models\Bila;
-use App\Models\BilaPrepItem;
+use App\Models\Meeting;
+use App\Models\MeetingPrepItem;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
@@ -16,6 +16,7 @@ use App\Models\Traits\HasSortOrder;
 use App\Models\Traits\Searchable;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 describe('TeamMember model', function (): void {
@@ -44,15 +45,15 @@ describe('TeamMember model', function (): void {
                 'email' => 'alice@example.com',
                 'notes' => 'Some notes',
                 'status' => MemberStatus::Available,
-                'bila_interval_days' => 7,
-                'next_bila_date' => '2025-06-01',
+                'meeting_interval_days' => 7,
+                'next_meeting_date' => '2025-06-01',
                 'user_id' => $user->id,
             ]);
 
             expect($member->name)->toBe('Alice')
                 ->and($member->role)->toBe('Developer')
                 ->and($member->email)->toBe('alice@example.com')
-                ->and($member->bila_interval_days)->toBe(7);
+                ->and($member->meeting_interval_days)->toBe(7);
         });
     });
 
@@ -70,17 +71,17 @@ describe('TeamMember model', function (): void {
             expect($member->fresh()->status)->toBe(MemberStatus::Absent);
         });
 
-        it('casts next_bila_date to a Carbon date instance', function (): void {
+        it('casts next_meeting_date to a Carbon date instance', function (): void {
             $user = User::factory()->create();
             $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
             $member = TeamMember::create([
                 'team_id' => $team->id,
                 'name' => 'Carol',
-                'next_bila_date' => '2025-06-15',
+                'next_meeting_date' => '2025-06-15',
                 'user_id' => $user->id,
             ]);
 
-            expect($member->fresh()->next_bila_date)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+            expect($member->fresh()->next_meeting_date)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
         });
     });
 
@@ -129,22 +130,24 @@ describe('TeamMember model', function (): void {
             expect($member->followUps)->toHaveCount(1);
         });
 
-        it('has a hasMany relationship to Bila', function (): void {
+        it('has a BelongsToMany relationship to Meeting', function (): void {
             $user = User::factory()->create();
             $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
             $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
 
-            expect($member->bilas())->toBeInstanceOf(HasMany::class);
+            expect($member->meetings())->toBeInstanceOf(BelongsToMany::class);
         });
 
-        it('returns related bilas', function (): void {
+        it('returns related meetings', function (): void {
             $user = User::factory()->create();
             $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
             $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
-            Bila::create(['team_member_id' => $member->id, 'scheduled_date' => '2025-06-01', 'user_id' => $user->id]);
-            Bila::create(['team_member_id' => $member->id, 'scheduled_date' => '2025-07-01', 'user_id' => $user->id]);
+            $meeting1 = Meeting::factory()->create(['user_id' => $user->id]);
+            $meeting2 = Meeting::factory()->create(['user_id' => $user->id]);
+            $meeting1->attendees()->attach($member->id);
+            $meeting2->attendees()->attach($member->id);
 
-            expect($member->bilas)->toHaveCount(2);
+            expect($member->meetings)->toHaveCount(2);
         });
 
         it('has a hasMany relationship to Agreement', function (): void {
@@ -164,21 +167,22 @@ describe('TeamMember model', function (): void {
             expect($member->agreements)->toHaveCount(1);
         });
 
-        it('has a hasMany relationship to BilaPrepItem', function (): void {
+        it('has a hasMany relationship to MeetingPrepItem', function (): void {
             $user = User::factory()->create();
             $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
             $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
 
-            expect($member->bilaPrepItems())->toBeInstanceOf(HasMany::class);
+            expect($member->meetingPrepItems())->toBeInstanceOf(HasMany::class);
         });
 
-        it('returns related bila prep items', function (): void {
+        it('returns related meeting prep items', function (): void {
             $user = User::factory()->create();
             $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
             $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
-            BilaPrepItem::create(['team_member_id' => $member->id, 'content' => 'Prep item 1', 'user_id' => $user->id]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingPrepItem::create(['team_member_id' => $member->id, 'meeting_id' => $meeting->id, 'content' => 'Prep item 1', 'user_id' => $user->id]);
 
-            expect($member->bilaPrepItems)->toHaveCount(1);
+            expect($member->meetingPrepItems)->toHaveCount(1);
         });
 
         it('has a hasMany relationship to Note', function (): void {

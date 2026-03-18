@@ -154,13 +154,13 @@
             </button>
 
             <a
-                href="{{ route('bilas.index', ['team_member_id' => $member->id]) }}"
+                href="{{ route('meetings.index', ['team_member_id' => $member->id]) }}"
                 class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
             >
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
-                Bilas
+                Meetings
             </a>
 
             <button
@@ -265,17 +265,17 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <x-tl.auto-save-field
                                 :endpoint="route('members.update', $member->id)"
-                                field="bila_interval_days"
-                                :value="$member->bila_interval_days"
+                                field="meeting_interval_days"
+                                :value="$member->meeting_interval_days"
                                 type="number"
-                                label="Bila interval (days)"
+                                label="Meeting interval (days)"
                             />
                             <x-tl.auto-save-field
                                 :endpoint="route('members.update', $member->id)"
-                                field="next_bila_date"
-                                :value="$member->next_bila_date?->format('Y-m-d') ?? ''"
+                                field="next_meeting_date"
+                                :value="$member->next_meeting_date?->format('Y-m-d') ?? ''"
                                 type="date"
-                                label="Next bila date"
+                                label="Next meeting date"
                             />
                         </div>
                     </div>
@@ -358,7 +358,7 @@
             @foreach([
                 ['id' => 'tasks',      'label' => 'Tasks'],
                 ['id' => 'followups',  'label' => 'Follow-ups'],
-                ['id' => 'bilas',      'label' => 'Bila history'],
+                ['id' => 'meetings',   'label' => 'Meeting history'],
                 ['id' => 'agreements', 'label' => 'Agreements'],
                 ['id' => 'notes',      'label' => 'Notes'],
             ] as $tab)
@@ -411,15 +411,15 @@
             </div>
         </div>
 
-        {{-- Bila history tab --}}
+        {{-- Meeting history tab --}}
         <div
-            x-show="activeTab === 'bilas'"
+            x-show="activeTab === 'meetings'"
             x-cloak
             role="tabpanel"
-            aria-label="Bila history"
+            aria-label="Meeting history"
         >
             <div class="space-y-3">
-                @forelse($memberBilas as $bila)
+                @forelse($memberMeetings as $meeting)
                     <div
                         x-data="{ expanded: false }"
                         class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
@@ -431,7 +431,7 @@
                             class="flex w-full items-center justify-between px-5 py-4 text-left"
                         >
                             <span class="text-sm font-medium text-gray-800 dark:text-white/90">
-                                Bila — {{ \Carbon\Carbon::parse($bila->scheduled_date)->format('d F Y') }}
+                                Meeting — {{ \Carbon\Carbon::parse($meeting->scheduled_at)->format('d F Y') }}
                             </span>
                             <svg
                                 class="h-4 w-4 text-gray-400 transition"
@@ -447,25 +447,25 @@
                             x-cloak
                             class="border-t border-gray-100 px-5 py-4 dark:border-gray-800"
                         >
-                            @if($bila->notes)
-                                <x-tl.markdown-content :content="$bila->notes" />
+                            @if($meeting->notes)
+                                <x-tl.markdown-content :content="$meeting->notes" />
                             @else
                                 <p class="text-sm text-gray-400 dark:text-gray-500">No notes recorded.</p>
                             @endif
 
                             <div class="mt-3">
                                 <a
-                                    href="{{ route('bilas.show', $bila->id) }}"
+                                    href="{{ route('meetings.show', $meeting->id) }}"
                                     class="text-xs text-blue-600 hover:underline dark:text-blue-400"
                                 >
-                                    Open full bila
+                                    Open full meeting
                                 </a>
                             </div>
                         </div>
                     </div>
                 @empty
                     <p class="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                        No bilas yet for this member.
+                        No meetings yet for this member.
                     </p>
                 @endforelse
             </div>

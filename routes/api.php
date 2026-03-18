@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\CalendarActionController;
 use App\Http\Controllers\Api\CounterController;
 use App\Http\Controllers\Api\EmailActionController;
 
-use App\Http\Controllers\Api\BilaController;
+use App\Http\Controllers\Api\MeetingController;
 use App\Http\Controllers\Api\ExportImportController;
 use App\Http\Controllers\Api\JiraActionController;
 use App\Http\Controllers\Api\SyncController;
@@ -32,7 +32,7 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::apiResource('team-members', TeamMemberController::class);
     Route::apiResource('notes', NoteController::class);
     Route::apiResource('follow-ups', FollowUpController::class);
-    Route::apiResource('bilas', BilaController::class);
+    Route::apiResource('meetings', MeetingController::class);
     Route::apiResource('agreements', AgreementController::class);
 
     Route::put('notes/{note}/tags', [NoteTagController::class, 'sync'])->name('notes.tags.sync');
@@ -41,7 +41,7 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::post('auto-save', AutoSaveController::class);
 
     Route::prefix('{type}/{id}/activities')
-        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'bilas'])
+        ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'meetings'])
         ->group(function (): void {
             Route::post('/', [ActivityController::class, 'store']);
             Route::patch('{activity}', [ActivityController::class, 'update']);
@@ -72,11 +72,11 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
         Route::prefix('{email}')->group(function (): void {
             Route::get('prefill/{type}', [EmailActionController::class, 'prefill'])
                 ->name('prefill')
-                ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+                ->whereIn('type', ['task', 'follow-up', 'note', 'meeting']);
 
             Route::post('create/{type}', [EmailActionController::class, 'create'])
                 ->name('create')
-                ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+                ->whereIn('type', ['task', 'follow-up', 'note', 'meeting']);
 
             Route::delete('links/{emailLink}', [EmailActionController::class, 'unlink'])->name('unlink');
         });
@@ -90,11 +90,11 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
         Route::get('{jiraIssue}/prefill/{type}', [JiraActionController::class, 'prefill'])
             ->name('prefill')
-            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+            ->whereIn('type', ['task', 'follow-up', 'note', 'meeting']);
 
         Route::post('{jiraIssue}/create/{type}', [JiraActionController::class, 'create'])
             ->name('create')
-            ->whereIn('type', ['task', 'follow-up', 'note', 'bila']);
+            ->whereIn('type', ['task', 'follow-up', 'note', 'meeting']);
 
         Route::delete('{jiraIssue}/links/{jiraIssueLink}', [JiraActionController::class, 'unlink'])
             ->name('unlink');
@@ -106,11 +106,11 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::prefix('calendar-events/{calendarEvent}')->as('calendar-events.')->group(function (): void {
         Route::get('prefill/{type}', [CalendarActionController::class, 'prefill'])
             ->name('prefill')
-            ->whereIn('type', ['bila', 'task', 'follow-up', 'note']);
+            ->whereIn('type', ['meeting', 'task', 'follow-up', 'note']);
 
         Route::post('create/{type}', [CalendarActionController::class, 'create'])
             ->name('create')
-            ->whereIn('type', ['bila', 'task', 'follow-up', 'note']);
+            ->whereIn('type', ['meeting', 'task', 'follow-up', 'note']);
 
         Route::delete('links/{calendarEventLink}', [CalendarActionController::class, 'unlink'])
             ->name('unlink');

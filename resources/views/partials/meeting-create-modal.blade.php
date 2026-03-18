@@ -1,4 +1,4 @@
-{{-- Schedule bila modal --}}
+{{-- Schedule meeting modal --}}
 <div
     x-data="{
         addOpen: false,
@@ -18,7 +18,7 @@
         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Schedule bila
+        Schedule meeting
     </button>
 
     <div
@@ -43,14 +43,14 @@
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
         >
-            <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">Schedule a new bila</h2>
-            <form method="POST" action="{{ route('bilas.store') }}">
+            <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">Schedule a new meeting</h2>
+            <form method="POST" action="{{ route('meetings.store') }}">
                 @csrf
                 <div class="mb-4 grid grid-cols-2 gap-3">
                     <div>
-                        <label for="new-bila-team" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team</label>
+                        <label for="new-meeting-team" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team</label>
                         <select
-                            id="new-bila-team"
+                            id="new-meeting-team"
                             x-model="selectedTeamId"
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                         >
@@ -62,9 +62,9 @@
                     </div>
 
                     <div>
-                        <label for="new-bila-member" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team member <span class="text-red-500">*</span></label>
+                        <label for="new-meeting-member" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team member <span class="text-red-500">*</span></label>
                         <select
-                            id="new-bila-member"
+                            id="new-meeting-member"
                             name="team_member_id"
                             required
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
@@ -78,11 +78,11 @@
                 </div>
 
                 <div class="mb-4" x-data="datePicker()">
-                    <label for="new-bila-date" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Scheduled date <span class="text-red-500">*</span></label>
+                    <label for="new-meeting-date" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Scheduled date <span class="text-red-500">*</span></label>
                     <input
-                        id="new-bila-date"
+                        id="new-meeting-date"
                         type="text"
-                        name="scheduled_date"
+                        name="scheduled_at"
                         x-ref="input"
                         required
                         value="{{ now()->addDays(7)->toDateString() }}"

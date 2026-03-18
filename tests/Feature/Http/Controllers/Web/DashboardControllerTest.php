@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\Team;
@@ -65,11 +65,11 @@ test('dashboard passes counters array to view', function () {
         'overdue_tasks',
         'overdue_follow_ups',
         'today_follow_ups',
-        'bilas_this_week',
+        'meetings_this_week',
     ]);
 });
 
-test('dashboard passes todayTasks todayFollowUps todayBilas to view', function () {
+test('dashboard passes todayTasks todayFollowUps todayMeetings to view', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -77,7 +77,7 @@ test('dashboard passes todayTasks todayFollowUps todayBilas to view', function (
 
     $response->assertViewHas('todayTasks');
     $response->assertViewHas('todayFollowUps');
-    $response->assertViewHas('todayBilas');
+    $response->assertViewHas('todayMeetings');
 });
 
 test('counters open_tasks counts non-done tasks only', function () {
@@ -133,18 +133,18 @@ test('counters today_follow_ups counts follow-ups due today', function () {
     expect($response->viewData('counters')['today_follow_ups'])->toBe(1);
 });
 
-test('counters bilas_this_week counts bilas within the current week', function () {
+test('counters meetings_this_week counts meetings within the current week', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-04 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay()]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addWeeks(2)]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addDay()]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addWeeks(2)]);
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('counters')['bilas_this_week'])->toBe(2);
+    expect($response->viewData('counters')['meetings_this_week'])->toBe(2);
 });
 
 test('todayTasks contains tasks with deadline today and not done', function () {
@@ -236,43 +236,43 @@ test('todayFollowUps contains overdue and today non-done follow-ups', function (
     expect($response->viewData('todayFollowUps'))->toHaveCount(3);
 });
 
-test('todayBilas contains bilas scheduled for today', function () {
+test('todayMeetings contains meetings scheduled for today', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString()]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString()]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->toDateString()]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->addDay()->toDateString()]);
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('todayBilas'))->toHaveCount(1);
+    expect($response->viewData('todayMeetings'))->toHaveCount(1);
 });
 
-test('counters bilas_this_week excludes done bilas', function () {
+test('counters meetings_this_week excludes done meetings', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-04 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(), 'is_done' => false]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay(), 'is_done' => true]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addDay(), 'is_done' => true]);
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('counters')['bilas_this_week'])->toBe(1);
+    expect($response->viewData('counters')['meetings_this_week'])->toBe(1);
 });
 
-test('todayBilas excludes done bilas', function () {
+test('todayMeetings excludes done meetings', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
     $user = User::factory()->create();
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString(), 'is_done' => false]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString(), 'is_done' => true]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->toDateString(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->toDateString(), 'is_done' => true]);
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('todayBilas'))->toHaveCount(1);
+    expect($response->viewData('todayMeetings'))->toHaveCount(1);
 });
 
 test('dashboard counters are zero when no data exists', function () {
@@ -287,7 +287,7 @@ test('dashboard counters are zero when no data exists', function () {
     expect($counters['overdue_tasks'])->toBe(0);
     expect($counters['overdue_follow_ups'])->toBe(0);
     expect($counters['today_follow_ups'])->toBe(0);
-    expect($counters['bilas_this_week'])->toBe(0);
+    expect($counters['meetings_this_week'])->toBe(0);
 });
 
 test('dashboard passes teamOptions and memberOptions to view', function () {
@@ -340,7 +340,7 @@ test('dashboard renders quick-create buttons for all entity types', function () 
     $response->assertSee('New task');
     $response->assertSee('New follow-up');
     $response->assertSee('New note');
-    $response->assertSee('Schedule bila');
+    $response->assertSee('Schedule meeting');
 });
 
 test('dashboard includes create modal partials', function () {
@@ -352,7 +352,7 @@ test('dashboard includes create modal partials', function () {
     $response->assertSee('Create a new task');
     $response->assertSee('Create a new follow-up');
     $response->assertSee('Create a new note');
-    $response->assertSee('Schedule a new bila');
+    $response->assertSee('Schedule a new meeting');
 });
 
 test('dashboard passes upcomingTasks as empty collection when setting is null', function () {
@@ -375,14 +375,14 @@ test('dashboard passes upcomingFollowUps as empty collection when setting is nul
     expect($response->viewData('upcomingFollowUps'))->toHaveCount(0);
 });
 
-test('dashboard passes upcomingBilas as empty collection when setting is null', function () {
+test('dashboard passes upcomingMeetings as empty collection when setting is null', function () {
     /** @var \Tests\TestCase $this */
-    $user = User::factory()->create(['dashboard_upcoming_bilas' => null]);
+    $user = User::factory()->create(['dashboard_upcoming_meetings' => null]);
 
     $response = $this->actingAs($user)->get('/');
 
-    $response->assertViewHas('upcomingBilas');
-    expect($response->viewData('upcomingBilas'))->toHaveCount(0);
+    $response->assertViewHas('upcomingMeetings');
+    expect($response->viewData('upcomingMeetings'))->toHaveCount(0);
 });
 
 test('upcomingTasks fetches future tasks limited to configured amount', function () {
@@ -429,33 +429,33 @@ test('upcomingFollowUps fetches future follow-ups limited to configured amount',
     expect($response->viewData('upcomingFollowUps'))->toHaveCount(1);
 });
 
-test('upcomingBilas fetches future bilas limited to configured amount', function () {
+test('upcomingMeetings fetches future meetings limited to configured amount', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
-    $user = User::factory()->create(['dashboard_upcoming_bilas' => 2]);
+    $user = User::factory()->create(['dashboard_upcoming_meetings' => 2]);
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->toDateString(), 'is_done' => false]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDays(2)->toDateString(), 'is_done' => false]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDays(3)->toDateString(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->toDateString(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->addDays(2)->toDateString(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->addDays(3)->toDateString(), 'is_done' => false]);
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('todayBilas'))->toHaveCount(1);
-    expect($response->viewData('upcomingBilas'))->toHaveCount(2);
+    expect($response->viewData('todayMeetings'))->toHaveCount(1);
+    expect($response->viewData('upcomingMeetings'))->toHaveCount(2);
 });
 
-test('upcomingBilas excludes done bilas', function () {
+test('upcomingMeetings excludes done meetings', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
-    $user = User::factory()->create(['dashboard_upcoming_bilas' => 5]);
+    $user = User::factory()->create(['dashboard_upcoming_meetings' => 5]);
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDays(2)->toDateString(), 'is_done' => true]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->addDays(2)->toDateString(), 'is_done' => true]);
 
     $response = $this->actingAs($user)->get('/');
 
-    expect($response->viewData('upcomingBilas'))->toHaveCount(1);
+    expect($response->viewData('upcomingMeetings'))->toHaveCount(1);
 });
 
 test('upcomingTasks are ordered by deadline ascending', function () {
@@ -507,16 +507,16 @@ test('dashboard shows dynamic title when upcoming follow-ups are configured and 
     $response->assertSee('Upcoming follow-ups');
 });
 
-test('dashboard shows dynamic title when upcoming bilas are configured and exist', function () {
+test('dashboard shows dynamic title when upcoming meetings are configured and exist', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
-    $user = User::factory()->create(['dashboard_upcoming_bilas' => 3]);
+    $user = User::factory()->create(['dashboard_upcoming_meetings' => 3]);
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(USER_TZ)->addDay()->toDateString(), 'is_done' => false]);
 
     $response = $this->actingAs($user)->get('/');
 
-    $response->assertSee('Upcoming bilas');
+    $response->assertSee('Upcoming meetings');
 });
 
 test('todayTasks sorts by deadline then priority within same day', function () {

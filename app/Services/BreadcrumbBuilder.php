@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Bila;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\Team;
@@ -135,24 +135,28 @@ class BreadcrumbBuilder
     }
 
     /**
-     * Build breadcrumbs for a bila detail page.
+     * Build breadcrumbs for a meeting detail page.
      *
-     * Routes through the team member's hierarchy.
+     * Routes through the team or attendee hierarchy.
      *
-     * @param Bila $bila
+     * @param Meeting $meeting
      * @return self
      */
-    public function forBila(Bila $bila): self
+    public function forMeeting(Meeting $meeting): self
     {
         $this->crumbs = [['label' => 'Home', 'url' => '/']];
 
-        if ($bila->teamMember) {
-            $this->addTeamMemberChain($bila->teamMember, linked: true);
-            $this->crumbs[] = ['label' => 'Bila — ' . $bila->teamMember->name, 'url' => null];
+        $attendee = $meeting->attendees->first();
+
+        if ($attendee) {
+            $this->addTeamMemberChain($attendee, linked: true);
+        } elseif ($meeting->team) {
+            $this->addTeamChain($meeting->team);
         } else {
-            $this->crumbs[] = ['label' => "Bila's", 'url' => route('bilas.index')];
-            $this->crumbs[] = ['label' => 'Bila', 'url' => null];
+            $this->crumbs[] = ['label' => 'Meetings', 'url' => route('meetings.index')];
         }
+
+        $this->crumbs[] = ['label' => $meeting->title, 'url' => null];
 
         return $this;
     }

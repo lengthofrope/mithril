@@ -18,14 +18,14 @@
             \App\Models\Task::class => 'Task',
             \App\Models\FollowUp::class => 'Follow-up',
             \App\Models\Note::class => 'Note',
-            \App\Models\Bila::class => 'Bila',
+            \App\Models\Meeting::class => 'Meeting',
         ];
 
         $parentRouteNames = [
             \App\Models\Task::class => 'tasks.show',
             \App\Models\FollowUp::class => 'follow-ups.show',
             \App\Models\Note::class => 'notes.show',
-            \App\Models\Bila::class => 'bilas.show',
+            \App\Models\Meeting::class => 'meetings.show',
         ];
 
         $getParentTitle = function ($activity) {
@@ -36,7 +36,7 @@
                 $parent instanceof \App\Models\Task => $parent->title,
                 $parent instanceof \App\Models\FollowUp => $parent->description,
                 $parent instanceof \App\Models\Note => $parent->title,
-                $parent instanceof \App\Models\Bila => 'Bila' . ($parent->scheduled_date ? ' — ' . $parent->scheduled_date->format('d M Y') : ''),
+                $parent instanceof \App\Models\Meeting => 'Meeting' . ($parent->scheduled_at ? ' — ' . $parent->scheduled_at->format('d M Y') : ''),
                 default => null,
             };
         };

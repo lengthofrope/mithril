@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
@@ -104,20 +104,21 @@ test('team member produces four crumbs', function () {
         ->and($crumbs[3])->toBe(['label' => $member->name, 'url' => null]);
 });
 
-test('bila show produces crumbs through member hierarchy', function () {
+test('meeting show produces crumbs through member hierarchy', function () {
     $team = Team::factory()->create(['user_id' => $this->user->id]);
     $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $this->user->id]);
-    $bila = Bila::factory()->create(['team_member_id' => $member->id, 'user_id' => $this->user->id]);
-    $bila->load(['teamMember.team']);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id, 'title' => 'Sprint Review']);
+    $meeting->attendees()->attach($member->id);
+    $meeting->load(['attendees.team']);
 
-    $crumbs = $this->builder->forBila($bila)->build();
+    $crumbs = $this->builder->forMeeting($meeting)->build();
 
     expect($crumbs)->toHaveCount(5)
         ->and($crumbs[0])->toBe(['label' => 'Home', 'url' => '/'])
         ->and($crumbs[1])->toBe(['label' => 'Teams', 'url' => route('teams.index')])
         ->and($crumbs[2])->toBe(['label' => $team->name, 'url' => route('teams.show', $team)])
         ->and($crumbs[3])->toBe(['label' => $member->name, 'url' => route('teams.member', $member)])
-        ->and($crumbs[4])->toBe(['label' => 'Bila — ' . $member->name, 'url' => null]);
+        ->and($crumbs[4])->toBe(['label' => 'Sprint Review', 'url' => null]);
 });
 
 test('note show without associations produces three crumbs', function () {

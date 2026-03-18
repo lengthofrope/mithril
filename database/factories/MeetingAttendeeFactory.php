@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Meeting;
+use App\Models\MeetingAttendee;
 use App\Models\TeamMember;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Bila>
+ * @extends Factory<MeetingAttendee>
  */
-class BilaFactory extends Factory
+class MeetingAttendeeFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -20,10 +22,8 @@ class BilaFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
+            'meeting_id' => Meeting::factory(),
             'team_member_id' => TeamMember::factory(),
-            'scheduled_date' => fake()->dateTimeBetween('-1 month', '+1 month'),
-            'notes' => fake()->optional()->paragraph(),
         ];
     }
 }

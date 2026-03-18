@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\Email;
 use App\Models\EmailLink;
 use App\Models\FollowUp;
@@ -188,7 +188,7 @@ describe('EmailActionService::buildPrefillData()', function (): void {
             ->and($data['content'])->toBe('Key points from the meeting...');
     });
 
-    it('returns correct prefill for bila when sender is a team member', function (): void {
+    it('returns correct prefill for meeting when sender is a team member', function (): void {
         $user   = User::factory()->create();
         $team   = Team::factory()->create(['user_id' => $user->id]);
         $member = TeamMember::factory()->create([
@@ -205,12 +205,12 @@ describe('EmailActionService::buildPrefillData()', function (): void {
 
         $this->actingAs($user);
         $service = app(EmailActionService::class);
-        $data    = $service->buildPrefillData($email, 'bila');
+        $data    = $service->buildPrefillData($email, 'meeting');
 
         expect($data['team_member_id'])->toBe($member->id);
     });
 
-    it('throws when bila type is requested but sender is not a team member', function (): void {
+    it('throws when meeting type is requested but sender is not a team member', function (): void {
         $user  = User::factory()->create();
         $email = Email::factory()->create([
             'user_id'      => $user->id,
@@ -220,7 +220,7 @@ describe('EmailActionService::buildPrefillData()', function (): void {
         $this->actingAs($user);
         $service = app(EmailActionService::class);
 
-        expect(fn () => $service->buildPrefillData($email, 'bila'))
+        expect(fn () => $service->buildPrefillData($email, 'meeting'))
             ->toThrow(\InvalidArgumentException::class);
     });
 });

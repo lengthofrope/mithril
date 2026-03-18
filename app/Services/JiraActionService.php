@@ -71,9 +71,9 @@ class JiraActionService
      * Build pre-fill data for creating a resource from a Jira issue.
      *
      * @param JiraIssue $issue        The source Jira issue.
-     * @param string    $resourceType One of: task, follow-up, note, bila.
+     * @param string    $resourceType One of: task, follow-up, note, meeting.
      * @return array<string, mixed> Pre-fill data keyed by field name.
-     * @throws \InvalidArgumentException When resourceType is not supported or bila has no team member.
+     * @throws \InvalidArgumentException When resourceType is not supported or meeting has no team member.
      */
     public function buildPrefillData(JiraIssue $issue, string $resourceType): array
     {
@@ -97,7 +97,7 @@ class JiraActionService
                 'title'   => "{$issue->issue_key} {$issue->summary}",
                 'content' => $issue->description_preview,
             ]),
-            'bila' => $this->buildBilaPrefill($issue, $teamMember, $base),
+            'meeting' => $this->buildMeetingPrefill($issue, $teamMember, $base),
             default => throw new \InvalidArgumentException("Invalid resource type: {$resourceType}"),
         };
     }
@@ -165,19 +165,19 @@ class JiraActionService
     }
 
     /**
-     * Build pre-fill data for a bila resource.
+     * Build pre-fill data for a meeting resource.
      *
      * @param JiraIssue       $issue      The source Jira issue.
      * @param TeamMember|null $teamMember The resolved team member.
      * @param array<string, mixed> $base  Base pre-fill data.
-     * @return array<string, mixed> Pre-fill data for bila creation.
+     * @return array<string, mixed> Pre-fill data for meeting creation.
      * @throws \InvalidArgumentException When the assignee is not a team member.
      */
-    private function buildBilaPrefill(JiraIssue $issue, ?TeamMember $teamMember, array $base): array
+    private function buildMeetingPrefill(JiraIssue $issue, ?TeamMember $teamMember, array $base): array
     {
         if ($teamMember === null) {
             throw new \InvalidArgumentException(
-                'Cannot create bila: assignee is not a team member.'
+                'Cannot create meeting: assignee is not a team member.'
             );
         }
 
