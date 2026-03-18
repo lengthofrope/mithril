@@ -24,3 +24,5 @@
 | 020 | backend, frontend, polymorphic, observer, activity-feed, traits | Polymorphic activity feed with observer-based system event logging | Activity Feed & Polling | Accepted | 2026-03-14 |
 | 021 | backend, services, polymorphic, security, conversion, global-scopes | MetadataTransferService bypasses BelongsToUser scope for entity conversion | Activity Feed & Polling | Accepted | 2026-03-14 |
 | 022 | backend, frontend, storage, attachments, artisan, settings | Storage management with quota enforcement and dual cleanup strategy | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 023 | backend, migration, data-integrity, meetings | Orphaned prep items dropped during Bila→Meeting migration | Meetings (Phase 1) | Accepted | 2026-03-18 |
+| 024 | backend, meetings, scheduling, events | Auto-scheduling scoped to one-on-one meetings with single attendee | Meetings (Phase 1) | Accepted | 2026-03-18 |
