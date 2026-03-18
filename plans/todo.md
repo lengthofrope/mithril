@@ -1,6 +1,0 @@
-- [PLANNED] als ik in mithril klik op "show overdue tasks" krijg ik alles en niet alleen de overdue taska
-- [PLANNED] dashboard widgets --> per dag gesorteerd is prima, maar graag ook prio sorteren
-- [PLANNED] filteren op recurring tasks inbouwen
-- [PLANNED] in de kanbanvieuw kan ik kaartjes alleen verplaatsen als ik ze naar de bovenkant van een volgende kolom sleep. ben ik door scrollen dus verder naar beneden, moet ik de taak eerst in de eigen kolom omhoog slapen en daarna pas naar rechts
-- "group" aan kunnen passen zonder de taak te openen. net als hier bij prio en status: 
-- de zoekfunctie doet het niet. in tasks. in list doet hij gewoon niets, in kanban maakt hij een picasso van de layout van de pagina ook als ik dingen zoek die er zeker in staan
