@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - Unreleased
+
+### Added
+
+- **Meetings module** — Complete replacement of the Bila (1-on-1) system with a generalized Meeting model supporting team meetings, 1-on-1s, and custom meeting types; multi-attendee support via pivot table; meeting title, type badges, and status lifecycle (scheduled → in progress → completed/cancelled)
+- **Meeting CRUD & views** — Meetings index page with filters on team, member, type, and status; create modal with title, type, date, team, and attendee selection; detail page with editable title (auto-save), type/status badges, status transition buttons, attendee list, and previous/next navigation
+- **Meeting prep items** — Extended prep items with type selection (agenda item, question, action), time estimates, and attendee assignment; drag-and-drop reordering; total estimated time display
+- **Audio recording** — In-browser audio recording via MediaRecorder API with start/stop/pause controls and live timer; file upload fallback for existing audio files (mp3, wav, webm, m4a, ogg); configurable storage disk and max upload size; audio player for playback; recording deletion with transcription safety hint
+- **Transcription service** — Provider-agnostic transcription via `TranscriptionServiceInterface`; OpenAI Whisper implementation; queued `TranscribeMeetingJob` with 3 retries and exponential backoff; auto-dispatch after recording upload (configurable); transcription language selectable per meeting (NL/EN); status polling UI; retry on failure; manual transcription input as fallback
+- **AI extraction & review** — Provider-agnostic insight extraction via `MeetingInsightExtractorInterface`; OpenAI GPT-4o-mini implementation with structured JSON output; queued `ExtractMeetingInsightsJob`; AI-generated meeting summary; extraction review UI with per-item accept/reject/edit, bulk actions, and re-extract; accepted extractions create real Task/FollowUp/Agreement records linked to the source meeting via `meeting_id` FK
+- **Meeting scheduling** — `ScheduleNextMeeting` listener auto-calculates `next_meeting_date` for 1-on-1 meetings based on `meeting_interval_days` on the team member
+- **Meetings in global search** — Meetings searchable by title and notes via the existing global search endpoint
+- **Meetings in analytics** — New "Meetings by Type" data source for analytics widgets (1-on-1 / Team / Other breakdown)
+- **Calendar event linking** — Meeting detail page shows linked calendar events; calendar/email/Jira actions support creating meetings
+- **Configuration** — New `config/meetings.php` with recording storage, transcription provider, and extraction provider settings
+
+### Changed
+
+- **Bila → Meeting migration** — All existing bila data automatically migrated to the new meetings system: bilas become one_on_one meetings, team_member_id becomes an attendee record, bila_prep_items become meeting_prep_items; all polymorphic references (activities, calendar event links) updated
+- **TeamMember scheduling fields** — `bila_interval_days` renamed to `meeting_interval_days`, `next_bila_date` renamed to `next_meeting_date`
+- **Dashboard widget** — "Bila's" section replaced with "Meetings" showing upcoming and today's meetings
+- **Navigation** — "Bila's" menu item replaced with "Meetings"
+- **User preference** — `dashboard_upcoming_bilas` renamed to `dashboard_upcoming_meetings`
+- **Action controllers** — Email, Jira, and Calendar action controllers updated: 'bila' resource type replaced with 'meeting'; meeting creation attaches attendees via pivot table
+- **Weekly review** — Weekly reflection stats and summary text updated from "bilas held" to "meetings held"
+- **Storage quota** — Audio recordings now count towards the existing file storage quota alongside attachments
+
+### Removed
+
+- **Bila system** — Removed `Bila` model, `BilaPrepItem` model, `BilaController`, `BilaPageController`, `BilaRequest`, `BilaScheduled` event, `ScheduleNextBila` listener, and all associated factories, tests, and Blade views
+
 ## [1.8.0] - 2026-03-18
 
 ### Added

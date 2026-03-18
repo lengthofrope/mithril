@@ -1,7 +1,7 @@
 # Meetings — Vergaderingen met opname, transcriptie & AI-extractie
 
 **Created:** 2026-03-18
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort
 
 ## Problem Statement
