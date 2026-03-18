@@ -308,17 +308,17 @@ sequenceDiagram
 ### Phase 3: Audio recording & upload
 - **Goal:** Audio opnemen in de browser en/of uploaden, opslaan op disk
 - **Specs:**
-  - [ ] MeetingRecording model met BelongsToUser
-  - [ ] `audioRecorder` Alpine component: start/stop/pause met MediaRecorder API, visuele waveform/timer
-  - [ ] Browser recording stuurt audio chunks of volledige blob naar server na stop
-  - [ ] Upload endpoint voor bestaande audiobestanden (mp3, wav, webm, m4a, ogg)
-  - [ ] Validatie: max bestandsgrootte (configureerbaar), mime type check
-  - [ ] Audio opgeslagen op configureerbare disk (local default, s3 optioneel)
-  - [ ] Audio player component in meeting detail view voor terugluisteren
-  - [ ] Meeting status automatisch → `in_progress` bij start recording
-  - [ ] Delete recording mogelijkheid (handmatig, niet automatisch — audio is niet meer nodig na succesvolle transcriptie maar wordt niet automatisch verwijderd)
-  - [ ] UI hint bij delete: "Transcriptie is beschikbaar, audio kan veilig verwijderd worden" (alleen tonen als transcriptie status=completed)
-  - [ ] Audio bestanden tellen mee voor de bestaande upload limiet (file storage quota)
+  - [x] MeetingRecording model met BelongsToUser
+  - [x] `audioRecorder` Alpine component: start/stop/pause met MediaRecorder API, visuele waveform/timer
+  - [x] Browser recording stuurt audio chunks of volledige blob naar server na stop
+  - [x] Upload endpoint voor bestaande audiobestanden (mp3, wav, webm, m4a, ogg)
+  - [x] Validatie: max bestandsgrootte (configureerbaar), mime type check
+  - [x] Audio opgeslagen op configureerbare disk (local default, s3 optioneel)
+  - [x] Audio player component in meeting detail view voor terugluisteren
+  - [x] Meeting status automatisch → `in_progress` bij start recording
+  - [x] Delete recording mogelijkheid (handmatig, niet automatisch — audio is niet meer nodig na succesvolle transcriptie maar wordt niet automatisch verwijderd)
+  - [x] UI hint bij delete: "Transcriptie is beschikbaar, audio kan veilig verwijderd worden" (alleen tonen als transcriptie status=completed)
+  - [x] Audio bestanden tellen mee voor de bestaande upload limiet (file storage quota)
 - **Files:** MeetingRecording model, migration, audioRecorder.ts, upload endpoint, config/meetings.php
 
 ### Phase 4: Transcriptie service

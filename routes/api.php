@@ -37,6 +37,10 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
     Route::put('notes/{note}/tags', [NoteTagController::class, 'sync'])->name('notes.tags.sync');
 
+    Route::post('meetings/{meeting}/recordings', [App\Http\Controllers\Api\MeetingRecordingController::class, 'store'])->name('meetings.recordings.store');
+    Route::get('meetings/{meeting}/recordings/{recording}/stream', [App\Http\Controllers\Api\MeetingRecordingController::class, 'stream'])->name('meetings.recordings.stream');
+    Route::delete('meetings/{meeting}/recordings/{recording}', [App\Http\Controllers\Api\MeetingRecordingController::class, 'destroy'])->name('meetings.recordings.destroy');
+
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);
 

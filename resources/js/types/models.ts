@@ -155,6 +155,22 @@ interface MeetingPrepItem {
 }
 
 /**
+ * Mirrors the `meeting_recordings` Eloquent model.
+ */
+interface MeetingRecording {
+    id: number;
+    meeting_id: number;
+    disk: string;
+    path: string;
+    original_filename: string | null;
+    mime_type: string;
+    size_bytes: number;
+    duration_seconds: number | null;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
  * Mirrors the `agreements` Eloquent model.
  */
 interface Agreement {
@@ -441,4 +457,4 @@ interface Attachment {
 }
 
 export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, MeetingType, MeetingStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant, ActivityType };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Meeting, MeetingPrepItem, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification, Activity, Attachment };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Meeting, MeetingPrepItem, MeetingRecording, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification, Activity, Attachment };

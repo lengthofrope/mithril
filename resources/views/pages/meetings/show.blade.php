@@ -123,6 +123,193 @@
         @endif
     </div>
 
+    {{-- Recording section --}}
+    <div class="mb-6 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+            <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Recording</h2>
+        </div>
+
+        <div class="p-5">
+            {{-- Existing recordings --}}
+            @foreach($meeting->recordings as $recording)
+                <div class="mb-4 flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+                    <audio controls preload="metadata" class="flex-1 h-10">
+                        <source src="{{ route('api.meetings.recordings.stream', [$meeting->id, $recording->id]) }}" type="{{ $recording->mime_type }}">
+                    </audio>
+
+                    <div class="flex shrink-0 items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                        @if($recording->duration_seconds)
+                            <span>{{ floor($recording->duration_seconds / 60) }}:{{ str_pad((string) ($recording->duration_seconds % 60), 2, '0', STR_PAD_LEFT) }}</span>
+                        @endif
+                        <span>{{ number_format($recording->size_bytes / 1024 / 1024, 1) }} MB</span>
+                        <span>{{ $recording->created_at->format('d M H:i') }}</span>
+                    </div>
+
+                    <div
+                        x-data="{
+                            async deleteRecording() {
+                                if (!confirm('Delete this recording?')) return;
+
+                                const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/recordings/{{ $recording->id }}', {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                        'Accept': 'application/json',
+                                    },
+                                });
+
+                                if (response.ok) window.location.reload();
+                            },
+                        }"
+                    >
+                        @if($meeting->transcription?->status === 'completed')
+                            <p class="text-xs text-green-600 dark:text-green-400">Transcription available — audio can be safely deleted</p>
+                        @endif
+
+                        <button
+                            type="button"
+                            x-on:click="deleteRecording()"
+                            class="rounded p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+                            aria-label="Delete recording"
+                        >
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+
+            {{-- Audio recorder --}}
+            @if(!$meeting->is_done)
+                <div
+                    x-data="audioRecorder({
+                        meetingId: {{ $meeting->id }},
+                        uploadEndpoint: '/api/v1/meetings/{{ $meeting->id }}/recordings',
+                        csrfToken: document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                    })"
+                >
+                    {{-- Idle state --}}
+                    <template x-if="state === 'idle'">
+                        <button
+                            type="button"
+                            x-on:click="startRecording()"
+                            class="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                        >
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <circle cx="12" cy="12" r="6"/>
+                            </svg>
+                            Start recording
+                        </button>
+                    </template>
+
+                    {{-- Recording / Paused state --}}
+                    <template x-if="state === 'recording' || state === 'paused'">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="h-3 w-3 rounded-full"
+                                    :class="state === 'recording' ? 'bg-red-500 animate-pulse' : 'bg-amber-500'"
+                                ></span>
+                                <span class="font-mono text-lg font-semibold text-gray-900 dark:text-white" x-text="formattedTime"></span>
+                            </div>
+
+                            <template x-if="state === 'recording'">
+                                <button
+                                    type="button"
+                                    x-on:click="pauseRecording()"
+                                    class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                                >Pause</button>
+                            </template>
+
+                            <template x-if="state === 'paused'">
+                                <button
+                                    type="button"
+                                    x-on:click="resumeRecording()"
+                                    class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-400"
+                                >Resume</button>
+                            </template>
+
+                            <button
+                                type="button"
+                                x-on:click="stopRecording()"
+                                class="rounded-lg bg-gray-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-gray-900 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+                            >Stop & save</button>
+                        </div>
+                    </template>
+
+                    {{-- Uploading state --}}
+                    <template x-if="state === 'uploading'">
+                        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            Uploading recording…
+                        </div>
+                    </template>
+
+                    {{-- Error state --}}
+                    <template x-if="state === 'error'">
+                        <div class="flex items-center gap-3">
+                            <p class="text-sm text-red-600 dark:text-red-400" x-text="errorMessage"></p>
+                            <button
+                                type="button"
+                                x-on:click="state = 'idle'"
+                                class="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                            >Try again</button>
+                        </div>
+                    </template>
+
+                    {{-- File upload fallback --}}
+                    <div class="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+                        <form
+                            x-on:submit.prevent="
+                                const formData = new FormData($event.target);
+                                state = 'uploading';
+                                const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/recordings', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                        'Accept': 'application/json',
+                                    },
+                                    body: formData,
+                                });
+
+                                if (response.ok) {
+                                    window.location.reload();
+                                } else {
+                                    const data = await response.json();
+                                    state = 'error';
+                                    errorMessage = data.message ?? 'Upload failed.';
+                                }
+                            "
+                        >
+                            <label class="mb-2 block text-xs font-medium text-gray-500 dark:text-gray-400">Or upload an audio file</label>
+                            <div class="flex items-center gap-2">
+                                <input
+                                    type="file"
+                                    name="audio"
+                                    accept="audio/*"
+                                    required
+                                    class="text-xs text-gray-600 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-gray-700 hover:file:bg-gray-200 dark:text-gray-400 dark:file:bg-gray-700 dark:file:text-gray-300"
+                                >
+                                <button
+                                    type="submit"
+                                    class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800"
+                                >Upload</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @else
+                @if($meeting->recordings->isEmpty())
+                    <p class="text-sm text-gray-400 dark:text-gray-500">No recordings for this meeting.</p>
+                @endif
+            @endif
+        </div>
+    </div>
+
     {{-- Navigation to prev/next meeting --}}
     <div class="mb-6 flex items-center justify-between">
         @if($previousMeeting)

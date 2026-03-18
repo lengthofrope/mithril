@@ -31,6 +31,7 @@ import { refreshable } from './components/refreshable';
 import { activityInput } from './components/activity-input';
 import { followUpActions } from './components/follow-up-actions';
 import { tagEditor } from './components/tag-editor';
+import { audioRecorder } from './components/audio-recorder';
 
 declare global {
     interface Window {
@@ -67,6 +68,7 @@ Alpine.data('refreshable', refreshable as Parameters<typeof Alpine.data>[1]);
 Alpine.data('activityInput', activityInput as Parameters<typeof Alpine.data>[1]);
 Alpine.data('followUpActions', followUpActions as Parameters<typeof Alpine.data>[1]);
 Alpine.data('tagEditor', tagEditor as Parameters<typeof Alpine.data>[1]);
+Alpine.data('audioRecorder', audioRecorder as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

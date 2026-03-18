@@ -138,6 +138,16 @@ class Meeting extends Model
     }
 
     /**
+     * Get all recordings for this meeting.
+     *
+     * @return HasMany<MeetingRecording>
+     */
+    public function recordings(): HasMany
+    {
+        return $this->hasMany(MeetingRecording::class);
+    }
+
+    /**
      * Get all calendar event links for this meeting.
      *
      * @return MorphMany<CalendarEventLink>
