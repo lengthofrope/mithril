@@ -342,21 +342,21 @@ sequenceDiagram
 ### Phase 5: AI extractie & review
 - **Goal:** Uit transcriptie automatisch taken, follow-ups, afspraken en besluiten extraheren met review-flow
 - **Specs:**
-  - [ ] MeetingExtraction model met BelongsToUser
-  - [ ] ExtractionType, ExtractionStatus enums
-  - [ ] `MeetingInsightExtractorInterface` met `extract()` method
-  - [ ] Minimaal één concrete implementatie (configureerbaar)
-  - [ ] `ExtractMeetingInsightsJob` queued job
-  - [ ] AI prompt bevat: transcriptie, deelnemerslijst, meeting context
-  - [ ] AI output-taal volgt meeting.output_language → user.preferred_output_language → 'nl' fallback
-  - [ ] AI retourneert gestructureerde JSON: summary + extracties met type/content/assignee/priority/deadline
-  - [ ] Summary wordt opgeslagen op meeting.summary
-  - [ ] `extractionReview` Alpine component: lijst van voorgestelde items met accept/reject/edit per item
-  - [ ] Accept creëert daadwerkelijk Task/FollowUp/Agreement record met meeting_id FK (link naar bron-meeting)
-  - [ ] Bulk accept/reject mogelijk
-  - [ ] Modified: gebruiker kan content/assignee/priority aanpassen voor accept
-  - [ ] Re-extract knop (opnieuw AI laten analyseren)
-  - [ ] Config `meetings.extraction.provider` + provider-specifieke config
+  - [x] MeetingExtraction model met BelongsToUser
+  - [x] ExtractionType, ExtractionStatus enums
+  - [x] `MeetingInsightExtractorInterface` met `extract()` method
+  - [x] Minimaal één concrete implementatie (configureerbaar)
+  - [x] `ExtractMeetingInsightsJob` queued job
+  - [x] AI prompt bevat: transcriptie, deelnemerslijst, meeting context
+  - [x] AI output-taal volgt meeting.output_language → user.preferred_output_language → 'nl' fallback
+  - [x] AI retourneert gestructureerde JSON: summary + extracties met type/content/assignee/priority/deadline
+  - [x] Summary wordt opgeslagen op meeting.summary
+  - [x] `extractionReview` Alpine component: lijst van voorgestelde items met accept/reject/edit per item
+  - [x] Accept creëert daadwerkelijk Task/FollowUp/Agreement record met meeting_id FK (link naar bron-meeting)
+  - [x] Bulk accept/reject mogelijk
+  - [x] Modified: gebruiker kan content/assignee/priority aanpassen voor accept
+  - [x] Re-extract knop (opnieuw AI laten analyseren)
+  - [x] Config `meetings.extraction.provider` + provider-specifieke config
 - **Files:** MeetingExtraction model, migration, Service interface + impl, Job, extractionReview.ts, config
 
 ### Phase 6: Polish & integraties

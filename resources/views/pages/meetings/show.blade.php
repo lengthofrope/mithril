@@ -451,6 +451,150 @@
         </div>
     </div>
 
+    {{-- AI Extractions review --}}
+    @if($meeting->extractions->isNotEmpty() || ($meeting->transcription && $meeting->transcription->status->value === 'completed'))
+        <div
+            class="mb-6 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+            x-data="extractionReview({
+                meetingId: {{ $meeting->id }},
+                initialExtractions: @js($meeting->extractions->map(fn ($e) => [
+                    'id' => $e->id,
+                    'type' => $e->type->value,
+                    'content' => $e->content,
+                    'assignee_id' => $e->assignee_id,
+                    'assignee' => $e->assignee ? ['id' => $e->assignee->id, 'name' => $e->assignee->name] : null,
+                    'priority' => $e->priority,
+                    'deadline' => $e->deadline?->toDateString(),
+                    'status' => $e->status->value,
+                ])->values()),
+                csrfToken: document.querySelector('meta[name=csrf-token]')?.content ?? '',
+            })"
+        >
+            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">
+                    AI Extractions
+                    <template x-if="pendingExtractions.length > 0">
+                        <span class="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-xs font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" x-text="pendingExtractions.length"></span>
+                    </template>
+                </h2>
+                <div class="flex items-center gap-2">
+                    <template x-if="selectedIds.length > 0">
+                        <div class="flex items-center gap-1">
+                            <button type="button" x-on:click="bulkAccept()" class="rounded-lg bg-green-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-green-700" :disabled="loading">Accept selected</button>
+                            <button type="button" x-on:click="bulkReject()" class="rounded-lg border border-red-300 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:border-red-700/50 dark:text-red-400" :disabled="loading">Reject selected</button>
+                        </div>
+                    </template>
+                    <template x-if="pendingExtractions.length > 0">
+                        <button type="button" x-on:click="selectedIds.length === pendingExtractions.length ? deselectAll() : selectAll()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" x-text="selectedIds.length === pendingExtractions.length ? 'Deselect all' : 'Select all'"></button>
+                    </template>
+                    <button type="button" x-on:click="reExtract()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" :disabled="loading">Re-extract</button>
+                </div>
+            </div>
+
+            {{-- Summary --}}
+            @if($meeting->summary)
+                <div class="border-b border-gray-100 px-5 py-3 dark:border-gray-800">
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Summary</p>
+                    <p class="mt-1 text-sm text-gray-700 dark:text-gray-300">{{ $meeting->summary }}</p>
+                </div>
+            @endif
+
+            {{-- Extraction items --}}
+            <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                <template x-for="extraction in extractions" :key="extraction.id">
+                    <div class="px-5 py-3">
+                        {{-- View mode --}}
+                        <template x-if="editingId !== extraction.id">
+                            <div class="flex items-start gap-3">
+                                <template x-if="extraction.status === 'pending'">
+                                    <input type="checkbox" :checked="selectedIds.includes(extraction.id)" x-on:change="toggleSelection(extraction.id)" class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 dark:border-gray-600 dark:bg-gray-800">
+                                </template>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        @php
+                                            $typeColors = [
+                                                'task' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                                                'follow_up' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                                                'agreement' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                                                'decision' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                                            ];
+                                        @endphp
+                                        <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+                                            :class="{
+                                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': extraction.type === 'task',
+                                                'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': extraction.type === 'follow_up',
+                                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': extraction.type === 'agreement',
+                                                'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400': extraction.type === 'decision',
+                                            }"
+                                            x-text="extraction.type.replace('_', ' ')"
+                                        ></span>
+
+                                        <span class="text-sm text-gray-800 dark:text-white/90" :class="{ 'line-through text-gray-400': extraction.status === 'rejected' }" x-text="extraction.content"></span>
+                                    </div>
+
+                                    <div class="mt-1 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+                                        <template x-if="extraction.assignee">
+                                            <span x-text="extraction.assignee.name"></span>
+                                        </template>
+                                        <template x-if="extraction.priority">
+                                            <span x-text="extraction.priority"></span>
+                                        </template>
+                                        <template x-if="extraction.deadline">
+                                            <span x-text="extraction.deadline"></span>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="flex shrink-0 items-center gap-1">
+                                    <template x-if="extraction.status === 'pending'">
+                                        <div class="flex items-center gap-1">
+                                            <button type="button" x-on:click="accept(extraction)" class="rounded px-2 py-1 text-xs font-medium text-green-600 transition hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-500/10" :disabled="loading">Accept</button>
+                                            <button type="button" x-on:click="startEdit(extraction)" class="rounded px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10" :disabled="loading">Edit</button>
+                                            <button type="button" x-on:click="reject(extraction)" class="rounded px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10" :disabled="loading">Reject</button>
+                                        </div>
+                                    </template>
+                                    <template x-if="extraction.status !== 'pending'">
+                                        <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                            :class="{
+                                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': extraction.status === 'accepted' || extraction.status === 'modified',
+                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': extraction.status === 'rejected',
+                                            }"
+                                            x-text="extraction.status"
+                                        ></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Edit mode --}}
+                        <template x-if="editingId === extraction.id">
+                            <div class="space-y-2">
+                                <input type="text" x-model="editContent" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                <div class="flex items-center gap-2">
+                                    <select x-model="editPriority" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                        <option value="">No priority</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="high">High</option>
+                                        <option value="normal">Normal</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                    <input type="date" x-model="editDeadline" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                    <button type="button" x-on:click="acceptWithEdits(extraction)" class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700" :disabled="loading">Save & accept</button>
+                                    <button type="button" x-on:click="cancelEdit()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">Cancel</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <template x-if="extractions.length === 0">
+                <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions yet. Complete a transcription to extract insights.</p>
+            </template>
+        </div>
+    @endif
+
     {{-- Navigation to prev/next meeting --}}
     <div class="mb-6 flex items-center justify-between">
         @if($previousMeeting)

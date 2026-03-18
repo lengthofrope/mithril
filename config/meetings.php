@@ -33,6 +33,11 @@ return [
     ],
 
     'extraction' => [
-        'provider' => env('MEETING_EXTRACTION_PROVIDER'),
+        'provider' => env('MEETING_EXTRACTION_PROVIDER', 'openai'),
+
+        'openai' => [
+            'api_key' => env('OPENAI_API_KEY'),
+            'model' => env('MEETING_EXTRACTION_MODEL', 'gpt-4o-mini'),
+        ],
     ],
 ];

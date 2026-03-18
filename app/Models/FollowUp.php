@@ -52,6 +52,7 @@ class FollowUp extends Model
         'follow_up_date',
         'snoozed_until',
         'status',
+        'meeting_id',
     ];
 
     /**

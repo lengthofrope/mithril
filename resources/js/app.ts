@@ -32,6 +32,7 @@ import { activityInput } from './components/activity-input';
 import { followUpActions } from './components/follow-up-actions';
 import { tagEditor } from './components/tag-editor';
 import { audioRecorder } from './components/audio-recorder';
+import { extractionReview } from './components/extraction-review';
 
 declare global {
     interface Window {
@@ -69,6 +70,7 @@ Alpine.data('activityInput', activityInput as Parameters<typeof Alpine.data>[1])
 Alpine.data('followUpActions', followUpActions as Parameters<typeof Alpine.data>[1]);
 Alpine.data('tagEditor', tagEditor as Parameters<typeof Alpine.data>[1]);
 Alpine.data('audioRecorder', audioRecorder as Parameters<typeof Alpine.data>[1]);
+Alpine.data('extractionReview', extractionReview as Parameters<typeof Alpine.data>[1]);
 
 Alpine.store('taskList', { showCompleted: false });
 

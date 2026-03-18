@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Events\MeetingScheduled;
+use App\Services\MeetingInsights\MeetingInsightExtractorInterface;
+use App\Services\MeetingInsights\OpenAiInsightExtractor;
 use App\Services\Transcription\TranscriptionServiceInterface;
 use App\Services\Transcription\WhisperTranscriptionService;
 use App\Events\TaskStatusChanged;
@@ -36,6 +38,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(MeetingInsightExtractorInterface::class, function (): MeetingInsightExtractorInterface {
+            return new OpenAiInsightExtractor(
+                apiKey: config('meetings.extraction.openai.api_key') ?? config('meetings.transcription.whisper.api_key') ?? '',
+                model: config('meetings.extraction.openai.model') ?? 'gpt-4o-mini',
+            );
+        });
+
         $this->app->bind(TranscriptionServiceInterface::class, function (): TranscriptionServiceInterface {
             return new WhisperTranscriptionService(
                 apiKey: config('meetings.transcription.whisper.api_key') ?? '',

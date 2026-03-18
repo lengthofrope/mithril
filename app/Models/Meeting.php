@@ -158,6 +158,16 @@ class Meeting extends Model
     }
 
     /**
+     * Get all AI-extracted items for this meeting.
+     *
+     * @return HasMany<MeetingExtraction>
+     */
+    public function extractions(): HasMany
+    {
+        return $this->hasMany(MeetingExtraction::class);
+    }
+
+    /**
      * Get all calendar event links for this meeting.
      *
      * @return MorphMany<CalendarEventLink>

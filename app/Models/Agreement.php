@@ -40,6 +40,7 @@ class Agreement extends Model
         'description',
         'agreed_date',
         'follow_up_date',
+        'meeting_id',
     ];
 
     /**
