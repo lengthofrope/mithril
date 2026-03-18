@@ -46,7 +46,7 @@
                             x-model="filterState['{{ $filter['field'] }}']"
                             class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
                         >
-                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ $filter['label'] }}</span>
+                        <label for="filter-{{ $filter['field'] }}" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">{{ $filter['label'] }}</label>
                     </div>
 
                 @elseif($filter['type'] === 'select' && !empty($filter['linked_to']))
