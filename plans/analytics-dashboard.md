@@ -1,5 +1,8 @@
 # Analytics Dashboard — Implementatieplan
 
+**Status:** Complete
+**Author:** Bas de Kort
+
 ## Samenvatting
 
 Een apart Analytics-dashboard met configureerbare grafieken (ApexCharts), waarbij de gebruiker per widget het grafiektype kan kiezen (donut, bar, horizontal bar, stacked bar) en widgets kan drag & droppen — zowel op het Analytics-board als op het hoofddashboard. Widgets zijn herbruikbaar: dezelfde widget kan op beide pagina's verschijnen.

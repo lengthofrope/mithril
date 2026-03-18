@@ -1,5 +1,8 @@
 # Messages & Attachments on Resources — Implementation Plan
 
+**Status:** Complete
+**Author:** Bas de Kort
+
 ## Summary
 
 Add the ability to attach messages (comments/notes) and file attachments to any core resource: Tasks, Follow-ups, Bilas, and Notes. This creates a threaded activity feed per resource where users can add context, upload files, and track the history of a resource over time. Messages are timestamped, stored in chronological order, and displayed as a timeline on the resource detail view.

@@ -1,5 +1,8 @@
 # Calendar Actions — Create Resources from Calendar Events
 
+**Status:** Complete
+**Author:** Bas de Kort
+
 ## Summary
 
 Enable users to create Bilas, Tasks, Follow-ups, and Notes directly from synced calendar events. Calendar events display a context menu with "Create..." actions that pre-fill resource fields from event data (date, subject, attendees). Created resources are linked back to the calendar event via a polymorphic pivot table, allowing multiple resources per event. The calendar UI shows visual indicators for events that have linked resources, and clicking navigates to the linked resource.

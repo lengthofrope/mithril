@@ -1,5 +1,8 @@
 # Recurring Tasks — Implementation Plan
 
+**Status:** Complete
+**Author:** Bas de Kort
+
 ## Summary
 
 Allow users to make any task recurring by adding a recurrence schedule. When a recurring task is marked as "Done", the system automatically creates a new copy of that task with the status reset to "Open" and the deadline advanced to the next occurrence according to the schedule. The original completed task is preserved in history. Recurrence is configured per-task via a simple schedule definition (daily, weekly, biweekly, monthly, or custom interval).

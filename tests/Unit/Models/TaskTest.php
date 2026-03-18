@@ -264,6 +264,50 @@ describe('Task model', function (): void {
         });
     });
 
+    describe('scopeOverdue', function (): void {
+        it('returns tasks with deadline before today and status not done', function (): void {
+            $user = User::factory()->create();
+
+            $overdue = Task::factory()->create([
+                'user_id' => $user->id,
+                'deadline' => now()->subDays(3),
+                'status' => TaskStatus::Open,
+            ]);
+            Task::factory()->create([
+                'user_id' => $user->id,
+                'deadline' => now()->addDays(3),
+                'status' => TaskStatus::Open,
+            ]);
+            Task::factory()->create([
+                'user_id' => $user->id,
+                'deadline' => now()->subDays(1),
+                'status' => TaskStatus::Done,
+            ]);
+            Task::factory()->create([
+                'user_id' => $user->id,
+                'deadline' => null,
+                'status' => TaskStatus::Open,
+            ]);
+
+            $results = Task::overdue()->get();
+
+            expect($results)->toHaveCount(1)
+                ->and($results->first()->id)->toBe($overdue->id);
+        });
+
+        it('excludes tasks with deadline of today', function (): void {
+            $user = User::factory()->create();
+
+            Task::factory()->create([
+                'user_id' => $user->id,
+                'deadline' => now()->startOfDay(),
+                'status' => TaskStatus::Open,
+            ]);
+
+            expect(Task::overdue()->count())->toBe(0);
+        });
+    });
+
     describe('is_recurring filter', function (): void {
         it('filters tasks by is_recurring boolean', function (): void {
             $user = User::factory()->create();

@@ -1,5 +1,8 @@
 # Office 365 Integration — Implementatieplan
 
+**Status:** Complete
+**Author:** Bas de Kort
+
 ## Samenvatting
 
 Integratie met Microsoft Graph API om (1) je eigen Office 365 agenda en afspraken te tonen op het dashboard, en (2) de beschikbaarheidsstatus van teamleden automatisch te synchroniseren op basis van hun Outlook-agenda. De integratie gebruikt OAuth2 via Microsoft Entra ID (voorheen Azure AD) en slaat tokens veilig op voor achtergrondverwerking.

@@ -273,6 +273,36 @@ test('task index returns only the partial for AJAX requests', function () {
     $response->assertDontSee('<!DOCTYPE html');
 });
 
+test('task index filters by is_recurring', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'is_recurring' => true]);
+    Task::factory()->create(['user_id' => $user->id, 'is_recurring' => false]);
+    Task::factory()->create(['user_id' => $user->id, 'is_recurring' => false]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks?is_recurring=1', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+});
+
+test('task kanban filters by is_recurring', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'is_recurring' => true, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'is_recurring' => false, 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks/kanban?is_recurring=1');
+
+    $response->assertOk();
+    expect($response->viewData('tasks'))->toHaveCount(1);
+    expect($response->viewData('tasks')->first()->is_recurring)->toBeTrue();
+});
+
 test('convert to follow-up creates follow-up linked to task and marks task done', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
@@ -456,6 +486,120 @@ test('convert to follow-up transfers calendar event links', function () {
     $followUp = FollowUp::where('description', 'Transfer cal links test')->first();
     expect(CalendarEventLink::where('linkable_type', FollowUp::class)->where('linkable_id', $followUp->id)->count())->toBe(1);
     expect(CalendarEventLink::where('linkable_type', Task::class)->where('linkable_id', $task->id)->count())->toBe(0);
+});
+
+test('task index search filters tasks by title', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Deploy to staging']);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Review pull request']);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Write documentation']);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks?search=deploy', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('Deploy to staging');
+    $response->assertDontSee('Review pull request');
+    $response->assertDontSee('Write documentation');
+});
+
+test('task index search with empty string returns all tasks', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->count(3)->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks?search=', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+});
+
+test('task kanban search filters tasks by title', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Fix login bug', 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Add dark mode', 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks/kanban?search=login', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('Fix login bug');
+    $response->assertDontSee('Add dark mode');
+});
+
+test('task kanban AJAX returns partial without full page layout', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->get('/tasks/kanban', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertDontSee('<!DOCTYPE html');
+});
+
+test('task index overdue filter returns only overdue tasks', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Overdue task', 'deadline' => now()->subDays(2), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Future task', 'deadline' => now()->addDays(5), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Done overdue', 'deadline' => now()->subDays(1), 'status' => TaskStatus::Done]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks?overdue=1', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('Overdue task');
+    $response->assertDontSee('Future task');
+    $response->assertDontSee('Done overdue');
+});
+
+test('task kanban overdue filter returns only overdue tasks', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Old undone', 'deadline' => now()->subDays(3), 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Not overdue', 'deadline' => now()->addDays(1), 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks/kanban?overdue=1', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('Old undone');
+    $response->assertDontSee('Not overdue');
+});
+
+test('task kanban filters by is_private', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'is_private' => true, 'status' => TaskStatus::Open]);
+    Task::factory()->create(['user_id' => $user->id, 'is_private' => false, 'status' => TaskStatus::Open]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks/kanban?is_private=1');
+
+    $response->assertOk();
+    expect($response->viewData('tasks'))->toHaveCount(1);
+    expect($response->viewData('tasks')->first()->is_private)->toBeTrue();
 });
 
 test('convert to follow-up transfers email links', function () {

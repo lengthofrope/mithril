@@ -32,6 +32,17 @@ use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     /**
+     * SQL expression for sorting tasks by priority (urgent first, null last).
+     */
+    private const PRIORITY_SORT_EXPRESSION = "CASE
+        WHEN priority = 'urgent' THEN 0
+        WHEN priority = 'high' THEN 1
+        WHEN priority = 'normal' THEN 2
+        WHEN priority = 'low' THEN 3
+        ELSE 4
+    END ASC";
+
+    /**
      * Display the dashboard index page.
      *
      * @param Request $request
@@ -125,6 +136,7 @@ class DashboardController extends Controller
         $tasksDueToday = Task::whereDate('deadline', '<=', now($timezone)->toDateString())
             ->whereNotIn('status', [TaskStatus::Done->value])
             ->orderBy('deadline')
+            ->orderByRaw(self::PRIORITY_SORT_EXPRESSION)
             ->with(['teamMember', 'taskCategory', 'team'])
             ->get();
 
@@ -167,6 +179,7 @@ class DashboardController extends Controller
             ? Task::whereDate('deadline', '>', $todayDate)
                 ->whereNotIn('status', [TaskStatus::Done->value])
                 ->orderBy('deadline')
+                ->orderByRaw(self::PRIORITY_SORT_EXPRESSION)
                 ->with(['teamMember', 'taskCategory', 'team'])
                 ->limit($taskLimit)
                 ->get()

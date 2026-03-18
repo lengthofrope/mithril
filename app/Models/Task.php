@@ -14,6 +14,7 @@ use App\Models\Traits\HasFollowUp;
 use App\Models\Traits\HasResourceLinks;
 use App\Models\Traits\HasSortOrder;
 use App\Models\Traits\Searchable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -135,6 +136,19 @@ class Task extends Model
             'is_recurring' => 'boolean',
             'recurrence_interval' => RecurrenceInterval::class,
         ];
+    }
+
+    /**
+     * Scope to filter only overdue tasks (deadline before today, not done).
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $query->whereNotNull('deadline')
+            ->whereDate('deadline', '<', now()->toDateString())
+            ->where('status', '!=', TaskStatus::Done);
     }
 
     /**

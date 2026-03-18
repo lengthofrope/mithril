@@ -55,6 +55,33 @@ function buildQueryString(state: FilterState): string {
 }
 
 /**
+ * Counts the number of active (non-empty, non-search) filters.
+ */
+function countActiveFilters(filters: FilterDef[], state: FilterState): number {
+    let count = 0;
+
+    for (const filterDef of filters) {
+        if (filterDef.type === 'search') {
+            continue;
+        }
+
+        const value = state[filterDef.field];
+
+        if (value === null || value === '' || value === false) {
+            continue;
+        }
+
+        if (Array.isArray(value) && value.length === 0) {
+            continue;
+        }
+
+        count++;
+    }
+
+    return count;
+}
+
+/**
  * Alpine.js component providing generic filter and search functionality.
  * Sends filters as query parameters and replaces a DOM container with
  * the server-returned HTML partial.
@@ -77,11 +104,14 @@ function filterManager(config: FilterManagerConfig): Record<string, unknown> {
         isLoading: false,
         hasError: false,
 
+        activeFilterCount: 0,
+
         /**
          * Initialises the component and runs the initial fetch on mount.
          */
-        init(this: { filterState: FilterState; isLoading: boolean; hasError: boolean; applyFilters: () => Promise<void>; $watch: (key: string, cb: () => void) => void }): void {
+        init(this: { filterState: FilterState; activeFilterCount: number; isLoading: boolean; hasError: boolean; applyFilters: () => Promise<void>; $watch: (key: string, cb: () => void) => void }): void {
             this.$watch('filterState', () => {
+                this.activeFilterCount = countActiveFilters(config.filters, this.filterState);
                 void this.applyFilters();
             });
         },
