@@ -79,6 +79,11 @@ function sortableKanban(config: SortableKanbanConfig): Record<string, unknown> {
                 Sortable.create(column, {
                     group: config.containerSelector,
                     animation: 150,
+                    handle: '.drag-handle',
+                    scroll: true,
+                    scrollSensitivity: 80,
+                    scrollSpeed: 12,
+                    forceFallback: true,
                     onEnd(event: Sortable.SortableEvent): void {
                         void self.handleMove(event);
                     },

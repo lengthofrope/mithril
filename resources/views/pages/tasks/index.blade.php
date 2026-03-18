@@ -12,7 +12,7 @@
                 ['field' => 'search', 'type' => 'search', 'label' => 'Search'],
                 ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
                 ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
-                ['field' => 'category', 'type' => 'select', 'label' => 'Category', 'options' => $categoryOptions],
+                ['field' => 'task_category_id', 'type' => 'select', 'label' => 'Category', 'options' => $categoryOptions],
                 ['field' => 'status', 'type' => 'select', 'label' => 'Status', 'options' => [
                     ['value' => 'open', 'label' => 'Open'],
                     ['value' => 'in_progress', 'label' => 'In Progress'],
@@ -27,6 +27,8 @@
                 ]],
                 ['field' => 'task_group_id', 'type' => 'select', 'label' => 'Group', 'options' => $groupOptions],
                 ['field' => 'is_private', 'type' => 'boolean', 'label' => 'Private only'],
+                ['field' => 'overdue', 'type' => 'boolean', 'label' => 'Overdue'],
+                ['field' => 'is_recurring', 'type' => 'boolean', 'label' => 'Recurring'],
             ]"
         />
     </div>

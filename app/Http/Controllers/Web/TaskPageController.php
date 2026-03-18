@@ -49,11 +49,17 @@ class TaskPageController extends Controller
             'task_group_id',
             'task_category_id',
             'is_private',
+            'is_recurring',
             'deadline',
         ]);
 
+        $searchTerm = (string) $request->get('search', '');
+        $isOverdue = (bool) $request->get('overdue', false);
+
         $query = Task::query()
             ->applyFilters($filters)
+            ->search($searchTerm)
+            ->when($isOverdue, fn ($q) => $q->overdue())
             ->orderBySortOrder()
             ->with(['teamMember', 'taskGroup', 'taskCategory', 'team']);
 
@@ -66,12 +72,14 @@ class TaskPageController extends Controller
         }
 
         $allGroups = TaskGroup::orderBySortOrder()
-            ->with(['tasks' => fn ($q) => $q->applyFilters($filters)->orderBySortOrder()->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])])
+            ->with(['tasks' => fn ($q) => $q->applyFilters($filters)->search($searchTerm)->when($isOverdue, fn ($q) => $q->overdue())->orderBySortOrder()->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])])
             ->get();
 
         $ungroupedTasks = Task::query()
             ->whereNull('task_group_id')
             ->applyFilters($filters)
+            ->search($searchTerm)
+            ->when($isOverdue, fn ($q) => $q->overdue())
             ->orderBySortOrder()
             ->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])
             ->get();
@@ -177,10 +185,17 @@ class TaskPageController extends Controller
             'team_member_id',
             'task_group_id',
             'task_category_id',
+            'is_private',
+            'is_recurring',
         ]);
+
+        $searchTerm = (string) $request->get('search', '');
+        $isOverdue = (bool) $request->get('overdue', false);
 
         $tasks = Task::query()
             ->applyFilters($filters)
+            ->search($searchTerm)
+            ->when($isOverdue, fn ($q) => $q->overdue())
             ->where(function ($query): void {
                 $query->where('status', '!=', TaskStatus::Done)
                     ->orWhere('updated_at', '>=', now()->subWeek());
@@ -189,10 +204,15 @@ class TaskPageController extends Controller
             ->with(['teamMember', 'taskCategory'])
             ->get();
 
+        $allGroups = TaskGroup::orderBySortOrder()->get();
+
+        if ($request->ajax()) {
+            return view('partials.kanban-board', ['tasks' => $tasks, 'taskGroups' => $allGroups]);
+        }
+
         $allTeams = Team::orderBySortOrder()->get();
         $allMembers = TeamMember::orderBySortOrder()->get();
         $allCategories = TaskCategory::all();
-        $allGroups = TaskGroup::orderBySortOrder()->get();
 
         return view('pages.tasks.kanban', [
             'title' => 'Kanban',

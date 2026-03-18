@@ -1,7 +1,7 @@
 # Bugfixes & Improvements — Tasks, Dashboard, Kanban
 
 **Created:** 2026-03-18
-**Status:** Draft
+**Status:** Complete
 **Author:** Bas de Kort
 
 ## Problem Statement
@@ -57,67 +57,67 @@ All six issues are isolated fixes in different parts of the codebase with no int
 ### Phase 1: Fix task search (list + kanban)
 - **Goal:** Task search works correctly in both views without breaking layout
 - **Specs:**
-  - [ ] TaskPageController `index()` extracts `search` from request and applies `->search($term)` scope when present
-  - [ ] TaskPageController `kanban()` extracts `search` from request and applies `->search($term)` scope when present
-  - [ ] TaskPageController `kanban()` checks `$request->ajax()` and returns a kanban board partial instead of the full page
-  - [ ] Kanban board markup extracted into `resources/views/partials/kanban-board.blade.php`, included by both full page and AJAX response
-  - [ ] Kanban `is_private` filter also added to `$request->only()` (currently missing)
-  - [ ] Search in list view returns matching tasks correctly
-  - [ ] Search in kanban view returns matching tasks in correct column layout
+  - [x] TaskPageController `index()` extracts `search` from request and applies `->search($term)` scope when present
+  - [x] TaskPageController `kanban()` extracts `search` from request and applies `->search($term)` scope when present
+  - [x] TaskPageController `kanban()` checks `$request->ajax()` and returns a kanban board partial instead of the full page
+  - [x] Kanban board markup extracted into `resources/views/partials/kanban-board.blade.php`, included by both full page and AJAX response
+  - [x] Kanban `is_private` filter also added to `$request->only()` (currently missing)
+  - [x] Search in list view returns matching tasks correctly
+  - [x] Search in kanban view returns matching tasks in correct column layout
 - **Files:** `app/Http/Controllers/Web/TaskPageController.php`, `resources/views/pages/tasks/kanban.blade.php`, `resources/views/partials/kanban-board.blade.php`
 
 ### Phase 2: Overdue tasks filter
 - **Goal:** Users can filter task list and kanban to show only overdue tasks
 - **Specs:**
-  - [ ] Task model has a `scopeOverdue` scope: `deadline < today AND status != done`
-  - [ ] TaskPageController `index()` extracts `overdue` from request and applies scope when truthy
-  - [ ] TaskPageController `kanban()` extracts `overdue` from request and applies scope when truthy
-  - [ ] Task list index filter bar includes an "Overdue" boolean filter (`field: overdue, type: boolean`)
-  - [ ] Kanban filter bar includes an "Overdue" boolean filter
-  - [ ] Tasks without a deadline are excluded from overdue results
-  - [ ] Overdue filter combines correctly with other active filters
+  - [x] Task model has a `scopeOverdue` scope: `deadline < today AND status != done`
+  - [x] TaskPageController `index()` extracts `overdue` from request and applies scope when truthy
+  - [x] TaskPageController `kanban()` extracts `overdue` from request and applies scope when truthy
+  - [x] Task list index filter bar includes an "Overdue" boolean filter (`field: overdue, type: boolean`)
+  - [x] Kanban filter bar includes an "Overdue" boolean filter
+  - [x] Tasks without a deadline are excluded from overdue results
+  - [x] Overdue filter combines correctly with other active filters
 - **Files:** `app/Models/Task.php`, `app/Http/Controllers/Web/TaskPageController.php`, `resources/views/pages/tasks/index.blade.php`, `resources/views/pages/tasks/kanban.blade.php`
 
 ### Phase 3: Dashboard priority sorting
 - **Goal:** Dashboard task widgets sort by priority (urgent first) within each day
 - **Specs:**
-  - [ ] `DashboardController::buildTodaySection()` sorts tasks by deadline ASC then priority (urgent → high → normal → low)
-  - [ ] `DashboardController::buildUpcomingSection()` applies the same sort
-  - [ ] `PartialController::dashboardTasks()` applies the same sort for both today and upcoming queries
-  - [ ] Priority sort uses `CASE WHEN` expression to map string enum values to numeric order
-  - [ ] Tasks with NULL priority sort after low
+  - [x] `DashboardController::buildTodaySection()` sorts tasks by deadline ASC then priority (urgent → high → normal → low)
+  - [x] `DashboardController::buildUpcomingSection()` applies the same sort
+  - [x] `PartialController::dashboardTasks()` applies the same sort for both today and upcoming queries
+  - [x] Priority sort uses `CASE WHEN` expression to map string enum values to numeric order
+  - [x] Tasks with NULL priority sort after low — N/A: priority column is NOT NULL, defaults to 'normal'
 - **Files:** `app/Http/Controllers/Web/DashboardController.php`, `app/Http/Controllers/Web/PartialController.php`
 
 ### Phase 4: Recurring tasks filter
 - **Goal:** Users can filter task list and kanban to show only recurring (or non-recurring) tasks
 - **Specs:**
-  - [ ] TaskPageController `index()` extracts `is_recurring` from request
-  - [ ] TaskPageController `kanban()` extracts `is_recurring` from request
-  - [ ] Task list index filter bar includes a "Recurring" boolean filter
-  - [ ] Kanban filter bar includes a "Recurring" boolean filter
-  - [ ] Filter correctly applies via Filterable trait (already configured as boolean type in `$filterableFields`)
+  - [x] TaskPageController `index()` extracts `is_recurring` from request
+  - [x] TaskPageController `kanban()` extracts `is_recurring` from request
+  - [x] Task list index filter bar includes a "Recurring" boolean filter
+  - [x] Kanban filter bar includes a "Recurring" boolean filter
+  - [x] Filter correctly applies via Filterable trait (already configured as boolean type in `$filterableFields`)
 - **Files:** `app/Http/Controllers/Web/TaskPageController.php`, `resources/views/pages/tasks/index.blade.php`, `resources/views/pages/tasks/kanban.blade.php`
 
 ### Phase 5: Inline task group edit
 - **Goal:** Users can change a task's group directly from the task card without opening it
 - **Specs:**
-  - [ ] Task card component accepts a `$taskGroups` collection prop
-  - [ ] Task card renders an `inline-select-pill` for `task_group_id` with group names as options
-  - [ ] "None" option available to unset the group (sends null)
-  - [ ] Pill uses the task's REST endpoint (`/api/v1/tasks/{id}`) with field `task_group_id`
-  - [ ] Task group options are passed from the controller/view to avoid N+1 queries
-  - [ ] Inline select updates immediately in the UI after save
+  - [x] Task card component accepts a `$taskGroups` collection prop
+  - [x] Task card renders an `inline-select-pill` for `task_group_id` with group names as options
+  - [x] "None" option available to unset the group (sends null)
+  - [x] Pill uses the task's REST endpoint (`/api/v1/tasks/{id}`) with field `task_group_id`
+  - [x] Task group options are passed from the controller/view to avoid N+1 queries
+  - [x] Inline select updates immediately in the UI after save
 - **Files:** `resources/views/components/tl/task-card.blade.php`, `resources/views/pages/tasks/index.blade.php`, `resources/views/pages/tasks/kanban.blade.php`, `resources/views/partials/tasks-list.blade.php`
 
 ### Phase 6: Kanban drag-and-drop scroll fix
 - **Goal:** Cards can be dragged across kanban columns regardless of scroll position, using the drag handle
 - **Specs:**
-  - [ ] SortableJS instances use `handle: '.drag-handle'` option to restrict drag initiation to the handle element
-  - [ ] SortableJS instances use `scroll: true` with `scrollSensitivity: 80` and `scrollSpeed: 12` for smoother auto-scroll
-  - [ ] SortableJS instances use `forceFallback: true` for consistent cross-browser drag behavior
-  - [ ] Kanban column containers have appropriate overflow/height styling for SortableJS scroll detection
-  - [ ] Cards can be dragged from a scrolled-down position in one column to any position in another column
-  - [ ] Drag handle cursor remains `cursor-grab` (already styled), non-handle areas of the card are not draggable
+  - [x] SortableJS instances use `handle: '.drag-handle'` option to restrict drag initiation to the handle element
+  - [x] SortableJS instances use `scroll: true` with `scrollSensitivity: 80` and `scrollSpeed: 12` for smoother auto-scroll
+  - [x] SortableJS instances use `forceFallback: true` for consistent cross-browser drag behavior
+  - [x] Kanban column containers have appropriate overflow/height styling for SortableJS scroll detection
+  - [x] Cards can be dragged from a scrolled-down position in one column to any position in another column
+  - [x] Drag handle cursor remains `cursor-grab` (already styled), non-handle areas of the card are not draggable
 - **Files:** `resources/js/components/sortable-kanban.ts`, `resources/views/pages/tasks/kanban.blade.php`
 
 ## Out of Scope
@@ -127,6 +127,12 @@ All six issues are isolated fixes in different parts of the codebase with no int
 - Priority sort on the task list page (task list uses manual sort_order via drag-and-drop)
 - Recurring task management UI changes (creation/editing already works)
 - Task group color indicator on the inline pill (possible future enhancement)
+
+## Parallelization
+
+**Strategy:** Sequential
+
+Most phases share overlapping files — `TaskPageController.php` (phases 1, 2, 4), `kanban.blade.php` (phases 1, 2, 4, 5, 6), `index.blade.php` (phases 2, 4, 5). Only Phase 3 (dashboard sorting) is fully independent, but it's too small (~15 min) to justify spawn overhead. Execute all phases sequentially.
 
 ## Open Questions
 

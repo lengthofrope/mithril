@@ -1,4 +1,4 @@
-@props(['task', 'hideWhenDone' => false, 'draggable' => true])
+@props(['task', 'hideWhenDone' => false, 'draggable' => true, 'taskGroups' => null])
 
 @php
     $statusValue = $task->status instanceof \BackedEnum ? $task->status->value : $task->status;
@@ -81,6 +81,21 @@
                 endpoint="/api/v1/tasks/{{ $task->id }}"
                 field="status"
             />
+
+            @if($taskGroups)
+                @php
+                    $groupOptions = ['' => 'None'] + $taskGroups->pluck('name', 'id')->all();
+                    $groupColorMap = ['' => 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400']
+                        + $taskGroups->mapWithKeys(fn ($g) => [$g->id => 'bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400'])->all();
+                @endphp
+                <x-tl.inline-select-pill
+                    :value="(string) ($task->task_group_id ?? '')"
+                    :options="$groupOptions"
+                    :color-map="$groupColorMap"
+                    endpoint="/api/v1/tasks/{{ $task->id }}"
+                    field="task_group_id"
+                />
+            @endif
 
             @if($task->deadline)
                 @php

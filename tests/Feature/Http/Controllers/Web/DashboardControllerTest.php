@@ -519,6 +519,47 @@ test('dashboard shows dynamic title when upcoming bilas are configured and exist
     $response->assertSee('Upcoming bilas');
 });
 
+test('todayTasks sorts by deadline then priority within same day', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create();
+
+    $lowToday = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open, 'priority' => Priority::Low]);
+    $urgentToday = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open, 'priority' => Priority::Urgent]);
+    $highToday = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open, 'priority' => Priority::High]);
+    $normalToday = Task::factory()->create(['user_id' => $user->id, 'deadline' => now(USER_TZ)->toDateString(), 'status' => TaskStatus::Open, 'priority' => Priority::Normal]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $tasks = $response->viewData('todayTasks');
+    expect($tasks->pluck('id')->all())->toBe([
+        $urgentToday->id,
+        $highToday->id,
+        $normalToday->id,
+        $lowToday->id,
+    ]);
+});
+
+test('upcomingTasks sorts by deadline then priority within same day', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_tasks' => 10]);
+
+    $tomorrow = now(USER_TZ)->addDay()->toDateString();
+    $lowTomorrow = Task::factory()->create(['user_id' => $user->id, 'deadline' => $tomorrow, 'status' => TaskStatus::Open, 'priority' => Priority::Low]);
+    $urgentTomorrow = Task::factory()->create(['user_id' => $user->id, 'deadline' => $tomorrow, 'status' => TaskStatus::Open, 'priority' => Priority::Urgent]);
+    $normalTomorrow = Task::factory()->create(['user_id' => $user->id, 'deadline' => $tomorrow, 'status' => TaskStatus::Open, 'priority' => Priority::Normal]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $tasks = $response->viewData('upcomingTasks');
+    expect($tasks->pluck('id')->all())->toBe([
+        $urgentTomorrow->id,
+        $normalTomorrow->id,
+        $lowTomorrow->id,
+    ]);
+});
+
 test('todayTasks eager-loads teamMember and team relationships', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
