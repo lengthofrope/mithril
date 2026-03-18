@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\MeetingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Jobs\TranscribeMeetingJob;
 use App\Models\Attachment;
 use App\Models\Meeting;
 use App\Models\MeetingRecording;
@@ -72,6 +73,10 @@ class MeetingRecordingController extends Controller
                 'status' => MeetingStatus::InProgress,
                 'started_at' => $meeting->started_at ?? now(),
             ]);
+        }
+
+        if (config('meetings.transcription.auto_start', true)) {
+            TranscribeMeetingJob::dispatch($meeting, $recording);
         }
 
         return $this->successResponse($recording, 'Recording saved.', 201);

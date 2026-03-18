@@ -41,6 +41,10 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::get('meetings/{meeting}/recordings/{recording}/stream', [App\Http\Controllers\Api\MeetingRecordingController::class, 'stream'])->name('meetings.recordings.stream');
     Route::delete('meetings/{meeting}/recordings/{recording}', [App\Http\Controllers\Api\MeetingRecordingController::class, 'destroy'])->name('meetings.recordings.destroy');
 
+    Route::get('meetings/{meeting}/transcription', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'show'])->name('meetings.transcription.show');
+    Route::post('meetings/{meeting}/transcription/retry', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'retry'])->name('meetings.transcription.retry');
+    Route::post('meetings/{meeting}/transcription/manual', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'storeManual'])->name('meetings.transcription.manual');
+
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);
 

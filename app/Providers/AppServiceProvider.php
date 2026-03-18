@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Events\MeetingScheduled;
+use App\Services\Transcription\TranscriptionServiceInterface;
+use App\Services\Transcription\WhisperTranscriptionService;
 use App\Events\TaskStatusChanged;
 use App\Listeners\CreateFollowUpOnWaiting;
 use App\Listeners\CreateRecurringTaskOccurrence;
@@ -34,6 +36,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(TranscriptionServiceInterface::class, function (): TranscriptionServiceInterface {
+            return new WhisperTranscriptionService(
+                apiKey: config('meetings.transcription.whisper.api_key') ?? '',
+                model: config('meetings.transcription.whisper.model') ?? 'whisper-1',
+            );
+        });
     }
 
     /**

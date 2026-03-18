@@ -25,6 +25,11 @@ return [
     'transcription' => [
         'provider' => env('MEETING_TRANSCRIPTION_PROVIDER', 'whisper'),
         'auto_start' => (bool) env('MEETING_AUTO_TRANSCRIBE', true),
+
+        'whisper' => [
+            'api_key' => env('OPENAI_API_KEY'),
+            'model' => env('WHISPER_MODEL', 'whisper-1'),
+        ],
     ],
 
     'extraction' => [

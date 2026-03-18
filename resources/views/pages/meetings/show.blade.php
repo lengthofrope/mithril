@@ -310,6 +310,147 @@
         </div>
     </div>
 
+    {{-- Transcription section --}}
+    <div
+        class="mb-6 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+        x-data="{
+            status: @js($meeting->transcription?->status?->value),
+            content: @js($meeting->transcription?->content ?? ''),
+            errorMessage: @js($meeting->transcription?->error_message ?? ''),
+            showManualInput: false,
+            manualContent: '',
+            polling: false,
+
+            init() {
+                if (this.status === 'pending' || this.status === 'processing') {
+                    this.startPolling();
+                }
+            },
+
+            async startPolling() {
+                this.polling = true;
+                while (this.polling && (this.status === 'pending' || this.status === 'processing')) {
+                    await new Promise(r => setTimeout(r, 3000));
+                    try {
+                        const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/transcription', {
+                            headers: { 'Accept': 'application/json' },
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.status = data.data?.status;
+                            this.content = data.data?.content ?? '';
+                            this.errorMessage = data.data?.error_message ?? '';
+                            if (this.status === 'completed' || this.status === 'failed') {
+                                this.polling = false;
+                            }
+                        }
+                    } catch { /* continue polling */ }
+                }
+            },
+
+            async retry() {
+                const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/transcription/retry', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                    },
+                });
+                if (response.ok) {
+                    this.status = 'pending';
+                    this.errorMessage = '';
+                    this.startPolling();
+                }
+            },
+
+            async saveManual() {
+                const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/transcription/manual', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content: this.manualContent }),
+                });
+                if (response.ok) {
+                    this.content = this.manualContent;
+                    this.status = 'completed';
+                    this.showManualInput = false;
+                }
+            },
+        }"
+    >
+        <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+            <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Transcription</h2>
+            <div class="flex items-center gap-2">
+                <template x-if="status === 'failed'">
+                    <button
+                        type="button"
+                        x-on:click="retry()"
+                        class="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-400"
+                    >Retry</button>
+                </template>
+                <button
+                    type="button"
+                    x-on:click="showManualInput = !showManualInput"
+                    class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                    x-text="showManualInput ? 'Cancel' : 'Manual input'"
+                ></button>
+            </div>
+        </div>
+
+        <div class="p-5">
+            {{-- Pending / Processing --}}
+            <template x-if="status === 'pending' || status === 'processing'">
+                <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                    <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span x-text="status === 'pending' ? 'Waiting to start transcription…' : 'Transcribing audio…'"></span>
+                </div>
+            </template>
+
+            {{-- Failed --}}
+            <template x-if="status === 'failed'">
+                <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                    <p class="font-medium">Transcription failed</p>
+                    <p class="mt-1 text-xs" x-text="errorMessage"></p>
+                </div>
+            </template>
+
+            {{-- Completed --}}
+            <template x-if="status === 'completed' && !showManualInput">
+                <div class="max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300" x-text="content"></div>
+            </template>
+
+            {{-- No transcription yet --}}
+            <template x-if="!status && !showManualInput">
+                <p class="text-sm text-gray-400 dark:text-gray-500">No transcription available yet. Record or upload audio to start.</p>
+            </template>
+
+            {{-- Manual input --}}
+            <template x-if="showManualInput">
+                <div>
+                    <label for="manual-transcription" class="sr-only">Manual transcription</label>
+                    <textarea
+                        id="manual-transcription"
+                        x-model="manualContent"
+                        rows="10"
+                        placeholder="Paste or type the transcription here…"
+                        class="mb-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                    ></textarea>
+                    <button
+                        type="button"
+                        x-on:click="saveManual()"
+                        class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-500"
+                    >Save transcription</button>
+                </div>
+            </template>
+        </div>
+    </div>
+
     {{-- Navigation to prev/next meeting --}}
     <div class="mb-6 flex items-center justify-between">
         @if($previousMeeting)

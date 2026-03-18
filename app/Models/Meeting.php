@@ -148,6 +148,16 @@ class Meeting extends Model
     }
 
     /**
+     * Get the transcription for this meeting.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<MeetingTranscription>
+     */
+    public function transcription(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(MeetingTranscription::class);
+    }
+
+    /**
      * Get all calendar event links for this meeting.
      *
      * @return MorphMany<CalendarEventLink>

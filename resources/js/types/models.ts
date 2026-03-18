@@ -170,6 +170,23 @@ interface MeetingRecording {
     updated_at: string;
 }
 
+type TranscriptionStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+/**
+ * Mirrors the `meeting_transcriptions` Eloquent model.
+ */
+interface MeetingTranscription {
+    id: number;
+    meeting_id: number;
+    content: string | null;
+    language: string;
+    provider: string;
+    status: TranscriptionStatus;
+    error_message: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 /**
  * Mirrors the `agreements` Eloquent model.
  */
@@ -456,5 +473,5 @@ interface Attachment {
     updated_at: string;
 }
 
-export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, MeetingType, MeetingStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant, ActivityType };
-export type { Team, TeamMember, Task, TaskGroup, FollowUp, Meeting, MeetingPrepItem, MeetingRecording, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification, Activity, Attachment };
+export type { Priority, TaskStatus, RecurrenceInterval, FollowUpStatus, MemberStatus, MeetingType, MeetingStatus, TranscriptionStatus, ChartType, DataSource, TimeRange, CalendarEventStatus, EmailImportance, NotificationVariant, ActivityType };
+export type { Team, TeamMember, Task, TaskGroup, FollowUp, Meeting, MeetingPrepItem, MeetingRecording, MeetingTranscription, Agreement, Note, WeeklyReflection, AnalyticsWidget, ChartData, TimeSeriesChartData, CalendarEvent, CalendarEventLink, Email, EmailLink, JiraIssue, JiraIssueLink, SystemNotification, Activity, Attachment };

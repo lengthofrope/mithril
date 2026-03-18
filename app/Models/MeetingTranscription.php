@@ -1,0 +1,67 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Enums\TranscriptionStatus;
+use App\Models\Traits\BelongsToUser;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * Transcription result for a meeting recording.
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property int $meeting_id
+ * @property string|null $content
+ * @property string $language
+ * @property string $provider
+ * @property TranscriptionStatus $status
+ * @property string|null $error_message
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ */
+class MeetingTranscription extends Model
+{
+    use BelongsToUser;
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'meeting_id',
+        'content',
+        'language',
+        'provider',
+        'status',
+        'error_message',
+    ];
+
+    /**
+     * Get the casts for this model.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => TranscriptionStatus::class,
+        ];
+    }
+
+    /**
+     * Get the meeting this transcription belongs to.
+     *
+     * @return BelongsTo<Meeting, MeetingTranscription>
+     */
+    public function meeting(): BelongsTo
+    {
+        return $this->belongsTo(Meeting::class);
+    }
+}

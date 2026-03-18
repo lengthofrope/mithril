@@ -324,19 +324,19 @@ sequenceDiagram
 ### Phase 4: Transcriptie service
 - **Goal:** Audio automatisch transcriberen via configureerbare provider
 - **Specs:**
-  - [ ] MeetingTranscription model met BelongsToUser
-  - [ ] TranscriptionStatus enum
-  - [ ] `TranscriptionServiceInterface` met `transcribe()` method
-  - [ ] Minimaal één concrete implementatie (bijv. OpenAI Whisper)
-  - [ ] `TranscribeMeetingJob` queued job met retry logic
-  - [ ] Config `meetings.transcription.provider` + provider-specifieke config
-  - [ ] Service provider binding interface → implementatie
-  - [ ] Transcriptietaal kiesbaar per meeting (NL/EN), default vanuit meeting.transcription_language
-  - [ ] Transcriptie automatisch gestart na recording save (configureerbaar)
-  - [ ] Status polling in frontend (pending → processing → completed/failed)
-  - [ ] Transcriptie weergave op meeting detail pagina (scrollbaar, doorzoekbaar)
-  - [ ] Retry knop bij failed transcriptie
-  - [ ] Handmatige transcriptie-invoer als fallback (textarea)
+  - [x] MeetingTranscription model met BelongsToUser
+  - [x] TranscriptionStatus enum
+  - [x] `TranscriptionServiceInterface` met `transcribe()` method
+  - [x] Minimaal één concrete implementatie (bijv. OpenAI Whisper)
+  - [x] `TranscribeMeetingJob` queued job met retry logic
+  - [x] Config `meetings.transcription.provider` + provider-specifieke config
+  - [x] Service provider binding interface → implementatie
+  - [x] Transcriptietaal kiesbaar per meeting (NL/EN), default vanuit meeting.transcription_language
+  - [x] Transcriptie automatisch gestart na recording save (configureerbaar)
+  - [x] Status polling in frontend (pending → processing → completed/failed)
+  - [x] Transcriptie weergave op meeting detail pagina (scrollbaar, doorzoekbaar)
+  - [x] Retry knop bij failed transcriptie
+  - [x] Handmatige transcriptie-invoer als fallback (textarea)
 - **Files:** MeetingTranscription model, migration, Service interface + impl, Job, config
 
 ### Phase 5: AI extractie & review
