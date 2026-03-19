@@ -1,13 +1,29 @@
+x-common: &common
+  container_name: mithril-whisper
+  restart: unless-stopped
+  ports:
+    - "${WHISPER_CPP_PORT:-8080}:8080"
+  volumes:
+    - whisper-models:/models
+  entrypoint: ["whisper-server", "--host", "0.0.0.0", "--port", "8080", "-m", "/models/${WHISPER_MODEL_FILE:-ggml-large-v3-turbo.bin}", "--convert"]
+
 services:
   whisper:
+    <<: *common
     image: ghcr.io/ggml-org/whisper.cpp:main
-    container_name: mithril-whisper
-    restart: unless-stopped
-    ports:
-      - "${WHISPER_CPP_PORT:-8080}:8080"
-    volumes:
-      - whisper-models:/models
-    entrypoint: ["whisper-server", "--host", "0.0.0.0", "--port", "8080", "-m", "/models/${WHISPER_MODEL_FILE:-ggml-large-v3-turbo.bin}", "--convert"]
+    profiles: ["cpu"]
+
+  whisper-gpu:
+    <<: *common
+    image: ghcr.io/ggml-org/whisper.cpp:main-cuda
+    profiles: ["gpu"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 volumes:
   whisper-models:

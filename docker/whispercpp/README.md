@@ -5,12 +5,18 @@ A standalone [whisper.cpp](https://github.com/ggml-org/whisper.cpp) server for t
 ## Prerequisites
 
 - Docker and Docker Compose
+- For GPU mode: NVIDIA GPU with [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed
 
 ## Quick Start
 
 ```bash
 cd docker/whispercpp
+
+# CPU mode (default)
 ./setup.sh
+
+# NVIDIA GPU mode (significantly faster)
+./setup.sh --gpu
 ```
 
 This will:
@@ -26,6 +32,7 @@ Pass a model filename to `setup.sh` to use a different model:
 
 ```bash
 ./setup.sh ggml-base.bin
+./setup.sh --gpu ggml-base.bin    # combine with GPU mode
 ```
 
 | Model | Size | Speed | Quality | Use case |
@@ -60,17 +67,22 @@ WHISPER_CPP_BASE_URL=http://localhost:8080
 ## Managing the Service
 
 ```bash
-# Start
-docker compose up -d
+# Start (CPU)
+docker compose --profile cpu up -d
+
+# Start (GPU)
+docker compose --profile gpu up -d
 
 # Stop
-docker compose down
+docker compose --profile cpu down
+# or
+docker compose --profile gpu down
 
 # View logs
 docker compose logs -f
 
 # Restart with a different model
-WHISPER_MODEL_FILE=ggml-base.bin docker compose up -d
+WHISPER_MODEL_FILE=ggml-base.bin docker compose --profile cpu up -d
 ```
 
 ## Verifying the Server
@@ -93,5 +105,7 @@ Expected response:
 Models are stored in a Docker volume (`whispercpp_whisper-models`) and persist across container restarts. To remove the volume and downloaded models:
 
 ```bash
-docker compose down -v
+docker compose --profile cpu down -v
+# or
+docker compose --profile gpu down -v
 ```
