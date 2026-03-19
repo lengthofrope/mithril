@@ -3,21 +3,20 @@
 @section('content')
     <x-common.page-breadcrumb pageTitle="Follow-ups" />
 
-    {{-- Filter bar --}}
-    <div class="mb-6">
-        <x-tl.filter-bar
-            :endpoint="route('follow-ups.index')"
-            results-selector="#follow-ups-results"
-            :filters="[
-                ['field' => 'search', 'type' => 'search', 'label' => 'Search'],
-                ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
-                ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
-            ]"
-        />
-    </div>
+    {{-- Filter bar + toolbar --}}
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0 flex-1">
+            <x-tl.filter-bar
+                :endpoint="route('follow-ups.index')"
+                results-selector="#follow-ups-results"
+                :filters="[
+                    ['field' => 'search', 'type' => 'search', 'label' => 'Search'],
+                    ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
+                    ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
+                ]"
+            />
+        </div>
 
-    {{-- Toolbar --}}
-    <div class="mb-6 flex items-center justify-end">
         @include('partials.follow-up-create-modal', [
             'teamOptions' => $teamOptions,
             'memberOptions' => $memberOptions,

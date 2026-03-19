@@ -3,8 +3,8 @@
 @section('content')
     <x-common.page-breadcrumb pageTitle="Tasks" />
 
-    {{-- Filter bar --}}
-    <div class="mb-6">
+    {{-- Filter bar + toolbar --}}
+    <div x-data="{ showAddGroup: false }" class="mb-4 space-y-3">
         <x-tl.filter-bar
             :endpoint="route('tasks.index')"
             results-selector="#tasks-results"
@@ -31,10 +31,6 @@
                 ['field' => 'is_recurring', 'type' => 'boolean', 'label' => 'Recurring'],
             ]"
         />
-    </div>
-
-    {{-- Toolbar --}}
-    <div x-data="{ showAddGroup: false }" class="mb-4 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
                 {{-- Toggle completed --}}
