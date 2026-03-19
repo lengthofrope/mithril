@@ -82,9 +82,18 @@ app = FastAPI(title="Mithril Diarization Service", lifespan=lifespan)
 
 def get_speaker_segments(audio_path: str) -> list[tuple[str, float, float]]:
     """Run pyannote diarization and return (speaker, start, end) tuples."""
-    diarization = diarization_pipeline(audio_path)
+    from pyannote.audio.core.io import Audio
+
+    audio = Audio(mono="downmix")
+    waveform, sample_rate = audio(audio_path)
+    duration = waveform.shape[1] / sample_rate
+
+    output = diarization_pipeline(
+        {"waveform": waveform, "sample_rate": sample_rate, "uri": audio_path},
+    )
+
     segments = []
-    for turn, _, speaker in diarization.itertracks(yield_label=True):
+    for turn, speaker in output.exclusive_speaker_diarization:
         segments.append((speaker, turn.start, turn.end))
     return segments
 
