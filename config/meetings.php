@@ -11,6 +11,7 @@ return [
         'max_upload_mb' => (int) env('MEETING_RECORDING_MAX_MB', 500),
         'allowed_mime_types' => [
             'audio/webm',
+            'video/webm',
             'audio/mp3',
             'audio/mpeg',
             'audio/wav',
