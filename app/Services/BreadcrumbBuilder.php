@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\MeetingType;
 use App\Models\FollowUp;
 use App\Models\Meeting;
 use App\Models\Note;
@@ -146,19 +147,57 @@ class BreadcrumbBuilder
     {
         $this->crumbs = [['label' => 'Home', 'url' => '/']];
 
-        $attendee = $meeting->attendees->first();
-
-        if ($attendee) {
-            $this->addTeamMemberChain($attendee, linked: true);
-        } elseif ($meeting->team) {
-            $this->addTeamChain($meeting->team);
-        } else {
-            $this->crumbs[] = ['label' => 'Meetings', 'url' => route('meetings.index')];
-        }
+        match ($meeting->type) {
+            MeetingType::OneOnOne => $this->buildOneOnOneMeetingCrumbs($meeting),
+            MeetingType::Team => $this->buildTeamMeetingCrumbs($meeting),
+            MeetingType::Other => $this->crumbs[] = ['label' => 'Meetings', 'url' => route('meetings.index')],
+        };
 
         $this->crumbs[] = ['label' => $meeting->title, 'url' => null];
 
         return $this;
+    }
+
+    /**
+     * Build breadcrumb chain for a one-on-one meeting via the attendee's team hierarchy.
+     *
+     * @param Meeting $meeting
+     * @return void
+     */
+    private function buildOneOnOneMeetingCrumbs(Meeting $meeting): void
+    {
+        $attendee = $meeting->attendees->first();
+
+        if ($attendee) {
+            $this->addTeamMemberChain($attendee, linked: true);
+        } else {
+            $this->crumbs[] = ['label' => 'Meetings', 'url' => route('meetings.index')];
+        }
+    }
+
+    /**
+     * Build breadcrumb chain for a team meeting based on the number of distinct teams.
+     *
+     * Single team: Home > Teams > Team X > title.
+     * Multiple teams: Home > Teams > title.
+     *
+     * @param Meeting $meeting
+     * @return void
+     */
+    private function buildTeamMeetingCrumbs(Meeting $meeting): void
+    {
+        $uniqueTeams = $meeting->attendees
+            ->pluck('team')
+            ->filter()
+            ->unique('id');
+
+        if ($uniqueTeams->count() === 1) {
+            $this->addTeamChain($uniqueTeams->first());
+        } elseif ($uniqueTeams->isEmpty() && $meeting->team) {
+            $this->addTeamChain($meeting->team);
+        } else {
+            $this->crumbs[] = ['label' => 'Teams', 'url' => route('teams.index')];
+        }
     }
 
     /**

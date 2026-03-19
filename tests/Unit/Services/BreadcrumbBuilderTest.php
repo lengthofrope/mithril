@@ -104,10 +104,10 @@ test('team member produces four crumbs', function () {
         ->and($crumbs[3])->toBe(['label' => $member->name, 'url' => null]);
 });
 
-test('meeting show produces crumbs through member hierarchy', function () {
+test('one_on_one meeting produces crumbs through member hierarchy', function () {
     $team = Team::factory()->create(['user_id' => $this->user->id]);
     $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $this->user->id]);
-    $meeting = Meeting::factory()->create(['user_id' => $this->user->id, 'title' => 'Sprint Review']);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id, 'type' => 'one_on_one', 'title' => '1-on-1 with Alice']);
     $meeting->attendees()->attach($member->id);
     $meeting->load(['attendees.team']);
 
@@ -118,7 +118,69 @@ test('meeting show produces crumbs through member hierarchy', function () {
         ->and($crumbs[1])->toBe(['label' => 'Teams', 'url' => route('teams.index')])
         ->and($crumbs[2])->toBe(['label' => $team->name, 'url' => route('teams.show', $team)])
         ->and($crumbs[3])->toBe(['label' => $member->name, 'url' => route('teams.member', $member)])
-        ->and($crumbs[4])->toBe(['label' => 'Sprint Review', 'url' => null]);
+        ->and($crumbs[4])->toBe(['label' => '1-on-1 with Alice', 'url' => null]);
+});
+
+test('team meeting with single team produces team hierarchy breadcrumb', function () {
+    $team = Team::factory()->create(['user_id' => $this->user->id]);
+    $alice = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $this->user->id]);
+    $bob = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $this->user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id, 'type' => 'team', 'title' => 'Sprint Review']);
+    $meeting->attendees()->attach([$alice->id, $bob->id]);
+    $meeting->load(['attendees.team']);
+
+    $crumbs = $this->builder->forMeeting($meeting)->build();
+
+    expect($crumbs)->toHaveCount(4)
+        ->and($crumbs[0])->toBe(['label' => 'Home', 'url' => '/'])
+        ->and($crumbs[1])->toBe(['label' => 'Teams', 'url' => route('teams.index')])
+        ->and($crumbs[2])->toBe(['label' => $team->name, 'url' => route('teams.show', $team)])
+        ->and($crumbs[3])->toBe(['label' => 'Sprint Review', 'url' => null]);
+});
+
+test('team meeting with multiple teams produces generic teams breadcrumb', function () {
+    $teamA = Team::factory()->create(['user_id' => $this->user->id]);
+    $teamB = Team::factory()->create(['user_id' => $this->user->id]);
+    $alice = TeamMember::factory()->create(['team_id' => $teamA->id, 'user_id' => $this->user->id]);
+    $bob = TeamMember::factory()->create(['team_id' => $teamB->id, 'user_id' => $this->user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id, 'type' => 'team', 'title' => 'Cross-team Sync']);
+    $meeting->attendees()->attach([$alice->id, $bob->id]);
+    $meeting->load(['attendees.team']);
+
+    $crumbs = $this->builder->forMeeting($meeting)->build();
+
+    expect($crumbs)->toHaveCount(3)
+        ->and($crumbs[0])->toBe(['label' => 'Home', 'url' => '/'])
+        ->and($crumbs[1])->toBe(['label' => 'Teams', 'url' => route('teams.index')])
+        ->and($crumbs[2])->toBe(['label' => 'Cross-team Sync', 'url' => null]);
+});
+
+test('team meeting with no attendees but team_id uses that team', function () {
+    $team = Team::factory()->create(['user_id' => $this->user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id, 'type' => 'team', 'team_id' => $team->id, 'title' => 'Empty Team Meeting']);
+    $meeting->load(['attendees.team', 'team']);
+
+    $crumbs = $this->builder->forMeeting($meeting)->build();
+
+    expect($crumbs)->toHaveCount(4)
+        ->and($crumbs[1])->toBe(['label' => 'Teams', 'url' => route('teams.index')])
+        ->and($crumbs[2])->toBe(['label' => $team->name, 'url' => route('teams.show', $team)])
+        ->and($crumbs[3])->toBe(['label' => 'Empty Team Meeting', 'url' => null]);
+});
+
+test('other meeting produces simple meetings breadcrumb', function () {
+    $team = Team::factory()->create(['user_id' => $this->user->id]);
+    $member = TeamMember::factory()->create(['team_id' => $team->id, 'user_id' => $this->user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id, 'type' => 'other', 'title' => 'External Sync']);
+    $meeting->attendees()->attach($member->id);
+    $meeting->load(['attendees.team']);
+
+    $crumbs = $this->builder->forMeeting($meeting)->build();
+
+    expect($crumbs)->toHaveCount(3)
+        ->and($crumbs[0])->toBe(['label' => 'Home', 'url' => '/'])
+        ->and($crumbs[1])->toBe(['label' => 'Meetings', 'url' => route('meetings.index')])
+        ->and($crumbs[2])->toBe(['label' => 'External Sync', 'url' => null]);
 });
 
 test('note show without associations produces three crumbs', function () {
