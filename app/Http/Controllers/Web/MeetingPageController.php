@@ -42,9 +42,16 @@ class MeetingPageController extends Controller
         $type = $request->get('type');
         $status = $request->get('status');
 
+        $memberIdsForTeam = $teamId
+            ? TeamMember::where('team_id', $teamId)->pluck('id')
+            : null;
+
         $baseQuery = fn () => Meeting::query()
             ->when($teamMemberId, fn ($q) => $q->whereHas('attendees', fn ($sub) => $sub->where('team_member_id', $teamMemberId)))
-            ->when($teamId, fn ($q) => $q->where('team_id', $teamId))
+            ->when($memberIdsForTeam, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('team_id', $teamId)
+                ->orWhereHas('attendees', fn ($att) => $att->whereIn('team_member_id', $memberIdsForTeam))
+            ))
             ->when($type, fn ($q) => $q->where('type', $type))
             ->when($status, fn ($q) => $q->where('status', $status))
             ->with(['attendees', 'prepItems']);
