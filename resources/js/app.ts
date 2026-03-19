@@ -72,8 +72,6 @@ Alpine.data('tagEditor', tagEditor as Parameters<typeof Alpine.data>[1]);
 Alpine.data('audioRecorder', audioRecorder as Parameters<typeof Alpine.data>[1]);
 Alpine.data('extractionReview', extractionReview as Parameters<typeof Alpine.data>[1]);
 
-Alpine.store('taskList', { showCompleted: false });
-
 window.Alpine = Alpine;
 
 Alpine.start();
