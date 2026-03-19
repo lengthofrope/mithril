@@ -24,8 +24,12 @@ return [
     ],
 
     'transcription' => [
-        'provider' => env('MEETING_TRANSCRIPTION_PROVIDER', 'whisper'),
+        'provider' => env('MEETING_TRANSCRIPTION_PROVIDER', 'whisper_cpp'),
         'auto_start' => (bool) env('MEETING_AUTO_TRANSCRIBE', true),
+
+        'whisper_cpp' => [
+            'base_url' => env('WHISPER_CPP_BASE_URL', 'http://localhost:8080'),
+        ],
 
         'whisper' => [
             'api_key' => env('OPENAI_API_KEY'),

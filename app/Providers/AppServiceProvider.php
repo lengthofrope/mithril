@@ -8,6 +8,7 @@ use App\Events\MeetingScheduled;
 use App\Services\MeetingInsights\MeetingInsightExtractorInterface;
 use App\Services\MeetingInsights\OpenAiInsightExtractor;
 use App\Services\Transcription\TranscriptionServiceInterface;
+use App\Services\Transcription\WhisperCppTranscriptionService;
 use App\Services\Transcription\WhisperTranscriptionService;
 use App\Events\TaskStatusChanged;
 use App\Listeners\CreateFollowUpOnWaiting;
@@ -46,10 +47,15 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(TranscriptionServiceInterface::class, function (): TranscriptionServiceInterface {
-            return new WhisperTranscriptionService(
-                apiKey: config('meetings.transcription.whisper.api_key') ?? '',
-                model: config('meetings.transcription.whisper.model') ?? 'whisper-1',
-            );
+            return match (config('meetings.transcription.provider')) {
+                'whisper' => new WhisperTranscriptionService(
+                    apiKey: config('meetings.transcription.whisper.api_key') ?? '',
+                    model: config('meetings.transcription.whisper.model') ?? 'whisper-1',
+                ),
+                default => new WhisperCppTranscriptionService(
+                    baseUrl: config('meetings.transcription.whisper_cpp.base_url') ?? 'http://localhost:8080',
+                ),
+            };
         });
     }
 
