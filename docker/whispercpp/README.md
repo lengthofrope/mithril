@@ -5,18 +5,29 @@ A standalone [whisper.cpp](https://github.com/ggml-org/whisper.cpp) server for t
 ## Prerequisites
 
 - Docker and Docker Compose
-- For GPU mode: NVIDIA GPU with [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed
+- For CUDA mode: NVIDIA GPU with [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- For Vulkan mode: GPU with Vulkan support and `/dev/dri` device access
 
 ## Quick Start
 
 ```bash
 cd docker/whispercpp
-
-# CPU mode (default)
 ./setup.sh
+```
 
-# NVIDIA GPU mode (significantly faster)
-./setup.sh --gpu
+The setup script auto-detects the best available backend:
+
+1. **NVIDIA GPU + `/dev/dri`** → Vulkan (most compatible)
+2. **NVIDIA GPU without `/dev/dri`** → CUDA
+3. **Non-NVIDIA GPU + `/dev/dri`** → Vulkan
+4. **No GPU** → CPU
+
+You can override the auto-detection:
+
+```bash
+./setup.sh --vulkan              # Force Vulkan
+./setup.sh --cuda                # Force CUDA
+./setup.sh --cpu                 # Force CPU
 ```
 
 This will:
@@ -32,7 +43,7 @@ Pass a model filename to `setup.sh` to use a different model:
 
 ```bash
 ./setup.sh ggml-base.bin
-./setup.sh --gpu ggml-base.bin    # combine with GPU mode
+./setup.sh --vulkan ggml-base.bin
 ```
 
 | Model | Size | Speed | Quality | Use case |
@@ -64,26 +75,37 @@ MEETING_TRANSCRIPTION_PROVIDER=whisper_cpp
 WHISPER_CPP_BASE_URL=http://localhost:8080
 ```
 
-## Managing the Service
+## Profiles
+
+The `docker-compose.yml` defines three profiles. The `setup.sh` script selects one automatically, but you must specify the same profile when managing the container manually.
+
+| Profile | Image | GPU access | Requirements |
+|---------|-------|------------|--------------|
+| `cpu` | `main` | None | Docker only |
+| `vulkan` | `main-vulkan` | `/dev/dri` device | GPU with Vulkan driver |
+| `cuda` | `main-cuda` | NVIDIA runtime | NVIDIA Container Toolkit |
+
+Vulkan is preferred over CUDA because it works without the NVIDIA Container Toolkit and avoids CUDA driver version compatibility issues.
+
+## Daily Usage
+
+After the initial `./setup.sh`, the model is downloaded and the profile is chosen. Day-to-day you just start and stop the container directly. Replace `<profile>` with the one you used during setup (`cpu`, `vulkan`, or `cuda`).
 
 ```bash
-# Start (CPU)
-docker compose --profile cpu up -d
-
-# Start (GPU)
-docker compose --profile gpu up -d
+# Start
+docker compose --profile <profile> up -d
 
 # Stop
-docker compose --profile cpu down
-# or
-docker compose --profile gpu down
+docker compose --profile <profile> down
 
 # View logs
 docker compose logs -f
 
 # Restart with a different model
-WHISPER_MODEL_FILE=ggml-base.bin docker compose --profile cpu up -d
+WHISPER_MODEL_FILE=ggml-base.bin docker compose --profile <profile> up -d
 ```
+
+The container is configured with `restart: unless-stopped`, so it will start automatically after a system reboot unless you explicitly stop it.
 
 ## Verifying the Server
 
@@ -105,7 +127,5 @@ Expected response:
 Models are stored in a Docker volume (`whispercpp_whisper-models`) and persist across container restarts. To remove the volume and downloaded models:
 
 ```bash
-docker compose --profile cpu down -v
-# or
-docker compose --profile gpu down -v
+docker compose --profile <profile> down -v
 ```

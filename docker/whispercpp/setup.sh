@@ -3,11 +3,12 @@
 # Downloads a Whisper model into the Docker volume and starts the service.
 #
 # Usage:
-#   ./setup.sh                    # Auto-detect GPU, fallback to CPU
-#   ./setup.sh --gpu              # Force NVIDIA GPU mode
+#   ./setup.sh                    # Auto-detect: NVIDIA GPU → Vulkan → CPU
+#   ./setup.sh --cuda             # Force NVIDIA CUDA mode
+#   ./setup.sh --vulkan           # Force Vulkan mode
 #   ./setup.sh --cpu              # Force CPU mode
 #   ./setup.sh ggml-base.bin      # Auto-detect with a specific model
-#   ./setup.sh --gpu ggml-base.bin
+#   ./setup.sh --vulkan ggml-base.bin
 #
 # Available models (smallest → largest):
 #   ggml-tiny.bin        ~  75 MB   (fastest, lowest quality)
@@ -24,19 +25,28 @@ MODEL_FILE=""
 
 for arg in "$@"; do
     case "$arg" in
-        --gpu) PROFILE="gpu" ;;
-        --cpu) PROFILE="cpu" ;;
-        *)     MODEL_FILE="$arg" ;;
+        --cuda)   PROFILE="cuda" ;;
+        --vulkan) PROFILE="vulkan" ;;
+        --cpu)    PROFILE="cpu" ;;
+        *)        MODEL_FILE="$arg" ;;
     esac
 done
 
 if [ -z "$PROFILE" ]; then
-    if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null && docker info 2>/dev/null | grep -qi nvidia; then
-        PROFILE="gpu"
-        echo "==> NVIDIA GPU detected, using GPU mode"
+    if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null; then
+        if [ -e /dev/dri ]; then
+            PROFILE="vulkan"
+            echo "==> NVIDIA GPU detected, using Vulkan mode"
+        else
+            PROFILE="cuda"
+            echo "==> NVIDIA GPU detected, using CUDA mode"
+        fi
+    elif [ -e /dev/dri ]; then
+        PROFILE="vulkan"
+        echo "==> GPU detected via /dev/dri, using Vulkan mode"
     else
         PROFILE="cpu"
-        echo "==> No NVIDIA GPU detected, using CPU mode"
+        echo "==> No GPU detected, using CPU mode"
     fi
 fi
 

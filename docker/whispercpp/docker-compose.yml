@@ -16,7 +16,7 @@ services:
   whisper-gpu:
     <<: *common
     image: ghcr.io/ggml-org/whisper.cpp:main-cuda
-    profiles: ["gpu"]
+    profiles: ["cuda"]
     deploy:
       resources:
         reservations:
@@ -25,5 +25,18 @@ services:
               count: 1
               capabilities: [gpu]
 
+  whisper-vulkan:
+    <<: *common
+    image: ghcr.io/ggml-org/whisper.cpp:main-vulkan
+    profiles: ["vulkan"]
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - whisper-models:/models
+      - /usr/share/vulkan/icd.d:/usr/share/vulkan/icd.d:ro
+      - /etc/vulkan/icd.d:/etc/vulkan/icd.d:ro
+
 volumes:
   whisper-models:
+    name: whispercpp_whisper-models
+    external: true
