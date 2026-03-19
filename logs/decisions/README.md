@@ -27,3 +27,4 @@
 | 023 | backend, migration, data-integrity, meetings | Orphaned prep items dropped during Bila→Meeting migration | Meetings (Phase 1) | Accepted | 2026-03-18 |
 | 024 | backend, meetings, scheduling, events | Auto-scheduling scoped to one-on-one meetings with single attendee | Meetings (Phase 1) | Accepted | 2026-03-18 |
 | 025 | backend, meetings, ai, extraction, data-integrity | Fallback strategies for AI extraction resource creation | Meetings (Phase 5) | Accepted | 2026-03-18 |
+| 026 | backend, docker, meetings, diarization, pyannote, transcription | Speaker diarization via self-hosted pyannote-audio service | Meetings (Diarization) | Accepted | 2026-03-19 |

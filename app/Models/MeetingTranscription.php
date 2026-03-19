@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\DiarizationStatus;
 use App\Enums\TranscriptionStatus;
 use App\Models\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,10 +18,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int $meeting_id
  * @property string|null $content
+ * @property string|null $diarized_content
  * @property string $language
  * @property string $provider
  * @property TranscriptionStatus $status
+ * @property DiarizationStatus|null $diarization_status
  * @property string|null $error_message
+ * @property string|null $diarization_error
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -37,10 +41,13 @@ class MeetingTranscription extends Model
     protected $fillable = [
         'meeting_id',
         'content',
+        'diarized_content',
         'language',
         'provider',
         'status',
+        'diarization_status',
         'error_message',
+        'diarization_error',
     ];
 
     /**
@@ -52,6 +59,7 @@ class MeetingTranscription extends Model
     {
         return [
             'status' => TranscriptionStatus::class,
+            'diarization_status' => DiarizationStatus::class,
         ];
     }
 

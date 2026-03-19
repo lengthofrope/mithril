@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Api;
 use App\Enums\MeetingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Jobs\DiarizeMeetingJob;
 use App\Jobs\TranscribeMeetingJob;
+use Illuminate\Support\Facades\Bus;
 use App\Models\Attachment;
 use App\Models\Meeting;
 use App\Models\MeetingRecording;
@@ -76,7 +78,14 @@ class MeetingRecordingController extends Controller
         }
 
         if (config('meetings.transcription.auto_start', true)) {
-            TranscribeMeetingJob::dispatch($meeting, $recording);
+            if (config('meetings.diarization.enabled', false)) {
+                Bus::chain([
+                    new TranscribeMeetingJob($meeting, $recording),
+                    new DiarizeMeetingJob($meeting, $recording),
+                ])->dispatch();
+            } else {
+                TranscribeMeetingJob::dispatch($meeting, $recording);
+            }
         }
 
         return $this->successResponse($recording, 'Recording saved.', 201);

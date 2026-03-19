@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Services\MeetingInsights\MeetingInsightExtractorInterface;
 use App\Services\MeetingInsights\OpenAiInsightExtractor;
+use App\Services\Diarization\DiarizationServiceInterface;
+use App\Services\Diarization\PyAnnoteDiarizationService;
 use App\Services\Transcription\TranscriptionServiceInterface;
 use App\Services\Transcription\WhisperCppTranscriptionService;
 use App\Services\Transcription\WhisperTranscriptionService;
@@ -37,6 +39,12 @@ class AppServiceProvider extends ServiceProvider
             return new OpenAiInsightExtractor(
                 apiKey: config('meetings.extraction.openai.api_key') ?? config('meetings.transcription.whisper.api_key') ?? '',
                 model: config('meetings.extraction.openai.model') ?? 'gpt-4o-mini',
+            );
+        });
+
+        $this->app->bind(DiarizationServiceInterface::class, function (): DiarizationServiceInterface {
+            return new PyAnnoteDiarizationService(
+                baseUrl: config('meetings.diarization.pyannote.base_url') ?? 'http://localhost:8081',
             );
         });
 

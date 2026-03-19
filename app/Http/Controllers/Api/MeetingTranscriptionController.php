@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\DiarizationStatus;
 use App\Enums\TranscriptionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Jobs\DiarizeMeetingJob;
 use App\Jobs\TranscribeMeetingJob;
 use App\Models\Meeting;
 use App\Models\MeetingTranscription;
@@ -43,6 +45,9 @@ class MeetingTranscriptionController extends Controller
         return $this->successResponse([
             'status' => $transcription->status->value,
             'content' => $transcription->content,
+            'diarized_content' => $transcription->diarized_content,
+            'diarization_status' => $transcription->diarization_status?->value,
+            'diarization_error' => $transcription->diarization_error,
             'language' => $transcription->language,
             'provider' => $transcription->provider,
             'error_message' => $transcription->error_message,
@@ -158,5 +163,73 @@ class MeetingTranscriptionController extends Controller
         }
 
         return $this->successResponse(null, 'Transcription saved.', 200, true);
+    }
+
+    /**
+     * Trigger speaker diarization for a meeting's transcription.
+     *
+     * @param Meeting $meeting
+     * @return JsonResponse
+     */
+    public function diarize(Meeting $meeting): JsonResponse
+    {
+        $recording = $meeting->recordings()->latest()->first();
+
+        if ($recording === null) {
+            return $this->errorResponse('No recording available for diarization.', statusCode: 422);
+        }
+
+        $transcription = $meeting->transcription;
+
+        if ($transcription === null || $transcription->status !== TranscriptionStatus::Completed) {
+            return $this->errorResponse('Transcription must be completed before diarization.', statusCode: 422);
+        }
+
+        if ($transcription->diarization_status === DiarizationStatus::Processing) {
+            return $this->errorResponse('Diarization is already in progress.', statusCode: 422);
+        }
+
+        $transcription->update([
+            'diarization_status' => DiarizationStatus::Pending,
+            'diarization_error' => null,
+        ]);
+
+        DiarizeMeetingJob::dispatch($meeting, $recording);
+
+        return $this->successResponse(null, 'Diarization job dispatched.');
+    }
+
+    /**
+     * Retry a failed diarization by re-dispatching the job.
+     *
+     * @param Meeting $meeting
+     * @return JsonResponse
+     */
+    public function retryDiarization(Meeting $meeting): JsonResponse
+    {
+        $recording = $meeting->recordings()->latest()->first();
+
+        if ($recording === null) {
+            return $this->errorResponse('No recording available for diarization.', statusCode: 422);
+        }
+
+        $transcription = $meeting->transcription;
+
+        if ($transcription === null) {
+            return $this->errorResponse('No transcription available.', statusCode: 422);
+        }
+
+        if ($transcription->diarization_status === DiarizationStatus::Processing) {
+            return $this->errorResponse('Diarization is already in progress.', statusCode: 422);
+        }
+
+        $transcription->update([
+            'diarization_status' => DiarizationStatus::Pending,
+            'diarization_error' => null,
+        ]);
+
+        DiarizeMeetingJob::dispatch($meeting, $recording);
+
+        return $this->successResponse(null, 'Diarization retry job dispatched.');
     }
 }

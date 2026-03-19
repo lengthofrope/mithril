@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Configuration for the meetings module: recording storage, transcription, and AI extraction.
+ * Configuration for the meetings module: recording storage, transcription, diarization, and AI extraction.
  */
 return [
     'recording' => [
@@ -34,6 +34,14 @@ return [
         'whisper' => [
             'api_key' => env('OPENAI_API_KEY'),
             'model' => env('WHISPER_MODEL', 'whisper-1'),
+        ],
+    ],
+
+    'diarization' => [
+        'enabled' => (bool) env('MEETING_DIARIZATION_ENABLED', false),
+
+        'pyannote' => [
+            'base_url' => env('PYANNOTE_BASE_URL', 'http://localhost:8081'),
         ],
     ],
 
