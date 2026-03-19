@@ -4,24 +4,24 @@
     <x-common.page-breadcrumb pageTitle="Meetings" />
 
     {{-- Filter bar + toolbar --}}
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div class="min-w-0 flex-1">
-            <x-tl.filter-bar
-                :endpoint="route('meetings.index')"
-                results-selector="#meetings-results"
-                :filters="[
-                    ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
-                    ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
-                    ['field' => 'type', 'type' => 'select', 'label' => 'Type', 'options' => $typeOptions],
-                    ['field' => 'status', 'type' => 'select', 'label' => 'Status', 'options' => $statusOptions],
-                ]"
-            />
-        </div>
+    <div class="relative mb-6">
+        <x-tl.filter-bar
+            :endpoint="route('meetings.index')"
+            results-selector="#meetings-results"
+            :filters="[
+                ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
+                ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
+                ['field' => 'type', 'type' => 'select', 'label' => 'Type', 'options' => $typeOptions],
+                ['field' => 'status', 'type' => 'select', 'label' => 'Status', 'options' => $statusOptions],
+            ]"
+        />
 
-        @include('partials.meeting-create-modal', [
-            'teamOptions' => $teamOptions,
-            'memberOptions' => $memberOptions,
-        ])
+        <div class="absolute right-0 top-0">
+            @include('partials.meeting-create-modal', [
+                'teamOptions' => $teamOptions,
+                'memberOptions' => $memberOptions,
+            ])
+        </div>
     </div>
 
     {{-- Meetings list --}}

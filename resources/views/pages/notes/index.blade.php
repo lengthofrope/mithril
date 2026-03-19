@@ -4,23 +4,23 @@
     <x-common.page-breadcrumb pageTitle="Notes" />
 
     {{-- Filter bar + toolbar --}}
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div class="min-w-0 flex-1">
-            <x-tl.filter-bar
-                :endpoint="route('notes.index')"
-                results-selector="#notes-results"
-                :filters="[
-                    ['field' => 'search', 'type' => 'search', 'label' => 'Search notes'],
-                    ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
-                    ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
-                ]"
-            />
-        </div>
+    <div class="relative mb-6">
+        <x-tl.filter-bar
+            :endpoint="route('notes.index')"
+            results-selector="#notes-results"
+            :filters="[
+                ['field' => 'search', 'type' => 'search', 'label' => 'Search notes'],
+                ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
+                ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
+            ]"
+        />
 
-        @include('partials.note-create-modal', [
-            'teamOptions' => $teamOptions,
-            'memberOptions' => $memberOptions,
-        ])
+        <div class="absolute right-0 top-0">
+            @include('partials.note-create-modal', [
+                'teamOptions' => $teamOptions,
+                'memberOptions' => $memberOptions,
+            ])
+        </div>
     </div>
 
     {{-- Tag filters --}}
