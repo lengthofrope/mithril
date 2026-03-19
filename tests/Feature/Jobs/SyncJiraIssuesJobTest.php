@@ -6,7 +6,6 @@ use App\Jobs\SyncJiraIssuesJob;
 use App\Models\User;
 use App\Services\JiraSyncService;
 use Illuminate\Support\Facades\Log;
-use RuntimeException;
 
 test('job calls syncIssues on the sync service', function () {
     $user = User::factory()->create([
