@@ -966,19 +966,74 @@
                     status: @js($meeting->transcription?->status?->value),
                     content: @js($meeting->transcription?->content ?? ''),
                     errorMessage: @js($meeting->transcription?->error_message ?? ''),
+                    diarizationStatus: @js($meeting->transcription?->diarization_status?->value),
+                    diarizedContent: @js($meeting->transcription?->diarized_content ?? ''),
+                    diarizationError: @js($meeting->transcription?->diarization_error ?? ''),
+                    diarizationEnabled: @js(config('meetings.diarization.enabled')),
                     showManualInput: false,
                     manualContent: '',
                     polling: false,
 
+                    speakerColors: [
+                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                        'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+                        'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+                    ],
+
+                    get segments() {
+                        if (!this.diarizedContent) return [];
+                        try {
+                            const parsed = typeof this.diarizedContent === 'string'
+                                ? JSON.parse(this.diarizedContent)
+                                : this.diarizedContent;
+                            return parsed.segments ?? [];
+                        } catch { return []; }
+                    },
+
+                    get hasDiarization() {
+                        return this.diarizationStatus === 'completed' && this.segments.length > 0;
+                    },
+
+                    get isDiarizing() {
+                        return this.diarizationEnabled
+                            && (this.diarizationStatus === 'pending' || this.diarizationStatus === 'processing');
+                    },
+
+                    get shouldPoll() {
+                        return this.status === 'pending'
+                            || this.status === 'processing'
+                            || this.isDiarizing;
+                    },
+
+                    speakerColor(speaker) {
+                        const speakers = [...new Set(this.segments.map(s => s.speaker))];
+                        const index = speakers.indexOf(speaker);
+                        return this.speakerColors[index % this.speakerColors.length];
+                    },
+
+                    speakerLabel(speaker) {
+                        const speakers = [...new Set(this.segments.map(s => s.speaker))];
+                        return 'Speaker ' + (speakers.indexOf(speaker) + 1);
+                    },
+
+                    formatTime(seconds) {
+                        const m = Math.floor(seconds / 60);
+                        const s = Math.floor(seconds % 60);
+                        return m + ':' + String(s).padStart(2, '0');
+                    },
+
                     init() {
-                        if (this.status === 'pending' || this.status === 'processing') {
+                        if (this.shouldPoll) {
                             this.startPolling();
                         }
                     },
 
                     async startPolling() {
                         this.polling = true;
-                        while (this.polling && (this.status === 'pending' || this.status === 'processing')) {
+                        while (this.polling && this.shouldPoll) {
                             await new Promise(r => setTimeout(r, 3000));
                             try {
                                 const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/transcription', {
@@ -989,7 +1044,11 @@
                                     this.status = data.data?.status;
                                     this.content = data.data?.content ?? '';
                                     this.errorMessage = data.data?.error_message ?? '';
-                                    if (this.status === 'completed' || this.status === 'failed') {
+                                    this.diarizationStatus = data.data?.diarization_status;
+                                    this.diarizedContent = data.data?.diarized_content ?? '';
+                                    this.diarizationError = data.data?.diarization_error ?? '';
+
+                                    if (!this.shouldPoll) {
                                         this.polling = false;
                                     }
                                 }
@@ -1008,6 +1067,8 @@
                         if (response.ok) {
                             this.status = 'pending';
                             this.errorMessage = '';
+                            this.diarizationStatus = null;
+                            this.diarizedContent = '';
                             this.startPolling();
                         }
                     },
@@ -1024,6 +1085,8 @@
                             this.status = 'pending';
                             this.content = '';
                             this.errorMessage = '';
+                            this.diarizationStatus = null;
+                            this.diarizedContent = '';
                             this.startPolling();
                         }
                     },
@@ -1094,9 +1157,51 @@
                         </div>
                     </template>
 
-                    {{-- Completed --}}
-                    <template x-if="status === 'completed' && !showManualInput">
-                        <div class="max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300" x-text="content"></div>
+                    {{-- Diarizing speakers --}}
+                    <template x-if="status === 'completed' && isDiarizing && !showManualInput">
+                        <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                            <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            <span>Identifying speakers…</span>
+                        </div>
+                    </template>
+
+                    {{-- Diarization failed (show plain text with warning) --}}
+                    <template x-if="status === 'completed' && diarizationStatus === 'failed' && !hasDiarization && !showManualInput">
+                        <div>
+                            <div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+                                Speaker identification failed — showing plain transcription.
+                            </div>
+                            <div class="max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed text-gray-700 whitespace-pre-line dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300" x-text="content"></div>
+                        </div>
+                    </template>
+
+                    {{-- Completed with diarization — chat view --}}
+                    <template x-if="status === 'completed' && hasDiarization && !showManualInput">
+                        <div class="max-h-[32rem] overflow-y-auto space-y-3">
+                            <template x-for="(segment, i) in segments" x-bind:key="i">
+                                <div class="flex gap-3">
+                                    <div class="shrink-0 pt-0.5">
+                                        <span
+                                            class="inline-flex items-center rounded-md px-2 py-0.5 text-[0.625rem] font-semibold"
+                                            x-bind:class="speakerColor(segment.speaker)"
+                                            x-text="speakerLabel(segment.speaker)"
+                                        ></span>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm leading-relaxed text-gray-700 dark:text-gray-300" x-text="segment.text"></p>
+                                        <p class="mt-0.5 text-[0.625rem] text-gray-400 dark:text-gray-600" x-text="formatTime(segment.start) + ' – ' + formatTime(segment.end)"></p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    {{-- Completed without diarization — plain text --}}
+                    <template x-if="status === 'completed' && !hasDiarization && !isDiarizing && diarizationStatus !== 'failed' && !showManualInput">
+                        <div class="max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed text-gray-700 whitespace-pre-line dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300" x-text="content"></div>
                     </template>
 
                     {{-- No transcription yet --}}
