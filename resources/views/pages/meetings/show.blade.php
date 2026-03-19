@@ -430,7 +430,6 @@
                 ['id' => 'recording',     'label' => 'Recording'],
                 ['id' => 'transcription', 'label' => 'Transcription'],
                 ['id' => 'extractions',   'label' => 'AI Extractions'],
-                ['id' => 'activity',      'label' => 'Activity'],
             ] as $tab)
                 <button
                     type="button"
@@ -452,7 +451,8 @@
             role="tabpanel"
             aria-label="Prep & Notes"
         >
-            <div class="space-y-6">
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+                <div class="xl:col-span-2 space-y-6">
                 {{-- Prep items --}}
                 <div
                     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
@@ -708,6 +708,16 @@
 
                         <x-tl.auto-save-status />
                     </div>
+                </div>
+                </div>
+
+                {{-- Activity feed sidebar --}}
+                <div>
+                    <x-tl.activity-feed
+                        :parent="$meeting"
+                        parentType="meetings"
+                        :activities="$meeting->getActivityFeed()"
+                    />
                 </div>
             </div>
         </div>
@@ -1226,19 +1236,6 @@
             @endif
         </div>
 
-        {{-- Activity tab --}}
-        <div
-            x-show="activeTab === 'activity'"
-            x-cloak
-            role="tabpanel"
-            aria-label="Activity"
-        >
-            <x-tl.activity-feed
-                :parent="$meeting"
-                parentType="meetings"
-                :activities="$meeting->getActivityFeed()"
-            />
-        </div>
     </div>
 
     {{-- Actions --}}
