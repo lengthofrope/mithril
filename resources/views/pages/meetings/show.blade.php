@@ -644,6 +644,8 @@
     </div>
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        {{-- Main content: Prep items + Notes --}}
+        <div class="xl:col-span-2 space-y-6">
         {{-- Prep items --}}
         <div
             class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
@@ -706,46 +708,50 @@
                 x-on:submit.prevent="addPrepItem($event)"
             >
                 <input type="hidden" name="meeting_id" value="{{ $meeting->id }}">
-                <div class="flex items-center gap-2">
-                    <label for="new-prep-item" class="sr-only">New prep item</label>
-                    <input
-                        id="new-prep-item"
-                        type="text"
-                        name="content"
-                        placeholder="Add prep item…"
-                        required
-                        class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
-                    >
-                    <select name="type" x-model="newType" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                        <option value="agenda_item">Agenda</option>
-                        <option value="question">Question</option>
-                        <option value="action">Action</option>
-                    </select>
-                    <input
-                        type="number"
-                        name="duration_minutes"
-                        x-model="newDuration"
-                        placeholder="Min"
-                        min="1"
-                        class="w-16 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                    >
-                    @if(count($attendeeOptions) > 0)
-                        <select name="team_member_id" x-model="newAssignee" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                            <option value="">Unassigned</option>
-                            @foreach($attendeeOptions as $opt)
-                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
-                            @endforeach
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <label for="new-prep-item" class="sr-only">New prep item</label>
+                        <input
+                            id="new-prep-item"
+                            type="text"
+                            name="content"
+                            placeholder="Add prep item…"
+                            required
+                            class="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                        <button
+                            type="submit"
+                            class="flex shrink-0 items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
+                        >
+                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select name="type" x-model="newType" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                            <option value="agenda_item">Agenda</option>
+                            <option value="question">Question</option>
+                            <option value="action">Action</option>
                         </select>
-                    @endif
-                    <button
-                        type="submit"
-                        class="flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
-                    >
-                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        Add
-                    </button>
+                        <input
+                            type="number"
+                            name="duration_minutes"
+                            x-model="newDuration"
+                            placeholder="Min"
+                            min="1"
+                            class="w-16 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                        >
+                        @if(count($attendeeOptions) > 0)
+                            <select name="team_member_id" x-model="newAssignee" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                <option value="">Unassigned</option>
+                                @foreach($attendeeOptions as $opt)
+                                    <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </div>
                 </div>
             </form>
 
@@ -880,7 +886,7 @@
                         name="notes"
                         x-model="content"
                         x-on:input="value = content"
-                        rows="14"
+                        rows="10"
                         placeholder="Write your notes in Markdown…"
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
                     ></textarea>
@@ -897,6 +903,8 @@
             </div>
         </div>
 
+        </div>
+
         {{-- Activity feed sidebar --}}
         <div>
             <x-tl.activity-feed
@@ -908,7 +916,7 @@
     </div>
 
     {{-- Actions --}}
-    <div class="mt-4 flex items-center gap-3">
+    <div class="mt-6 flex flex-wrap items-center gap-3">
         <a
             href="{{ route('meetings.index') }}"
             class="text-sm text-blue-600 hover:underline dark:text-blue-400"
