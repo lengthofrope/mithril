@@ -417,7 +417,15 @@
 
     {{-- Tabbed content --}}
     <div
-        x-data="{ activeTab: 'prep' }"
+        x-data="{
+            activeTab: new URLSearchParams(window.location.search).get('tab') || 'prep',
+            setTab(tab) {
+                this.activeTab = tab;
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tab);
+                history.replaceState(null, '', url);
+            },
+        }"
         class="space-y-6"
     >
         {{-- Tab bar --}}
@@ -434,7 +442,7 @@
                 <button
                     type="button"
                     role="tab"
-                    x-on:click="activeTab = '{{ $tab['id'] }}'"
+                    x-on:click="setTab('{{ $tab['id'] }}')"
                     x-bind:aria-selected="activeTab === '{{ $tab['id'] }}'"
                     x-bind:class="activeTab === '{{ $tab['id'] }}' ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white' : 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'"
                     class="rounded-lg px-4 py-2 text-sm font-medium transition"
@@ -457,50 +465,89 @@
                 <div
                     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                     x-data="{
+                        items: @js($meeting->prepItems->sortBy('sort_order')->values()->map(fn($item) => [
+                            'id' => $item->id,
+                            'content' => $item->content,
+                            'type' => $item->type->value,
+                            'duration_minutes' => $item->duration_minutes,
+                            'is_discussed' => $item->is_discussed,
+                            'team_member_name' => $item->teamMember?->name,
+                        ])),
                         newType: 'agenda_item',
                         newDuration: '',
                         newAssignee: '',
-                        async addPrepItem(event) {
-                            const form = event.target;
-                            const formData = new FormData(form);
+                        newContent: '',
+                        csrfToken: document.querySelector('meta[name=csrf-token]')?.content ?? '',
 
-                            const response = await fetch(form.action, {
+                        typeConfig: {
+                            agenda_item: { icon: 'A', class: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+                            question: { icon: 'Q', class: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
+                            action: { icon: '!', class: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
+                        },
+
+                        get totalMinutes() {
+                            return this.items.reduce((sum, item) => sum + (item.duration_minutes || 0), 0);
+                        },
+
+                        async addPrepItem() {
+                            const payload = {
+                                meeting_id: {{ $meeting->id }},
+                                content: this.newContent,
+                                type: this.newType,
+                            };
+                            if (this.newDuration) payload.duration_minutes = parseInt(this.newDuration, 10);
+                            if (this.newAssignee) payload.team_member_id = parseInt(this.newAssignee, 10);
+
+                            const response = await fetch('{{ route('prep-items.store') }}', {
                                 method: 'POST',
                                 headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'X-CSRF-TOKEN': this.csrfToken,
                                     'Accept': 'application/json',
                                     'Content-Type': 'application/json',
                                 },
-                                body: JSON.stringify(Object.fromEntries(formData)),
+                                body: JSON.stringify(payload),
                             });
 
                             if (response.ok) {
-                                window.location.reload();
+                                const json = await response.json();
+                                this.items.push(json.data);
+                                this.newContent = '';
+                                this.newDuration = '';
+                                this.newAssignee = '';
                             }
                         },
-                        async toggleDiscussed(url, isDiscussed) {
-                            await fetch(url, {
+
+                        async toggleDiscussed(index) {
+                            const item = this.items[index];
+                            const newValue = !item.is_discussed;
+
+                            item.is_discussed = newValue;
+
+                            await fetch('/prep-items/' + item.id, {
                                 method: 'PATCH',
                                 headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'X-CSRF-TOKEN': this.csrfToken,
                                     'Accept': 'application/json',
                                     'Content-Type': 'application/json',
                                 },
-                                body: JSON.stringify({ is_discussed: isDiscussed }),
+                                body: JSON.stringify({ is_discussed: newValue }),
                             });
-
-                            window.location.reload();
                         },
-                        async deletePrepItem(url) {
-                            await fetch(url, {
+
+                        async deletePrepItem(index) {
+                            const item = this.items[index];
+
+                            const response = await fetch('/prep-items/' + item.id, {
                                 method: 'DELETE',
                                 headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'X-CSRF-TOKEN': this.csrfToken,
                                     'Accept': 'application/json',
                                 },
                             });
 
-                            window.location.reload();
+                            if (response.ok) {
+                                this.items.splice(index, 1);
+                            }
                         },
                     }"
                 >
@@ -510,18 +557,16 @@
 
                     {{-- Add new prep item form --}}
                     <form
-                        action="{{ route('prep-items.store') }}"
                         class="border-b border-gray-100 px-5 py-3 dark:border-gray-800"
-                        x-on:submit.prevent="addPrepItem($event)"
+                        x-on:submit.prevent="addPrepItem()"
                     >
-                        <input type="hidden" name="meeting_id" value="{{ $meeting->id }}">
                         <div class="space-y-2">
                             <div class="flex items-center gap-2">
                                 <label for="new-prep-item" class="sr-only">New prep item</label>
                                 <input
                                     id="new-prep-item"
                                     type="text"
-                                    name="content"
+                                    x-model="newContent"
                                     placeholder="Add prep item…"
                                     required
                                     class="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
@@ -537,21 +582,20 @@
                                 </button>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
-                                <select name="type" x-model="newType" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                <select x-model="newType" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                                     <option value="agenda_item">Agenda</option>
                                     <option value="question">Question</option>
                                     <option value="action">Action</option>
                                 </select>
                                 <input
                                     type="number"
-                                    name="duration_minutes"
                                     x-model="newDuration"
                                     placeholder="Min"
                                     min="1"
                                     class="w-16 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                                 >
                                 @if(count($attendeeOptions) > 0)
-                                    <select name="team_member_id" x-model="newAssignee" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                    <select x-model="newAssignee" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                                         <option value="">Unassigned</option>
                                         @foreach($attendeeOptions as $opt)
                                             <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
@@ -567,17 +611,9 @@
                         :endpoint="route('reorder')"
                         :containerId="'prep-items-' . $meeting->id"
                     >
-                        @forelse($meeting->prepItems->sortBy('sort_order') as $prepItem)
-                            @php
-                                $typeIcon = match($prepItem->type->value) {
-                                    'agenda_item' => ['icon' => 'A', 'class' => 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'],
-                                    'question' => ['icon' => 'Q', 'class' => 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'],
-                                    'action' => ['icon' => '!', 'class' => 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'],
-                                    default => ['icon' => '?', 'class' => 'bg-gray-100 text-gray-600'],
-                                };
-                            @endphp
+                        <template x-for="(item, index) in items" x-bind:key="item.id">
                             <div
-                                data-id="{{ $prepItem->id }}"
+                                x-bind:data-id="item.id"
                                 class="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0 dark:border-gray-800"
                                 role="listitem"
                             >
@@ -596,35 +632,35 @@
 
                                 <input
                                     type="checkbox"
-                                    @checked($prepItem->is_discussed)
-                                    x-on:change="toggleDiscussed('{{ route('prep-items.update', $prepItem->id) }}', $el.checked)"
+                                    x-bind:checked="item.is_discussed"
+                                    x-on:change="toggleDiscussed(index)"
                                     class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
-                                    aria-label="{{ $prepItem->content }}"
+                                    x-bind:aria-label="item.content"
                                 >
 
-                                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[0.625rem] font-bold {{ $typeIcon['class'] }}">
-                                    {{ $typeIcon['icon'] }}
-                                </span>
+                                <span
+                                    class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[0.625rem] font-bold"
+                                    x-bind:class="(typeConfig[item.type] || { class: 'bg-gray-100 text-gray-600' }).class"
+                                    x-text="(typeConfig[item.type] || { icon: '?' }).icon"
+                                ></span>
 
-                                <span class="flex-1 text-sm text-gray-800 dark:text-white/90 {{ $prepItem->is_discussed ? 'line-through text-gray-400 dark:text-gray-500' : '' }}">
-                                    {{ $prepItem->content }}
-                                </span>
+                                <span
+                                    class="flex-1 text-sm"
+                                    x-bind:class="item.is_discussed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-white/90'"
+                                    x-text="item.content"
+                                ></span>
 
-                                @if($prepItem->duration_minutes)
-                                    <span class="shrink-0 text-xs text-gray-400 dark:text-gray-500" title="Estimated duration">
-                                        {{ $prepItem->duration_minutes }}m
-                                    </span>
-                                @endif
+                                <template x-if="item.duration_minutes">
+                                    <span class="shrink-0 text-xs text-gray-400 dark:text-gray-500" title="Estimated duration" x-text="item.duration_minutes + 'm'"></span>
+                                </template>
 
-                                @if($prepItem->teamMember)
-                                    <span class="shrink-0 text-xs text-gray-400 dark:text-gray-500">
-                                        {{ $prepItem->teamMember->name }}
-                                    </span>
-                                @endif
+                                <template x-if="item.team_member_name">
+                                    <span class="shrink-0 text-xs text-gray-400 dark:text-gray-500" x-text="item.team_member_name"></span>
+                                </template>
 
                                 <button
                                     type="button"
-                                    x-on:click="deletePrepItem('{{ route('prep-items.destroy', $prepItem->id) }}')"
+                                    x-on:click="deletePrepItem(index)"
                                     class="shrink-0 rounded p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
                                     aria-label="Remove prep item"
                                 >
@@ -633,23 +669,24 @@
                                     </svg>
                                 </button>
                             </div>
-                        @empty
-                            <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                                No prep items yet.
-                            </p>
-                        @endforelse
+                        </template>
+
+                        <p
+                            x-show="items.length === 0"
+                            x-cloak
+                            class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500"
+                        >
+                            No prep items yet.
+                        </p>
                     </x-tl.sortable-container>
 
-                    @if($meeting->prepItems->isNotEmpty())
-                        @php
-                            $totalMinutes = $meeting->prepItems->sum('duration_minutes');
-                        @endphp
-                        @if($totalMinutes > 0)
-                            <div class="border-t border-gray-100 px-5 py-2 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
-                                Total estimated time: {{ $totalMinutes }} min
-                            </div>
-                        @endif
-                    @endif
+                    <div
+                        x-show="totalMinutes > 0"
+                        x-cloak
+                        class="border-t border-gray-100 px-5 py-2 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500"
+                    >
+                        Total estimated time: <span x-text="totalMinutes"></span> min
+                    </div>
                 </div>
 
                 {{-- Notes --}}

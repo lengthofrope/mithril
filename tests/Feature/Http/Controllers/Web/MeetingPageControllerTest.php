@@ -728,6 +728,55 @@ test('storePrepItem validation fails without meeting_id', function () {
     $response->assertSessionHasErrors('meeting_id');
 });
 
+test('storePrepItem returns created item data with id and attributes', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->post('/prep-items', [
+        'meeting_id' => $meeting->id,
+        'content' => 'Review sprint goals',
+        'type' => 'agenda_item',
+        'duration_minutes' => 10,
+    ]);
+
+    $response->assertOk();
+    $response->assertJsonStructure([
+        'success',
+        'data' => [
+            'id',
+            'content',
+            'type',
+            'duration_minutes',
+            'is_discussed',
+            'team_member_name',
+        ],
+    ]);
+    $response->assertJsonPath('data.content', 'Review sprint goals');
+    $response->assertJsonPath('data.type', 'agenda_item');
+    $response->assertJsonPath('data.duration_minutes', 10);
+    $response->assertJsonPath('data.is_discussed', false);
+    $response->assertJsonPath('data.team_member_name', null);
+});
+
+test('storePrepItem returns team member name when assigned', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id, 'name' => 'Bob Smith']);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->post('/prep-items', [
+        'meeting_id' => $meeting->id,
+        'content' => 'Bob presents update',
+        'type' => 'action',
+        'team_member_id' => $bob->id,
+    ]);
+
+    $response->assertOk();
+    $response->assertJsonPath('data.team_member_name', 'Bob Smith');
+});
+
 test('storePrepItem rejects meeting belonging to another user', function () {
     /** @var \Tests\TestCase $this */
     $owner = User::factory()->create();

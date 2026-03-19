@@ -350,9 +350,21 @@ class MeetingPageController extends Controller
             'duration_minutes' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ]);
 
-        MeetingPrepItem::create($validated);
+        $item = MeetingPrepItem::create($validated);
+        $item->refresh();
+        $item->load('teamMember');
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $item->id,
+                'content' => $item->content,
+                'type' => $item->type->value,
+                'duration_minutes' => $item->duration_minutes,
+                'is_discussed' => $item->is_discussed,
+                'team_member_name' => $item->teamMember?->name,
+            ],
+        ]);
     }
 
     /**
