@@ -20,14 +20,9 @@
                     <x-tl.auto-save-status />
                 </div>
 
-                {{-- Type badge + status + date --}}
+                {{-- Type + status + date --}}
                 <div class="mt-2 flex flex-wrap items-center gap-2">
                     @php
-                        $typeBadge = match($meeting->type->value) {
-                            'one_on_one' => ['label' => '1-on-1', 'class' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'],
-                            'team' => ['label' => 'Team meeting', 'class' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'],
-                            default => ['label' => 'Other', 'class' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'],
-                        };
                         $statusBadge = match($meeting->status->value) {
                             'scheduled' => ['label' => 'Scheduled', 'class' => 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'],
                             'in_progress' => ['label' => 'In progress', 'class' => 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'],
@@ -37,7 +32,114 @@
                         };
                     @endphp
 
-                    <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $typeBadge['class'] }}">{{ $typeBadge['label'] }}</span>
+                    <div
+                        x-data="{
+                            ...autoSaveField({ endpoint: '{{ route('meetings.update', $meeting->id) }}', field: 'type' }),
+                            showOneOnOneWarning: false,
+                            pendingValue: null,
+                            attendeeCount: @js($meeting->attendees->count()),
+
+                            handleTypeChange(newValue) {
+                                if (newValue === 'one_on_one' && this.attendeeCount > 1) {
+                                    this.pendingValue = newValue;
+                                    this.showOneOnOneWarning = true;
+                                    this.$nextTick(() => {
+                                        this.$refs.typeSelect.value = this.value;
+                                    });
+                                    return;
+                                }
+                                this.value = newValue;
+                                $dispatch('meeting-type-changed', { value: newValue });
+                            },
+
+                            confirmTypeChange() {
+                                this.showOneOnOneWarning = false;
+                                this.value = this.pendingValue;
+                                this.pendingValue = null;
+                                this.$nextTick(() => {
+                                    this.$refs.typeSelect.value = this.value;
+                                });
+                                $dispatch('meeting-type-changed', { value: this.value });
+                                $dispatch('meeting-clear-attendees');
+                            },
+
+                            cancelTypeChange() {
+                                this.showOneOnOneWarning = false;
+                                this.pendingValue = null;
+                            },
+                        }"
+                        x-init="value = @js($meeting->type->value)"
+                        x-on:meeting-attendee-count.window="attendeeCount = $event.detail.count"
+                        class="flex flex-col gap-1.5"
+                    >
+                        <select
+                            id="asf-type"
+                            name="type"
+                            x-ref="typeSelect"
+                            x-bind:value="value"
+                            x-on:change="handleTypeChange($event.target.value)"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                            @foreach($typeOptions as $option)
+                                <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <x-tl.auto-save-status />
+
+                        {{-- Warning modal: switching to 1-on-1 with multiple attendees --}}
+                        <div
+                            x-show="showOneOnOneWarning"
+                            x-cloak
+                            x-on:keydown.escape.window="cancelTypeChange()"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="type-change-dialog-title"
+                        >
+                            <div x-on:click="cancelTypeChange()" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+                            <div
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                x-on:click.stop
+                                class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                            >
+                                <h2 id="type-change-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
+                                    Switch to 1-on-1?
+                                </h2>
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                    A 1-on-1 meeting can only have one attendee. All current attendees will be removed.
+                                </p>
+                                <div class="mt-6 flex items-center justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        x-on:click="cancelTypeChange()"
+                                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-on:click="confirmTypeChange()"
+                                        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
+                                    >
+                                        Remove attendees & switch
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span>
 
                     <span class="text-xs text-gray-400">&middot;</span>
@@ -107,20 +209,162 @@
         </div>
 
         {{-- Attendees --}}
-        @if($meeting->attendees->isNotEmpty())
-            <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
-                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Attendees:</span>
-                @foreach($meeting->attendees as $attendee)
-                    <div class="flex items-center gap-2">
-                        <x-tl.team-member-avatar :member="$attendee" size="xs" />
-                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ $attendee->name }}</span>
-                        @if($attendee->role)
-                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ $attendee->role }}</span>
-                        @endif
-                    </div>
-                @endforeach
+        <div
+            class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 dark:border-gray-800"
+            x-data="{
+                attendees: @js($meeting->attendees->map(fn ($a) => ['id' => $a->id, 'name' => $a->name, 'role' => $a->role])),
+                allMembers: @js($memberOptions),
+                allTeams: @js($teamOptions),
+                meetingType: @js($meeting->type->value),
+                showPicker: false,
+                saving: false,
+
+                get isOneOnOne() {
+                    return this.meetingType === 'one_on_one';
+                },
+
+                get canAddMore() {
+                    if (this.isOneOnOne) return this.attendees.length < 1;
+                    return true;
+                },
+
+                get availableMembers() {
+                    const currentIds = this.attendees.map(a => a.id);
+                    return this.allMembers.filter(m => !currentIds.includes(m.value));
+                },
+
+                get availableTeams() {
+                    return this.allTeams.filter(t => {
+                        const teamMemberIds = this.allMembers.filter(m => m.team_id === t.value).map(m => m.value);
+                        const currentIds = this.attendees.map(a => a.id);
+                        return teamMemberIds.some(id => !currentIds.includes(id));
+                    });
+                },
+
+                async syncAttendees() {
+                    this.saving = true;
+                    await fetch('{{ route('meetings.update', $meeting->id) }}', {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ attendee_ids: this.attendees.map(a => a.id) }),
+                    });
+                    this.saving = false;
+                },
+
+                addMember(memberId) {
+                    const member = this.allMembers.find(m => m.value === Number(memberId));
+                    if (member) {
+                        this.attendees.push({ id: member.value, name: member.label, role: '' });
+                        this.syncAttendees();
+                    }
+                    this.showPicker = false;
+                },
+
+                addTeam(teamId) {
+                    const teamMembers = this.allMembers.filter(m => m.team_id === Number(teamId));
+                    const currentIds = this.attendees.map(a => a.id);
+                    let added = false;
+                    teamMembers.forEach(m => {
+                        if (!currentIds.includes(m.value)) {
+                            this.attendees.push({ id: m.value, name: m.label, role: '' });
+                            added = true;
+                        }
+                    });
+                    if (added) this.syncAttendees();
+                    this.showPicker = false;
+                },
+
+                removeMember(id) {
+                    this.attendees = this.attendees.filter(a => a.id !== id);
+                    this.syncAttendees();
+                },
+            }"
+            x-on:meeting-type-changed.window="meetingType = $event.detail.value"
+            x-on:meeting-clear-attendees.window="attendees = []; syncAttendees()"
+            x-effect="$dispatch('meeting-attendee-count', { count: attendees.length })"
+        >
+            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Attendees:</span>
+
+            <template x-for="attendee in attendees" :key="attendee.id">
+                <div class="flex items-center gap-1.5 rounded-full bg-gray-100 py-1 pl-3 pr-1 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                    <span x-text="attendee.name"></span>
+                    <button
+                        type="button"
+                        x-on:click="removeMember(attendee.id)"
+                        class="flex h-5 w-5 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                        aria-label="Remove attendee"
+                    >
+                        <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </template>
+
+            <div class="relative" x-show="canAddMore">
+                <button
+                    type="button"
+                    x-on:click="showPicker = !showPicker"
+                    class="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-400 transition hover:border-gray-400 hover:text-gray-600 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:text-gray-300"
+                    aria-label="Add attendee"
+                >
+                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                </button>
+
+                <div
+                    x-show="showPicker"
+                    x-cloak
+                    x-on:click.outside="showPicker = false"
+                    x-transition
+                    class="absolute left-0 top-full z-10 mt-1 w-64 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                >
+                    {{-- Team shortcut (team/other only) --}}
+                    <template x-if="!isOneOnOne && availableTeams.length > 0">
+                        <div class="border-b border-gray-100 pb-1 dark:border-gray-700">
+                            <p class="px-3 py-1 text-xs font-medium text-gray-400">Add entire team</p>
+                            <template x-for="team in availableTeams" :key="team.value">
+                                <button
+                                    type="button"
+                                    x-on:click="addTeam(team.value)"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50"
+                                >
+                                    <svg class="h-3.5 w-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                                    </svg>
+                                    <span x-text="team.label"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    {{-- Individual members --}}
+                    <template x-if="availableMembers.length === 0">
+                        <p class="px-3 py-2 text-xs text-gray-400">No more members to add</p>
+                    </template>
+                    <template x-for="member in availableMembers" :key="member.value">
+                        <button
+                            type="button"
+                            x-on:click="addMember(member.value)"
+                            class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50"
+                        >
+                            <span x-text="member.label"></span>
+                            <span class="ml-auto text-xs text-gray-400" x-text="member.team_name"></span>
+                        </button>
+                    </template>
+                </div>
             </div>
-        @endif
+
+            <svg x-show="saving" x-cloak class="h-4 w-4 animate-spin text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+        </div>
 
         {{-- Linked calendar events --}}
         @if($meeting->calendarEventLinks->isNotEmpty())

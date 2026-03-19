@@ -461,6 +461,65 @@ test('update response includes saved_at timestamp', function () {
     expect($data['saved_at'])->toBeString()->not->toBeEmpty();
 });
 
+test('can update meeting type via AJAX', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create(['user_id' => $user->id, 'type' => MeetingType::OneOnOne]);
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'type' => 'team',
+    ]);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    $this->assertDatabaseHas('meetings', ['id' => $meeting->id, 'type' => 'team']);
+});
+
+test('update rejects invalid meeting type', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'type' => 'invalid_type',
+    ]);
+
+    $response->assertSessionHasErrors('type');
+});
+
+test('can sync meeting attendees via AJAX', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member1 = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $member2 = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id, 'type' => MeetingType::Team]);
+    $meeting->attendees()->attach($member1->id);
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'attendee_ids' => [$member1->id, $member2->id],
+    ]);
+
+    $response->assertOk();
+    expect($meeting->fresh()->attendees)->toHaveCount(2);
+});
+
+test('can clear all meeting attendees via AJAX', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+    $meeting->attendees()->attach($member->id);
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'attendee_ids' => [],
+    ]);
+
+    $response->assertOk();
+    expect($meeting->fresh()->attendees)->toHaveCount(0);
+});
+
 // ---------------------------------------------------------------------------
 // Status Transitions
 // ---------------------------------------------------------------------------
@@ -818,4 +877,178 @@ test('cannot delete a meeting belonging to another user', function () {
 
     $response->assertNotFound();
     $this->assertDatabaseHas('meetings', ['id' => $meeting->id]);
+});
+
+// ---------------------------------------------------------------------------
+// Attendee constraints per meeting type
+// ---------------------------------------------------------------------------
+
+test('store one_on_one meeting rejects more than one attendee', function () {
+    /** @var \Tests\TestCase $this */
+    Event::fake([MeetingScheduled::class]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+
+    $response = $this->actingAs($user)->post('/meetings', [
+        'title' => '1-on-1 with too many',
+        'type' => 'one_on_one',
+        'scheduled_at' => now()->addDay()->toDateTimeString(),
+        'attendee_ids' => [$alice->id, $bob->id],
+    ]);
+
+    $response->assertSessionHasErrors('attendee_ids');
+});
+
+test('store one_on_one meeting allows exactly one attendee', function () {
+    /** @var \Tests\TestCase $this */
+    Event::fake([MeetingScheduled::class]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+
+    $response = $this->actingAs($user)->post('/meetings', [
+        'title' => '1-on-1 with Alice',
+        'type' => 'one_on_one',
+        'scheduled_at' => now()->addDay()->toDateTimeString(),
+        'attendee_ids' => [$alice->id],
+    ]);
+
+    $response->assertRedirect();
+    $meeting = Meeting::where('user_id', $user->id)->where('title', '1-on-1 with Alice')->first();
+    expect($meeting->attendees)->toHaveCount(1);
+});
+
+test('update one_on_one meeting rejects more than one attendee', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id, 'type' => MeetingType::OneOnOne]);
+    $meeting->attendees()->attach($alice->id);
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'attendee_ids' => [$alice->id, $bob->id],
+    ]);
+
+    $response->assertJsonValidationErrors('attendee_ids');
+    expect($meeting->fresh()->attendees)->toHaveCount(1);
+});
+
+test('store team meeting with team_ids auto-attaches all team members', function () {
+    /** @var \Tests\TestCase $this */
+    Event::fake([MeetingScheduled::class]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+
+    $response = $this->actingAs($user)->post('/meetings', [
+        'title' => 'Team Sync',
+        'type' => 'team',
+        'scheduled_at' => now()->addDay()->toDateTimeString(),
+        'team_ids' => [$team->id],
+    ]);
+
+    $response->assertRedirect();
+    $meeting = Meeting::where('user_id', $user->id)->where('title', 'Team Sync')->first();
+    expect($meeting->attendees()->pluck('team_member_id')->sort()->values()->all())
+        ->toBe(collect([$alice->id, $bob->id])->sort()->values()->all());
+});
+
+test('store other meeting with team_ids auto-attaches all team members', function () {
+    /** @var \Tests\TestCase $this */
+    Event::fake([MeetingScheduled::class]);
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create(['user_id' => $user->id]);
+    $teamB = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamA->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamB->id]);
+
+    $response = $this->actingAs($user)->post('/meetings', [
+        'title' => 'Cross-team sync',
+        'type' => 'other',
+        'scheduled_at' => now()->addDay()->toDateTimeString(),
+        'team_ids' => [$teamA->id, $teamB->id],
+    ]);
+
+    $response->assertRedirect();
+    $meeting = Meeting::where('user_id', $user->id)->where('title', 'Cross-team sync')->first();
+    expect($meeting->attendees()->pluck('team_member_id')->sort()->values()->all())
+        ->toBe(collect([$alice->id, $bob->id])->sort()->values()->all());
+});
+
+test('store team meeting with team_ids merges with explicit attendee_ids', function () {
+    /** @var \Tests\TestCase $this */
+    Event::fake([MeetingScheduled::class]);
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create(['user_id' => $user->id]);
+    $teamB = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamA->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $teamB->id]);
+
+    $response = $this->actingAs($user)->post('/meetings', [
+        'title' => 'Mixed',
+        'type' => 'team',
+        'scheduled_at' => now()->addDay()->toDateTimeString(),
+        'team_ids' => [$teamA->id],
+        'attendee_ids' => [$bob->id],
+    ]);
+
+    $response->assertRedirect();
+    $meeting = Meeting::where('user_id', $user->id)->where('title', 'Mixed')->first();
+    expect($meeting->attendees()->pluck('team_member_id')->sort()->values()->all())
+        ->toBe(collect([$alice->id, $bob->id])->sort()->values()->all());
+});
+
+test('update team meeting with team_ids resolves and syncs attendees', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id, 'type' => MeetingType::Team]);
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'team_ids' => [$team->id],
+    ]);
+
+    $response->assertOk();
+    expect($meeting->fresh()->attendees()->pluck('team_member_id')->sort()->values()->all())
+        ->toBe(collect([$alice->id, $bob->id])->sort()->values()->all());
+});
+
+test('store one_on_one meeting ignores team_ids', function () {
+    /** @var \Tests\TestCase $this */
+    Event::fake([MeetingScheduled::class]);
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $alice = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+    $bob = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
+
+    $response = $this->actingAs($user)->post('/meetings', [
+        'title' => '1-on-1 ignoring teams',
+        'type' => 'one_on_one',
+        'scheduled_at' => now()->addDay()->toDateTimeString(),
+        'team_ids' => [$team->id],
+        'attendee_ids' => [$alice->id],
+    ]);
+
+    $response->assertRedirect();
+    $meeting = Meeting::where('user_id', $user->id)->where('title', '1-on-1 ignoring teams')->first();
+    expect($meeting->attendees)->toHaveCount(1);
+    expect($meeting->attendees->first()->id)->toBe($alice->id);
+});
+
+test('show page passes teamOptions for team and other meeting types', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $team = Team::factory()->create(['user_id' => $user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id, 'type' => MeetingType::Team]);
+
+    $response = $this->actingAs($user)->get('/meetings/' . $meeting->id);
+
+    $response->assertViewHas('teamOptions');
 });

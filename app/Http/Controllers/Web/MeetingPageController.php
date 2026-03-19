@@ -126,7 +126,16 @@ class MeetingPageController extends Controller
             'team_id' => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'attendee_ids' => ['sometimes', 'array'],
             'attendee_ids.*' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'team_ids' => ['sometimes', 'array'],
+            'team_ids.*' => ['integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
         ]);
+
+        $meetingType = MeetingType::from($validated['type']);
+        $attendeeIds = $this->resolveAttendeeIds($validated, $meetingType);
+
+        if ($meetingType === MeetingType::OneOnOne && count($attendeeIds) > 1) {
+            return redirect()->back()->withErrors(['attendee_ids' => 'A 1-on-1 meeting can have at most one attendee.'])->withInput();
+        }
 
         $meeting = Meeting::create([
             'user_id' => $request->user()->id,
@@ -136,7 +145,6 @@ class MeetingPageController extends Controller
             'team_id' => $validated['team_id'] ?? null,
         ]);
 
-        $attendeeIds = array_filter($validated['attendee_ids'] ?? []);
         if (!empty($attendeeIds)) {
             $meeting->attendees()->attach($attendeeIds);
         }
@@ -164,6 +172,18 @@ class MeetingPageController extends Controller
             'label' => $m->name,
         ])->all();
 
+        $allTeams = Team::orderBySortOrder()->get();
+        $allMembers = TeamMember::orderBySortOrder()->with('team')->get();
+
+        $typeOptions = array_map(
+            fn (MeetingType $t) => ['value' => $t->value, 'label' => match ($t) {
+                MeetingType::OneOnOne => '1-on-1',
+                MeetingType::Team => 'Team',
+                MeetingType::Other => 'Other',
+            }],
+            MeetingType::cases(),
+        );
+
         return view('pages.meetings.show', [
             'title' => $meeting->title,
             'meeting' => $meeting,
@@ -171,6 +191,14 @@ class MeetingPageController extends Controller
             'previousMeeting' => $previousMeeting,
             'nextMeeting' => $nextMeeting,
             'attendeeOptions' => $attendeeOptions,
+            'typeOptions' => $typeOptions,
+            'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
+            'memberOptions' => $allMembers->map(fn (TeamMember $m) => [
+                'value' => $m->id,
+                'label' => $m->name,
+                'team_id' => $m->team_id,
+                'team_name' => $m->team?->name ?? '',
+            ])->all(),
         ]);
     }
 
@@ -187,9 +215,32 @@ class MeetingPageController extends Controller
             'scheduled_at' => ['sometimes', 'date'],
             'notes' => ['sometimes', 'nullable', 'string'],
             'title' => ['sometimes', 'string', 'max:255'],
+            'type' => ['sometimes', Rule::enum(MeetingType::class)],
+            'attendee_ids' => ['sometimes', 'array'],
+            'attendee_ids.*' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'team_ids' => ['sometimes', 'array'],
+            'team_ids.*' => ['integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
         ]);
 
+        $hasAttendeeChanges = array_key_exists('attendee_ids', $validated) || array_key_exists('team_ids', $validated);
+        $attendeeIds = null;
+
+        if ($hasAttendeeChanges) {
+            $meetingType = MeetingType::from($validated['type'] ?? $meeting->type->value);
+            $attendeeIds = $this->resolveAttendeeIds($validated, $meetingType);
+
+            if ($meetingType === MeetingType::OneOnOne && count($attendeeIds) > 1) {
+                return response()->json(['errors' => ['attendee_ids' => ['A 1-on-1 meeting can have at most one attendee.']]], 422);
+            }
+
+            unset($validated['attendee_ids'], $validated['team_ids']);
+        }
+
         $meeting->update($validated);
+
+        if ($attendeeIds !== null) {
+            $meeting->attendees()->sync($attendeeIds);
+        }
 
         return response()->json(['success' => true, 'saved_at' => now()->toIso8601String()]);
     }
@@ -336,6 +387,33 @@ class MeetingPageController extends Controller
         $meetingPrepItem->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Resolve the final set of attendee IDs from explicit attendee_ids and team_ids.
+     *
+     * For one_on_one meetings, team_ids are ignored. For team/other meetings,
+     * team_ids are resolved to their member IDs and merged with explicit attendee_ids.
+     *
+     * @param array<string, mixed> $validated
+     * @param MeetingType $meetingType
+     * @return list<int>
+     */
+    private function resolveAttendeeIds(array $validated, MeetingType $meetingType): array
+    {
+        $attendeeIds = array_filter($validated['attendee_ids'] ?? []);
+        $teamIds = $validated['team_ids'] ?? [];
+
+        if ($meetingType !== MeetingType::OneOnOne && !empty($teamIds)) {
+            $teamMemberIds = TeamMember::whereIn('team_id', $teamIds)
+                ->where('user_id', auth()->id())
+                ->pluck('id')
+                ->all();
+
+            $attendeeIds = array_values(array_unique(array_merge($attendeeIds, $teamMemberIds)));
+        }
+
+        return array_map('intval', $attendeeIds);
     }
 
     /**

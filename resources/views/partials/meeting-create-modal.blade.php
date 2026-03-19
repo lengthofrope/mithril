@@ -4,12 +4,33 @@
         addOpen: false,
         selectedTeamId: '',
         selectedType: 'one_on_one',
+        selectedTeamIds: [],
         allMembers: @js($memberOptions),
+        allTeams: @js($teamOptions),
         get filteredMembers() {
             if (!this.selectedTeamId) return this.allMembers;
             return this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId));
         },
+        get isOneOnOne() {
+            return this.selectedType === 'one_on_one';
+        },
+        addTeam(teamId) {
+            if (teamId && !this.selectedTeamIds.includes(Number(teamId))) {
+                this.selectedTeamIds.push(Number(teamId));
+            }
+        },
+        removeTeam(teamId) {
+            this.selectedTeamIds = this.selectedTeamIds.filter(id => id !== teamId);
+        },
+        teamLabel(teamId) {
+            const team = this.allTeams.find(t => t.value === teamId);
+            return team ? team.label : '';
+        },
+        get availableTeams() {
+            return this.allTeams.filter(t => !this.selectedTeamIds.includes(t.value));
+        },
     }"
+    x-effect="if (selectedType === 'one_on_one') { selectedTeamIds = []; }"
 >
     <button
         type="button"
@@ -94,24 +115,22 @@
                     </div>
                 </div>
 
-                <div class="mb-4 grid grid-cols-2 gap-3">
-                    {{-- Team filter --}}
+                {{-- 1-on-1: single attendee picker with optional team filter --}}
+                <div x-show="isOneOnOne" class="mb-4 grid grid-cols-2 gap-3">
                     <div>
-                        <label for="new-meeting-team" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Team</label>
+                        <label for="new-meeting-team-filter" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Filter by team</label>
                         <select
-                            id="new-meeting-team"
-                            name="team_id"
+                            id="new-meeting-team-filter"
                             x-model="selectedTeamId"
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                         >
-                            <option value="">No team</option>
+                            <option value="">All teams</option>
                             @foreach($teamOptions as $opt)
                                 <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    {{-- Attendee --}}
                     <div>
                         <label for="new-meeting-member" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Attendee</label>
                         <select
@@ -124,6 +143,43 @@
                                 <option :value="member.value" x-text="member.label"></option>
                             </template>
                         </select>
+                    </div>
+                </div>
+
+                {{-- Team/Other: team picker to add whole teams --}}
+                <div x-show="!isOneOnOne" class="mb-4">
+                    <label for="new-meeting-add-team" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Add teams</label>
+                    <div class="flex items-center gap-2">
+                        <select
+                            id="new-meeting-add-team"
+                            x-on:change="addTeam($event.target.value); $event.target.value = ''"
+                            class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                            <option value="">Select a team…</option>
+                            <template x-for="team in availableTeams" :key="team.value">
+                                <option :value="team.value" x-text="team.label"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    {{-- Selected teams chips --}}
+                    <div class="mt-2 flex flex-wrap gap-2" x-show="selectedTeamIds.length > 0">
+                        <template x-for="teamId in selectedTeamIds" :key="teamId">
+                            <div class="flex items-center gap-1 rounded-full bg-gray-100 py-1 pl-3 pr-1 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                <span x-text="teamLabel(teamId)"></span>
+                                <input type="hidden" name="team_ids[]" :value="teamId">
+                                <button
+                                    type="button"
+                                    x-on:click="removeTeam(teamId)"
+                                    class="flex h-5 w-5 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                                    aria-label="Remove team"
+                                >
+                                    <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
