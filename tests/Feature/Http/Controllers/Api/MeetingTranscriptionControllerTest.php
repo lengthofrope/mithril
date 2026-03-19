@@ -9,6 +9,7 @@ use App\Models\MeetingRecording;
 use App\Models\MeetingTranscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -257,6 +258,88 @@ describe('MeetingTranscriptionController', function (): void {
             );
 
             $response->assertUnauthorized();
+        });
+    });
+
+    describe('retranscribe (POST /api/v1/meetings/{meeting}/transcription/retranscribe)', function (): void {
+        it('clears existing transcription content and resets status', function (): void {
+            Queue::fake();
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+            $transcription = MeetingTranscription::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'content' => 'Old transcription.',
+                'status' => TranscriptionStatus::Completed,
+            ]);
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retranscribe"
+            );
+
+            $fresh = $transcription->fresh();
+            expect($fresh->content)->toBeNull()
+                ->and($fresh->status)->toBe(TranscriptionStatus::Pending);
+        });
+
+        it('dispatches a chained job for each recording in chronological order', function (): void {
+            Bus::fake();
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $first = MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'created_at' => now()->subMinutes(10),
+            ]);
+            $second = MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'created_at' => now(),
+            ]);
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retranscribe"
+            );
+
+            Bus::assertChained([
+                function (TranscribeMeetingJob $job) use ($first) {
+                    return $job->recording->id === $first->id;
+                },
+                function (TranscribeMeetingJob $job) use ($second) {
+                    return $job->recording->id === $second->id;
+                },
+            ]);
+        });
+
+        it('returns 422 when no recordings exist', function (): void {
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retranscribe"
+            );
+
+            $response->assertStatus(422);
+        });
+
+        it('returns 422 when transcription is already processing', function (): void {
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+            MeetingTranscription::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'status' => TranscriptionStatus::Processing,
+            ]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retranscribe"
+            );
+
+            $response->assertStatus(422);
         });
     });
 

@@ -12,6 +12,7 @@ use App\Models\Meeting;
 use App\Models\MeetingTranscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 
 /**
  * API controller for meeting transcription operations.
@@ -79,6 +80,46 @@ class MeetingTranscriptionController extends Controller
         TranscribeMeetingJob::dispatch($meeting, $recording);
 
         return $this->successResponse(null, 'Transcription job dispatched.');
+    }
+
+    /**
+     * Reset and retranscribe all recordings for a meeting from scratch.
+     *
+     * Clears existing transcription content and dispatches a chained job
+     * for each recording in chronological order.
+     *
+     * @param Meeting $meeting
+     * @return JsonResponse
+     */
+    public function retranscribe(Meeting $meeting): JsonResponse
+    {
+        $recordings = $meeting->recordings()->oldest()->get();
+
+        if ($recordings->isEmpty()) {
+            return $this->errorResponse('No recordings available for transcription.', statusCode: 422);
+        }
+
+        $transcription = $meeting->transcription;
+
+        if ($transcription !== null && $transcription->status === TranscriptionStatus::Processing) {
+            return $this->errorResponse('Transcription is already in progress.', statusCode: 422);
+        }
+
+        if ($transcription !== null) {
+            $transcription->update([
+                'content' => null,
+                'status' => TranscriptionStatus::Pending,
+                'error_message' => null,
+            ]);
+        }
+
+        $jobs = $recordings->map(
+            fn ($recording) => new TranscribeMeetingJob($meeting, $recording)
+        )->all();
+
+        Bus::chain($jobs)->dispatch();
+
+        return $this->successResponse(null, 'Retranscription jobs dispatched.');
     }
 
     /**

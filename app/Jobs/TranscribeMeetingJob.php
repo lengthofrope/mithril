@@ -74,8 +74,13 @@ class TranscribeMeetingJob implements ShouldQueue
 
             $text = $transcriptionService->transcribe($audioPath, $language);
 
+            $existingContent = trim($transcription->content ?? '');
+            $newContent = $existingContent !== ''
+                ? $existingContent . "\n\n" . $text
+                : $text;
+
             $transcription->update([
-                'content' => $text,
+                'content' => $newContent,
                 'status' => TranscriptionStatus::Completed,
                 'error_message' => null,
             ]);

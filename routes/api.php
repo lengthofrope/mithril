@@ -43,6 +43,7 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
 
     Route::get('meetings/{meeting}/transcription', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'show'])->name('meetings.transcription.show');
     Route::post('meetings/{meeting}/transcription/retry', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'retry'])->name('meetings.transcription.retry');
+    Route::post('meetings/{meeting}/transcription/retranscribe', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'retranscribe'])->name('meetings.transcription.retranscribe');
     Route::post('meetings/{meeting}/transcription/manual', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'storeManual'])->name('meetings.transcription.manual');
 
     Route::get('meetings/{meeting}/extractions', [App\Http\Controllers\Api\MeetingExtractionController::class, 'index'])->name('meetings.extractions.index');

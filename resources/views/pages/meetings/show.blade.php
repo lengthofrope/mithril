@@ -624,6 +624,22 @@
                 }
             },
 
+            async retranscribeAll() {
+                const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/transcription/retranscribe', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                    },
+                });
+                if (response.ok) {
+                    this.status = 'pending';
+                    this.content = '';
+                    this.errorMessage = '';
+                    this.startPolling();
+                }
+            },
+
             async saveManual() {
                 const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/transcription/manual', {
                     method: 'POST',
@@ -652,6 +668,15 @@
                         class="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-400"
                     >Retry</button>
                 </template>
+                @if($meeting->recordings->count() > 0)
+                    <template x-if="status === 'completed' || status === 'failed'">
+                        <button
+                            type="button"
+                            x-on:click="retranscribeAll()"
+                            class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                        >Retranscribe all</button>
+                    </template>
+                @endif
                 <button
                     type="button"
                     x-on:click="showManualInput = !showManualInput"

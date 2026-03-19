@@ -183,6 +183,35 @@ describe('TranscribeMeetingJob', function (): void {
             expect($transcription->content)->toBe('This is the full transcript.');
         });
 
+        it('appends new transcription text to existing content', function (): void {
+            Storage::fake('local');
+            Storage::disk('local')->put('recordings/second.webm', 'fake audio');
+
+            $mock = $this->mock(TranscriptionServiceInterface::class);
+            $mock->shouldReceive('transcribe')->once()->andReturn('Second part.');
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $recording = MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'disk' => 'local',
+                'path' => 'recordings/second.webm',
+            ]);
+            MeetingTranscription::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'content' => 'First part.',
+                'status' => TranscriptionStatus::Completed,
+            ]);
+
+            (new TranscribeMeetingJob($meeting, $recording))->handle($mock);
+
+            $transcription = MeetingTranscription::withoutGlobalScopes()->first();
+            expect($transcription->content)->toContain('First part.')
+                ->and($transcription->content)->toContain('Second part.');
+        });
+
         it('clears the error_message on success', function (): void {
             Storage::fake('local');
             Storage::disk('local')->put('recordings/test.webm', 'fake audio');
