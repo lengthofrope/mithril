@@ -125,7 +125,7 @@ class MeetingPageController extends Controller
             'scheduled_at' => ['required', 'date'],
             'team_id' => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'attendee_ids' => ['sometimes', 'array'],
-            'attendee_ids.*' => ['integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
+            'attendee_ids.*' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
         ]);
 
         $meeting = Meeting::create([
@@ -136,8 +136,9 @@ class MeetingPageController extends Controller
             'team_id' => $validated['team_id'] ?? null,
         ]);
 
-        if (!empty($validated['attendee_ids'])) {
-            $meeting->attendees()->attach($validated['attendee_ids']);
+        $attendeeIds = array_filter($validated['attendee_ids'] ?? []);
+        if (!empty($attendeeIds)) {
+            $meeting->attendees()->attach($attendeeIds);
         }
 
         MeetingScheduled::dispatch($meeting);

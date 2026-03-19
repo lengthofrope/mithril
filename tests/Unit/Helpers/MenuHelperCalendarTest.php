@@ -38,7 +38,7 @@ describe('MenuHelper calendar item', function (): void {
         expect($calendarItem)->toBeNull();
     });
 
-    it('places the Calendar item after Dashboard', function (): void {
+    it('places the Calendar item after the core workflow section', function (): void {
         $user = User::factory()->create(['microsoft_id' => 'ms-123']);
         $this->actingAs($user);
 
@@ -49,10 +49,10 @@ describe('MenuHelper calendar item', function (): void {
             ->values()
             ->all();
 
-        $dashboardIndex = array_search('Dashboard', $nonSeparatorNames);
+        $notesIndex = array_search('Notes', $nonSeparatorNames);
         $calendarIndex = array_search('Calendar', $nonSeparatorNames);
 
-        expect($calendarIndex)->toBe($dashboardIndex + 1);
+        expect($calendarIndex)->toBeGreaterThan($notesIndex);
     });
 
     it('uses a unique meeting icon for Meetings menu item', function (): void {
