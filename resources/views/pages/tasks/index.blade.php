@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    <div x-data x-init="localStorage.setItem('tasks.view', 'list')"></div>
     <x-common.page-breadcrumb pageTitle="Tasks" />
 
     {{-- Filter bar + toolbar --}}

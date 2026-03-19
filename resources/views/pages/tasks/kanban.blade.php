@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    <div x-data x-init="localStorage.setItem('tasks.view', 'kanban')"></div>
     <x-common.page-breadcrumb :items="$breadcrumbs" />
 
     {{-- Filter bar + toolbar --}}

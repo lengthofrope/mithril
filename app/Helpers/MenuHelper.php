@@ -33,6 +33,34 @@ class MenuHelper
             ['separator' => true],
         ];
 
+        $items[] = [
+            'icon' => 'meeting',
+            'name' => 'Meetings',
+            'path' => '/meetings',
+        ];
+
+        $items[] = [
+            'icon' => 'task',
+            'name' => 'Tasks',
+            'path' => '/tasks',
+            'viewPreference' => 'tasks.view',
+            'viewPaths' => ['list' => '/tasks', 'kanban' => '/tasks/kanban'],
+        ];
+
+        $items[] = [
+            'icon' => 'follow-up',
+            'name' => 'Follow-ups',
+            'path' => '/follow-ups',
+        ];
+
+        $items[] = [
+            'icon' => 'notes',
+            'name' => 'Notes',
+            'path' => '/notes',
+        ];
+
+        $items[] = ['separator' => true];
+
         if (self::hasMicrosoftConnection()) {
             $items[] = [
                 'icon' => 'calendar',
@@ -56,36 +84,7 @@ class MenuHelper
 
         $items[] = ['separator' => true];
 
-        $items[] = [
-            'icon' => 'task',
-            'name' => 'Tasks',
-            'subItems' => [
-                ['name' => 'List View', 'path' => '/tasks'],
-                ['name' => 'Kanban', 'path' => '/tasks/kanban'],
-            ],
-        ];
-
-        $items[] = [
-            'icon' => 'follow-up',
-            'name' => 'Follow-ups',
-            'path' => '/follow-ups',
-        ];
-
-        $items[] = [
-            'icon' => 'notes',
-            'name' => 'Notes',
-            'path' => '/notes',
-        ];
-
-        $items[] = ['separator' => true];
-
         $items[] = self::buildTeamsItem();
-
-        $items[] = [
-            'icon' => 'meeting',
-            'name' => 'Meetings',
-            'path' => '/meetings',
-        ];
 
         $items[] = [
             'icon' => 'weekly',
