@@ -20,21 +20,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Meetings in analytics** — New "Meetings by Type" data source for analytics widgets (1-on-1 / Team / Other breakdown)
 - **Calendar event linking** — Meeting detail page shows linked calendar events; calendar/email/Jira actions support creating meetings
 - **Configuration** — New `config/meetings.php` with recording storage, transcription provider, and extraction provider settings
+- **Task show_completed filter** — "Show completed" is now a server-side boolean filter in the filter panel; tasks with status "done" are excluded by default; explicit `status=done` filter overrides this
+- **Task view preference** — Last-visited task view (list or kanban) is stored in `localStorage`; the "Back to tasks" link on task detail pages and the sidebar Tasks link both respect the preference
+- **Global select arrow styling** — All `<select>` elements now render a consistent custom SVG chevron via a global CSS rule, with dark mode variant and `select[multiple]` exception
 
 ### Changed
 
 - **Bila → Meeting migration** — All existing bila data automatically migrated to the new meetings system: bilas become one_on_one meetings, team_member_id becomes an attendee record, bila_prep_items become meeting_prep_items; all polymorphic references (activities, calendar event links) updated
 - **TeamMember scheduling fields** — `bila_interval_days` renamed to `meeting_interval_days`, `next_bila_date` renamed to `next_meeting_date`
 - **Dashboard widget** — "Bila's" section replaced with "Meetings" showing upcoming and today's meetings
-- **Navigation** — "Bila's" menu item replaced with "Meetings"
 - **User preference** — `dashboard_upcoming_bilas` renamed to `dashboard_upcoming_meetings`
 - **Action controllers** — Email, Jira, and Calendar action controllers updated: 'bila' resource type replaced with 'meeting'; meeting creation attaches attendees via pivot table
 - **Weekly review** — Weekly reflection stats and summary text updated from "bilas held" to "meetings held"
 - **Storage quota** — Audio recordings now count towards the existing file storage quota alongside attachments
+- **Meeting show page layout** — Restructured from 3-equal-column grid to 2/3 + 1/3 layout (prep items and notes in main column, activity feed in sidebar), matching the tasks/notes detail page pattern; prep items form split into two rows for better mobile responsiveness
+- **Meeting team filter** — Filtering by team now shows meetings where any attendee belongs to that team (via `whereHas`), not just meetings with a direct `team_id` match
+- **Filter bar + toolbar layout** — All index pages (tasks, kanban, follow-ups, notes, meetings) now use a `relative` container with action buttons absolutely positioned top-right; the filter panel expands full-width underneath the buttons instead of being constrained to a flex column
+- **Follow-ups AJAX detection** — Changed `$request->wantsJson()` to `$request->ajax()` in `FollowUpPageController::index` to match the filterManager's `X-Requested-With: XMLHttpRequest` header; fixes filter results rendering the full page instead of the partial
+- **Filter bar component cleanup** — Removed manual SVG arrow overlays and `relative` wrapper divs from `filter-bar.blade.php`; select arrows now handled by the global CSS rule
+- **Navigation restructured** — Sidebar reordered by usage intent: core workflow (Meetings, Tasks, Follow-ups, Notes) → integrations (Calendar, E-mail, Jira) → team management (Teams, Weekly Review) → insights (Analytics); Tasks sub-menu (List View / Kanban) removed in favor of a single direct link that respects the `localStorage` view preference
 
 ### Removed
 
 - **Bila system** — Removed `Bila` model, `BilaPrepItem` model, `BilaController`, `BilaPageController`, `BilaRequest`, `BilaScheduled` event, `ScheduleNextBila` listener, and all associated factories, tests, and Blade views
+- **Client-side showCompleted toggle** — Removed `Alpine.store('taskList')` and `hideWhenDone` prop from task cards; replaced by the server-side `show_completed` filter
 
 ## [1.8.0] - 2026-03-18
 
