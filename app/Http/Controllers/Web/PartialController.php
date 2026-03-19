@@ -91,12 +91,16 @@ class PartialController extends Controller
      */
     public function tasksList(Request $request): Response
     {
+        $showCompleted = (bool) $request->get('show_completed', false);
+        $excludeDone = fn ($q) => $q->where('status', '!=', TaskStatus::Done);
+
         $taskGroups = TaskGroup::orderBySortOrder()
-            ->with(['tasks' => fn ($q) => $q->orderBySortOrder()->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])])
+            ->with(['tasks' => fn ($q) => $q->when(!$showCompleted, $excludeDone)->orderBySortOrder()->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])])
             ->get();
 
         $ungroupedTasks = Task::query()
             ->whereNull('task_group_id')
+            ->when(!$showCompleted, $excludeDone)
             ->orderBySortOrder()
             ->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])
             ->get();
