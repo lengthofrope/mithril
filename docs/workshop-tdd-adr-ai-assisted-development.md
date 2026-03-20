@@ -37,7 +37,10 @@ De AI mag dan zijn geheugen verliezen, maar bestanden in je repository niet. De 
 |------|------------------|----------------|
 | **Tests (TDD)** | Gedrag en contracten | `tests/` |
 | **ADRs** | Architectuurbeslissingen en de *waarom* | `logs/decisions/` |
-| **Plans** | Scope, specs en voortgang | `plans/` |
+| **PRDs** | Product requirements: *wat* en *waarom* op feature-niveau | `plans/` |
+| **Plans** | Technische scope, specs en voortgang | `plans/` |
+
+> **Opmerking:** Sinds de oorspronkelijke versie van deze workshop is het systeem uitgebreid met **Product Requirements Documents (PRDs)**. PRDs formaliseren de functionele eisen en het *waarom* op feature-niveau, vóórdat er een technisch plan wordt geschreven. Ze vormen de schakel tussen een idee en een implementatieplan, en voorkomen dat de AI (of een developer) begint te bouwen zonder helder gedefinieerde scope en doelen.
 
 ---
 
@@ -321,10 +324,11 @@ De meest waardevolle informatie in een ADR is niet *wat* er is besloten, maar *w
 |-----------|---------|---------------------|
 | **TDD** | Beschrijft gedrag, vangt regressies | Ja (tests in repo) |
 | **ADR** | Documenteert beslissingen + waarom | Ja (markdown in repo) |
-| **Plan** | Definieert scope, fases, specs | Ja (markdown in repo) |
+| **PRD** | Formaliseert feature-eisen en doelen | Ja (markdown in repo) |
+| **Plan** | Definieert technische scope, fases, specs | Ja (markdown in repo) |
 | **CLAUDE.md** | Laadt context automatisch bij start | Ja (config in repo) |
 
-De kracht zit in de combinatie: het plan definieert *wat* er gebouwd wordt, TDD verifieert *dat* het correct is, en ADRs leggen vast *waarom* het zo is. Samen vormen ze een systeem dat context rot voorkomt en consistente, betrouwbare AI-assisted development mogelijk maakt.
+De kracht zit in de combinatie: de PRD definieert *wat* er gebouwd moet worden en *waarom*, het plan vertaalt dat naar technische specs, TDD verifieert *dat* het correct is, en ADRs leggen vast *waarom* technische keuzes zijn gemaakt. Samen vormen ze een systeem dat context rot voorkomt en consistente, betrouwbare AI-assisted development mogelijk maakt.
 
 **Mithril bewijst het:** 995 tests, 23 ADRs, 12 plannen, 318 commits — gebouwd in 3 weken, met consistente architectuur ondanks tientallen sessiewisselingen.
 
