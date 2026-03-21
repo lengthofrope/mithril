@@ -8,6 +8,21 @@ use App\Services\MeetingInsights\ExtractionItem;
 use App\Services\MeetingInsights\ExtractionResult;
 use Illuminate\Support\Facades\Http;
 
+/**
+ * Helper to build a fake Anthropic response body.
+ *
+ * Since we prefill the assistant with `{`, the API response continues from there.
+ * The extractor prepends `{` to the response text, so we strip the leading `{` here.
+ */
+function anthropicResponse(array $data): array
+{
+    $json = json_encode($data);
+
+    return [
+        'content' => [['type' => 'text', 'text' => mb_substr($json, 1)]],
+    ];
+}
+
 describe('AnthropicInsightExtractor', function (): void {
     describe('class structure', function (): void {
         it('implements MeetingInsightExtractorInterface', function (): void {
@@ -26,12 +41,9 @@ describe('AnthropicInsightExtractor', function (): void {
     describe('HTTP call', function (): void {
         it('sends request to the Anthropic Messages endpoint', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
-                        'summary' => 'Test summary.',
-                        'items' => [],
-                    ])]],
-                ]),
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse(['summary' => 'Test.', 'items' => []])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-haiku-4-5-20251001');
@@ -44,12 +56,9 @@ describe('AnthropicInsightExtractor', function (): void {
 
         it('sends the x-api-key header with the API key', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
-                        'summary' => 'Test summary.',
-                        'items' => [],
-                    ])]],
-                ]),
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse(['summary' => 'Test.', 'items' => []])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'ant-secret-key', model: 'claude-haiku-4-5-20251001');
@@ -62,12 +71,9 @@ describe('AnthropicInsightExtractor', function (): void {
 
         it('sends the anthropic-version header', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
-                        'summary' => 'Test summary.',
-                        'items' => [],
-                    ])]],
-                ]),
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse(['summary' => 'Test.', 'items' => []])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-haiku-4-5-20251001');
@@ -80,12 +86,9 @@ describe('AnthropicInsightExtractor', function (): void {
 
         it('sends the system prompt as a top-level parameter', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
-                        'summary' => 'Test summary.',
-                        'items' => [],
-                    ])]],
-                ]),
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse(['summary' => 'Test.', 'items' => []])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-haiku-4-5-20251001');
@@ -98,14 +101,11 @@ describe('AnthropicInsightExtractor', function (): void {
             });
         });
 
-        it('sends only user messages in the messages array', function (): void {
+        it('sends user message followed by assistant prefill in the messages array', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
-                        'summary' => 'Test summary.',
-                        'items' => [],
-                    ])]],
-                ]),
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse(['summary' => 'Test.', 'items' => []])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-haiku-4-5-20251001');
@@ -114,19 +114,18 @@ describe('AnthropicInsightExtractor', function (): void {
             Http::assertSent(function ($request): bool {
                 $messages = $request['messages'];
 
-                return count($messages) === 1
-                    && $messages[0]['role'] === 'user';
+                return count($messages) === 2
+                    && $messages[0]['role'] === 'user'
+                    && $messages[1]['role'] === 'assistant'
+                    && $messages[1]['content'] === '{';
             });
         });
 
         it('sends the configured model in the request body', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
-                        'summary' => 'Test summary.',
-                        'items' => [],
-                    ])]],
-                ]),
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse(['summary' => 'Test.', 'items' => []])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-sonnet-4-5-20250514');
@@ -139,12 +138,9 @@ describe('AnthropicInsightExtractor', function (): void {
 
         it('sets max_tokens in the request body', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
-                        'summary' => 'Test summary.',
-                        'items' => [],
-                    ])]],
-                ]),
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse(['summary' => 'Test.', 'items' => []])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-haiku-4-5-20251001');
@@ -159,15 +155,15 @@ describe('AnthropicInsightExtractor', function (): void {
     describe('response parsing', function (): void {
         it('returns an ExtractionResult with summary and items', function (): void {
             Http::fake([
-                'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => json_encode([
+                'api.anthropic.com/v1/messages' => Http::response(
+                    anthropicResponse([
                         'summary' => 'Sprint planning went well.',
                         'items' => [
                             ['type' => 'task', 'content' => 'Deploy to staging'],
                             ['type' => 'agreement', 'content' => 'No deploys on Fridays'],
                         ],
-                    ])]],
-                ]),
+                    ])
+                ),
             ]);
 
             $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-haiku-4-5-20251001');
@@ -179,6 +175,26 @@ describe('AnthropicInsightExtractor', function (): void {
                 ->and($result->items[0])->toBeInstanceOf(ExtractionItem::class)
                 ->and($result->items[0]->type)->toBe('task')
                 ->and($result->items[1]->type)->toBe('agreement');
+        });
+
+        it('handles response wrapped in markdown code fences', function (): void {
+            $json = json_encode([
+                'summary' => 'Wrapped in fences.',
+                'items' => [['type' => 'task', 'content' => 'Do something']],
+            ]);
+            $wrappedText = "```json\n{$json}\n```";
+
+            Http::fake([
+                'api.anthropic.com/v1/messages' => Http::response([
+                    'content' => [['type' => 'text', 'text' => $wrappedText]],
+                ]),
+            ]);
+
+            $extractor = new AnthropicInsightExtractor(apiKey: 'test-key', model: 'claude-haiku-4-5-20251001');
+            $result = $extractor->extract('Some transcription', [], 'Meeting', 'en');
+
+            expect($result->summary)->toBe('Wrapped in fences.')
+                ->and($result->items)->toHaveCount(1);
         });
     });
 
@@ -199,7 +215,7 @@ describe('AnthropicInsightExtractor', function (): void {
         it('throws RuntimeException when response contains invalid JSON content', function (): void {
             Http::fake([
                 'api.anthropic.com/v1/messages' => Http::response([
-                    'content' => [['type' => 'text', 'text' => 'not json']],
+                    'content' => [['type' => 'text', 'text' => 'not json at all']],
                 ]),
             ]);
 

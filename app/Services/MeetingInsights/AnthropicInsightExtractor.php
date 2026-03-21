@@ -18,11 +18,11 @@ class AnthropicInsightExtractor extends AbstractInsightExtractor
      * Create the extractor.
      *
      * @param string $apiKey Anthropic API key.
-     * @param string $model  Model to use (e.g. claude-haiku-4-5-20251001).
+     * @param string $model  Model to use (e.g. claude-haiku-4-5).
      */
     public function __construct(
         private readonly string $apiKey,
-        private readonly string $model = 'claude-haiku-4-5-20251001',
+        private readonly string $model = 'claude-haiku-4-5',
     ) {}
 
     /**
@@ -48,6 +48,7 @@ class AnthropicInsightExtractor extends AbstractInsightExtractor
                     'system' => $systemPrompt,
                     'messages' => [
                         ['role' => 'user', 'content' => $userPrompt],
+                        ['role' => 'assistant', 'content' => '{'],
                     ],
                 ]);
         } catch (ConnectionException $e) {
@@ -59,13 +60,34 @@ class AnthropicInsightExtractor extends AbstractInsightExtractor
             throw new \RuntimeException("Anthropic API error ({$response->status()}): {$error}");
         }
 
-        $content = $response->json('content.0.text', '');
-        $parsed = json_decode($content, true);
+        $content = '{' . $response->json('content.0.text', '');
+        $parsed = json_decode($this->extractJson($content), true);
 
         if (!is_array($parsed)) {
             throw new \RuntimeException('Anthropic API returned invalid JSON.');
         }
 
         return $parsed;
+    }
+
+    /**
+     * Extract a JSON object from a string that may contain markdown fences or preamble.
+     *
+     * @param string $content
+     * @return string
+     */
+    private function extractJson(string $content): string
+    {
+        $content = trim($content);
+
+        if (preg_match('/```(?:json)?\s*(\{[\s\S]*\})\s*```/', $content, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/(\{[\s\S]*\})\s*$/', $content, $matches)) {
+            return $matches[1];
+        }
+
+        return $content;
     }
 }
