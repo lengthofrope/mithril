@@ -37,6 +37,11 @@ class DiarizeMeetingJob implements ShouldQueue
     public int $tries = 2;
 
     /**
+     * Disable worker-level timeout; the HTTP client timeout handles failures.
+     */
+    public int $timeout = 0;
+
+    /**
      * Seconds to wait between retries (backoff).
      *
      * @return array<int, int>

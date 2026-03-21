@@ -12,6 +12,7 @@ use App\Models\MeetingTranscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -112,8 +113,85 @@ describe('MeetingTranscriptionController', function (): void {
                         'provider',
                         'error_message',
                         'updated_at',
+                        'processing_started_at',
+                        'audio_duration_seconds',
+                        'estimated_duration_seconds',
                     ],
                 ]);
+        });
+
+        it('returns processing_started_at for a processing transcription', function (): void {
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingTranscription::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'status' => TranscriptionStatus::Processing,
+                'processing_started_at' => now(),
+                'audio_duration_seconds' => 600,
+            ]);
+
+            $response = $this->actingAs($user)->getJson(
+                "/api/v1/meetings/{$meeting->id}/transcription"
+            );
+
+            $response->assertOk()
+                ->assertJson([
+                    'data' => [
+                        'status' => 'processing',
+                        'audio_duration_seconds' => 600,
+                    ],
+                ]);
+
+            expect($response->json('data.processing_started_at'))->not->toBeNull();
+        });
+
+        it('returns estimated_duration_seconds based on historical ratio', function (): void {
+            $user = User::factory()->create();
+
+            $completedMeeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingTranscription::factory()->create([
+                'meeting_id' => $completedMeeting->id,
+                'user_id' => $user->id,
+                'status' => TranscriptionStatus::Completed,
+                'audio_duration_seconds' => 600,
+                'processing_duration_seconds' => 60,
+            ]);
+
+            $currentMeeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingTranscription::factory()->create([
+                'meeting_id' => $currentMeeting->id,
+                'user_id' => $user->id,
+                'status' => TranscriptionStatus::Processing,
+                'processing_started_at' => now(),
+                'audio_duration_seconds' => 1200,
+            ]);
+
+            $response = $this->actingAs($user)->getJson(
+                "/api/v1/meetings/{$currentMeeting->id}/transcription"
+            );
+
+            $response->assertOk();
+            expect($response->json('data.estimated_duration_seconds'))->toBe(120);
+        });
+
+        it('returns null estimated_duration_seconds when no historical data exists', function (): void {
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingTranscription::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'status' => TranscriptionStatus::Processing,
+                'processing_started_at' => now(),
+                'audio_duration_seconds' => 600,
+            ]);
+
+            $response = $this->actingAs($user)->getJson(
+                "/api/v1/meetings/{$meeting->id}/transcription"
+            );
+
+            $response->assertOk();
+            expect($response->json('data.estimated_duration_seconds'))->toBeNull();
         });
 
         it('returns 404 when the meeting belongs to another user', function (): void {
@@ -142,7 +220,7 @@ describe('MeetingTranscriptionController', function (): void {
     describe('retry (POST /api/v1/meetings/{meeting}/transcription/retry)', function (): void {
         it('dispatches a TranscribeMeetingJob when a recording exists', function (): void {
             Queue::fake();
-            Storage::fake('local');
+            Config::set('meetings.diarization.enabled', false);
 
             $user = User::factory()->create();
             $meeting = Meeting::factory()->create(['user_id' => $user->id]);
@@ -153,6 +231,24 @@ describe('MeetingTranscriptionController', function (): void {
             );
 
             Queue::assertPushed(TranscribeMeetingJob::class);
+        });
+
+        it('chains diarization after transcription when diarization is enabled', function (): void {
+            Bus::fake();
+            Config::set('meetings.diarization.enabled', true);
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retry"
+            );
+
+            Bus::assertChained([
+                TranscribeMeetingJob::class,
+                DiarizeMeetingJob::class,
+            ]);
         });
 
         it('resets an existing transcription status to pending on retry', function (): void {
@@ -291,6 +387,7 @@ describe('MeetingTranscriptionController', function (): void {
 
         it('dispatches a chained job for each recording in chronological order', function (): void {
             Bus::fake();
+            Config::set('meetings.diarization.enabled', false);
 
             $user = User::factory()->create();
             $meeting = Meeting::factory()->create(['user_id' => $user->id]);
@@ -316,6 +413,27 @@ describe('MeetingTranscriptionController', function (): void {
                 function (TranscribeMeetingJob $job) use ($second) {
                     return $job->recording->id === $second->id;
                 },
+            ]);
+        });
+
+        it('appends diarization job to the chain when diarization is enabled', function (): void {
+            Bus::fake();
+            Config::set('meetings.diarization.enabled', true);
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+            ]);
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retranscribe"
+            );
+
+            Bus::assertChained([
+                TranscribeMeetingJob::class,
+                DiarizeMeetingJob::class,
             ]);
         });
 

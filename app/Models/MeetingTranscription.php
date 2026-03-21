@@ -25,6 +25,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property DiarizationStatus|null $diarization_status
  * @property string|null $error_message
  * @property string|null $diarization_error
+ * @property \Illuminate\Support\Carbon|null $processing_started_at
+ * @property int|null $processing_duration_seconds
+ * @property int|null $audio_duration_seconds
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -48,6 +51,9 @@ class MeetingTranscription extends Model
         'diarization_status',
         'error_message',
         'diarization_error',
+        'processing_started_at',
+        'processing_duration_seconds',
+        'audio_duration_seconds',
     ];
 
     /**
@@ -60,6 +66,9 @@ class MeetingTranscription extends Model
         return [
             'status' => TranscriptionStatus::class,
             'diarization_status' => DiarizationStatus::class,
+            'processing_started_at' => 'datetime',
+            'processing_duration_seconds' => 'integer',
+            'audio_duration_seconds' => 'integer',
         ];
     }
 

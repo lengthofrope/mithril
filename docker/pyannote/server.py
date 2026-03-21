@@ -9,6 +9,7 @@ Accepts audio files and returns speaker-labeled transcription segments by:
 
 import logging
 import os
+import subprocess
 import tempfile
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -185,6 +186,27 @@ async def health():
     }
 
 
+def ensure_wav(audio_path: str) -> str:
+    """Convert audio to WAV (16-bit PCM, mono) if not already .wav."""
+    if audio_path.lower().endswith(".wav"):
+        return audio_path
+
+    wav_path = audio_path + ".wav"
+    logger.info("Converting %s to WAV...", os.path.basename(audio_path))
+
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", audio_path, "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", wav_path],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg conversion failed: {result.stderr}")
+
+    logger.info("Conversion complete: %s", os.path.basename(wav_path))
+    return wav_path
+
+
 @app.post("/diarize")
 async def diarize(
     file: UploadFile = File(...),
@@ -208,11 +230,17 @@ async def diarize(
             language,
         )
 
-        speaker_segments = get_speaker_segments(tmp.name)
-        logger.info("Diarization complete: %d speaker segments", len(speaker_segments))
+        audio_path = ensure_wav(tmp.name)
 
-        whisper_segments = get_whisper_segments(tmp.name, language)
-        logger.info("Transcription complete: %d text segments", len(whisper_segments))
+        try:
+            speaker_segments = get_speaker_segments(audio_path)
+            logger.info("Diarization complete: %d speaker segments", len(speaker_segments))
+
+            whisper_segments = get_whisper_segments(audio_path, language)
+            logger.info("Transcription complete: %d text segments", len(whisper_segments))
+        finally:
+            if audio_path != tmp.name:
+                os.unlink(audio_path)
 
     merged = merge_segments(speaker_segments, whisper_segments)
     collapsed = collapse_consecutive_speakers(merged)

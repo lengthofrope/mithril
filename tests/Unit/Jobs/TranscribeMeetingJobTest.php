@@ -268,6 +268,99 @@ describe('TranscribeMeetingJob', function (): void {
         });
     });
 
+    describe('handle — processing timing', function (): void {
+        it('records processing_started_at when the job starts processing', function (): void {
+            Storage::fake('local');
+            Storage::disk('local')->put('recordings/test.webm', 'fake audio');
+
+            $mock = $this->mock(TranscriptionServiceInterface::class);
+            $mock->shouldReceive('transcribe')->once()->andReturn('Transcribed text');
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $recording = MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'disk' => 'local',
+                'path' => 'recordings/test.webm',
+            ]);
+
+            (new TranscribeMeetingJob($meeting, $recording))->handle($mock);
+
+            $transcription = MeetingTranscription::withoutGlobalScopes()->first();
+            expect($transcription->processing_started_at)->not->toBeNull();
+        });
+
+        it('records processing_duration_seconds on success', function (): void {
+            Storage::fake('local');
+            Storage::disk('local')->put('recordings/test.webm', 'fake audio');
+
+            $mock = $this->mock(TranscriptionServiceInterface::class);
+            $mock->shouldReceive('transcribe')->once()->andReturn('Transcribed text');
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $recording = MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'disk' => 'local',
+                'path' => 'recordings/test.webm',
+            ]);
+
+            (new TranscribeMeetingJob($meeting, $recording))->handle($mock);
+
+            $transcription = MeetingTranscription::withoutGlobalScopes()->first();
+            expect($transcription->processing_duration_seconds)->toBeInt()
+                ->and($transcription->processing_duration_seconds)->toBeGreaterThanOrEqual(0);
+        });
+
+        it('records processing_duration_seconds on failure', function (): void {
+            Storage::fake('local');
+            Storage::disk('local')->put('recordings/test.webm', 'fake audio');
+
+            $mock = $this->mock(TranscriptionServiceInterface::class);
+            $mock->shouldReceive('transcribe')->once()->andThrow(new \RuntimeException('Timeout'));
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $recording = MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'disk' => 'local',
+                'path' => 'recordings/test.webm',
+            ]);
+
+            (new TranscribeMeetingJob($meeting, $recording))->handle($mock);
+
+            $transcription = MeetingTranscription::withoutGlobalScopes()->first();
+            expect($transcription->processing_duration_seconds)->toBeInt()
+                ->and($transcription->processing_duration_seconds)->toBeGreaterThanOrEqual(0);
+        });
+
+        it('stores audio_duration_seconds from the recording', function (): void {
+            Storage::fake('local');
+            Storage::disk('local')->put('recordings/test.webm', 'fake audio');
+
+            $mock = $this->mock(TranscriptionServiceInterface::class);
+            $mock->shouldReceive('transcribe')->once()->andReturn('Transcribed text');
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $recording = MeetingRecording::factory()->create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'disk' => 'local',
+                'path' => 'recordings/test.webm',
+                'duration_seconds' => 300,
+            ]);
+
+            (new TranscribeMeetingJob($meeting, $recording))->handle($mock);
+
+            $transcription = MeetingTranscription::withoutGlobalScopes()->first();
+            expect($transcription->audio_duration_seconds)->toBe(300);
+        });
+    });
+
     describe('handle — failure path', function (): void {
         it('updates the transcription status to failed when the service throws', function (): void {
             Storage::fake('local');

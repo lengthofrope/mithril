@@ -970,6 +970,10 @@
                     diarizedContent: @js($meeting->transcription?->diarized_content ?? ''),
                     diarizationError: @js($meeting->transcription?->diarization_error ?? ''),
                     diarizationEnabled: @js(config('meetings.diarization.enabled')),
+                    processingStartedAt: @js($meeting->transcription?->processing_started_at?->toIso8601String()),
+                    estimatedDurationSeconds: null,
+                    elapsedTimer: null,
+                    elapsedSeconds: 0,
                     showManualInput: false,
                     manualContent: '',
                     polling: false,
@@ -1025,9 +1029,41 @@
                         return m + ':' + String(s).padStart(2, '0');
                     },
 
+                    formatDuration(totalSeconds) {
+                        const m = Math.floor(totalSeconds / 60);
+                        const s = totalSeconds % 60;
+                        if (m === 0) return s + 's';
+                        return m + 'm ' + s + 's';
+                    },
+
+                    get progressPercent() {
+                        if (!this.estimatedDurationSeconds || this.estimatedDurationSeconds <= 0) return null;
+                        return Math.min(95, Math.round((this.elapsedSeconds / this.estimatedDurationSeconds) * 100));
+                    },
+
+                    startElapsedTimer() {
+                        this.stopElapsedTimer();
+                        if (!this.processingStartedAt) return;
+                        const started = new Date(this.processingStartedAt).getTime();
+                        this.elapsedSeconds = Math.max(0, Math.floor((Date.now() - started) / 1000));
+                        this.elapsedTimer = setInterval(() => {
+                            this.elapsedSeconds = Math.max(0, Math.floor((Date.now() - started) / 1000));
+                        }, 1000);
+                    },
+
+                    stopElapsedTimer() {
+                        if (this.elapsedTimer) {
+                            clearInterval(this.elapsedTimer);
+                            this.elapsedTimer = null;
+                        }
+                    },
+
                     init() {
                         if (this.shouldPoll) {
                             this.startPolling();
+                        }
+                        if (this.status === 'processing') {
+                            this.startElapsedTimer();
                         }
                     },
 
@@ -1041,12 +1077,21 @@
                                 });
                                 if (response.ok) {
                                     const data = await response.json();
+                                    const prev = this.status;
                                     this.status = data.data?.status;
                                     this.content = data.data?.content ?? '';
                                     this.errorMessage = data.data?.error_message ?? '';
                                     this.diarizationStatus = data.data?.diarization_status;
                                     this.diarizedContent = data.data?.diarized_content ?? '';
                                     this.diarizationError = data.data?.diarization_error ?? '';
+                                    this.processingStartedAt = data.data?.processing_started_at;
+                                    this.estimatedDurationSeconds = data.data?.estimated_duration_seconds;
+
+                                    if (this.status === 'processing' && prev !== 'processing') {
+                                        this.startElapsedTimer();
+                                    } else if (this.status !== 'processing') {
+                                        this.stopElapsedTimer();
+                                    }
 
                                     if (!this.shouldPoll) {
                                         this.polling = false;
@@ -1069,6 +1114,9 @@
                             this.errorMessage = '';
                             this.diarizationStatus = null;
                             this.diarizedContent = '';
+                            this.processingStartedAt = null;
+                            this.estimatedDurationSeconds = null;
+                            this.stopElapsedTimer();
                             this.startPolling();
                         }
                     },
@@ -1087,6 +1135,9 @@
                             this.errorMessage = '';
                             this.diarizationStatus = null;
                             this.diarizedContent = '';
+                            this.processingStartedAt = null;
+                            this.estimatedDurationSeconds = null;
+                            this.stopElapsedTimer();
                             this.startPolling();
                         }
                     },
@@ -1140,12 +1191,35 @@
                 <div class="p-5">
                     {{-- Pending / Processing --}}
                     <template x-if="status === 'pending' || status === 'processing'">
-                        <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                            <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                            <span x-text="status === 'pending' ? 'Waiting to start transcription…' : 'Transcribing audio…'"></span>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                                <svg class="h-4 w-4 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span x-text="status === 'pending' ? 'Waiting to start transcription…' : 'Transcribing audio…'"></span>
+                            </div>
+
+                            <template x-if="status === 'processing' && processingStartedAt">
+                                <div class="space-y-2">
+                                    <template x-if="progressPercent !== null">
+                                        <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                            <div
+                                                class="h-1.5 rounded-full bg-brand-500 transition-all duration-1000"
+                                                :style="'width: ' + progressPercent + '%'"
+                                            ></div>
+                                        </div>
+                                    </template>
+                                    <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+                                        <span x-text="'Elapsed: ' + formatDuration(elapsedSeconds)"></span>
+                                        <template x-if="estimatedDurationSeconds">
+                                            <span x-text="elapsedSeconds < estimatedDurationSeconds
+                                                ? 'Est. remaining: ~' + formatDuration(estimatedDurationSeconds - elapsedSeconds)
+                                                : 'Taking longer than expected…'"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </template>
 

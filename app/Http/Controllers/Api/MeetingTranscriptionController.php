@@ -52,6 +52,9 @@ class MeetingTranscriptionController extends Controller
             'provider' => $transcription->provider,
             'error_message' => $transcription->error_message,
             'updated_at' => $transcription->updated_at->toIso8601String(),
+            'processing_started_at' => $transcription->processing_started_at?->toIso8601String(),
+            'audio_duration_seconds' => $transcription->audio_duration_seconds,
+            'estimated_duration_seconds' => $this->estimateProcessingDuration($transcription),
         ]);
     }
 
@@ -82,7 +85,14 @@ class MeetingTranscriptionController extends Controller
             ]);
         }
 
-        TranscribeMeetingJob::dispatch($meeting, $recording);
+        if (config('meetings.diarization.enabled', false)) {
+            Bus::chain([
+                new TranscribeMeetingJob($meeting, $recording),
+                new DiarizeMeetingJob($meeting, $recording),
+            ])->dispatch();
+        } else {
+            TranscribeMeetingJob::dispatch($meeting, $recording);
+        }
 
         return $this->successResponse(null, 'Transcription job dispatched.');
     }
@@ -121,6 +131,11 @@ class MeetingTranscriptionController extends Controller
         $jobs = $recordings->map(
             fn ($recording) => new TranscribeMeetingJob($meeting, $recording)
         )->all();
+
+        if (config('meetings.diarization.enabled', false)) {
+            $lastRecording = $recordings->last();
+            $jobs[] = new DiarizeMeetingJob($meeting, $lastRecording);
+        }
 
         Bus::chain($jobs)->dispatch();
 
@@ -231,5 +246,33 @@ class MeetingTranscriptionController extends Controller
         DiarizeMeetingJob::dispatch($meeting, $recording);
 
         return $this->successResponse(null, 'Diarization retry job dispatched.');
+    }
+
+    /**
+     * Estimate processing duration based on audio length and historical ratio.
+     *
+     * @param MeetingTranscription $transcription
+     * @return int|null Estimated seconds, or null when no estimate is possible.
+     */
+    private function estimateProcessingDuration(MeetingTranscription $transcription): ?int
+    {
+        if ($transcription->audio_duration_seconds === null) {
+            return null;
+        }
+
+        $averageRatio = MeetingTranscription::withoutGlobalScopes()
+            ->where('user_id', $transcription->user_id)
+            ->where('status', TranscriptionStatus::Completed)
+            ->whereNotNull('processing_duration_seconds')
+            ->whereNotNull('audio_duration_seconds')
+            ->where('audio_duration_seconds', '>', 0)
+            ->selectRaw('AVG(CAST(processing_duration_seconds AS REAL) / audio_duration_seconds) as ratio')
+            ->value('ratio');
+
+        if ($averageRatio === null) {
+            return null;
+        }
+
+        return (int) round((float) $averageRatio * $transcription->audio_duration_seconds);
     }
 }

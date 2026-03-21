@@ -36,6 +36,11 @@ class TranscribeMeetingJob implements ShouldQueue
     public int $tries = 3;
 
     /**
+     * Disable worker-level timeout; the HTTP client timeout handles failures.
+     */
+    public int $timeout = 0;
+
+    /**
      * Seconds to wait between retries (backoff).
      *
      * @return array<int, int>
@@ -66,7 +71,13 @@ class TranscribeMeetingJob implements ShouldQueue
     {
         $transcription = $this->findOrCreateTranscription();
 
-        $transcription->update(['status' => TranscriptionStatus::Processing]);
+        $startedAt = now();
+
+        $transcription->update([
+            'status' => TranscriptionStatus::Processing,
+            'processing_started_at' => $startedAt,
+            'audio_duration_seconds' => $this->recording->duration_seconds,
+        ]);
 
         try {
             $audioPath = Storage::disk($this->recording->disk)->path($this->recording->path);
@@ -83,6 +94,7 @@ class TranscribeMeetingJob implements ShouldQueue
                 'content' => $newContent,
                 'status' => TranscriptionStatus::Completed,
                 'error_message' => null,
+                'processing_duration_seconds' => (int) $startedAt->diffInSeconds(now()),
             ]);
         } catch (\Throwable $e) {
             Log::error('Transcription failed', [
@@ -94,6 +106,7 @@ class TranscribeMeetingJob implements ShouldQueue
             $transcription->update([
                 'status' => TranscriptionStatus::Failed,
                 'error_message' => $e->getMessage(),
+                'processing_duration_seconds' => (int) $startedAt->diffInSeconds(now()),
             ]);
         }
     }
