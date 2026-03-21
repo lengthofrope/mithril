@@ -84,7 +84,6 @@
                                 <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
                             @endforeach
                         </select>
-                        <x-tl.auto-save-status />
 
                         {{-- Warning modal: switching to 1-on-1 with multiple attendees --}}
                         <div
@@ -144,17 +143,21 @@
 
                     <span class="text-xs text-gray-400">&middot;</span>
 
-                    <div class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+                    <div
+                        class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400"
+                        x-data="Object.assign(autoSaveField({ endpoint: '{{ route('meetings.update', $meeting->id) }}', field: 'scheduled_at' }), datePicker())"
+                        x-init="value = @js($meeting->scheduled_at->toDateString())"
+                    >
                         <svg class="h-3.5 w-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
-                        <x-tl.auto-save-field
-                            :endpoint="route('meetings.update', $meeting->id)"
-                            field="scheduled_at"
-                            :value="$meeting->scheduled_at->toDateString()"
-                            type="date"
-                            label=""
-                        />
+                        <input
+                            type="text"
+                            x-ref="input"
+                            x-model="value"
+                            placeholder="YYYY-MM-DD"
+                            class="w-32 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                        >
                     </div>
                 </div>
             </div>
