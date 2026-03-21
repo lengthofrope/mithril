@@ -8,23 +8,25 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Extracts meeting insights using the OpenAI Chat Completions API.
+ * Extracts meeting insights using the Anthropic Messages API.
  */
-class OpenAiInsightExtractor extends AbstractInsightExtractor
+class AnthropicInsightExtractor extends AbstractInsightExtractor
 {
+    private const API_VERSION = '2023-06-01';
+
     /**
      * Create the extractor.
      *
-     * @param string $apiKey OpenAI API key.
-     * @param string $model  Model to use (e.g. gpt-4o, gpt-4o-mini).
+     * @param string $apiKey Anthropic API key.
+     * @param string $model  Model to use (e.g. claude-haiku-4-5-20251001).
      */
     public function __construct(
         private readonly string $apiKey,
-        private readonly string $model = 'gpt-4o-mini',
+        private readonly string $model = 'claude-haiku-4-5-20251001',
     ) {}
 
     /**
-     * Send the prompt to the OpenAI Chat Completions API.
+     * Send the prompt to the Anthropic Messages API.
      *
      * @param string $systemPrompt The system prompt.
      * @param string $userPrompt The user prompt.
@@ -35,30 +37,33 @@ class OpenAiInsightExtractor extends AbstractInsightExtractor
     {
         try {
             $response = Http::timeout(120)
-                ->withToken($this->apiKey)
-                ->post('https://api.openai.com/v1/chat/completions', [
+                ->withHeaders([
+                    'x-api-key' => $this->apiKey,
+                    'anthropic-version' => self::API_VERSION,
+                ])
+                ->post('https://api.anthropic.com/v1/messages', [
                     'model' => $this->model,
+                    'max_tokens' => 4096,
+                    'temperature' => 0.3,
+                    'system' => $systemPrompt,
                     'messages' => [
-                        ['role' => 'system', 'content' => $systemPrompt],
                         ['role' => 'user', 'content' => $userPrompt],
                     ],
-                    'response_format' => ['type' => 'json_object'],
-                    'temperature' => 0.3,
                 ]);
         } catch (ConnectionException $e) {
-            throw new \RuntimeException("OpenAI API connection failed: {$e->getMessage()}", 0, $e);
+            throw new \RuntimeException("Anthropic API connection failed: {$e->getMessage()}", 0, $e);
         }
 
         if (!$response->successful()) {
             $error = $response->json('error.message', 'Unknown error');
-            throw new \RuntimeException("OpenAI API error ({$response->status()}): {$error}");
+            throw new \RuntimeException("Anthropic API error ({$response->status()}): {$error}");
         }
 
-        $content = $response->json('choices.0.message.content', '');
+        $content = $response->json('content.0.text', '');
         $parsed = json_decode($content, true);
 
         if (!is_array($parsed)) {
-            throw new \RuntimeException('OpenAI API returned invalid JSON.');
+            throw new \RuntimeException('Anthropic API returned invalid JSON.');
         }
 
         return $parsed;

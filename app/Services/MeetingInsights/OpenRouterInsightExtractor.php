@@ -8,23 +8,23 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Extracts meeting insights using the OpenAI Chat Completions API.
+ * Extracts meeting insights using the OpenRouter API (OpenAI-compatible).
  */
-class OpenAiInsightExtractor extends AbstractInsightExtractor
+class OpenRouterInsightExtractor extends AbstractInsightExtractor
 {
     /**
      * Create the extractor.
      *
-     * @param string $apiKey OpenAI API key.
-     * @param string $model  Model to use (e.g. gpt-4o, gpt-4o-mini).
+     * @param string $apiKey OpenRouter API key.
+     * @param string $model  Model to use (e.g. openai/gpt-4o-mini).
      */
     public function __construct(
         private readonly string $apiKey,
-        private readonly string $model = 'gpt-4o-mini',
+        private readonly string $model = 'openai/gpt-4o-mini',
     ) {}
 
     /**
-     * Send the prompt to the OpenAI Chat Completions API.
+     * Send the prompt to the OpenRouter Chat Completions API.
      *
      * @param string $systemPrompt The system prompt.
      * @param string $userPrompt The user prompt.
@@ -36,7 +36,11 @@ class OpenAiInsightExtractor extends AbstractInsightExtractor
         try {
             $response = Http::timeout(120)
                 ->withToken($this->apiKey)
-                ->post('https://api.openai.com/v1/chat/completions', [
+                ->withHeaders([
+                    'HTTP-Referer' => config('app.url', 'http://localhost'),
+                    'X-Title' => config('app.name', 'Mithril'),
+                ])
+                ->post('https://openrouter.ai/api/v1/chat/completions', [
                     'model' => $this->model,
                     'messages' => [
                         ['role' => 'system', 'content' => $systemPrompt],
@@ -46,19 +50,19 @@ class OpenAiInsightExtractor extends AbstractInsightExtractor
                     'temperature' => 0.3,
                 ]);
         } catch (ConnectionException $e) {
-            throw new \RuntimeException("OpenAI API connection failed: {$e->getMessage()}", 0, $e);
+            throw new \RuntimeException("OpenRouter API connection failed: {$e->getMessage()}", 0, $e);
         }
 
         if (!$response->successful()) {
             $error = $response->json('error.message', 'Unknown error');
-            throw new \RuntimeException("OpenAI API error ({$response->status()}): {$error}");
+            throw new \RuntimeException("OpenRouter API error ({$response->status()}): {$error}");
         }
 
         $content = $response->json('choices.0.message.content', '');
         $parsed = json_decode($content, true);
 
         if (!is_array($parsed)) {
-            throw new \RuntimeException('OpenAI API returned invalid JSON.');
+            throw new \RuntimeException('OpenRouter API returned invalid JSON.');
         }
 
         return $parsed;

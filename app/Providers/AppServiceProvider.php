@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Services\MeetingInsights\MeetingInsightExtractorInterface;
 use App\Services\MeetingInsights\OpenAiInsightExtractor;
+use App\Services\MeetingInsights\AnthropicInsightExtractor;
+use App\Services\MeetingInsights\OpenRouterInsightExtractor;
 use App\Services\Diarization\DiarizationServiceInterface;
 use App\Services\Diarization\PyAnnoteDiarizationService;
 use App\Services\Transcription\TranscriptionServiceInterface;
@@ -36,10 +38,17 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(MeetingInsightExtractorInterface::class, function (): MeetingInsightExtractorInterface {
-            return new OpenAiInsightExtractor(
-                apiKey: config('meetings.extraction.openai.api_key') ?? config('meetings.transcription.whisper.api_key') ?? '',
-                model: config('meetings.extraction.openai.model') ?? 'gpt-4o-mini',
-            );
+            $apiKey = config('ai.api_key') ?? '';
+            $model = config('ai.model') ?? 'gpt-4o-mini';
+
+            $provider = config('ai.provider') ?? 'openai';
+
+            return match ($provider) {
+                'openai' => new OpenAiInsightExtractor(apiKey: $apiKey, model: $model),
+                'openrouter' => new OpenRouterInsightExtractor(apiKey: $apiKey, model: $model),
+                'anthropic' => new AnthropicInsightExtractor(apiKey: $apiKey, model: $model),
+                default => throw new \InvalidArgumentException("Unsupported AI provider: {$provider}"),
+            };
         });
 
         $this->app->bind(DiarizationServiceInterface::class, function (): DiarizationServiceInterface {

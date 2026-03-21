@@ -46,11 +46,7 @@ return [
     ],
 
     'extraction' => [
-        'provider' => env('MEETING_EXTRACTION_PROVIDER', 'openai'),
-
-        'openai' => [
-            'api_key' => env('OPENAI_API_KEY'),
-            'model' => env('MEETING_EXTRACTION_MODEL', 'gpt-4o-mini'),
-        ],
+        // Provider, API key, and model are now configured globally in config/ai.php
+        // (AI_PROVIDER, AI_API_KEY, AI_MODEL env vars).
     ],
 ];
