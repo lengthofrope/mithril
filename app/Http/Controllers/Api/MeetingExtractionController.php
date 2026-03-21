@@ -169,6 +169,10 @@ class MeetingExtractionController extends Controller
      */
     public function reExtract(Meeting $meeting): JsonResponse
     {
+        if (!config('ai.enabled', true)) {
+            return $this->errorResponse('AI feature is disabled.', statusCode: 403);
+        }
+
         $transcription = $meeting->transcription;
 
         if ($transcription === null || $transcription->content === null) {

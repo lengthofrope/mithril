@@ -70,6 +70,13 @@ class DiarizeMeetingJob implements ShouldQueue
      */
     public function handle(DiarizationServiceInterface $diarizationService): void
     {
+        if (!config('meetings.transcription.enabled', true)) {
+            Log::info('DiarizeMeetingJob: transcription feature disabled, skipping.', [
+                'meeting_id' => $this->meeting->id,
+            ]);
+            return;
+        }
+
         $transcription = $this->findTranscription();
 
         if ($transcription === null) {

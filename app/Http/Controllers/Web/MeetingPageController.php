@@ -199,6 +199,9 @@ class MeetingPageController extends Controller
                 'team_id' => $m->team_id,
                 'team_name' => $m->team?->name ?? '',
             ])->all(),
+            'recordingEnabled' => (bool) config('meetings.recording.enabled', true),
+            'transcriptionEnabled' => (bool) config('meetings.transcription.enabled', true),
+            'aiEnabled' => (bool) config('ai.enabled', true),
         ]);
     }
 

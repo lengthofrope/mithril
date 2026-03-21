@@ -60,6 +60,13 @@ class ExtractMeetingInsightsJob implements ShouldQueue
      */
     public function handle(MeetingInsightExtractorInterface $extractor): void
     {
+        if (!config('ai.enabled', true)) {
+            Log::info('ExtractMeetingInsightsJob: AI feature disabled, skipping.', [
+                'meeting_id' => $this->meeting->id,
+            ]);
+            return;
+        }
+
         $transcription = $this->meeting->transcription;
 
         if ($transcription === null || $transcription->content === null) {

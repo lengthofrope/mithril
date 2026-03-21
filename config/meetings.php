@@ -7,6 +7,7 @@ declare(strict_types=1);
  */
 return [
     'recording' => [
+        'enabled' => (bool) env('MEETING_RECORDING_ENABLED', true),
         'disk' => env('MEETING_RECORDING_DISK', 'local'),
         'max_upload_mb' => (int) env('MEETING_RECORDING_MAX_MB', 500),
         'allowed_mime_types' => [
@@ -24,6 +25,7 @@ return [
     ],
 
     'transcription' => [
+        'enabled' => (bool) env('MEETING_TRANSCRIPTION_ENABLED', true),
         'provider' => env('MEETING_TRANSCRIPTION_PROVIDER', 'whisper_cpp'),
         'auto_start' => (bool) env('MEETING_AUTO_TRANSCRIBE', true),
 

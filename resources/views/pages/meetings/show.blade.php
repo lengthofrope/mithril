@@ -418,7 +418,17 @@
     {{-- Tabbed content --}}
     <div
         x-data="{
-            activeTab: new URLSearchParams(window.location.search).get('tab') || 'prep',
+            availableTabs: @js(array_values(array_filter([
+                'prep',
+                $recordingEnabled ? 'recording' : null,
+                'transcription',
+                $aiEnabled ? 'extractions' : null,
+            ]))),
+            activeTab: null,
+            init() {
+                const requested = new URLSearchParams(window.location.search).get('tab') || 'prep';
+                this.activeTab = this.availableTabs.includes(requested) ? requested : 'prep';
+            },
             setTab(tab) {
                 this.activeTab = tab;
                 const url = new URL(window.location);
@@ -433,12 +443,12 @@
             class="flex flex-wrap gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-gray-900/50"
             role="tablist"
         >
-            @foreach([
+            @foreach(array_filter([
                 ['id' => 'prep',          'label' => 'Prep & Notes'],
-                ['id' => 'recording',     'label' => 'Recording'],
+                $recordingEnabled ? ['id' => 'recording', 'label' => 'Recording'] : null,
                 ['id' => 'transcription', 'label' => 'Transcription'],
-                ['id' => 'extractions',   'label' => 'AI Extractions'],
-            ] as $tab)
+                $aiEnabled ? ['id' => 'extractions', 'label' => 'AI Extractions'] : null,
+            ]) as $tab)
                 <button
                     type="button"
                     role="tab"
@@ -760,6 +770,7 @@
         </div>
 
         {{-- Recording tab --}}
+        @if($recordingEnabled)
         <div
             x-show="activeTab === 'recording'"
             x-cloak
@@ -953,6 +964,8 @@
             </div>
         </div>
 
+        @endif
+
         {{-- Transcription tab --}}
         <div
             x-show="activeTab === 'transcription'"
@@ -974,7 +987,8 @@
                     estimatedDurationSeconds: null,
                     elapsedTimer: null,
                     elapsedSeconds: 0,
-                    showManualInput: false,
+                    transcriptionEnabled: @js($transcriptionEnabled),
+                    showManualInput: @js(!$transcriptionEnabled),
                     manualContent: '',
                     polling: false,
 
@@ -1163,7 +1177,7 @@
                 <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Transcription</h2>
                     <div class="flex items-center gap-2">
-                        <template x-if="status === 'failed'">
+                        <template x-if="transcriptionEnabled && status === 'failed'">
                             <button
                                 type="button"
                                 x-on:click="retry()"
@@ -1171,7 +1185,7 @@
                             >Retry</button>
                         </template>
                         @if($meeting->recordings->count() > 0)
-                            <template x-if="status === 'completed' || status === 'failed'">
+                            <template x-if="transcriptionEnabled && (status === 'completed' || status === 'failed')">
                                 <button
                                     type="button"
                                     x-on:click="retranscribeAll()"
@@ -1281,9 +1295,11 @@
                     {{-- No transcription yet --}}
                     <template x-if="!status && !showManualInput">
                         <div class="space-y-3">
-                            @if($meeting->recordings->count() > 0)
+                            @if($transcriptionEnabled && $meeting->recordings->count() > 0)
                                 <p class="text-sm text-gray-400 dark:text-gray-500">Recording available. Start transcription or enter it manually.</p>
                                 <x-ui.button size="sm" x-on:click="retranscribeAll()">Start transcription</x-ui.button>
+                            @elseif(!$transcriptionEnabled)
+                                <p class="text-sm text-gray-400 dark:text-gray-500">Use the manual input button to paste a transcription.</p>
                             @else
                                 <p class="text-sm text-gray-400 dark:text-gray-500">No transcription available yet. Record or upload audio to start.</p>
                             @endif
@@ -1313,6 +1329,7 @@
         </div>
 
         {{-- AI Extractions tab --}}
+        @if($aiEnabled)
         <div
             x-show="activeTab === 'extractions'"
             x-cloak
@@ -1458,6 +1475,7 @@
                 </div>
             @endif
         </div>
+        @endif
 
     </div>
 

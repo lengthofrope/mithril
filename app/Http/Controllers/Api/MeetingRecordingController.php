@@ -36,6 +36,10 @@ class MeetingRecordingController extends Controller
      */
     public function store(Request $request, Meeting $meeting): JsonResponse
     {
+        if (!config('meetings.recording.enabled', true)) {
+            return $this->errorResponse('Recording feature is disabled.', statusCode: 403);
+        }
+
         $maxMb = config('meetings.recording.max_upload_mb', 500);
         $allowedMimes = implode(',', config('meetings.recording.allowed_mime_types', []));
 
@@ -77,7 +81,7 @@ class MeetingRecordingController extends Controller
             ]);
         }
 
-        if (config('meetings.transcription.auto_start', true)) {
+        if (config('meetings.transcription.enabled', true) && config('meetings.transcription.auto_start', true)) {
             if (config('meetings.diarization.enabled', false)) {
                 Bus::chain([
                     new TranscribeMeetingJob($meeting, $recording),
