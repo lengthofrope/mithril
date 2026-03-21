@@ -434,6 +434,7 @@
                 const url = new URL(window.location);
                 url.searchParams.set('tab', tab);
                 history.replaceState(null, '', url);
+                this.$dispatch('tab-activated', { tab });
             },
         }"
         class="space-y-6"
@@ -1079,6 +1080,40 @@
                         if (this.status === 'processing') {
                             this.startElapsedTimer();
                         }
+                        this.$el.closest('[x-data]')?.addEventListener('tab-activated', (e) => {
+                            if (e.detail?.tab === 'transcription') {
+                                this.refreshData();
+                            }
+                        });
+                    },
+
+                    async refreshData() {
+                        try {
+                            const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/transcription', {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                this.status = data.data?.status;
+                                this.content = data.data?.content ?? '';
+                                this.errorMessage = data.data?.error_message ?? '';
+                                this.diarizationStatus = data.data?.diarization_status;
+                                this.diarizedContent = data.data?.diarized_content ?? '';
+                                this.diarizationError = data.data?.diarization_error ?? '';
+                                this.processingStartedAt = data.data?.processing_started_at;
+                                this.estimatedDurationSeconds = data.data?.estimated_duration_seconds;
+
+                                if (this.status === 'processing') {
+                                    this.startElapsedTimer();
+                                } else {
+                                    this.stopElapsedTimer();
+                                }
+
+                                if (this.shouldPoll && !this.polling) {
+                                    this.startPolling();
+                                }
+                            }
+                        } catch { /* silent */ }
                     },
 
                     async startPolling() {
@@ -1336,7 +1371,6 @@
             role="tabpanel"
             aria-label="AI Extractions"
         >
-            @if($meeting->extractions->isNotEmpty() || ($meeting->transcription && $meeting->transcription->status->value === 'completed'))
                 <div
                     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                     x-data="extractionReview({
@@ -1351,6 +1385,8 @@
                             'deadline' => $e->deadline?->toDateString(),
                             'status' => $e->status->value,
                         ])->values()),
+                        hasTranscription: @js($meeting->transcription !== null && $meeting->transcription->status->value === 'completed'),
+                        summary: @js($meeting->summary ?? ''),
                         csrfToken: document.querySelector('meta[name=csrf-token]')?.content ?? '',
                     })"
                 >
@@ -1371,17 +1407,19 @@
                             <template x-if="pendingExtractions.length > 0">
                                 <button type="button" x-on:click="selectedIds.length === pendingExtractions.length ? deselectAll() : selectAll()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" x-text="selectedIds.length === pendingExtractions.length ? 'Deselect all' : 'Select all'"></button>
                             </template>
-                            <button type="button" x-on:click="reExtract()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" :disabled="loading">Re-extract</button>
+                            <template x-if="hasTranscription">
+                                <button type="button" x-on:click="reExtract()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" :disabled="loading">Re-extract</button>
+                            </template>
                         </div>
                     </div>
 
                     {{-- Summary --}}
-                    @if($meeting->summary)
+                    <template x-if="summary">
                         <div class="border-b border-gray-100 px-5 py-3 dark:border-gray-800">
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Summary</p>
-                            <p class="mt-1 text-sm text-gray-700 dark:text-gray-300">{{ $meeting->summary }}</p>
+                            <p class="mt-1 text-sm text-gray-700 dark:text-gray-300" x-text="summary"></p>
                         </div>
-                    @endif
+                    </template>
 
                     {{-- Extraction items --}}
                     <div class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -1465,15 +1503,14 @@
                         </template>
                     </div>
 
-                    <template x-if="extractions.length === 0">
-                        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions yet. Complete a transcription to extract insights.</p>
+                    <template x-if="extractions.length === 0 && hasTranscription">
+                        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions yet. Use the Re-extract button to extract insights.</p>
+                    </template>
+
+                    <template x-if="extractions.length === 0 && !hasTranscription">
+                        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions available. Complete a transcription first.</p>
                     </template>
                 </div>
-            @else
-                <div class="rounded-xl border border-gray-200 bg-white px-5 py-6 dark:border-gray-800 dark:bg-white/[0.03]">
-                    <p class="text-center text-sm text-gray-400 dark:text-gray-500">No extractions available. Complete a transcription first.</p>
-                </div>
-            @endif
         </div>
         @endif
 

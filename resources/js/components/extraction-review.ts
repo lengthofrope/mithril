@@ -12,11 +12,15 @@ interface Extraction {
 interface ExtractionReviewConfig {
     meetingId: number;
     initialExtractions: Extraction[];
+    hasTranscription: boolean;
+    summary: string;
     csrfToken: string;
 }
 
 interface ExtractionReviewState {
     extractions: Extraction[];
+    hasTranscription: boolean;
+    summary: string;
     selectedIds: number[];
     loading: boolean;
     editingId: number | null;
@@ -26,6 +30,7 @@ interface ExtractionReviewState {
     editDeadline: string;
 
     init(): void;
+    refreshData(): Promise<void>;
     accept(extraction: Extraction): Promise<void>;
     reject(extraction: Extraction): Promise<void>;
     startEdit(extraction: Extraction): void;
@@ -50,6 +55,8 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
 
     return {
         extractions: config.initialExtractions,
+        hasTranscription: config.hasTranscription,
+        summary: config.summary,
         selectedIds: [] as number[],
         loading: false,
         editingId: null as number | null,
@@ -61,7 +68,49 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         /**
          * Initialize the component.
          */
-        init(this: ExtractionReviewState): void {},
+        init(this: ExtractionReviewState): void {
+            const el = (this as unknown as { $el: HTMLElement }).$el;
+            el.closest('[x-data]')?.addEventListener('tab-activated', ((e: CustomEvent) => {
+                if (e.detail?.tab === 'extractions') {
+                    this.refreshData();
+                }
+            }) as EventListener);
+        },
+
+        /**
+         * Refresh extractions and transcription status from the API.
+         */
+        async refreshData(this: ExtractionReviewState): Promise<void> {
+            try {
+                const response = await fetch(`${baseUrl}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                if (response.ok) {
+                    const json = await response.json();
+                    const data = json.data ?? [];
+                    this.extractions = data.map((e: Record<string, unknown>) => ({
+                        id: e.id,
+                        type: e.type,
+                        content: e.content,
+                        assignee_id: e.assignee_id,
+                        assignee: e.assignee ?? null,
+                        priority: e.priority,
+                        deadline: e.deadline,
+                        status: e.status,
+                    }));
+                }
+            } catch { /* silent */ }
+
+            try {
+                const response = await fetch(`/api/v1/meetings/${config.meetingId}/transcription`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                if (response.ok) {
+                    const json = await response.json();
+                    this.hasTranscription = json.data?.status === 'completed';
+                }
+            } catch { /* silent */ }
+        },
 
         /**
          * Accept an extraction as-is.

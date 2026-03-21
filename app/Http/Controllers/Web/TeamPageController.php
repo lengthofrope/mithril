@@ -95,7 +95,7 @@ class TeamPageController extends Controller
             'breadcrumbs' => (new BreadcrumbBuilder())->forTeamMember($teamMember)->build(),
             'memberTasks' => $teamMember->tasks,
             'memberFollowUps' => $teamMember->followUps,
-            'memberMeetings' => $teamMember->meetings,
+            'memberMeetings' => $teamMember->meetings()->with(['transcription', 'extractions'])->orderByDesc('scheduled_at')->get(),
             'memberAgreements' => $teamMember->agreements,
             'memberNotes' => $memberNotes,
         ]);

@@ -1,7 +1,7 @@
 # Meeting Feature Flags + Tab Freshness
 
 **Created:** 2026-03-21
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort + Claude
 
 ## Problem Statement
@@ -117,25 +117,25 @@ Fix: Add a `refreshData()` method to the Transcription and AI Extractions Alpine
 ### Phase 3: Tab-switch data refresh
 - **Goal:** Ensure tab content is always fresh when switching between tabs
 - **Specs:**
-  - [ ] Switching to the Transcription tab fetches latest status/content from `GET /api/v1/meetings/{id}/transcription`
-  - [ ] Transcription tab updates status, content, diarization state, and error messages from the API response
-  - [ ] If transcription was processing and is now complete, polling stops and content displays immediately
-  - [ ] Switching to the AI Extractions tab fetches latest extractions from `GET /api/v1/meetings/{id}/extractions`
-  - [ ] AI Extractions tab detects a newly available transcription (removes "no transcription" message, shows extraction UI)
-  - [ ] Tab refresh is debounced — rapid tab switching does not fire multiple requests
-  - [ ] Network errors during tab refresh are silently ignored (keep existing data)
+  - [x] Switching to the Transcription tab fetches latest status/content from `GET /api/v1/meetings/{id}/transcription`
+  - [x] Transcription tab updates status, content, diarization state, and error messages from the API response
+  - [x] If transcription was processing and is now complete, polling stops and content displays immediately
+  - [x] Switching to the AI Extractions tab fetches latest extractions from `GET /api/v1/meetings/{id}/extractions`
+  - [x] AI Extractions tab detects a newly available transcription (removes "no transcription" message, shows extraction UI)
+  - [x] ~~Tab refresh is debounced~~ — skipped, tab switching is a deliberate user action
+  - [x] Network errors during tab refresh are silently ignored (keep existing data)
 - **Files:** `resources/views/pages/meetings/show.blade.php`
 
 ### Phase 4: Meeting history on team member page
 - **Goal:** Show meaningful meeting content in member's meeting history instead of just `notes`
 - **Specs:**
-  - [ ] Meeting history cards show the meeting title
-  - [ ] Meeting history cards show the AI summary when available (`$meeting->summary`)
-  - [ ] Meeting history cards show transcription excerpt (first ~200 chars) when no summary or notes exist
-  - [ ] Meeting history cards show accepted extraction count (tasks, follow-ups) as a compact indicator
-  - [ ] "No notes recorded" only shows when there is genuinely no content (no notes, no summary, no transcription)
-  - [ ] `TeamPageController` eager-loads `transcription` and `extractions` on `memberMeetings`
-  - [ ] Meeting history respects feature flags (don't show AI summary section when `ai.enabled` is false)
+  - [x] Meeting history cards show the meeting title
+  - [x] Meeting history cards show the AI summary when available (`$meeting->summary`)
+  - [x] Meeting history cards show transcription excerpt (first ~200 chars) when no summary or notes exist
+  - [x] Meeting history cards show accepted extraction count (tasks, follow-ups) as a compact indicator
+  - [x] "No notes recorded" only shows when there is genuinely no content (no notes, no summary, no transcription)
+  - [x] `TeamPageController` eager-loads `transcription` and `extractions` on `memberMeetings`
+  - [x] Meeting history respects feature flags (don't show AI summary section when `ai.enabled` is false)
 - **Files:** `app/Http/Controllers/Web/TeamPageController.php`, `resources/views/pages/teams/member.blade.php`
 
 ## Out of Scope
