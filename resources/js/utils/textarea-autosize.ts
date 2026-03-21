@@ -13,7 +13,14 @@
 function resize(textarea: HTMLTextAreaElement): void {
     textarea.style.overflow = 'hidden';
     textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
+
+    const rows = parseInt(textarea.getAttribute('rows') || '0', 10);
+    const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 20;
+    const paddingTop = parseFloat(getComputedStyle(textarea).paddingTop) || 0;
+    const paddingBottom = parseFloat(getComputedStyle(textarea).paddingBottom) || 0;
+    const minHeight = rows > 0 ? rows * lineHeight + paddingTop + paddingBottom : 0;
+
+    textarea.style.height = `${Math.max(textarea.scrollHeight, minHeight)}px`;
 }
 
 /**

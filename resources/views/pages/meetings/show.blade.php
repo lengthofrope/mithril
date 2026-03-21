@@ -21,7 +21,7 @@
                 </div>
 
                 {{-- Type + status + date --}}
-                <div class="mt-2 flex flex-wrap items-center gap-2">
+                <div class="mt-2 flex flex-wrap items-center gap-3">
                     @php
                         $statusBadge = match($meeting->status->value) {
                             'scheduled' => ['label' => 'Scheduled', 'class' => 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'],
@@ -70,7 +70,7 @@
                         }"
                         x-init="value = @js($meeting->type->value)"
                         x-on:meeting-attendee-count.window="attendeeCount = $event.detail.count"
-                        class="flex flex-col gap-1.5"
+                        class="inline-flex items-center"
                     >
                         <select
                             id="asf-type"
@@ -78,7 +78,7 @@
                             x-ref="typeSelect"
                             x-bind:value="value"
                             x-on:change="handleTypeChange($event.target.value)"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                            class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
                         >
                             @foreach($typeOptions as $option)
                                 <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
@@ -580,11 +580,11 @@
                                     x-model="newContent"
                                     placeholder="Add prep item…"
                                     required
-                                    class="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
+                                    class="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-blue-500"
                                 >
                                 <button
                                     type="submit"
-                                    class="flex shrink-0 items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
+                                    class="flex shrink-0 items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                                 >
                                     <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -593,7 +593,7 @@
                                 </button>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
-                                <select x-model="newType" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                <select x-model="newType" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                                     <option value="agenda_item">Agenda</option>
                                     <option value="question">Question</option>
                                     <option value="action">Action</option>
@@ -603,10 +603,10 @@
                                     x-model="newDuration"
                                     placeholder="Min"
                                     min="1"
-                                    class="w-16 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                                    class="w-20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                                 >
                                 @if(count($attendeeOptions) > 0)
-                                    <select x-model="newAssignee" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                    <select x-model="newAssignee" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                                         <option value="">Unassigned</option>
                                         @foreach($attendeeOptions as $opt)
                                             <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
