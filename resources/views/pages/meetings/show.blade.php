@@ -1280,7 +1280,14 @@
 
                     {{-- No transcription yet --}}
                     <template x-if="!status && !showManualInput">
-                        <p class="text-sm text-gray-400 dark:text-gray-500">No transcription available yet. Record or upload audio to start.</p>
+                        <div class="space-y-3">
+                            @if($meeting->recordings->count() > 0)
+                                <p class="text-sm text-gray-400 dark:text-gray-500">Recording available. Start transcription or enter it manually.</p>
+                                <x-ui.button size="sm" x-on:click="retranscribeAll()">Start transcription</x-ui.button>
+                            @else
+                                <p class="text-sm text-gray-400 dark:text-gray-500">No transcription available yet. Record or upload audio to start.</p>
+                            @endif
+                        </div>
                     </template>
 
                     {{-- Manual input --}}
