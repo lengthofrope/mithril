@@ -9,12 +9,20 @@ interface Extraction {
     status: string;
 }
 
+interface SelectOption {
+    value: number;
+    label: string;
+    team_id?: number;
+}
+
 interface ExtractionReviewConfig {
     meetingId: number;
     initialExtractions: Extraction[];
     hasTranscription: boolean;
     summary: string;
     csrfToken: string;
+    teamOptions: SelectOption[];
+    memberOptions: SelectOption[];
 }
 
 interface ExtractionReviewState {
@@ -28,6 +36,10 @@ interface ExtractionReviewState {
     editAssigneeId: number | string;
     editPriority: string;
     editDeadline: string;
+    editTeamId: number | string;
+    showReExtractConfirm: boolean;
+    teamOptions: SelectOption[];
+    memberOptions: SelectOption[];
 
     init(): void;
     refreshData(): Promise<void>;
@@ -43,6 +55,7 @@ interface ExtractionReviewState {
     selectAll(): void;
     deselectAll(): void;
     pendingExtractions: Extraction[];
+    filteredMemberOptions: SelectOption[];
 }
 
 /**
@@ -64,6 +77,10 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         editAssigneeId: '' as number | string,
         editPriority: '',
         editDeadline: '',
+        editTeamId: '' as number | string,
+        showReExtractConfirm: false,
+        teamOptions: config.teamOptions,
+        memberOptions: config.memberOptions,
 
         /**
          * Initialize the component.
@@ -165,6 +182,11 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
             this.editAssigneeId = extraction.assignee_id ?? '';
             this.editPriority = extraction.priority ?? '';
             this.editDeadline = extraction.deadline ?? '';
+
+            const member = extraction.assignee_id
+                ? this.memberOptions.find(m => m.value === extraction.assignee_id)
+                : null;
+            this.editTeamId = member?.team_id ?? '';
         },
 
         /**
@@ -265,7 +287,7 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
          * Re-extract insights from the transcription.
          */
         async reExtract(this: ExtractionReviewState): Promise<void> {
-            if (!confirm('This will remove all pending extractions and re-analyze the transcription. Continue?')) return;
+            this.showReExtractConfirm = false;
             this.loading = true;
 
             const response = await fetch(`${baseUrl}/re-extract`, {
@@ -315,6 +337,16 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         get pendingExtractions(): Extraction[] {
             const self = this as unknown as ExtractionReviewState;
             return self.extractions.filter(e => e.status === 'pending');
+        },
+
+        /**
+         * Get member options filtered by the selected team.
+         */
+        get filteredMemberOptions(): SelectOption[] {
+            const self = this as unknown as ExtractionReviewState;
+            return self.editTeamId
+                ? self.memberOptions.filter(m => String(m.team_id) === String(self.editTeamId))
+                : self.memberOptions;
         },
     };
 }

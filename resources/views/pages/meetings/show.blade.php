@@ -1391,6 +1391,8 @@
                         hasTranscription: @js($meeting->transcription !== null && $meeting->transcription->status->value === 'completed'),
                         summary: @js($meeting->summary ?? ''),
                         csrfToken: document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                        teamOptions: @js($teamOptions),
+                        memberOptions: @js($memberOptions),
                     })"
                 >
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
@@ -1411,7 +1413,7 @@
                                 <button type="button" x-on:click="selectedIds.length === pendingExtractions.length ? deselectAll() : selectAll()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" x-text="selectedIds.length === pendingExtractions.length ? 'Deselect all' : 'Select all'"></button>
                             </template>
                             <template x-if="hasTranscription">
-                                <button type="button" x-on:click="reExtract()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" :disabled="loading">Re-extract</button>
+                                <button type="button" x-on:click="showReExtractConfirm = true" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" :disabled="loading" x-text="extractions.length > 0 ? 'Re-extract' : 'Extract'"></button>
                             </template>
                         </div>
                     </div>
@@ -1484,35 +1486,198 @@
                                     </div>
                                 </template>
 
-                                {{-- Edit mode --}}
-                                <template x-if="editingId === extraction.id">
-                                    <div class="space-y-2">
-                                        <input type="text" x-model="editContent" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                                        <div class="flex items-center gap-2">
-                                            <select x-model="editPriority" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                                                <option value="">No priority</option>
-                                                <option value="urgent">Urgent</option>
-                                                <option value="high">High</option>
-                                                <option value="normal">Normal</option>
-                                                <option value="low">Low</option>
-                                            </select>
-                                            <input type="date" x-model="editDeadline" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                                            <button type="button" x-on:click="acceptWithEdits(extraction)" class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700" :disabled="loading">Save & accept</button>
-                                            <button type="button" x-on:click="cancelEdit()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">Cancel</button>
-                                        </div>
-                                    </div>
-                                </template>
+                                {{-- Edit mode is now handled by the edit modal below --}}
                             </div>
                         </template>
                     </div>
 
                     <template x-if="extractions.length === 0 && hasTranscription">
-                        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions yet. Use the Re-extract button to extract insights.</p>
+                        <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions yet. Use the Extract button to extract insights.</p>
                     </template>
 
                     <template x-if="extractions.length === 0 && !hasTranscription">
                         <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions available. Complete a transcription first.</p>
                     </template>
+
+                    {{-- Re-extract confirmation modal --}}
+                    <div
+                        x-show="showReExtractConfirm"
+                        x-cloak
+                        x-on:keydown.escape.window="showReExtractConfirm = false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="re-extract-dialog-title"
+                    >
+                        <div x-on:click="showReExtractConfirm = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <h2 id="re-extract-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
+                                <span x-text="extractions.length > 0 ? 'Re-extract insights' : 'Extract insights'"></span>
+                            </h2>
+
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                This will remove all pending extractions and re-analyze the transcription. This action cannot be undone.
+                            </p>
+
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="showReExtractConfirm = false"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="reExtract()"
+                                    :disabled="loading"
+                                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
+                                >
+                                    Confirm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Edit extraction modal --}}
+                    <div
+                        x-show="editingId !== null"
+                        x-cloak
+                        x-on:keydown.escape.window="cancelEdit()"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="edit-extraction-dialog-title"
+                    >
+                        <div x-on:click="cancelEdit()" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <h2 id="edit-extraction-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
+                                Edit extraction
+                            </h2>
+
+                            <div class="mt-4 space-y-4">
+                                <div>
+                                    <label for="edit-extraction-content" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Content</label>
+                                    <input
+                                        id="edit-extraction-content"
+                                        type="text"
+                                        x-model="editContent"
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
+                                    >
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="edit-extraction-team" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Team</label>
+                                        <select
+                                            id="edit-extraction-team"
+                                            x-model="editTeamId"
+                                            x-on:change="editAssigneeId = ''"
+                                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
+                                        >
+                                            <option value="">All teams</option>
+                                            <template x-for="team in teamOptions" :key="team.value">
+                                                <option :value="team.value" x-text="team.label"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="edit-extraction-assignee" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Assigned to</label>
+                                        <select
+                                            id="edit-extraction-assignee"
+                                            x-model="editAssigneeId"
+                                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
+                                        >
+                                            <option value="">Unassigned</option>
+                                            <template x-for="member in filteredMemberOptions" :key="member.value">
+                                                <option :value="member.value" x-text="member.label"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="edit-extraction-priority" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Priority</label>
+                                        <select
+                                            id="edit-extraction-priority"
+                                            x-model="editPriority"
+                                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
+                                        >
+                                            <option value="">No priority</option>
+                                            <option value="urgent">Urgent</option>
+                                            <option value="high">High</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="low">Low</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="edit-extraction-deadline" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Deadline</label>
+                                        <input
+                                            id="edit-extraction-deadline"
+                                            type="date"
+                                            x-model="editDeadline"
+                                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="cancelEdit()"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="acceptWithEdits(extractions.find(e => e.id === editingId))"
+                                    :disabled="loading"
+                                    class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 dark:hover:bg-green-500"
+                                >
+                                    Save & accept
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
         </div>
         @endif
