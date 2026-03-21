@@ -11,10 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Meetings module** — Complete replacement of the Bila (1-on-1) system with a generalized Meeting model supporting team meetings, 1-on-1s, and custom meeting types; multi-attendee support via pivot table; meeting title, type badges, and status lifecycle (scheduled → in progress → completed/cancelled)
 - **Meeting CRUD & views** — Meetings index page with filters on team, member, type, and status; create modal with title, type, date, team, and attendee selection; detail page with editable title (auto-save), type/status badges, status transition buttons, attendee list, and previous/next navigation
-- **Meeting prep items** — Extended prep items with type selection (agenda item, question, action), time estimates, and attendee assignment; drag-and-drop reordering; total estimated time display
+- **Meeting prep items** — Extended prep items with type selection (agenda item, question, action), time estimates, and attendee assignment; drag-and-drop reordering; total estimated time display; detailed response data per prep item
 - **Audio recording** — In-browser audio recording via MediaRecorder API with start/stop/pause controls and live timer; file upload fallback for existing audio files (mp3, wav, webm, m4a, ogg); configurable storage disk and max upload size; audio player for playback; recording deletion with transcription safety hint
-- **Transcription service** — Provider-agnostic transcription via `TranscriptionServiceInterface`; OpenAI Whisper implementation; queued `TranscribeMeetingJob` with 3 retries and exponential backoff; auto-dispatch after recording upload (configurable); transcription language selectable per meeting (NL/EN); status polling UI; retry on failure; manual transcription input as fallback
-- **AI extraction & review** — Provider-agnostic insight extraction via `MeetingInsightExtractorInterface`; OpenAI GPT-4o-mini implementation with structured JSON output; queued `ExtractMeetingInsightsJob`; AI-generated meeting summary; extraction review UI with per-item accept/reject/edit, bulk actions, and re-extract; accepted extractions create real Task/FollowUp/Agreement records linked to the source meeting via `meeting_id` FK
+- **Transcription service** — Provider-agnostic transcription via `TranscriptionServiceInterface`; OpenAI Whisper implementation; queued `TranscribeMeetingJob` with 3 retries and exponential backoff; auto-dispatch after recording upload (configurable); transcription language selectable per meeting (NL/EN); status polling UI; retry on failure; manual transcription input as fallback; retranscription support; processing timing display
+- **WhisperCpp transcription provider** — Self-hosted alternative to OpenAI Whisper via whisper.cpp server; GPU acceleration support (Vulkan/CUDA); Docker-based deployment with model configuration
+- **Speaker diarization** — Pyannote-audio service for identifying speakers in meeting recordings; waveform-based speaker segment extraction; speaker labels displayed in transcription view
+- **AI extraction & review** — Provider-agnostic insight extraction via `MeetingInsightExtractorInterface`; OpenAI GPT-4o-mini implementation with structured JSON output; queued `ExtractMeetingInsightsJob`; AI-generated meeting summary; extraction review UI with per-item accept/reject/edit, bulk actions, and re-extract; accepted extractions create real Task/FollowUp/Agreement records linked to the source meeting via `meeting_id` FK; edit modal with team-to-user assignment selection; styled confirmation modal for (re-)extraction; dynamic button label ("Extract" / "Re-extract" based on state)
+- **Feature flags** — Configurable feature flags for recording, transcription, and AI extraction; UI sections conditionally rendered based on flags
+- **Meeting scheduling auto-save** — Meeting scheduling date input uses auto-save with debounced AJAX instead of form submission
+- **Meeting member view enhancements** — Team member detail page shows transcription and extraction statistics per meeting (accepted/modified extraction count)
 - **Meeting scheduling** — `ScheduleNextMeeting` listener auto-calculates `next_meeting_date` for 1-on-1 meetings based on `meeting_interval_days` on the team member
 - **Meetings in global search** — Meetings searchable by title and notes via the existing global search endpoint
 - **Meetings in analytics** — New "Meetings by Type" data source for analytics widgets (1-on-1 / Team / Other breakdown)
@@ -33,17 +38,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Action controllers** — Email, Jira, and Calendar action controllers updated: 'bila' resource type replaced with 'meeting'; meeting creation attaches attendees via pivot table
 - **Weekly review** — Weekly reflection stats and summary text updated from "bilas held" to "meetings held"
 - **Storage quota** — Audio recordings now count towards the existing file storage quota alongside attachments
-- **Meeting show page layout** — Restructured from 3-equal-column grid to 2/3 + 1/3 layout (prep items and notes in main column, activity feed in sidebar), matching the tasks/notes detail page pattern; prep items form split into two rows for better mobile responsiveness
+- **Meeting show page layout** — Restructured from 3-equal-column grid to 2/3 + 1/3 layout (prep items and notes in main column, recording/transcription tab in sidebar); activity feed integrated into the recording tab instead of a separate activity tab
 - **Meeting team filter** — Filtering by team now shows meetings where any attendee belongs to that team (via `whereHas`), not just meetings with a direct `team_id` match
+- **Meeting attendee validation** — Improved attendee attachment logic with proper team selection and validation
+- **Meeting breadcrumbs** — Enhanced breadcrumb logic for one-on-one and team meeting types
+- **Transcription prompt** — Enhanced with recording availability context and action button for triggering transcription
+- **AI extractor** — Updated to latest model version with enhanced response handling
 - **Filter bar + toolbar layout** — All index pages (tasks, kanban, follow-ups, notes, meetings) now use a `relative` container with action buttons absolutely positioned top-right; the filter panel expands full-width underneath the buttons instead of being constrained to a flex column
 - **Follow-ups AJAX detection** — Changed `$request->wantsJson()` to `$request->ajax()` in `FollowUpPageController::index` to match the filterManager's `X-Requested-With: XMLHttpRequest` header; fixes filter results rendering the full page instead of the partial
 - **Filter bar component cleanup** — Removed manual SVG arrow overlays and `relative` wrapper divs from `filter-bar.blade.php`; select arrows now handled by the global CSS rule
 - **Navigation restructured** — Sidebar reordered by usage intent: core workflow (Meetings, Tasks, Follow-ups, Notes) → integrations (Calendar, E-mail, Jira) → team management (Teams, Weekly Review) → insights (Analytics); Tasks sub-menu (List View / Kanban) removed in favor of a single direct link that respects the `localStorage` view preference
+- **Textarea auto-resize** — Improved logic to account for minimum height, preventing layout jumps
+- **Permissions-Policy and CSP headers** — Updated security headers with stricter policies
 
 ### Removed
 
 - **Bila system** — Removed `Bila` model, `BilaPrepItem` model, `BilaController`, `BilaPageController`, `BilaRequest`, `BilaScheduled` event, `ScheduleNextBila` listener, and all associated factories, tests, and Blade views
 - **Client-side showCompleted toggle** — Removed `Alpine.store('taskList')` and `hideWhenDone` prop from task cards; replaced by the server-side `show_completed` filter
+- **Separate activity tab** — Activity feed moved into the recording tab on the meeting detail page; standalone activity tab removed
 
 ## [1.8.0] - 2026-03-18
 
