@@ -10,7 +10,9 @@ use App\Services\MeetingInsights\AnthropicInsightExtractor;
 use App\Services\MeetingInsights\OpenRouterInsightExtractor;
 use App\Services\Diarization\DiarizationServiceInterface;
 use App\Services\Diarization\PyAnnoteDiarizationService;
+use App\Services\Diarization\UnifiedSpeechDiarizationService;
 use App\Services\Transcription\TranscriptionServiceInterface;
+use App\Services\Transcription\UnifiedSpeechTranscriptionService;
 use App\Services\Transcription\WhisperCppTranscriptionService;
 use App\Services\Transcription\WhisperTranscriptionService;
 use App\Models\FollowUp;
@@ -52,9 +54,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(DiarizationServiceInterface::class, function (): DiarizationServiceInterface {
-            return new PyAnnoteDiarizationService(
-                baseUrl: config('meetings.diarization.pyannote.base_url') ?? 'http://localhost:8081',
-            );
+            return match (config('meetings.diarization.provider')) {
+                'unified' => new UnifiedSpeechDiarizationService(
+                    baseUrl: config('meetings.diarization.unified.base_url') ?? 'http://localhost:8090',
+                ),
+                default => new PyAnnoteDiarizationService(
+                    baseUrl: config('meetings.diarization.pyannote.base_url') ?? 'http://localhost:8081',
+                ),
+            };
         });
 
         $this->app->bind(TranscriptionServiceInterface::class, function (): TranscriptionServiceInterface {
@@ -62,6 +69,9 @@ class AppServiceProvider extends ServiceProvider
                 'whisper' => new WhisperTranscriptionService(
                     apiKey: config('meetings.transcription.whisper.api_key') ?? '',
                     model: config('meetings.transcription.whisper.model') ?? 'whisper-1',
+                ),
+                'unified' => new UnifiedSpeechTranscriptionService(
+                    baseUrl: config('meetings.transcription.unified.base_url') ?? 'http://localhost:8090',
                 ),
                 default => new WhisperCppTranscriptionService(
                     baseUrl: config('meetings.transcription.whisper_cpp.base_url') ?? 'http://localhost:8080',

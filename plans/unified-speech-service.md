@@ -136,13 +136,13 @@ sequenceDiagram
 - **Goal:** New `unified` provider wired into Mithril's service layer
 - **PRD criteria:** AC 12, 13
 - **Specs:**
-  - [ ] `UnifiedSpeechTranscriptionService` implements `TranscriptionServiceInterface` and calls `/transcribe`
-  - [ ] `UnifiedSpeechDiarizationService` implements `DiarizationServiceInterface` and calls `/diarize`
-  - [ ] `DiarizationResult::fromResponse()` works with unified service response without changes
-  - [ ] `config/meetings.php` accepts `unified` as provider for both transcription and diarization
-  - [ ] `AppServiceProvider` binds the new services when `unified` is selected
-  - [ ] `UNIFIED_SPEECH_BASE_URL` env var defaults to `http://localhost:8090`
-  - [ ] Feature tests verify correct response parsing for both endpoints
+  - [x] `UnifiedSpeechTranscriptionService` implements `TranscriptionServiceInterface` and calls `/transcribe`
+  - [x] `UnifiedSpeechDiarizationService` implements `DiarizationServiceInterface` and calls `/diarize`
+  - [x] `DiarizationResult::fromResponse()` works with unified service response without changes
+  - [x] `config/meetings.php` accepts `unified` as provider for both transcription and diarization
+  - [x] `AppServiceProvider` binds the new services when `unified` is selected
+  - [x] `UNIFIED_SPEECH_BASE_URL` env var defaults to `http://localhost:8090`
+  - [x] Feature tests verify correct response parsing for both endpoints (13 tests, 22 assertions)
 - **Files:** `app/Services/Transcription/UnifiedSpeechTranscriptionService.php`, `app/Services/Diarization/UnifiedSpeechDiarizationService.php`, `config/meetings.php`, `app/Providers/AppServiceProvider.php`, `tests/`
 
 ### Phase 5: Documentation & Cleanup
