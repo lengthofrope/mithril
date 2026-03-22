@@ -1599,6 +1599,20 @@
                                     >
                                 </div>
 
+                                <div>
+                                    <label for="edit-extraction-type" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+                                    <select
+                                        id="edit-extraction-type"
+                                        x-model="editType"
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"
+                                    >
+                                        <option value="task">Task</option>
+                                        <option value="follow_up">Follow-up</option>
+                                        <option value="agreement">Agreement</option>
+                                        <option value="decision">Decision</option>
+                                    </select>
+                                </div>
+
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="edit-extraction-team" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Team</label>

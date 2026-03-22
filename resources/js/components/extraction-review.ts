@@ -33,6 +33,7 @@ interface ExtractionReviewState {
     loading: boolean;
     editingId: number | null;
     editContent: string;
+    editType: string;
     editAssigneeId: number | string;
     editPriority: string;
     editDeadline: string;
@@ -74,6 +75,7 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         loading: false,
         editingId: null as number | null,
         editContent: '',
+        editType: '',
         editAssigneeId: '' as number | string,
         editPriority: '',
         editDeadline: '',
@@ -179,6 +181,7 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         startEdit(this: ExtractionReviewState, extraction: Extraction): void {
             this.editingId = extraction.id;
             this.editContent = extraction.content;
+            this.editType = extraction.type;
             this.editAssigneeId = extraction.assignee_id ?? '';
             this.editPriority = extraction.priority ?? '';
             this.editDeadline = extraction.deadline ?? '';
@@ -204,6 +207,7 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
 
             const body: Record<string, unknown> = {};
             if (this.editContent !== extraction.content) body.content = this.editContent;
+            if (this.editType !== extraction.type) body.type = this.editType;
             if (String(this.editAssigneeId) !== String(extraction.assignee_id ?? '')) {
                 body.assignee_id = this.editAssigneeId === '' ? null : Number(this.editAssigneeId);
             }

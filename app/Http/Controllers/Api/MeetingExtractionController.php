@@ -16,6 +16,7 @@ use App\Models\MeetingExtraction;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Handles review actions on AI-extracted meeting items.
@@ -62,12 +63,14 @@ class MeetingExtractionController extends Controller
 
         $overrides = $request->validate([
             'content' => ['sometimes', 'string', 'max:1000'],
+            'type' => ['sometimes', Rule::enum(ExtractionType::class)],
             'assignee_id' => ['sometimes', 'nullable', 'integer', 'exists:team_members,id'],
             'priority' => ['sometimes', 'nullable', 'string'],
             'deadline' => ['sometimes', 'nullable', 'date'],
         ]);
 
         $content = $overrides['content'] ?? $extraction->content;
+        $type = isset($overrides['type']) ? ExtractionType::from($overrides['type']) : $extraction->type;
         $assigneeId = $overrides['assignee_id'] ?? $extraction->assignee_id;
         $priority = $overrides['priority'] ?? $extraction->priority;
         $deadline = $overrides['deadline'] ?? $extraction->deadline;
@@ -75,10 +78,11 @@ class MeetingExtractionController extends Controller
         $hasOverrides = !empty($overrides);
         $newStatus = $hasOverrides ? ExtractionStatus::Modified : ExtractionStatus::Accepted;
 
-        $resource = $this->createResource($extraction->type, $content, $assigneeId, $priority, $deadline, $meeting->id);
+        $resource = $this->createResource($type, $content, $assigneeId, $priority, $deadline, $meeting->id);
 
         $extraction->update([
             'content' => $content,
+            'type' => $type,
             'assignee_id' => $assigneeId,
             'priority' => $priority,
             'deadline' => $deadline,
