@@ -13,6 +13,7 @@ def test_health_returns_status(client):
     assert "whisper" in data["models"]
     assert "queue_depth" in data
     assert isinstance(data["queue_depth"], int)
+    assert "diarization_engine" in data
 
 
 def test_health_reports_not_ready_before_models_load(unready_client):

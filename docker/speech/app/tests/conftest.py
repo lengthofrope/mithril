@@ -15,6 +15,9 @@ sys.modules["ctranslate2"] = _mock_ctranslate2
 _mock_faster_whisper = MagicMock()
 sys.modules["faster_whisper"] = _mock_faster_whisper
 
+_mock_diarize_pkg = MagicMock()
+sys.modules["diarize"] = _mock_diarize_pkg
+
 
 @pytest.fixture(autouse=True)
 def _reset_server_state():

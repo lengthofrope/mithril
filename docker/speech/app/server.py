@@ -13,6 +13,8 @@ import threading
 from contextlib import asynccontextmanager
 
 import ctranslate2
+from dataclasses import dataclass
+from diarize import diarize as diarize_audio
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from faster_whisper import WhisperModel
 
@@ -122,6 +124,112 @@ def _transcribe_audio(audio_path: str, language: str) -> str:
     return " ".join(seg.text.strip() for seg in segments_iter if seg.text.strip())
 
 
+@dataclass
+class DiarizedSegment:
+    """A single segment of diarized transcription."""
+
+    speaker: str
+    start: float
+    end: float
+    text: str
+
+
+def _find_overlap(start1: float, end1: float, start2: float, end2: float) -> float:
+    """Calculate the overlap duration between two time intervals."""
+    return max(0.0, min(end1, end2) - max(start1, start2))
+
+
+def _merge_segments(
+    speaker_segments: list,
+    whisper_segments: list,
+) -> list[DiarizedSegment]:
+    """Merge whisper text segments with speaker labels by timestamp overlap."""
+    results: list[DiarizedSegment] = []
+
+    for w_seg in whisper_segments:
+        text = w_seg.text.strip()
+        if not text:
+            continue
+
+        best_speaker = "UNKNOWN"
+        best_overlap = 0.0
+
+        for s_seg in speaker_segments:
+            overlap = _find_overlap(w_seg.start, w_seg.end, s_seg.start, s_seg.end)
+            if overlap > best_overlap:
+                best_overlap = overlap
+                best_speaker = s_seg.speaker
+
+        results.append(DiarizedSegment(
+            speaker=best_speaker,
+            start=round(w_seg.start, 2),
+            end=round(w_seg.end, 2),
+            text=text,
+        ))
+
+    return results
+
+
+def _collapse_consecutive_speakers(
+    segments: list[DiarizedSegment],
+) -> list[DiarizedSegment]:
+    """Merge consecutive segments from the same speaker into single segments."""
+    if not segments:
+        return []
+
+    collapsed: list[DiarizedSegment] = [segments[0]]
+
+    for segment in segments[1:]:
+        if segment.speaker == collapsed[-1].speaker:
+            collapsed[-1] = DiarizedSegment(
+                speaker=collapsed[-1].speaker,
+                start=collapsed[-1].start,
+                end=segment.end,
+                text=collapsed[-1].text + " " + segment.text,
+            )
+        else:
+            collapsed.append(segment)
+
+    return collapsed
+
+
+def _diarize_and_transcribe(audio_path: str, language: str) -> dict:
+    """Run diarization and transcription, then merge results."""
+    diarize_result = diarize_audio(audio_path)
+    logger.info("Diarization complete: %d speaker segments", len(diarize_result.segments))
+
+    whisper_segments, _ = whisper_model.transcribe(
+        audio_path,
+        language=language,
+        beam_size=5,
+        word_timestamps=True,
+        temperature=0.0,
+    )
+    whisper_segments = list(whisper_segments)
+    logger.info("Transcription complete: %d text segments", len(whisper_segments))
+
+    merged = _merge_segments(diarize_result.segments, whisper_segments)
+    collapsed = _collapse_consecutive_speakers(merged)
+
+    speakers = sorted(set(seg.speaker for seg in collapsed))
+
+    return {
+        "segments": [
+            {
+                "speaker": seg.speaker,
+                "start": seg.start,
+                "end": seg.end,
+                "text": seg.text,
+            }
+            for seg in collapsed
+        ],
+        "speakers": speakers,
+    }
+
+
+DIARIZATION_ENGINE = "default"
+
+
 @app.get("/health")
 async def health():
     """Readiness and status check."""
@@ -132,6 +240,7 @@ async def health():
             "whisper": WHISPER_MODEL_SIZE if models_ready else None,
         },
         "queue_depth": queue_depth,
+        "diarization_engine": DIARIZATION_ENGINE,
     }
 
 
@@ -171,3 +280,41 @@ async def transcribe(
                 os.unlink(audio_path)
 
     return {"text": text}
+
+
+@app.post("/diarize")
+async def diarize(
+    file: UploadFile = File(...),
+    language: str = Form("en"),
+):
+    """Diarize and transcribe an audio file, returning speaker-labeled segments."""
+    if not models_ready or whisper_model is None:
+        raise HTTPException(status_code=503, detail="Models not loaded yet.")
+
+    suffix = os.path.splitext(file.filename or "audio.wav")[1] or ".wav"
+
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp.flush()
+
+        logger.info(
+            "Diarizing %s (%.1f MB, language=%s)",
+            file.filename,
+            len(content) / 1024 / 1024,
+            language,
+        )
+
+        audio_path = ensure_wav(tmp.name)
+
+        try:
+            import asyncio
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                None, run_in_queue, _diarize_and_transcribe, audio_path, language,
+            )
+        finally:
+            if audio_path != tmp.name:
+                os.unlink(audio_path)
+
+    return result

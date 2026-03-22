@@ -112,13 +112,13 @@ sequenceDiagram
 - **Goal:** Working `/diarize` endpoint using a non-gated diarization engine
 - **PRD criteria:** AC 3, 6, 9, 11
 - **Specs:**
-  - [ ] `POST /diarize` accepts multipart audio file + `language` param
-  - [ ] Returns `{ "segments": [{ "speaker": str, "start": float, "end": float, "text": str }], "speakers": [str] }` — same format as current pyannote service
-  - [ ] Default engine requires no HuggingFace token or gated model access
+  - [x] `POST /diarize` accepts multipart audio file + `language` param
+  - [x] Returns `{ "segments": [{ "speaker": str, "start": float, "end": float, "text": str }], "speakers": [str] }` — same format as current pyannote service
+  - [x] Default engine requires no HuggingFace token or gated model access
   - [ ] Default engine + transcription model combined disk < 4GB
-  - [ ] Diarization requests go through the same FIFO queue as transcription
-  - [ ] `/health` reports which diarization engine is active
-- **Files:** `docker/speech/server.py` (extend), `docker/speech/requirements.txt` (extend)
+  - [x] Diarization requests go through the same FIFO queue as transcription
+  - [x] `/health` reports which diarization engine is active
+- **Files:** `docker/speech/app/server.py` (extend), `docker/speech/app/requirements.txt` (extend)
 - **Note:** Uses `diarize` by FoxNoseTech (ONNX, Apache 2.0, ~10.8% DER). Prototype spike to validate quality on real meeting recordings before finalizing.
 
 ### Phase 3: Diarization — Optional Pyannote
