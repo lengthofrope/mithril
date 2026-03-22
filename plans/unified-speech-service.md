@@ -184,7 +184,7 @@ sequenceDiagram
 
 ## Open Questions
 
-_None — all questions resolved._
+- **Single-endpoint optimization:** When diarization is enabled, `/diarize` already returns the full transcription text per segment. The Laravel Jobs could be refactored so that when diarization is enabled, only `/diarize` is called (skipping the separate `/transcribe` call), and the plain text is extracted from the diarized segments. This would halve the processing time for diarization-enabled meetings. Requires changes to `TranscribeMeetingJob` / `DiarizeMeetingJob` orchestration — future iteration.
 
 ### Resolved
 
