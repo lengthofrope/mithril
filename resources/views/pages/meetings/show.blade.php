@@ -433,11 +433,9 @@
                 this.activeTab = this.availableTabs.includes(requested) ? requested : 'prep';
             },
             setTab(tab) {
-                this.activeTab = tab;
                 const url = new URL(window.location);
                 url.searchParams.set('tab', tab);
-                history.replaceState(null, '', url);
-                this.$dispatch('tab-activated', { tab });
+                window.location.href = url.toString();
             },
         }"
         class="space-y-6"
@@ -995,13 +993,14 @@
                     estimatedDiarizationSeconds: @js($estimatedDiarizationSeconds),
                     transcriptionEnabled: @js($transcriptionEnabled),
                     canChooseMode: @js($transcriptionEnabled && config('meetings.diarization.enabled')),
+                    hasRecordings: @js($meeting->recordings->count() > 0),
                 })"
 
             >
                 <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Transcription</h2>
                     <div class="flex items-center gap-2">
-                        <template x-if="canChooseMode && !isProcessing">
+                        <template x-if="canChooseMode && hasRecordings && !isProcessing">
                             <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700">
                                 <button
                                     type="button"
@@ -1021,22 +1020,20 @@
                                 >Text only</button>
                             </div>
                         </template>
-                        <template x-if="transcriptionEnabled && status === 'failed'">
+                        <template x-if="transcriptionEnabled && hasRecordings && status === 'failed'">
                             <button
                                 type="button"
                                 x-on:click="retry()"
                                 class="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-400"
                             >Retry</button>
                         </template>
-                        @if($meeting->recordings->count() > 0)
-                            <template x-if="transcriptionEnabled && (status === 'completed' || status === 'failed')">
-                                <button
-                                    type="button"
-                                    x-on:click="retranscribeAll()"
-                                    class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
-                                >Retranscribe all</button>
-                            </template>
-                        @endif
+                        <template x-if="transcriptionEnabled && hasRecordings && (status === 'completed' || status === 'failed')">
+                            <button
+                                type="button"
+                                x-on:click="retranscribeAll()"
+                                class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                            >Retranscribe all</button>
+                        </template>
                         <button
                             type="button"
                             x-on:click="showManualInput = !showManualInput"
@@ -1047,6 +1044,84 @@
                 </div>
 
                 <div class="p-5">
+                    {{-- Recording cleanup prompt --}}
+                    {{-- Recording cleanup prompt --}}
+                    <template x-if="showDeletePrompt">
+                        <div class="mb-4 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-3 dark:border-green-800/50 dark:bg-green-900/20">
+                            <p class="text-sm text-green-700 dark:text-green-400">
+                                Transcription complete. Delete the recording to free up storage?
+                            </p>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    x-on:click="showDeletePrompt = false"
+                                    class="rounded px-2.5 py-1 text-xs font-medium text-gray-500 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                                >Keep</button>
+                                <button
+                                    type="button"
+                                    x-on:click="showDeleteModal = true"
+                                    class="rounded bg-red-500 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-red-600"
+                                >Delete recording</button>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Delete recording confirmation modal --}}
+                    <div
+                        x-show="showDeleteModal"
+                        x-cloak
+                        x-on:keydown.escape.window="showDeleteModal = false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="delete-recording-dialog-title"
+                    >
+                        <div
+                            x-on:click="showDeleteModal = false"
+                            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+                        ></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <h2
+                                id="delete-recording-dialog-title"
+                                class="text-base font-semibold text-gray-900 dark:text-white"
+                            >Delete recording?</h2>
+
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                The recording will be permanently deleted. The transcription will be kept. This action cannot be undone.
+                            </p>
+
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="showDeleteModal = false"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >Cancel</button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="showDeleteModal = false; deleteRecordings()"
+                                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
+                                >Delete</button>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Unified processing progress --}}
                     <template x-if="isProcessing">
                         <div class="space-y-3">
@@ -1534,17 +1609,27 @@
                 </form>
             @endif
 
-            <form method="POST" action="{{ route('meetings.destroy', $meeting->id) }}" class="inline">
-                @csrf
-                @method('DELETE')
-                <button
-                    type="submit"
-                    onclick="return confirm('Delete this meeting?')"
-                    class="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                >
-                    Delete meeting
-                </button>
-            </form>
+            <x-tl.confirm-dialog-modal
+                trigger-id="delete-meeting-{{ $meeting->id }}"
+                title="Delete meeting?"
+                message="This meeting and all its data (recordings, transcriptions, extractions) will be permanently deleted. This action cannot be undone."
+            >
+                <x-slot:trigger>
+                    <button
+                        type="button"
+                        class="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                    >
+                        Delete meeting
+                    </button>
+                </x-slot:trigger>
+
+                <x-slot:form>
+                    <form id="confirm-form-delete-meeting-{{ $meeting->id }}" method="POST" action="{{ route('meetings.destroy', $meeting->id) }}">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                </x-slot:form>
+            </x-tl.confirm-dialog-modal>
         </div>
     </div>
 @endsection

@@ -21,6 +21,7 @@ interface TranscriptionViewerConfig {
     estimatedDiarizationSeconds: number | null;
     transcriptionEnabled: boolean;
     canChooseMode: boolean;
+    hasRecordings: boolean;
 }
 
 interface TranscriptionViewerState {
@@ -41,6 +42,9 @@ interface TranscriptionViewerState {
     diarizationElapsedSeconds: number;
     transcriptionEnabled: boolean;
     canChooseMode: boolean;
+    hasRecordings: boolean;
+    showDeletePrompt: boolean;
+    showDeleteModal: boolean;
     processingMode: 'transcribe' | 'diarize';
     showManualInput: boolean;
     manualContent: string;
@@ -59,6 +63,7 @@ interface TranscriptionViewerState {
     retry(): Promise<void>;
     retranscribeAll(): Promise<void>;
     saveManual(): Promise<void>;
+    deleteRecordings(): Promise<void>;
 
     segments: DiarizedSegment[];
     hasDiarization: boolean;
@@ -104,6 +109,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         diarizationElapsedSeconds: 0,
         transcriptionEnabled: config.transcriptionEnabled,
         canChooseMode: config.canChooseMode,
+        hasRecordings: config.hasRecordings,
+        showDeletePrompt: false,
+        showDeleteModal: false,
         processingMode: (config.canChooseMode ? 'diarize' : (config.diarizationEnabled ? 'diarize' : 'transcribe')) as 'transcribe' | 'diarize',
         showManualInput: !config.transcriptionEnabled,
         manualContent: '',
@@ -386,12 +394,6 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
             if (this.isDiarizing) {
                 this.startDiarizationTimer();
             }
-            const el = (this as unknown as { $el: HTMLElement }).$el;
-            el.closest('[x-data]')?.addEventListener('tab-activated', ((e: CustomEvent) => {
-                if (e.detail?.tab === 'transcription') {
-                    this.refreshData();
-                }
-            }) as EventListener);
         },
 
         /**
@@ -457,6 +459,10 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
 
                         if (!this.shouldPoll) {
                             this.polling = false;
+
+                            if (this.status === 'completed' && prev !== 'completed' && this.hasRecordings) {
+                                this.showDeletePrompt = true;
+                            }
                         }
                     }
                 } catch { /* continue polling */ }
@@ -529,6 +535,34 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 this.showManualInput = false;
                 this.manualContent = '';
             }
+        },
+
+        /**
+         * Delete all recordings for this meeting.
+         */
+        async deleteRecordings(this: TranscriptionViewerState): Promise<void> {
+            const recordingsUrl = `/api/v1/meetings/${config.meetingId}/recordings`;
+            const response = await fetch(recordingsUrl, {
+                headers: { 'Accept': 'application/json' },
+            });
+
+            if (!response.ok) return;
+
+            const json = await response.json();
+            const recordings = json.data ?? [];
+
+            for (const recording of recordings) {
+                await fetch(`${recordingsUrl}/${recording.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+            }
+
+            this.hasRecordings = false;
+            this.showDeletePrompt = false;
         },
     };
 }
