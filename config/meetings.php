@@ -26,34 +26,13 @@ return [
 
     'transcription' => [
         'enabled' => (bool) env('MEETING_TRANSCRIPTION_ENABLED', true),
-        'provider' => env('MEETING_TRANSCRIPTION_PROVIDER', 'whisper_cpp'),
         'auto_start' => (bool) env('MEETING_AUTO_TRANSCRIBE', true),
-
-        'whisper_cpp' => [
-            'base_url' => env('WHISPER_CPP_BASE_URL', 'http://localhost:8080'),
-        ],
-
-        'whisper' => [
-            'api_key' => env('OPENAI_API_KEY'),
-            'model' => env('WHISPER_MODEL', 'whisper-1'),
-        ],
-
-        'unified' => [
-            'base_url' => env('UNIFIED_SPEECH_BASE_URL', 'http://localhost:8090'),
-        ],
+        'base_url' => env('UNIFIED_SPEECH_BASE_URL', 'http://localhost:8090'),
     ],
 
     'diarization' => [
         'enabled' => (bool) env('MEETING_DIARIZATION_ENABLED', false),
-        'provider' => env('MEETING_DIARIZATION_PROVIDER', 'pyannote'),
-
-        'pyannote' => [
-            'base_url' => env('PYANNOTE_BASE_URL', 'http://localhost:8081'),
-        ],
-
-        'unified' => [
-            'base_url' => env('UNIFIED_SPEECH_BASE_URL', 'http://localhost:8090'),
-        ],
+        'base_url' => env('UNIFIED_SPEECH_BASE_URL', 'http://localhost:8090'),
     ],
 
     'extraction' => [

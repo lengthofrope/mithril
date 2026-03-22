@@ -24,7 +24,7 @@ final readonly class DiarizationResult
     ) {}
 
     /**
-     * Create a result from the pyannote service JSON response.
+     * Create a result from the diarization service JSON response.
      *
      * @param array<string, mixed> $data Decoded JSON from the diarization service.
      * @return self

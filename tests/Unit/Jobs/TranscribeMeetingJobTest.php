@@ -62,10 +62,9 @@ describe('TranscribeMeetingJob', function (): void {
             expect($transcription->language)->toBe('en');
         });
 
-        it('uses the configured provider name when creating a new record', function (): void {
+        it('stores the provider name when creating a new record', function (): void {
             Storage::fake('local');
             Storage::disk('local')->put('recordings/test.webm', 'fake audio');
-            Config::set('meetings.transcription.provider', 'whisper');
 
             $mock = $this->mock(TranscriptionServiceInterface::class);
             $mock->shouldReceive('transcribe')->once()->andReturn('Transcribed text');
@@ -82,7 +81,7 @@ describe('TranscribeMeetingJob', function (): void {
             (new TranscribeMeetingJob($meeting, $recording))->handle($mock);
 
             $transcription = MeetingTranscription::withoutGlobalScopes()->first();
-            expect($transcription->provider)->toBe('whisper');
+            expect($transcription->provider)->toBe('unified');
         });
 
         it('reuses an existing transcription record instead of creating a new one', function (): void {

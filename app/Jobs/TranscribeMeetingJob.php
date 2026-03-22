@@ -149,7 +149,7 @@ class TranscribeMeetingJob implements ShouldQueue
             'user_id' => $this->meeting->user_id,
             'meeting_id' => $this->meeting->id,
             'language' => $this->meeting->transcription_language,
-            'provider' => config('meetings.transcription.provider', 'whisper'),
+            'provider' => 'unified',
             'status' => TranscriptionStatus::Pending,
         ]);
     }
