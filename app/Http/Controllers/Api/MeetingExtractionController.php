@@ -40,7 +40,10 @@ class MeetingExtractionController extends Controller
             ->orderBy('id')
             ->get();
 
-        return $this->successResponse($extractions);
+        return $this->successResponse([
+            'extractions' => $extractions,
+            'summary' => $meeting->summary,
+        ]);
     }
 
     /**

@@ -1289,7 +1289,7 @@
                             <template x-if="pendingExtractions.length > 0">
                                 <button type="button" x-on:click="selectedIds.length === pendingExtractions.length ? deselectAll() : selectAll()" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" x-text="selectedIds.length === pendingExtractions.length ? 'Deselect all' : 'Select all'"></button>
                             </template>
-                            <template x-if="hasTranscription">
+                            <template x-if="hasTranscription && !extracting">
                                 <button type="button" x-on:click="showReExtractConfirm = true" class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400" :disabled="loading" x-text="extractions.length > 0 ? 'Re-extract' : 'Extract'"></button>
                             </template>
                         </div>
@@ -1368,11 +1368,22 @@
                         </template>
                     </div>
 
-                    <template x-if="extractions.length === 0 && hasTranscription">
+                    <template x-if="extracting">
+                        <div class="px-5 py-8 text-center">
+                            <svg class="mx-auto h-6 w-6 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">Analyzing transcription with AI…</p>
+                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">This usually takes 10–30 seconds.</p>
+                        </div>
+                    </template>
+
+                    <template x-if="!extracting && extractions.length === 0 && hasTranscription">
                         <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions yet. Use the Extract button to extract insights.</p>
                     </template>
 
-                    <template x-if="extractions.length === 0 && !hasTranscription">
+                    <template x-if="!extracting && extractions.length === 0 && !hasTranscription">
                         <p class="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No extractions available. Complete a transcription first.</p>
                     </template>
 
