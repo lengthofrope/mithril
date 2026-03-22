@@ -33,6 +33,7 @@ import { followUpActions } from './components/follow-up-actions';
 import { tagEditor } from './components/tag-editor';
 import { audioRecorder } from './components/audio-recorder';
 import { extractionReview } from './components/extraction-review';
+import { transcriptionViewer } from './components/transcription-viewer';
 
 declare global {
     interface Window {
@@ -71,6 +72,7 @@ Alpine.data('followUpActions', followUpActions as Parameters<typeof Alpine.data>
 Alpine.data('tagEditor', tagEditor as Parameters<typeof Alpine.data>[1]);
 Alpine.data('audioRecorder', audioRecorder as Parameters<typeof Alpine.data>[1]);
 Alpine.data('extractionReview', extractionReview as Parameters<typeof Alpine.data>[1]);
+Alpine.data('transcriptionViewer', transcriptionViewer as Parameters<typeof Alpine.data>[1]);
 
 window.Alpine = Alpine;
 
