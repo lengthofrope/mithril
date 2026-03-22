@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **OpenRouter API integration** — Responses wrapped in markdown code fences (`` ```json ``) are now correctly parsed; moved shared `extractJson()` method to `AbstractInsightExtractor` base class so all providers (OpenAI, Anthropic, OpenRouter) benefit from resilient JSON extraction
+- **OpenRouter API integration** — Responses wrapped in markdown code fences are now correctly parsed; moved shared `extractJson()` method to `AbstractInsightExtractor` base class so all providers (OpenAI, Anthropic, OpenRouter) benefit from resilient JSON extraction
 
 ### Changed
 
