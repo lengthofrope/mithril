@@ -169,6 +169,9 @@ class MeetingTranscriptionController extends Controller
         if ($transcription !== null) {
             $transcription->update([
                 'content' => $validated['content'],
+                'diarized_content' => null,
+                'diarization_status' => null,
+                'diarization_error' => null,
                 'language' => $validated['language'] ?? $meeting->transcription_language,
                 'provider' => 'manual',
                 'status' => TranscriptionStatus::Completed,
@@ -186,6 +189,25 @@ class MeetingTranscriptionController extends Controller
         }
 
         return $this->successResponse(null, 'Transcription saved.', 200, true);
+    }
+
+    /**
+     * Delete a meeting's transcription.
+     *
+     * @param Meeting $meeting
+     * @return JsonResponse
+     */
+    public function destroy(Meeting $meeting): JsonResponse
+    {
+        $transcription = $meeting->transcription;
+
+        if ($transcription === null) {
+            return $this->errorResponse('No transcription to delete.', statusCode: 422);
+        }
+
+        $transcription->delete();
+
+        return $this->successResponse(null, 'Transcription deleted.');
     }
 
     /**

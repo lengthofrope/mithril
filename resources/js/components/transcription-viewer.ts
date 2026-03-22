@@ -22,12 +22,14 @@ interface TranscriptionViewerConfig {
     transcriptionEnabled: boolean;
     canChooseMode: boolean;
     hasRecordings: boolean;
+    provider: string | null;
 }
 
 interface TranscriptionViewerState {
     status: string | null;
     content: string;
     errorMessage: string;
+    provider: string | null;
     diarizationStatus: string | null;
     diarizedContent: string;
     diarizationError: string;
@@ -63,7 +65,9 @@ interface TranscriptionViewerState {
     retry(): Promise<void>;
     retranscribeAll(): Promise<void>;
     saveManual(): Promise<void>;
+    deleteTranscription(): Promise<void>;
     deleteRecordings(): Promise<void>;
+    isManual: boolean;
 
     segments: DiarizedSegment[];
     hasDiarization: boolean;
@@ -95,6 +99,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         status: config.status,
         content: config.content,
         errorMessage: config.errorMessage,
+        provider: config.provider,
         diarizationStatus: config.diarizationStatus,
         diarizedContent: config.diarizedContent,
         diarizationError: config.diarizationError,
@@ -143,6 +148,14 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         /**
          * Whether completed diarization data is available.
          */
+        /**
+         * Whether the current transcription is manual input.
+         */
+        get isManual(): boolean {
+            const self = this as unknown as TranscriptionViewerState;
+            return self.provider === 'manual';
+        },
+
         get hasDiarization(): boolean {
             const self = this as unknown as TranscriptionViewerState;
             return self.diarizationStatus === 'completed' && self.segments.length > 0;
@@ -379,6 +392,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
             this.estimatedDurationSeconds = data.estimated_duration_seconds as number | null;
             this.diarizationStartedAt = data.diarization_started_at as string | null;
             this.estimatedDiarizationSeconds = data.estimated_diarization_seconds as number | null;
+            this.provider = (data.provider as string) ?? null;
         },
 
         /**
@@ -530,10 +544,28 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 body: JSON.stringify({ content: this.manualContent }),
             });
             if (response.ok) {
-                this.content = this.manualContent;
-                this.status = 'completed';
+                window.location.reload();
+            }
+        },
+
+        /**
+         * Delete the manual transcription, resetting to empty state.
+         */
+        async deleteTranscription(this: TranscriptionViewerState): Promise<void> {
+            const response = await fetch(`${baseUrl}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': config.csrfToken,
+                    'Accept': 'application/json',
+                },
+            });
+            if (response.ok) {
+                this.status = null;
+                this.content = '';
+                this.provider = null;
+                this.diarizedContent = '';
+                this.diarizationStatus = null;
                 this.showManualInput = false;
-                this.manualContent = '';
             }
         },
 

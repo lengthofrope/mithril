@@ -994,6 +994,7 @@
                     transcriptionEnabled: @js($transcriptionEnabled),
                     canChooseMode: @js($transcriptionEnabled && config('meetings.diarization.enabled')),
                     hasRecordings: @js($meeting->recordings->count() > 0),
+                    provider: @js($meeting->transcription?->provider),
                 })"
 
             >
@@ -1034,12 +1035,21 @@
                                 class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
                             >Retranscribe all</button>
                         </template>
-                        <button
-                            type="button"
-                            x-on:click="showManualInput = !showManualInput"
-                            class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
-                            x-text="showManualInput ? 'Cancel' : 'Manual input'"
-                        ></button>
+                        <template x-if="isManual && status === 'completed'">
+                            <button
+                                type="button"
+                                x-on:click="deleteTranscription()"
+                                class="rounded-lg border border-red-300 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:border-red-700/50 dark:text-red-400 dark:hover:bg-red-500/10"
+                            >Delete transcription</button>
+                        </template>
+                        <template x-if="!isManual || !status || status === 'failed'">
+                            <button
+                                type="button"
+                                x-on:click="showManualInput = !showManualInput"
+                                class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                                x-text="showManualInput ? 'Cancel' : 'Manual input'"
+                            ></button>
+                        </template>
                     </div>
                 </div>
 
@@ -1265,7 +1275,7 @@
                             'deadline' => $e->deadline?->toDateString(),
                             'status' => $e->status->value,
                         ])->values()),
-                        hasTranscription: @js($meeting->transcription !== null && $meeting->transcription->status->value === 'completed'),
+                        hasTranscription: @js($meeting->transcription !== null && $meeting->transcription->status?->value === 'completed'),
                         summary: @js($meeting->summary ?? ''),
                         csrfToken: document.querySelector('meta[name=csrf-token]')?.content ?? '',
                         teamOptions: @js($teamOptions),
