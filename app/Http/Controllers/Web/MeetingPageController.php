@@ -8,8 +8,11 @@ use App\Enums\MeetingStatus;
 use App\Enums\MeetingType;
 use App\Events\MeetingScheduled;
 use App\Http\Controllers\Controller;
+use App\Enums\DiarizationStatus;
+use App\Enums\TranscriptionStatus;
 use App\Models\Meeting;
 use App\Models\MeetingPrepItem;
+use App\Models\MeetingTranscription;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Services\BreadcrumbBuilder;
@@ -202,6 +205,8 @@ class MeetingPageController extends Controller
             'recordingEnabled' => (bool) config('meetings.recording.enabled', true),
             'transcriptionEnabled' => (bool) config('meetings.transcription.enabled', true),
             'aiEnabled' => (bool) config('ai.enabled', true),
+            'estimatedTranscriptionSeconds' => $this->estimateTranscriptionDuration($meeting->transcription),
+            'estimatedDiarizationSeconds' => $this->estimateDiarizationDuration($meeting->transcription),
         ]);
     }
 
@@ -462,5 +467,57 @@ class MeetingPageController extends Controller
         }
 
         return $query->first();
+    }
+
+    /**
+     * Estimate transcription processing duration based on historical ratio.
+     *
+     * @param MeetingTranscription|null $transcription
+     * @return int|null
+     */
+    private function estimateTranscriptionDuration(?MeetingTranscription $transcription): ?int
+    {
+        if ($transcription === null || $transcription->audio_duration_seconds === null) {
+            return null;
+        }
+
+        $averageRatio = MeetingTranscription::withoutGlobalScopes()
+            ->where('user_id', $transcription->user_id)
+            ->where('status', TranscriptionStatus::Completed)
+            ->whereNotNull('processing_duration_seconds')
+            ->whereNotNull('audio_duration_seconds')
+            ->where('audio_duration_seconds', '>', 0)
+            ->selectRaw('AVG((processing_duration_seconds * 1.0) / audio_duration_seconds) as ratio')
+            ->value('ratio');
+
+        return $averageRatio !== null
+            ? (int) round((float) $averageRatio * $transcription->audio_duration_seconds)
+            : null;
+    }
+
+    /**
+     * Estimate diarization duration based on historical ratio.
+     *
+     * @param MeetingTranscription|null $transcription
+     * @return int|null
+     */
+    private function estimateDiarizationDuration(?MeetingTranscription $transcription): ?int
+    {
+        if ($transcription === null || $transcription->audio_duration_seconds === null) {
+            return null;
+        }
+
+        $averageRatio = MeetingTranscription::withoutGlobalScopes()
+            ->where('user_id', $transcription->user_id)
+            ->where('diarization_status', DiarizationStatus::Completed)
+            ->whereNotNull('diarization_duration_seconds')
+            ->whereNotNull('audio_duration_seconds')
+            ->where('audio_duration_seconds', '>', 0)
+            ->selectRaw('AVG((diarization_duration_seconds * 1.0) / audio_duration_seconds) as ratio')
+            ->value('ratio');
+
+        return $averageRatio !== null
+            ? (int) round((float) $averageRatio * $transcription->audio_duration_seconds)
+            : null;
     }
 }

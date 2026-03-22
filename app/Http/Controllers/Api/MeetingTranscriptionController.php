@@ -55,6 +55,8 @@ class MeetingTranscriptionController extends Controller
             'processing_started_at' => $transcription->processing_started_at?->toIso8601String(),
             'audio_duration_seconds' => $transcription->audio_duration_seconds,
             'estimated_duration_seconds' => $this->estimateProcessingDuration($transcription),
+            'diarization_started_at' => $transcription->diarization_started_at?->toIso8601String(),
+            'estimated_diarization_seconds' => $this->estimateDiarizationDuration($transcription),
         ]);
     }
 
@@ -266,7 +268,35 @@ class MeetingTranscriptionController extends Controller
             ->whereNotNull('processing_duration_seconds')
             ->whereNotNull('audio_duration_seconds')
             ->where('audio_duration_seconds', '>', 0)
-            ->selectRaw('AVG(CAST(processing_duration_seconds AS REAL) / audio_duration_seconds) as ratio')
+            ->selectRaw('AVG((processing_duration_seconds * 1.0) / audio_duration_seconds) as ratio')
+            ->value('ratio');
+
+        if ($averageRatio === null) {
+            return null;
+        }
+
+        return (int) round((float) $averageRatio * $transcription->audio_duration_seconds);
+    }
+
+    /**
+     * Estimate diarization duration based on audio length and historical ratio.
+     *
+     * @param MeetingTranscription $transcription
+     * @return int|null Estimated seconds, or null when no estimate is possible.
+     */
+    private function estimateDiarizationDuration(MeetingTranscription $transcription): ?int
+    {
+        if ($transcription->audio_duration_seconds === null) {
+            return null;
+        }
+
+        $averageRatio = MeetingTranscription::withoutGlobalScopes()
+            ->where('user_id', $transcription->user_id)
+            ->where('diarization_status', DiarizationStatus::Completed)
+            ->whereNotNull('diarization_duration_seconds')
+            ->whereNotNull('audio_duration_seconds')
+            ->where('audio_duration_seconds', '>', 0)
+            ->selectRaw('AVG((diarization_duration_seconds * 1.0) / audio_duration_seconds) as ratio')
             ->value('ratio');
 
         if ($averageRatio === null) {

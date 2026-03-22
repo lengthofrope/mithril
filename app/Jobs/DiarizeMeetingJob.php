@@ -86,9 +86,12 @@ class DiarizeMeetingJob implements ShouldQueue
             return;
         }
 
+        $startedAt = now();
+
         $transcription->update([
             'diarization_status' => DiarizationStatus::Processing,
             'diarization_error' => null,
+            'diarization_started_at' => $startedAt,
         ]);
 
         try {
@@ -102,6 +105,7 @@ class DiarizeMeetingJob implements ShouldQueue
                 'content' => $result->toFormattedText(),
                 'diarization_status' => DiarizationStatus::Completed,
                 'diarization_error' => null,
+                'diarization_duration_seconds' => (int) $startedAt->diffInSeconds(now()),
             ]);
         } catch (\Throwable $e) {
             Log::error('Diarization failed', [

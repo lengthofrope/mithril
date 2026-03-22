@@ -988,9 +988,13 @@
                     diarizationError: @js($meeting->transcription?->diarization_error ?? ''),
                     diarizationEnabled: @js(config('meetings.diarization.enabled')),
                     processingStartedAt: @js($meeting->transcription?->processing_started_at?->toIso8601String()),
-                    estimatedDurationSeconds: null,
+                    estimatedDurationSeconds: @js($estimatedTranscriptionSeconds),
                     elapsedTimer: null,
                     elapsedSeconds: 0,
+                    diarizationStartedAt: @js($meeting->transcription?->diarization_started_at?->toIso8601String()),
+                    estimatedDiarizationSeconds: @js($estimatedDiarizationSeconds),
+                    diarizationElapsedTimer: null,
+                    diarizationElapsedSeconds: 0,
                     transcriptionEnabled: @js($transcriptionEnabled),
                     showManualInput: @js(!$transcriptionEnabled),
                     manualContent: '',
@@ -1059,6 +1063,28 @@
                         return Math.min(95, Math.round((this.elapsedSeconds / this.estimatedDurationSeconds) * 100));
                     },
 
+                    get diarizationProgressPercent() {
+                        if (!this.estimatedDiarizationSeconds || this.estimatedDiarizationSeconds <= 0) return null;
+                        return Math.min(95, Math.round((this.diarizationElapsedSeconds / this.estimatedDiarizationSeconds) * 100));
+                    },
+
+                    startDiarizationTimer() {
+                        this.stopDiarizationTimer();
+                        if (!this.diarizationStartedAt) return;
+                        const started = new Date(this.diarizationStartedAt).getTime();
+                        this.diarizationElapsedSeconds = Math.max(0, Math.floor((Date.now() - started) / 1000));
+                        this.diarizationElapsedTimer = setInterval(() => {
+                            this.diarizationElapsedSeconds = Math.max(0, Math.floor((Date.now() - started) / 1000));
+                        }, 1000);
+                    },
+
+                    stopDiarizationTimer() {
+                        if (this.diarizationElapsedTimer) {
+                            clearInterval(this.diarizationElapsedTimer);
+                            this.diarizationElapsedTimer = null;
+                        }
+                    },
+
                     startElapsedTimer() {
                         this.stopElapsedTimer();
                         if (!this.processingStartedAt) return;
@@ -1083,6 +1109,9 @@
                         if (this.status === 'processing') {
                             this.startElapsedTimer();
                         }
+                        if (this.isDiarizing) {
+                            this.startDiarizationTimer();
+                        }
                         this.$el.closest('[x-data]')?.addEventListener('tab-activated', (e) => {
                             if (e.detail?.tab === 'transcription') {
                                 this.refreshData();
@@ -1105,11 +1134,19 @@
                                 this.diarizationError = data.data?.diarization_error ?? '';
                                 this.processingStartedAt = data.data?.processing_started_at;
                                 this.estimatedDurationSeconds = data.data?.estimated_duration_seconds;
+                                this.diarizationStartedAt = data.data?.diarization_started_at;
+                                this.estimatedDiarizationSeconds = data.data?.estimated_diarization_seconds;
 
                                 if (this.status === 'processing') {
                                     this.startElapsedTimer();
                                 } else {
                                     this.stopElapsedTimer();
+                                }
+
+                                if (this.isDiarizing) {
+                                    this.startDiarizationTimer();
+                                } else {
+                                    this.stopDiarizationTimer();
                                 }
 
                                 if (this.shouldPoll && !this.polling) {
@@ -1130,6 +1167,7 @@
                                 if (response.ok) {
                                     const data = await response.json();
                                     const prev = this.status;
+                                    const prevDiarizationStatus = this.diarizationStatus;
                                     this.status = data.data?.status;
                                     this.content = data.data?.content ?? '';
                                     this.errorMessage = data.data?.error_message ?? '';
@@ -1138,11 +1176,20 @@
                                     this.diarizationError = data.data?.diarization_error ?? '';
                                     this.processingStartedAt = data.data?.processing_started_at;
                                     this.estimatedDurationSeconds = data.data?.estimated_duration_seconds;
+                                    this.diarizationStartedAt = data.data?.diarization_started_at;
+                                    this.estimatedDiarizationSeconds = data.data?.estimated_diarization_seconds;
 
                                     if (this.status === 'processing' && prev !== 'processing') {
                                         this.startElapsedTimer();
                                     } else if (this.status !== 'processing') {
                                         this.stopElapsedTimer();
+                                    }
+
+                                    const prevDiarizing = prevDiarizationStatus === 'pending' || prevDiarizationStatus === 'processing';
+                                    if (this.isDiarizing && !prevDiarizing) {
+                                        this.startDiarizationTimer();
+                                    } else if (!this.isDiarizing) {
+                                        this.stopDiarizationTimer();
                                     }
 
                                     if (!this.shouldPoll) {
@@ -1168,7 +1215,10 @@
                             this.diarizedContent = '';
                             this.processingStartedAt = null;
                             this.estimatedDurationSeconds = null;
+                            this.diarizationStartedAt = null;
+                            this.estimatedDiarizationSeconds = null;
                             this.stopElapsedTimer();
+                            this.stopDiarizationTimer();
                             this.startPolling();
                         }
                     },
@@ -1189,7 +1239,10 @@
                             this.diarizedContent = '';
                             this.processingStartedAt = null;
                             this.estimatedDurationSeconds = null;
+                            this.diarizationStartedAt = null;
+                            this.estimatedDiarizationSeconds = null;
                             this.stopElapsedTimer();
+                            this.stopDiarizationTimer();
                             this.startPolling();
                         }
                     },
@@ -1285,12 +1338,35 @@
 
                     {{-- Diarizing speakers --}}
                     <template x-if="status === 'completed' && isDiarizing && !showManualInput">
-                        <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                            <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                            <span>Identifying speakers…</span>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                                <svg class="h-4 w-4 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span>Identifying speakers…</span>
+                            </div>
+
+                            <template x-if="diarizationStartedAt">
+                                <div class="space-y-2">
+                                    <template x-if="diarizationProgressPercent !== null">
+                                        <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                            <div
+                                                class="h-1.5 rounded-full bg-brand-500 transition-all duration-1000"
+                                                :style="'width: ' + diarizationProgressPercent + '%'"
+                                            ></div>
+                                        </div>
+                                    </template>
+                                    <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+                                        <span x-text="'Elapsed: ' + formatDuration(diarizationElapsedSeconds)"></span>
+                                        <template x-if="estimatedDiarizationSeconds">
+                                            <span x-text="diarizationElapsedSeconds < estimatedDiarizationSeconds
+                                                ? 'Est. remaining: ~' + formatDuration(estimatedDiarizationSeconds - diarizationElapsedSeconds)
+                                                : 'Taking longer than expected…'"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </template>
 
