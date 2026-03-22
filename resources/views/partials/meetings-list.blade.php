@@ -56,10 +56,10 @@
 </div>
 
 {{-- Past meetings --}}
-<div>
-    <h2 class="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">Past meetings</h2>
+@if($pastMeetings->isNotEmpty())
+    <div>
+        <h2 class="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">Past meetings</h2>
 
-    @if($pastMeetings->isNotEmpty())
         <div class="space-y-2">
             @foreach($pastMeetings as $meeting)
                 <a
@@ -104,9 +104,5 @@
                 </a>
             @endforeach
         </div>
-    @else
-        <p class="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400 dark:border-gray-700 dark:text-gray-500">
-            No past meetings found.
-        </p>
-    @endif
-</div>
+    </div>
+@endif

@@ -71,7 +71,21 @@ test('meetings index upcoming contains only future non-done meetings', function 
     expect($upcoming->first()->id)->toBe($future->id);
 });
 
-test('meetings index past contains done or past-scheduled meetings', function () {
+test('meetings index past is empty by default', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(now()->setTime(12, 0, 0));
+    $user = User::factory()->create();
+
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->subDay(), 'is_done' => false]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addDay(), 'is_done' => true]);
+
+    $response = $this->actingAs($user)->get('/meetings');
+
+    $past = $response->viewData('pastMeetings');
+    expect($past)->toHaveCount(0);
+});
+
+test('meetings index past contains done or past-scheduled meetings when show_past is enabled', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(now()->setTime(12, 0, 0));
     $user = User::factory()->create();
@@ -80,7 +94,7 @@ test('meetings index past contains done or past-scheduled meetings', function ()
     $doneUpcoming = Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addDay(), 'is_done' => true]);
     Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addDay(), 'is_done' => false]);
 
-    $response = $this->actingAs($user)->get('/meetings');
+    $response = $this->actingAs($user)->get('/meetings?show_past=1');
 
     $past = $response->viewData('pastMeetings');
     $pastIds = $past->pluck('id')->sort()->values()->all();

@@ -48,6 +48,8 @@ class MeetingPageController extends Controller
             ? TeamMember::where('team_id', $teamId)->pluck('id')
             : null;
 
+        $showPast = (bool) $request->get('show_past', false);
+
         $baseQuery = fn () => Meeting::query()
             ->when($teamMemberId, fn ($q) => $q->whereHas('attendees', fn ($sub) => $sub->where('team_member_id', $teamMemberId)))
             ->when($memberIdsForTeam, fn ($q) => $q->where(fn ($sub) => $sub
@@ -64,13 +66,15 @@ class MeetingPageController extends Controller
             ->orderBy('scheduled_at')
             ->get();
 
-        $pastMeetings = $baseQuery()
-            ->where(fn ($q) => $q
-                ->where('is_done', true)
-                ->orWhereDate('scheduled_at', '<', now()->toDateString())
-            )
-            ->orderByDesc('scheduled_at')
-            ->get();
+        $pastMeetings = $showPast
+            ? $baseQuery()
+                ->where(fn ($q) => $q
+                    ->where('is_done', true)
+                    ->orWhereDate('scheduled_at', '<', now()->toDateString())
+                )
+                ->orderByDesc('scheduled_at')
+                ->get()
+            : collect();
 
         if ($request->ajax()) {
             return view('partials.meetings-list', [
