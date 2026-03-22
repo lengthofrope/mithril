@@ -12,6 +12,7 @@ services:
     environment:
       - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
       - MODEL_CACHE_DIR=/models
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
 
 volumes:
   speech-models:

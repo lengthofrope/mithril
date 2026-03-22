@@ -18,6 +18,14 @@ sys.modules["faster_whisper"] = _mock_faster_whisper
 _mock_diarize_pkg = MagicMock()
 sys.modules["diarize"] = _mock_diarize_pkg
 
+# Mock pyannote (only loaded when HUGGINGFACE_TOKEN is set)
+_mock_pyannote = MagicMock()
+sys.modules["pyannote"] = _mock_pyannote
+sys.modules["pyannote.audio"] = _mock_pyannote
+sys.modules["pyannote.audio.core"] = MagicMock()
+sys.modules["pyannote.audio.core.io"] = MagicMock()
+sys.modules["torch"] = MagicMock()
+
 
 @pytest.fixture(autouse=True)
 def _reset_server_state():

@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL", "large-v3-turbo")
 MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR", "/models")
+HUGGINGFACE_TOKEN = os.environ.get("HUGGINGFACE_TOKEN", "")
 def _detect_device() -> str:
     """Detect CUDA GPU via CTranslate2 (used by faster-whisper)."""
     try:
@@ -35,12 +36,31 @@ def _detect_device() -> str:
 DEVICE = _detect_device()
 
 whisper_model: WhisperModel | None = None
+pyannote_pipeline = None
 models_ready: bool = False
 queue_depth: int = 0
+DIARIZATION_ENGINE = "pyannote" if HUGGINGFACE_TOKEN else "default"
+
+
+def _load_pyannote():
+    """Load pyannote speaker diarization pipeline."""
+    global pyannote_pipeline
+    import torch
+    from pyannote.audio import Pipeline
+
+    logger.info("Loading pyannote speaker-diarization on %s...", DEVICE)
+    pyannote_pipeline = Pipeline.from_pretrained(
+        "pyannote/speaker-diarization-3.1",
+        use_auth_token=HUGGINGFACE_TOKEN,
+        cache_dir=MODEL_CACHE_DIR,
+    )
+    if DEVICE == "cuda":
+        pyannote_pipeline = pyannote_pipeline.to(torch.device("cuda"))
+    logger.info("pyannote model loaded.")
 
 
 def load_models() -> None:
-    """Load faster-whisper model into memory."""
+    """Load faster-whisper model (and optionally pyannote) into memory."""
     global whisper_model, models_ready
 
     compute_type = "float16" if DEVICE == "cuda" else "int8"
@@ -57,6 +77,10 @@ def load_models() -> None:
         download_root=MODEL_CACHE_DIR,
     )
     logger.info("faster-whisper model loaded.")
+
+    if DIARIZATION_ENGINE == "pyannote":
+        _load_pyannote()
+
     models_ready = True
 
 
@@ -193,10 +217,38 @@ def _collapse_consecutive_speakers(
     return collapsed
 
 
+def _get_pyannote_speaker_segments(audio_path: str) -> list:
+    """Run pyannote diarization and return segment-like objects."""
+    from pyannote.audio.core.io import Audio
+
+    audio = Audio(mono="downmix")
+    waveform, sample_rate = audio(audio_path)
+
+    output = pyannote_pipeline(
+        {"waveform": waveform, "sample_rate": sample_rate, "uri": audio_path},
+    )
+
+    @dataclass
+    class SpeakerSegment:
+        speaker: str
+        start: float
+        end: float
+
+    return [
+        SpeakerSegment(speaker=speaker, start=turn.start, end=turn.end)
+        for turn, speaker in output.exclusive_speaker_diarization
+    ]
+
+
 def _diarize_and_transcribe(audio_path: str, language: str) -> dict:
     """Run diarization and transcription, then merge results."""
-    diarize_result = diarize_audio(audio_path)
-    logger.info("Diarization complete: %d speaker segments", len(diarize_result.segments))
+    if DIARIZATION_ENGINE == "pyannote":
+        speaker_segments = _get_pyannote_speaker_segments(audio_path)
+        logger.info("Pyannote diarization complete: %d speaker segments", len(speaker_segments))
+    else:
+        diarize_result = diarize_audio(audio_path)
+        speaker_segments = diarize_result.segments
+        logger.info("Default diarization complete: %d speaker segments", len(speaker_segments))
 
     whisper_segments, _ = whisper_model.transcribe(
         audio_path,
@@ -208,7 +260,7 @@ def _diarize_and_transcribe(audio_path: str, language: str) -> dict:
     whisper_segments = list(whisper_segments)
     logger.info("Transcription complete: %d text segments", len(whisper_segments))
 
-    merged = _merge_segments(diarize_result.segments, whisper_segments)
+    merged = _merge_segments(speaker_segments, whisper_segments)
     collapsed = _collapse_consecutive_speakers(merged)
 
     speakers = sorted(set(seg.speaker for seg in collapsed))
@@ -225,9 +277,6 @@ def _diarize_and_transcribe(audio_path: str, language: str) -> dict:
         ],
         "speakers": speakers,
     }
-
-
-DIARIZATION_ENGINE = "default"
 
 
 @app.get("/health")

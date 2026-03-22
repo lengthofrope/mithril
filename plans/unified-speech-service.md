@@ -125,12 +125,12 @@ sequenceDiagram
 - **Goal:** Pyannote as higher-quality diarization option when HF token is provided
 - **PRD criteria:** AC 7
 - **Specs:**
-  - [ ] When `HUGGINGFACE_TOKEN` env var is set, service uses pyannote for diarization
-  - [ ] When `HUGGINGFACE_TOKEN` is absent, service uses default engine (Phase 2)
-  - [ ] Pyannote models cached in same `/models` volume
-  - [ ] `/health` reports `diarization_engine: "pyannote"` or `"default"`
-  - [ ] Response format identical regardless of engine
-- **Files:** `docker/speech/server.py` (extend), `docker/speech/requirements.txt` (extend)
+  - [x] When `HUGGINGFACE_TOKEN` env var is set, service uses pyannote for diarization
+  - [x] When `HUGGINGFACE_TOKEN` is absent, service uses default engine (Phase 2)
+  - [x] Pyannote models cached in same `/models` volume
+  - [x] `/health` reports `diarization_engine: "pyannote"` or `"default"`
+  - [x] Response format identical regardless of engine
+- **Files:** `docker/speech/app/server.py` (extend), `docker/speech/app/requirements.txt` (extend)
 
 ### Phase 4: Laravel Integration
 - **Goal:** New `unified` provider wired into Mithril's service layer
