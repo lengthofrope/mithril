@@ -94,7 +94,7 @@ The current speech processing setup requires two separate Docker containers (whi
 
 ## Open Questions
 
-- [ ] Which non-gated diarization approach to use as default? Research narrowed to: (1) **`diarize` by FoxNoseTech** — ONNX-only, ~10.8% DER, Apache 2.0, no PyTorch needed, but very new (Mar 2026); (2) **DIY with SpeechBrain ECAPA-TDNN + Silero-VAD + spectral clustering** — proven libs, ~18-25% DER, more engineering effort. NeMo disqualified (CC-BY-NC license, bloated). Needs prototype spike to validate `diarize` quality on real meeting recordings. — Bob — blocks diarization implementation
+- [x] ~~Which non-gated diarization approach to use as default?~~ **Resolved:** `diarize` by FoxNoseTech — ONNX-only, ~10.8% DER, Apache 2.0, no PyTorch needed. Prototype spike in implementation Phase 2 to validate quality on real meeting recordings.
 
 ### Resolved
 
