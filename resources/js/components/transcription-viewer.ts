@@ -388,7 +388,8 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Apply API response data to component state.
          */
         applyData(this: TranscriptionViewerState, data: Record<string, unknown>): void {
-            this.status = data.status as string;
+            const newStatus = data.status as string | null;
+            this.status = (newStatus === null && this.status === 'pending') ? 'pending' : newStatus;
             this.content = (data.content as string) ?? '';
             this.errorMessage = (data.error_message as string) ?? '';
             this.diarizationStatus = data.diarization_status as string | null;
