@@ -59,10 +59,10 @@ class OpenRouterInsightExtractor extends AbstractInsightExtractor
         }
 
         $content = $response->json('choices.0.message.content', '');
-        $parsed = json_decode($content, true);
+        $parsed = json_decode($this->extractJson($content), true);
 
         if (!is_array($parsed)) {
-            throw new \RuntimeException('OpenRouter API returned invalid JSON.');
+            throw new \RuntimeException('OpenRouter API returned invalid JSON: ' . mb_substr($content, 0, 200));
         }
 
         return $parsed;

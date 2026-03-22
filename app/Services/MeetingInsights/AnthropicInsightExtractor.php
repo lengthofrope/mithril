@@ -64,30 +64,9 @@ class AnthropicInsightExtractor extends AbstractInsightExtractor
         $parsed = json_decode($this->extractJson($content), true);
 
         if (!is_array($parsed)) {
-            throw new \RuntimeException('Anthropic API returned invalid JSON.');
+            throw new \RuntimeException('Anthropic API returned invalid JSON: ' . mb_substr($content, 0, 200));
         }
 
         return $parsed;
-    }
-
-    /**
-     * Extract a JSON object from a string that may contain markdown fences or preamble.
-     *
-     * @param string $content
-     * @return string
-     */
-    private function extractJson(string $content): string
-    {
-        $content = trim($content);
-
-        if (preg_match('/```(?:json)?\s*(\{[\s\S]*\})\s*```/', $content, $matches)) {
-            return $matches[1];
-        }
-
-        if (preg_match('/(\{[\s\S]*\})\s*$/', $content, $matches)) {
-            return $matches[1];
-        }
-
-        return $content;
     }
 }

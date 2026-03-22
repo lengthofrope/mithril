@@ -142,6 +142,25 @@ describe('OpenRouterInsightExtractor', function (): void {
                 ->and($result->items[0])->toBeInstanceOf(ExtractionItem::class)
                 ->and($result->items[0]->type)->toBe('decision');
         });
+        it('handles response wrapped in markdown code fences', function (): void {
+            $json = json_encode([
+                'summary' => 'Fenced response.',
+                'items' => [['type' => 'task', 'content' => 'Do something']],
+            ]);
+
+            Http::fake([
+                'openrouter.ai/api/v1/chat/completions' => Http::response([
+                    'choices' => [['message' => ['content' => "```json\n{$json}\n```"]]],
+                ]),
+            ]);
+
+            $extractor = new OpenRouterInsightExtractor(apiKey: 'test-key', model: 'openai/gpt-4o-mini');
+            $result = $extractor->extract('Some transcription', [], 'Meeting', 'en');
+
+            expect($result)->toBeInstanceOf(ExtractionResult::class)
+                ->and($result->summary)->toBe('Fenced response.')
+                ->and($result->items)->toHaveCount(1);
+        });
     });
 
     describe('error handling', function (): void {

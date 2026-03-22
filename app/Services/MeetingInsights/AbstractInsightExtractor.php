@@ -116,6 +116,27 @@ abstract class AbstractInsightExtractor implements MeetingInsightExtractorInterf
     }
 
     /**
+     * Extract a JSON object from a string that may contain markdown fences or preamble.
+     *
+     * @param string $content
+     * @return string
+     */
+    protected function extractJson(string $content): string
+    {
+        $content = trim($content);
+
+        if (preg_match('/```(?:json)?\s*(\{[\s\S]*\})\s*```/', $content, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/(\{[\s\S]*\})\s*$/', $content, $matches)) {
+            return $matches[1];
+        }
+
+        return $content;
+    }
+
+    /**
      * Parse the API response into an ExtractionResult.
      *
      * @param array<string, mixed> $parsed
