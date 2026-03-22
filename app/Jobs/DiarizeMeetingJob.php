@@ -8,6 +8,7 @@ use App\Enums\DiarizationStatus;
 use App\Models\Meeting;
 use App\Models\MeetingRecording;
 use App\Models\MeetingTranscription;
+use App\Models\ProcessingTimingLog;
 use App\Services\Diarization\DiarizationServiceInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -100,13 +101,24 @@ class DiarizeMeetingJob implements ShouldQueue
 
             $result = $diarizationService->diarize($audioPath, $language);
 
+            $durationSeconds = (int) $startedAt->diffInSeconds(now());
+
             $transcription->update([
                 'diarized_content' => $result->toJson(),
                 'content' => $result->toFormattedText(),
                 'diarization_status' => DiarizationStatus::Completed,
                 'diarization_error' => null,
-                'diarization_duration_seconds' => (int) $startedAt->diffInSeconds(now()),
+                'diarization_duration_seconds' => $durationSeconds,
             ]);
+
+            if ($transcription->audio_duration_seconds) {
+                ProcessingTimingLog::create([
+                    'user_id' => $transcription->user_id,
+                    'type' => 'diarization',
+                    'audio_duration_seconds' => $transcription->audio_duration_seconds,
+                    'processing_duration_seconds' => $durationSeconds,
+                ]);
+            }
         } catch (\Throwable $e) {
             Log::error('Diarization failed', [
                 'meeting_id' => $this->meeting->id,

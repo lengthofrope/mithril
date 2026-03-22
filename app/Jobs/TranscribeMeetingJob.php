@@ -8,6 +8,7 @@ use App\Enums\TranscriptionStatus;
 use App\Models\Meeting;
 use App\Models\MeetingRecording;
 use App\Models\MeetingTranscription;
+use App\Models\ProcessingTimingLog;
 use App\Services\Transcription\TranscriptionServiceInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -97,12 +98,23 @@ class TranscribeMeetingJob implements ShouldQueue
                 ? $existingContent . "\n\n" . $text
                 : $text;
 
+            $durationSeconds = (int) $startedAt->diffInSeconds(now());
+
             $transcription->update([
                 'content' => $newContent,
                 'status' => TranscriptionStatus::Completed,
                 'error_message' => null,
-                'processing_duration_seconds' => (int) $startedAt->diffInSeconds(now()),
+                'processing_duration_seconds' => $durationSeconds,
             ]);
+
+            if ($transcription->audio_duration_seconds) {
+                ProcessingTimingLog::create([
+                    'user_id' => $transcription->user_id,
+                    'type' => 'transcription',
+                    'audio_duration_seconds' => $transcription->audio_duration_seconds,
+                    'processing_duration_seconds' => $durationSeconds,
+                ]);
+            }
         } catch (\Throwable $e) {
             Log::error('Transcription failed', [
                 'meeting_id' => $this->meeting->id,

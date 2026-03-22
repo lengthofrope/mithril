@@ -9,6 +9,7 @@ use App\Jobs\TranscribeMeetingJob;
 use App\Models\Meeting;
 use App\Models\MeetingRecording;
 use App\Models\MeetingTranscription;
+use App\Models\ProcessingTimingLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -154,6 +155,13 @@ describe('MeetingTranscriptionController', function (): void {
                 'meeting_id' => $completedMeeting->id,
                 'user_id' => $user->id,
                 'status' => TranscriptionStatus::Completed,
+                'audio_duration_seconds' => 600,
+                'processing_duration_seconds' => 60,
+            ]);
+
+            ProcessingTimingLog::create([
+                'user_id' => $user->id,
+                'type' => 'transcription',
                 'audio_duration_seconds' => 600,
                 'processing_duration_seconds' => 60,
             ]);

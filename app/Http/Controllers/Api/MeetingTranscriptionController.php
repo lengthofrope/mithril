@@ -12,6 +12,7 @@ use App\Jobs\DiarizeMeetingJob;
 use App\Jobs\TranscribeMeetingJob;
 use App\Models\Meeting;
 use App\Models\MeetingTranscription;
+use App\Models\ProcessingTimingLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
@@ -262,12 +263,8 @@ class MeetingTranscriptionController extends Controller
             return null;
         }
 
-        $averageRatio = MeetingTranscription::withoutGlobalScopes()
-            ->where('user_id', $transcription->user_id)
-            ->where('status', TranscriptionStatus::Completed)
-            ->whereNotNull('processing_duration_seconds')
-            ->whereNotNull('audio_duration_seconds')
-            ->where('audio_duration_seconds', '>', 0)
+        $averageRatio = ProcessingTimingLog::where('user_id', $transcription->user_id)
+            ->where('type', 'transcription')
             ->selectRaw('AVG((processing_duration_seconds * 1.0) / audio_duration_seconds) as ratio')
             ->value('ratio');
 
@@ -290,13 +287,9 @@ class MeetingTranscriptionController extends Controller
             return null;
         }
 
-        $averageRatio = MeetingTranscription::withoutGlobalScopes()
-            ->where('user_id', $transcription->user_id)
-            ->where('diarization_status', DiarizationStatus::Completed)
-            ->whereNotNull('diarization_duration_seconds')
-            ->whereNotNull('audio_duration_seconds')
-            ->where('audio_duration_seconds', '>', 0)
-            ->selectRaw('AVG((diarization_duration_seconds * 1.0) / audio_duration_seconds) as ratio')
+        $averageRatio = ProcessingTimingLog::where('user_id', $transcription->user_id)
+            ->where('type', 'diarization')
+            ->selectRaw('AVG((processing_duration_seconds * 1.0) / audio_duration_seconds) as ratio')
             ->value('ratio');
 
         if ($averageRatio === null) {
