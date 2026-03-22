@@ -12,7 +12,7 @@ import tempfile
 import threading
 from contextlib import asynccontextmanager
 
-import torch
+import ctranslate2
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from faster_whisper import WhisperModel
 
@@ -21,7 +21,16 @@ logger = logging.getLogger(__name__)
 
 WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL", "large-v3-turbo")
 MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR", "/models")
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+def _detect_device() -> str:
+    """Detect CUDA GPU via CTranslate2 (used by faster-whisper)."""
+    try:
+        ctranslate2.get_supported_compute_types("cuda")
+        return "cuda"
+    except RuntimeError:
+        return "cpu"
+
+
+DEVICE = _detect_device()
 
 whisper_model: WhisperModel | None = None
 models_ready: bool = False

@@ -8,9 +8,9 @@ from unittest.mock import MagicMock
 import pytest
 
 # Mock heavy dependencies before any test imports server.py
-_mock_torch = MagicMock()
-_mock_torch.cuda.is_available.return_value = False
-sys.modules["torch"] = _mock_torch
+_mock_ctranslate2 = MagicMock()
+_mock_ctranslate2.get_supported_compute_types.side_effect = RuntimeError("no CUDA")
+sys.modules["ctranslate2"] = _mock_ctranslate2
 
 _mock_faster_whisper = MagicMock()
 sys.modules["faster_whisper"] = _mock_faster_whisper
