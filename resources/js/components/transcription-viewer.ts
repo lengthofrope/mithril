@@ -47,6 +47,9 @@ interface TranscriptionViewerState {
     hasRecordings: boolean;
     showDeletePrompt: boolean;
     showDeleteModal: boolean;
+    showManualConfirmModal: boolean;
+    showRetranscribeModal: boolean;
+    showDeleteTranscriptionModal: boolean;
     processingMode: 'transcribe' | 'diarize';
     showManualInput: boolean;
     manualContent: string;
@@ -117,6 +120,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         hasRecordings: config.hasRecordings,
         showDeletePrompt: false,
         showDeleteModal: false,
+        showManualConfirmModal: false,
+        showRetranscribeModal: false,
+        showDeleteTranscriptionModal: false,
         processingMode: (config.canChooseMode ? 'diarize' : (config.diarizationEnabled ? 'diarize' : 'transcribe')) as 'transcribe' | 'diarize',
         showManualInput: !config.transcriptionEnabled,
         manualContent: '',

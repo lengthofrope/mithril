@@ -1031,21 +1031,21 @@
                         <template x-if="transcriptionEnabled && hasRecordings && (status === 'completed' || status === 'failed')">
                             <button
                                 type="button"
-                                x-on:click="retranscribeAll()"
+                                x-on:click="status === 'completed' ? showRetranscribeModal = true : retranscribeAll()"
                                 class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
                             >Retranscribe all</button>
                         </template>
                         <template x-if="isManual && status === 'completed'">
                             <button
                                 type="button"
-                                x-on:click="deleteTranscription()"
+                                x-on:click="showDeleteTranscriptionModal = true"
                                 class="rounded-lg border border-red-300 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:border-red-700/50 dark:text-red-400 dark:hover:bg-red-500/10"
                             >Delete transcription</button>
                         </template>
                         <template x-if="!isManual || !status || status === 'failed'">
                             <button
                                 type="button"
-                                x-on:click="showManualInput = !showManualInput"
+                                x-on:click="showManualInput ? showManualInput = false : (status === 'completed' && !isManual ? showManualConfirmModal = true : showManualInput = true)"
                                 class="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
                                 x-text="showManualInput ? 'Cancel' : 'Manual input'"
                             ></button>
@@ -1128,6 +1128,174 @@
                                     x-on:click="showDeleteModal = false; deleteRecordings()"
                                     class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
                                 >Delete</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Manual input confirmation modal --}}
+                    <div
+                        x-show="showManualConfirmModal"
+                        x-cloak
+                        x-on:keydown.escape.window="showManualConfirmModal = false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="manual-input-dialog-title"
+                    >
+                        <div
+                            x-on:click="showManualConfirmModal = false"
+                            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+                        ></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <h2
+                                id="manual-input-dialog-title"
+                                class="text-base font-semibold text-gray-900 dark:text-white"
+                            >Replace transcription?</h2>
+
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                Saving manual input will replace the current transcription and remove any speaker diarization data. This cannot be undone.
+                            </p>
+
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="showManualConfirmModal = false"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >Cancel</button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="showManualConfirmModal = false; showManualInput = true"
+                                    class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700 dark:hover:bg-amber-500"
+                                >Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Delete transcription confirmation modal --}}
+                    <div
+                        x-show="showDeleteTranscriptionModal"
+                        x-cloak
+                        x-on:keydown.escape.window="showDeleteTranscriptionModal = false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="delete-transcription-dialog-title"
+                    >
+                        <div
+                            x-on:click="showDeleteTranscriptionModal = false"
+                            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+                        ></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <h2
+                                id="delete-transcription-dialog-title"
+                                class="text-base font-semibold text-gray-900 dark:text-white"
+                            >Delete transcription?</h2>
+
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                The transcription will be permanently deleted. This action cannot be undone.
+                            </p>
+
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="showDeleteTranscriptionModal = false"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >Cancel</button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="showDeleteTranscriptionModal = false; deleteTranscription()"
+                                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
+                                >Delete</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Retranscribe confirmation modal --}}
+                    <div
+                        x-show="showRetranscribeModal"
+                        x-cloak
+                        x-on:keydown.escape.window="showRetranscribeModal = false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="retranscribe-dialog-title"
+                    >
+                        <div
+                            x-on:click="showRetranscribeModal = false"
+                            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+                        ></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <h2
+                                id="retranscribe-dialog-title"
+                                class="text-base font-semibold text-gray-900 dark:text-white"
+                            >Retranscribe?</h2>
+
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                This will replace the current transcription with a new one from the recording. Any existing speaker diarization data will also be replaced.
+                            </p>
+
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="showRetranscribeModal = false"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >Cancel</button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="showRetranscribeModal = false; retranscribeAll()"
+                                    class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700 dark:hover:bg-amber-500"
+                                >Retranscribe</button>
                             </div>
                         </div>
                     </div>
