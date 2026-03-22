@@ -83,10 +83,7 @@ class MeetingRecordingController extends Controller
 
         if (config('meetings.transcription.enabled', true) && config('meetings.transcription.auto_start', true)) {
             if (config('meetings.diarization.enabled', false)) {
-                Bus::chain([
-                    new TranscribeMeetingJob($meeting, $recording),
-                    new DiarizeMeetingJob($meeting, $recording),
-                ])->dispatch();
+                DiarizeMeetingJob::dispatch($meeting, $recording);
             } else {
                 TranscribeMeetingJob::dispatch($meeting, $recording);
             }

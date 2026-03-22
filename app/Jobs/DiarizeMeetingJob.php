@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Enums\DiarizationStatus;
+use App\Enums\TranscriptionStatus;
 use App\Models\Meeting;
 use App\Models\MeetingRecording;
 use App\Models\MeetingTranscription;
@@ -78,21 +79,17 @@ class DiarizeMeetingJob implements ShouldQueue
             return;
         }
 
-        $transcription = $this->findTranscription();
-
-        if ($transcription === null) {
-            Log::warning('DiarizeMeetingJob: No transcription found, skipping.', [
-                'meeting_id' => $this->meeting->id,
-            ]);
-            return;
-        }
+        $transcription = $this->findOrCreateTranscription();
 
         $startedAt = now();
 
         $transcription->update([
+            'status' => TranscriptionStatus::Processing,
             'diarization_status' => DiarizationStatus::Processing,
             'diarization_error' => null,
             'diarization_started_at' => $startedAt,
+            'processing_started_at' => $transcription->processing_started_at ?? $startedAt,
+            'audio_duration_seconds' => $this->recording->duration_seconds,
         ]);
 
         try {
@@ -106,8 +103,11 @@ class DiarizeMeetingJob implements ShouldQueue
             $transcription->update([
                 'diarized_content' => $result->toJson(),
                 'content' => $result->toFormattedText(),
+                'status' => TranscriptionStatus::Completed,
                 'diarization_status' => DiarizationStatus::Completed,
                 'diarization_error' => null,
+                'error_message' => null,
+                'processing_duration_seconds' => $durationSeconds,
                 'diarization_duration_seconds' => $durationSeconds,
             ]);
 
@@ -127,21 +127,35 @@ class DiarizeMeetingJob implements ShouldQueue
             ]);
 
             $transcription->update([
+                'status' => TranscriptionStatus::Failed,
                 'diarization_status' => DiarizationStatus::Failed,
                 'diarization_error' => $e->getMessage(),
+                'error_message' => $e->getMessage(),
             ]);
         }
     }
 
     /**
-     * Find the existing transcription for this meeting.
+     * Find the existing transcription or create a new pending one.
      *
-     * @return MeetingTranscription|null
+     * @return MeetingTranscription
      */
-    private function findTranscription(): ?MeetingTranscription
+    private function findOrCreateTranscription(): MeetingTranscription
     {
-        return MeetingTranscription::withoutGlobalScopes()
+        $existing = MeetingTranscription::withoutGlobalScopes()
             ->where('meeting_id', $this->meeting->id)
             ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        return MeetingTranscription::forceCreate([
+            'user_id' => $this->meeting->user_id,
+            'meeting_id' => $this->meeting->id,
+            'language' => $this->meeting->transcription_language,
+            'provider' => 'unified',
+            'status' => TranscriptionStatus::Pending,
+        ]);
     }
 }

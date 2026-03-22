@@ -994,12 +994,33 @@
                     diarizationStartedAt: @js($meeting->transcription?->diarization_started_at?->toIso8601String()),
                     estimatedDiarizationSeconds: @js($estimatedDiarizationSeconds),
                     transcriptionEnabled: @js($transcriptionEnabled),
+                    canChooseMode: @js($transcriptionEnabled && config('meetings.diarization.enabled')),
                 })"
 
             >
                 <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Transcription</h2>
                     <div class="flex items-center gap-2">
+                        <template x-if="canChooseMode && !isProcessing">
+                            <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700">
+                                <button
+                                    type="button"
+                                    x-on:click="processingMode = 'diarize'"
+                                    class="rounded-l-lg px-2.5 py-1 text-xs font-medium transition"
+                                    :class="processingMode === 'diarize'
+                                        ? 'bg-brand-500/10 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400'
+                                        : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'"
+                                >With speakers</button>
+                                <button
+                                    type="button"
+                                    x-on:click="processingMode = 'transcribe'"
+                                    class="rounded-r-lg border-l border-gray-200 px-2.5 py-1 text-xs font-medium transition dark:border-gray-700"
+                                    :class="processingMode === 'transcribe'
+                                        ? 'bg-brand-500/10 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400'
+                                        : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'"
+                                >Text only</button>
+                            </div>
+                        </template>
                         <template x-if="transcriptionEnabled && status === 'failed'">
                             <button
                                 type="button"

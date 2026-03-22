@@ -20,6 +20,7 @@ interface TranscriptionViewerConfig {
     diarizationStartedAt: string | null;
     estimatedDiarizationSeconds: number | null;
     transcriptionEnabled: boolean;
+    canChooseMode: boolean;
 }
 
 interface TranscriptionViewerState {
@@ -39,6 +40,8 @@ interface TranscriptionViewerState {
     diarizationElapsedTimer: ReturnType<typeof setInterval> | null;
     diarizationElapsedSeconds: number;
     transcriptionEnabled: boolean;
+    canChooseMode: boolean;
+    processingMode: 'transcribe' | 'diarize';
     showManualInput: boolean;
     manualContent: string;
     polling: boolean;
@@ -100,6 +103,8 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         diarizationElapsedTimer: null as ReturnType<typeof setInterval> | null,
         diarizationElapsedSeconds: 0,
         transcriptionEnabled: config.transcriptionEnabled,
+        canChooseMode: config.canChooseMode,
+        processingMode: (config.canChooseMode ? 'diarize' : (config.diarizationEnabled ? 'diarize' : 'transcribe')) as 'transcribe' | 'diarize',
         showManualInput: !config.transcriptionEnabled,
         manualContent: '',
         polling: false,
@@ -194,8 +199,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Total number of processing phases.
          */
         get totalPhases(): number {
-            const self = this as unknown as TranscriptionViewerState;
-            return self.diarizationEnabled ? 2 : 1;
+            return 1;
         },
 
         /**
@@ -213,9 +217,10 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get currentPhaseLabel(): string {
             const self = this as unknown as TranscriptionViewerState;
-            if (self.status === 'pending') return 'Waiting to start transcription…';
+            if (self.status === 'pending') return 'Waiting to start…';
+            if (self.status === 'processing' && self.processingMode === 'diarize') return 'Transcribing & identifying speakers…';
             if (self.status === 'processing') return 'Transcribing audio…';
-            if (self.isDiarizing) return 'Identifying speakers…';
+            if (self.isDiarizing) return 'Transcribing & identifying speakers…';
             return '';
         },
 
@@ -467,7 +472,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 headers: {
                     'X-CSRF-TOKEN': config.csrfToken,
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({ mode: this.processingMode }),
             });
             if (response.ok) {
                 this.status = 'pending';
@@ -488,7 +495,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 headers: {
                     'X-CSRF-TOKEN': config.csrfToken,
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({ mode: this.processingMode }),
             });
             if (response.ok) {
                 this.status = 'pending';
