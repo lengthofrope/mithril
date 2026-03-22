@@ -1,0 +1,17 @@
+services:
+  speech:
+    container_name: mithril-speech
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${SPEECH_PORT:-8090}:8090"
+    volumes:
+      - speech-models:/models
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
+      - MODEL_CACHE_DIR=/models
+
+volumes:
+  speech-models:

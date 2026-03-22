@@ -1,7 +1,7 @@
 # Unified Speech Processing Service
 
 **Created:** 2026-03-22
-**Status:** Approved
+**Status:** In Progress
 **Author:** Bas de Kort + Claude
 
 ## PRD References
@@ -98,15 +98,15 @@ sequenceDiagram
 - **Goal:** Working `/transcribe` and `/health` endpoints in a single Docker container
 - **PRD criteria:** AC 1, 2, 4, 5, 8, 9, 10, 11, 15
 - **Specs:**
-  - [ ] `POST /transcribe` accepts multipart audio file + `language` param, returns `{ "text": "..." }`
-  - [ ] `GET /health` returns `{ "ready": bool, "device": "cpu"|"cuda", "models": {...}, "queue_depth": int }`
-  - [ ] Service detects CUDA GPU automatically at startup, falls back to CPU
-  - [ ] FIFO queue processes one request at a time; concurrent requests wait in order
-  - [ ] Models downloaded on first startup, cached in `/models` volume
-  - [ ] `WHISPER_MODEL` env var selects model size (default: `large-v3-turbo`)
-  - [ ] Container starts with `docker compose up` on CPU-only host
-  - [ ] Container starts with `docker compose up` on CUDA-equipped host (same image)
-- **Files:** `docker/speech/server.py`, `docker/speech/Dockerfile`, `docker/speech/docker-compose.yml`, `docker/speech/.env.example`, `docker/speech/requirements.txt`
+  - [x] `POST /transcribe` accepts multipart audio file + `language` param, returns `{ "text": "..." }`
+  - [x] `GET /health` returns `{ "ready": bool, "device": "cpu"|"cuda", "models": {...}, "queue_depth": int }`
+  - [x] Service detects CUDA GPU automatically at startup, falls back to CPU
+  - [x] FIFO queue processes one request at a time; concurrent requests wait in order
+  - [x] Models downloaded on first startup, cached in `/models` volume
+  - [x] `WHISPER_MODEL` env var selects model size (default: `large-v3-turbo`)
+  - [x] Container starts with `docker compose up` on CPU-only host
+  - [x] Container starts with `docker compose up` on CUDA-equipped host (same image, GPU via compose override — see ADR-027)
+- **Files:** `docker/speech/server.py`, `docker/speech/Dockerfile`, `docker/speech/docker-compose.yml`, `docker/speech/docker-compose.gpu.yml`, `docker/speech/.env.example`, `docker/speech/requirements.txt`
 
 ### Phase 2: Diarization — Default Engine
 - **Goal:** Working `/diarize` endpoint using a non-gated diarization engine
@@ -154,6 +154,23 @@ sequenceDiagram
   - [ ] Root `.env.example` updated with unified speech service vars
   - [ ] `docker-compose.yml` (if project-level exists) includes the unified service
 - **Files:** `docker/speech/README.md`, `docker/whispercpp/README.md`, `docker/pyannote/README.md`, `.env.example`
+
+## Parallelization
+
+**Strategy:** Partial parallel
+
+### Parallel Group 1: Service + Laravel
+- **Teammates:** 2
+- **Phases/tasks:**
+  - Teammate A (Python): Phases 1, 2, 3 (sequential within)
+  - Teammate B (PHP): Phase 4
+- **File ownership:**
+  - Teammate A: `docker/speech/*`
+  - Teammate B: `app/Services/Transcription/UnifiedSpeechTranscriptionService.php`, `app/Services/Diarization/UnifiedSpeechDiarizationService.php`, `config/meetings.php`, `app/Providers/AppServiceProvider.php`, `tests/`
+- **Sync point:** Both complete before Phase 5
+
+### Sequential remainder
+- Phase 5 (Documentation & Cleanup): runs after parallel group completes because it touches files from both tracks and needs final review
 
 ## Out of Scope
 
