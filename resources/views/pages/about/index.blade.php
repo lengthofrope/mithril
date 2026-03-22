@@ -161,9 +161,10 @@
                                     <ul class="space-y-3">
                                         @foreach($items as $item)
                                             <li class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                                                {!! \Illuminate\Support\Str::of($item)
+                                                {!! \Illuminate\Support\Str::of(e($item))
                                                     ->replaceMatches('/\*\*(.+?)\*\*\s*—\s*/', '<strong class="block font-medium text-gray-900 dark:text-white/90">$1</strong>')
-                                                    ->replaceMatches('/\*\*(.+?)\*\*/', '<strong class="block font-medium text-gray-900 dark:text-white/90">$1</strong>') !!}
+                                                    ->replaceMatches('/\*\*(.+?)\*\*/', '<strong class="block font-medium text-gray-900 dark:text-white/90">$1</strong>')
+                                                    ->replaceMatches('/`([^`]+)`/', '<code class="rounded bg-gray-100 px-1 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">$1</code>') !!}
                                             </li>
                                         @endforeach
                                     </ul>
