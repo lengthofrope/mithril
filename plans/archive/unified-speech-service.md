@@ -1,7 +1,7 @@
 # Unified Speech Processing Service
 
 **Created:** 2026-03-22
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort + Claude
 
 ## PRD References
@@ -149,10 +149,10 @@ sequenceDiagram
 - **Goal:** Deployment docs and legacy container deprecation
 - **PRD criteria:** AC 14
 - **Specs:**
-  - [ ] `docker/speech/README.md` covers: quick start, env vars, GPU setup, model sizes, production deployment, troubleshooting
-  - [ ] `docker/whispercpp/` and `docker/pyannote/` marked as deprecated in their READMEs (not deleted — migration path)
-  - [ ] Root `.env.example` updated with unified speech service vars
-  - [ ] `docker-compose.yml` (if project-level exists) includes the unified service
+  - [x] `docker/speech/README.md` covers: quick start, env vars, GPU setup, model sizes, diarization engines, troubleshooting
+  - [x] `docker/whispercpp/` and `docker/pyannote/` marked as deprecated in their READMEs (not deleted — migration path)
+  - [x] Root `.env.example` updated with unified speech service vars
+  - [x] No project-level `docker-compose.yml` exists — speech service has its own standalone compose
 - **Files:** `docker/speech/README.md`, `docker/whispercpp/README.md`, `docker/pyannote/README.md`, `.env.example`
 
 ## Parallelization

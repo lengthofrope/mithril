@@ -1,6 +1,6 @@
 # Mithril Speech Service
 
-Unified speech processing service for Mithril. Provides transcription (via faster-whisper) in a single Docker container with automatic CPU/GPU detection.
+Unified speech processing service for Mithril. Provides transcription (via faster-whisper) and speaker diarization in a single Docker container with automatic CPU/GPU detection.
 
 ## Quick Start
 
@@ -9,7 +9,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The service will be available at `http://localhost:8090`. On first startup, the Whisper model is downloaded and cached in a Docker volume (~1.6 GB for `large-v3-turbo`).
+The service will be available at `http://localhost:8090`. On first startup, models are downloaded and cached in a Docker volume (~1.6 GB for `large-v3-turbo`).
 
 ## GPU Support
 
@@ -20,6 +20,13 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml
 ```
 
 Then `docker compose up` passes the GPU to the container automatically.
+
+If Docker reports `could not select device driver "nvidia"`, generate the CDI spec and restart Docker:
+
+```bash
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+sudo systemctl restart docker
+```
 
 ## Endpoints
 
@@ -34,13 +41,15 @@ Returns service status.
   "models": {
     "whisper": "large-v3-turbo"
   },
-  "queue_depth": 0
+  "queue_depth": 0,
+  "diarization_engine": "default"
 }
 ```
 
 - `ready` is `false` while models are loading (first startup or after restart)
 - `device` reports `cpu` or `cuda` depending on available hardware
 - `queue_depth` shows how many requests are waiting
+- `diarization_engine` reports `default` or `pyannote`
 
 ### `POST /transcribe`
 
@@ -58,7 +67,37 @@ Transcribes an audio file to text.
 }
 ```
 
-Non-WAV files are automatically converted via ffmpeg.
+### `POST /diarize`
+
+Diarizes and transcribes an audio file, returning speaker-labeled segments.
+
+**Request:** multipart form data
+- `file` — audio file (WAV, MP3, M4A, OGG, FLAC, etc.)
+- `language` — BCP-47 language code (default: `en`)
+
+**Response:**
+
+```json
+{
+  "segments": [
+    {
+      "speaker": "SPEAKER_00",
+      "start": 0.0,
+      "end": 5.23,
+      "text": "Hello, how are you?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 5.24,
+      "end": 8.15,
+      "text": "I'm fine, thanks."
+    }
+  ],
+  "speakers": ["SPEAKER_00", "SPEAKER_01"]
+}
+```
+
+Non-WAV files are automatically converted via ffmpeg for both endpoints.
 
 ## Environment Variables
 
@@ -66,6 +105,16 @@ Non-WAV files are automatically converted via ffmpeg.
 |----------|---------|-------------|
 | `SPEECH_PORT` | `8090` | Host port to expose the service on |
 | `WHISPER_MODEL` | `large-v3-turbo` | Whisper model size (see below) |
+| `HUGGINGFACE_TOKEN` | *(empty)* | When set, uses pyannote for higher-quality diarization |
+
+### Diarization Engines
+
+| Engine | Token Required | Quality | Description |
+|--------|---------------|---------|-------------|
+| `default` | No | Good (~10.8% DER) | Uses `diarize` library (ONNX, Apache 2.0) |
+| `pyannote` | Yes (HuggingFace) | Better | Uses pyannote-audio (requires gated model access) |
+
+The engine is selected automatically based on whether `HUGGINGFACE_TOKEN` is set.
 
 ### Whisper Model Sizes
 
@@ -80,7 +129,17 @@ Non-WAV files are automatically converted via ffmpeg.
 
 ## Request Queue
 
-All requests are processed through a FIFO queue — one at a time. This prevents GPU/memory contention when multiple transcription requests arrive simultaneously. Additional requests wait in order. The current queue depth is reported via `/health`.
+All requests (both transcription and diarization) are processed through a shared FIFO queue — one at a time. This prevents GPU/memory contention. The current queue depth is reported via `/health`.
+
+## Connecting to Mithril
+
+In Mithril's root `.env`:
+
+```env
+MEETING_TRANSCRIPTION_PROVIDER=unified
+MEETING_DIARIZATION_PROVIDER=unified
+UNIFIED_SPEECH_BASE_URL=http://localhost:8090
+```
 
 ## Development
 
@@ -94,7 +153,7 @@ pip install -r requirements-test.txt
 python -m pytest tests/ -v
 ```
 
-Tests mock the heavy dependencies (torch, faster-whisper) so they run without a GPU or model downloads.
+Tests mock heavy dependencies so they run without a GPU or model downloads.
 
 ## File Structure
 

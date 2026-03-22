@@ -74,12 +74,29 @@ Follow the CPU steps above, then:
 
    The `device` field should report `cuda`.
 
+## Enabling Pyannote Diarization (Optional)
+
+For higher-quality speaker diarization, provide a HuggingFace token:
+
+1. Get a token at https://huggingface.co/settings/tokens
+2. Accept the model license at https://huggingface.co/pyannote/speaker-diarization-3.1
+3. Add to `.env`:
+
+   ```env
+   HUGGINGFACE_TOKEN=hf_your_token_here
+   ```
+
+4. Restart: `docker compose restart`
+
+Without a token, the default diarization engine is used (no account needed).
+
 ## Connecting to Mithril
 
 In Mithril's root `.env` file, set:
 
 ```env
 MEETING_TRANSCRIPTION_PROVIDER=unified
+MEETING_DIARIZATION_PROVIDER=unified
 UNIFIED_SPEECH_BASE_URL=http://localhost:8090
 ```
 
@@ -114,8 +131,10 @@ WHISPER_MODEL=small
 ### GPU not detected (device shows "cpu" on a GPU host)
 
 1. Verify the NVIDIA Container Toolkit is installed: `nvidia-ctk --version`
-2. Verify the GPU compose override is active: check `COMPOSE_FILE` in `.env`
-3. Verify Docker can see the GPU: `docker run --rm --gpus all nvidia/cuda:12.6.3-base-ubuntu24.04 nvidia-smi`
+2. Generate the CDI spec: `sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`
+3. Restart Docker: `sudo systemctl restart docker`
+4. Verify the GPU compose override is active: check `COMPOSE_FILE` in `.env`
+5. Verify Docker can see the GPU: `docker run --rm --gpus all nvidia/cuda:12.6.3-base-ubuntu24.04 nvidia-smi`
 
 ### Port conflict
 

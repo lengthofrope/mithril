@@ -1,5 +1,9 @@
 # whisper.cpp — Self-hosted Speech-to-Text
 
+> **Deprecated:** This service is superseded by the unified speech service in `docker/speech/`.
+> The unified service provides both transcription and diarization in a single container.
+> Set `MEETING_TRANSCRIPTION_PROVIDER=unified` to migrate. This directory will be removed in a future release.
+
 A standalone [whisper.cpp](https://github.com/ggml-org/whisper.cpp) server for transcribing meeting recordings locally. No data leaves your network.
 
 ## Prerequisites
