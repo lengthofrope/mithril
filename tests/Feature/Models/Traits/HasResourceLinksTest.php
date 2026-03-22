@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\CalendarEvent;
 use App\Models\CalendarEventLink;
 use App\Models\FollowUp;
@@ -59,18 +59,18 @@ describe('HasResourceLinks trait', function (): void {
         expect(CalendarEventLink::count())->toBe(0);
     });
 
-    it('deletes CalendarEventLinks when a bila is deleted', function (): void {
-        $user  = User::factory()->create();
-        $event = CalendarEvent::factory()->create(['user_id' => $user->id]);
-        $bila  = Bila::factory()->create(['user_id' => $user->id]);
+    it('deletes CalendarEventLinks when a meeting is deleted', function (): void {
+        $user    = User::factory()->create();
+        $event   = CalendarEvent::factory()->create(['user_id' => $user->id]);
+        $meeting = Meeting::factory()->create(['user_id' => $user->id]);
 
-        CalendarEventLink::factory()->forBila($bila)->create([
+        CalendarEventLink::factory()->forMeeting($meeting)->create([
             'calendar_event_id' => $event->id,
         ]);
 
         expect(CalendarEventLink::count())->toBe(1);
 
-        $bila->delete();
+        $meeting->delete();
 
         expect(CalendarEventLink::count())->toBe(0);
     });

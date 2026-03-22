@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
+use App\Models\MeetingRecording;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Services\BreadcrumbBuilder;
@@ -139,13 +140,13 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'dashboard_upcoming_tasks' => ['nullable', 'integer', 'min:0', 'max:20'],
             'dashboard_upcoming_follow_ups' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'dashboard_upcoming_bilas' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'dashboard_upcoming_meetings' => ['nullable', 'integer', 'min:0', 'max:20'],
         ]);
 
         $request->user()->update([
             'dashboard_upcoming_tasks' => $validated['dashboard_upcoming_tasks'] ?? null,
             'dashboard_upcoming_follow_ups' => $validated['dashboard_upcoming_follow_ups'] ?? null,
-            'dashboard_upcoming_bilas' => $validated['dashboard_upcoming_bilas'] ?? null,
+            'dashboard_upcoming_meetings' => $validated['dashboard_upcoming_meetings'] ?? null,
         ]);
 
         return response()->json(['success' => true]);
@@ -177,11 +178,18 @@ class SettingsController extends Controller
     public function storage(Request $request): View
     {
         $user = $request->user();
-        $usedBytes = (int) Attachment::where('user_id', $user->id)->sum('size');
+        $attachmentBytes = (int) Attachment::where('user_id', $user->id)->sum('size');
+        $recordingBytes = (int) MeetingRecording::where('user_id', $user->id)->sum('size_bytes');
+        $usedBytes = $attachmentBytes + $recordingBytes;
         $maxBytes = config('attachments.max_storage_mb') * 1024 * 1024;
 
         $attachments = Attachment::where('user_id', $user->id)
             ->with('activity.activityable')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $recordings = MeetingRecording::where('user_id', $user->id)
+            ->with('meeting')
             ->orderByDesc('created_at')
             ->get();
 
@@ -198,6 +206,7 @@ class SettingsController extends Controller
             'usedBytes' => $usedBytes,
             'maxBytes' => $maxBytes,
             'attachments' => $attachments,
+            'recordings' => $recordings,
             'orphanedBytes' => (int) $orphaned->sum('size'),
             'orphanedCount' => $orphaned->count(),
         ]);

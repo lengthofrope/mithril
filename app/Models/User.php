@@ -37,7 +37,7 @@ class User extends Authenticatable
         'prune_after_days',
         'dashboard_upcoming_tasks',
         'dashboard_upcoming_follow_ups',
-        'dashboard_upcoming_bilas',
+        'dashboard_upcoming_meetings',
         'sidebar_collapsed',
     ];
 
@@ -77,7 +77,7 @@ class User extends Authenticatable
             'prune_after_days'              => 'integer',
             'dashboard_upcoming_tasks'      => 'integer',
             'dashboard_upcoming_follow_ups' => 'integer',
-            'dashboard_upcoming_bilas'      => 'integer',
+            'dashboard_upcoming_meetings'      => 'integer',
             'sidebar_collapsed'                 => 'boolean',
             'is_active'                     => 'boolean',
         ];

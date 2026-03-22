@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Models\Bila;
 use App\Models\CalendarEvent;
 use App\Models\CalendarEventLink;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
@@ -40,17 +40,17 @@ function makeCalendarFixture(): array
 
 // ─── Prefill ──────────────────────────────────────────────────────────────────
 
-it('returns prefill data for bila type', function (): void {
+it('returns prefill data for meeting type', function (): void {
     /** @var \Tests\TestCase $this */
     ['user' => $user, 'member' => $member, 'event' => $event] = makeCalendarFixture();
 
-    $response = $this->actingAs($user)->getJson("/api/v1/calendar-events/{$event->id}/prefill/bila");
+    $response = $this->actingAs($user)->getJson("/api/v1/calendar-events/{$event->id}/prefill/meeting");
 
     $response->assertOk()
         ->assertJson(['success' => true]);
 
     expect($response->json('data.team_member_id'))->toBe($member->id)
-        ->and($response->json('data.scheduled_date'))->toBe($event->start_at->toDateString());
+        ->and($response->json('data.scheduled_at'))->toContain($event->start_at->toDateString());
 });
 
 it('returns prefill data for task type', function (): void {
@@ -109,18 +109,18 @@ it('returns 404 for another users calendar event on prefill', function (): void 
     $otherUser  = User::factory()->create();
     $otherEvent = CalendarEvent::factory()->create(['user_id' => $otherUser->id]);
 
-    $response = $this->actingAs($user)->getJson("/api/v1/calendar-events/{$otherEvent->id}/prefill/bila");
+    $response = $this->actingAs($user)->getJson("/api/v1/calendar-events/{$otherEvent->id}/prefill/meeting");
 
     $response->assertNotFound();
 });
 
 // ─── Create ───────────────────────────────────────────────────────────────────
 
-it('creates a bila from a calendar event', function (): void {
+it('creates a meeting from a calendar event', function (): void {
     /** @var \Tests\TestCase $this */
     ['user' => $user, 'member' => $member, 'event' => $event] = makeCalendarFixture();
 
-    $response = $this->actingAs($user)->postJson("/api/v1/calendar-events/{$event->id}/create/bila");
+    $response = $this->actingAs($user)->postJson("/api/v1/calendar-events/{$event->id}/create/meeting");
 
     $response->assertStatus(201)
         ->assertJson([
@@ -128,11 +128,8 @@ it('creates a bila from a calendar event', function (): void {
             'message' => 'Created successfully.',
         ]);
 
-    expect($response->json('data.resource.team_member_id'))->toBe($member->id);
-
-    $this->assertDatabaseHas('bilas', [
-        'team_member_id' => $member->id,
-        'user_id'        => $user->id,
+    $this->assertDatabaseHas('meetings', [
+        'user_id' => $user->id,
     ]);
 });
 
@@ -204,7 +201,7 @@ it('creates a resource with a link to the calendar event', function (): void {
     ]);
 });
 
-it('returns 422 when creating bila without matching team member', function (): void {
+it('returns 422 when creating meeting without matching team member', function (): void {
     /** @var \Tests\TestCase $this */
     $user  = User::factory()->create(['email' => 'lead@example.com']);
     $event = CalendarEvent::factory()->create([
@@ -216,13 +213,13 @@ it('returns 422 when creating bila without matching team member', function (): v
         ],
     ]);
 
-    $response = $this->actingAs($user)->postJson("/api/v1/calendar-events/{$event->id}/create/bila");
+    $response = $this->actingAs($user)->postJson("/api/v1/calendar-events/{$event->id}/create/meeting");
 
     $response->assertStatus(422)
         ->assertJson(['success' => false]);
 
     expect($response->json('message'))->toContain('no matching team member');
-    $this->assertDatabaseCount('bilas', 0);
+    $this->assertDatabaseCount('meetings', 0);
 });
 
 it('returns 400 for invalid create type', function (): void {

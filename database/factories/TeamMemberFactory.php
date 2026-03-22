@@ -29,8 +29,8 @@ class TeamMemberFactory extends Factory
             'notes' => fake()->optional()->sentence(),
             'status' => MemberStatus::Available,
             'avatar_path' => null,
-            'bila_interval_days' => 14,
-            'next_bila_date' => null,
+            'meeting_interval_days' => 14,
+            'next_meeting_date' => null,
         ];
     }
 }

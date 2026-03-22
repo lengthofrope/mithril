@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\ActivityType;
+use App\Enums\TaskStatus;
 use App\Models\Activity;
 use App\Models\Task;
 use App\Models\User;
@@ -101,6 +102,32 @@ describe('PartialController', function (): void {
             $response = $this->actingAs($user)->get('/partials/invalid/1/activity-feed');
 
             $response->assertNotFound();
+        });
+    });
+
+    describe('tasksList', function (): void {
+        it('excludes done tasks by default', function (): void {
+            $user = User::factory()->create();
+            $openTask = Task::factory()->create(['user_id' => $user->id, 'title' => 'Open task', 'status' => TaskStatus::Open]);
+            $doneTask = Task::factory()->create(['user_id' => $user->id, 'title' => 'Done task', 'status' => TaskStatus::Done]);
+
+            $response = $this->actingAs($user)->get('/partials/tasks');
+
+            $response->assertOk()
+                ->assertSee('Open task')
+                ->assertDontSee('Done task');
+        });
+
+        it('includes done tasks when show_completed is set', function (): void {
+            $user = User::factory()->create();
+            $openTask = Task::factory()->create(['user_id' => $user->id, 'title' => 'Open task', 'status' => TaskStatus::Open]);
+            $doneTask = Task::factory()->create(['user_id' => $user->id, 'title' => 'Done task', 'status' => TaskStatus::Done]);
+
+            $response = $this->actingAs($user)->get('/partials/tasks?show_completed=1');
+
+            $response->assertOk()
+                ->assertSee('Open task')
+                ->assertSee('Done task');
         });
     });
 });

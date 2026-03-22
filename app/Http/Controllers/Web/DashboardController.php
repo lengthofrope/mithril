@@ -8,7 +8,7 @@ use App\Enums\FollowUpStatus;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AnalyticsWidget;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\CalendarEvent;
 use App\Models\Email;
 use App\Models\FollowUp;
@@ -91,10 +91,10 @@ class DashboardController extends Controller
             'counters' => $counters,
             'todayTasks' => $today['tasks_due_today'],
             'todayFollowUps' => $today['overdue_follow_ups'],
-            'todayBilas' => $today['bilas_today'],
+            'todayMeetings' => $today['meetings_today'],
             'upcomingTasks' => $upcoming['tasks'],
             'upcomingFollowUps' => $upcoming['follow_ups'],
-            'upcomingBilas' => $upcoming['bilas'],
+            'upcomingMeetings' => $upcoming['meetings'],
             'dashboardWidgets' => $dashboardWidgets,
             'calendarEvents' => $calendarEvents,
             'flaggedEmails' => $flaggedEmails,
@@ -126,7 +126,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Build the today section with tasks due today, overdue follow-ups, and today's bilas.
+     * Build the today section with tasks due today, overdue follow-ups, and today's meetings.
      *
      * @param string $timezone
      * @return array<string, mixed>
@@ -147,16 +147,16 @@ class DashboardController extends Controller
             ->orderBy('follow_up_date')
             ->get();
 
-        $bilasToday = Bila::where('is_done', false)
-            ->whereDate('scheduled_date', now($timezone)->toDateString())
-            ->with(['teamMember', 'prepItems'])
-            ->orderBy('scheduled_date')
+        $meetingsToday = Meeting::where('is_done', false)
+            ->whereDate('scheduled_at', now($timezone)->toDateString())
+            ->with(['attendees', 'prepItems'])
+            ->orderBy('scheduled_at')
             ->get();
 
         return [
             'tasks_due_today' => $tasksDueToday,
             'overdue_follow_ups' => $overdueFollowUps,
-            'bilas_today' => $bilasToday,
+            'meetings_today' => $meetingsToday,
         ];
     }
 
@@ -173,7 +173,7 @@ class DashboardController extends Controller
 
         $taskLimit = $user->dashboard_upcoming_tasks ?? 5;
         $followUpLimit = $user->dashboard_upcoming_follow_ups ?? 5;
-        $bilaLimit = $user->dashboard_upcoming_bilas ?? 5;
+        $meetingLimit = $user->dashboard_upcoming_meetings ?? 5;
 
         $upcomingTasks = $taskLimit > 0
             ? Task::whereDate('deadline', '>', $todayDate)
@@ -194,19 +194,19 @@ class DashboardController extends Controller
                 ->get()
             : new Collection();
 
-        $upcomingBilas = $bilaLimit > 0
-            ? Bila::where('is_done', false)
-                ->whereDate('scheduled_date', '>', $todayDate)
-                ->with(['teamMember', 'prepItems'])
-                ->orderBy('scheduled_date')
-                ->limit($bilaLimit)
+        $upcomingMeetings = $meetingLimit > 0
+            ? Meeting::where('is_done', false)
+                ->whereDate('scheduled_at', '>', $todayDate)
+                ->with(['attendees', 'prepItems'])
+                ->orderBy('scheduled_at')
+                ->limit($meetingLimit)
                 ->get()
             : new Collection();
 
         return [
             'tasks' => $upcomingTasks,
             'follow_ups' => $upcomingFollowUps,
-            'bilas' => $upcomingBilas,
+            'meetings' => $upcomingMeetings,
         ];
     }
 }

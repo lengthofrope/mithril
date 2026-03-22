@@ -95,6 +95,7 @@ class Task extends Model
         'recurrence_custom_days',
         'recurrence_series_id',
         'recurrence_parent_id',
+        'meeting_id',
     ];
 
     /**

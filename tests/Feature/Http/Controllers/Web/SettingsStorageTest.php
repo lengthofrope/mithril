@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Enums\ActivityType;
 use App\Models\Activity;
 use App\Models\Attachment;
+use App\Models\Meeting;
+use App\Models\MeetingRecording;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -81,6 +83,62 @@ describe('Settings storage page', function (): void {
         $response = $this->actingAs($user)->get('/settings/storage');
 
         $response->assertViewHas('usedBytes', 8000);
+    });
+
+    it('includes meeting recording bytes in storage usage', function (): void {
+        $user = User::factory()->create();
+        $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+        MeetingRecording::factory()->create([
+            'user_id' => $user->id,
+            'meeting_id' => $meeting->id,
+            'size_bytes' => 12000,
+        ]);
+
+        $response = $this->actingAs($user)->get('/settings/storage');
+
+        $response->assertViewHas('usedBytes', 12000);
+    });
+
+    it('combines attachment and recording bytes in total usage', function (): void {
+        $user = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $user->id]);
+        $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+        $activity = Activity::create([
+            'user_id' => $user->id,
+            'activityable_type' => Task::class,
+            'activityable_id' => $task->id,
+            'type' => ActivityType::Attachment,
+        ]);
+
+        Attachment::create([
+            'user_id' => $user->id,
+            'activity_id' => $activity->id,
+            'filename' => 'file.pdf',
+            'path' => 'attachments/file.pdf',
+            'disk' => 'local',
+            'mime_type' => 'application/pdf',
+            'size' => 5000,
+        ]);
+
+        MeetingRecording::factory()->create([
+            'user_id' => $user->id,
+            'meeting_id' => $meeting->id,
+            'size_bytes' => 7000,
+        ]);
+
+        $response = $this->actingAs($user)->get('/settings/storage');
+
+        $response->assertViewHas('usedBytes', 12000);
+    });
+
+    it('passes recordings to the view', function (): void {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/settings/storage');
+
+        $response->assertViewHas('recordings');
     });
 
     it('does not include other users attachments in usage', function (): void {

@@ -19,7 +19,7 @@ use App\Models\User;
 /**
  * Prunes completed tasks and follow-ups beyond a user's configured retention period.
  *
- * Only tasks and follow-ups are pruned. Bilas, agreements, and notes are never
+ * Only tasks and follow-ups are pruned. Meetings, agreements, and notes are never
  * pruned by retention — they are only removed when a team member is deleted
  * (handled by DB cascade constraints).
  */

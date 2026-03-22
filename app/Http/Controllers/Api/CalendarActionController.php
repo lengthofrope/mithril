@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\BilaScheduled;
+use App\Events\MeetingScheduled;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
-use App\Models\Bila;
 use App\Models\CalendarEvent;
 use App\Models\CalendarEventLink;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Note;
 use App\Models\Task;
 use App\Services\CalendarActionService;
@@ -18,7 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Handles creation and linking of resources (Bila, Task, FollowUp, Note) to calendar events.
+ * Handles creation and linking of resources (Meeting, Task, FollowUp, Note) to calendar events.
  *
  * Provides three operations:
  * - prefill: returns pre-populated field data for a given resource type
@@ -42,12 +42,16 @@ class CalendarActionController extends Controller
      * GET /api/v1/calendar-events/{calendarEvent}/prefill/{type}
      *
      * @param CalendarEvent $calendarEvent
-     * @param string        $type One of: bila, task, follow-up, note.
+     * @param string        $type One of: meeting, task, follow-up, note.
      * @return JsonResponse
      */
     public function prefill(CalendarEvent $calendarEvent, string $type): JsonResponse
     {
-        $data = $this->service->buildPrefillData($calendarEvent, $type);
+        try {
+            $data = $this->service->buildPrefillData($calendarEvent, $type);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), statusCode: 422);
+        }
 
         return $this->successResponse($data);
     }
@@ -62,27 +66,22 @@ class CalendarActionController extends Controller
      *
      * @param Request       $request
      * @param CalendarEvent $calendarEvent
-     * @param string        $type One of: bila, task, follow-up, note.
+     * @param string        $type One of: meeting, task, follow-up, note.
      * @return JsonResponse
      */
     public function create(Request $request, CalendarEvent $calendarEvent, string $type): JsonResponse
     {
-        $prefill = $this->service->buildPrefillData($calendarEvent, $type);
-        $data    = array_merge($prefill, $request->except(['team_member_name']));
-        unset($data['team_member_name']);
-
-        if ($type === 'bila' && empty($data['team_member_id'])) {
-            return $this->errorResponse(
-                'Cannot create a Bila: no matching team member found from the event attendees.',
-                statusCode: 422,
-            );
+        try {
+            $prefill = $this->service->buildPrefillData($calendarEvent, $type);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), statusCode: 422);
         }
 
+        $data = array_merge($prefill, $request->except(['team_member_name']));
+        unset($data['team_member_name']);
+
         $resource = match ($type) {
-            'bila' => Bila::create([
-                'team_member_id' => $data['team_member_id'],
-                'scheduled_date' => $data['scheduled_date'],
-            ]),
+            'meeting' => $this->createMeeting($data),
             'task' => Task::create([
                 'title'          => $data['title'],
                 'deadline'       => $data['deadline'] ?? null,
@@ -104,8 +103,8 @@ class CalendarActionController extends Controller
             return $this->errorResponse("Invalid resource type: {$type}", statusCode: 400);
         }
 
-        if ($type === 'bila' && class_exists(BilaScheduled::class)) {
-            event(new BilaScheduled($resource));
+        if ($type === 'meeting') {
+            event(new MeetingScheduled($resource));
         }
 
         $link = $this->service->linkResource($calendarEvent, $resource);
@@ -136,5 +135,26 @@ class CalendarActionController extends Controller
         $calendarEventLink->delete();
 
         return $this->successResponse(null, 'Link removed.');
+    }
+
+    /**
+     * Create a meeting from pre-fill data and attach the attendee.
+     *
+     * @param array<string, mixed> $data
+     * @return Meeting
+     */
+    private function createMeeting(array $data): Meeting
+    {
+        $meeting = Meeting::create([
+            'title' => $data['title'] ?? 'Meeting',
+            'type' => $data['type'] ?? 'one_on_one',
+            'scheduled_at' => $data['scheduled_at'],
+        ]);
+
+        if (!empty($data['team_member_id'])) {
+            $meeting->attendees()->attach($data['team_member_id']);
+        }
+
+        return $meeting;
     }
 }

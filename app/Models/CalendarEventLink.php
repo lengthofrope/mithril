@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 /**
  * CalendarEventLink model representing a polymorphic link between a calendar event and a resource.
  *
- * A calendar event can be linked to multiple resources of different types (Bila, Task, FollowUp, Note).
+ * A calendar event can be linked to multiple resources of different types (Meeting, Task, FollowUp, Note).
  * This model intentionally does not use BelongsToUser — it is scoped through the CalendarEvent.
  *
  * @property int    $id
@@ -48,7 +48,7 @@ class CalendarEventLink extends Model
     }
 
     /**
-     * Get the linked resource (Bila, Task, FollowUp, or Note).
+     * Get the linked resource (Meeting, Task, FollowUp, or Note).
      *
      * @return MorphTo<Model, CalendarEventLink>
      */

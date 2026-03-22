@@ -6,7 +6,7 @@ use App\Enums\FollowUpStatus;
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
 use App\Models\AnalyticsSnapshot;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\CalendarEvent;
 use App\Models\CalendarEventLink;
 use App\Models\FollowUp;
@@ -126,17 +126,15 @@ test('analytics snapshots are never deleted', function () {
     $this->assertDatabaseCount('analytics_snapshots', 1);
 });
 
-test('bilas are never pruned by retention period', function () {
-    $member = TeamMember::factory()->create(['user_id' => $this->user->id]);
-    Bila::factory()->create([
+test('meetings are never pruned by retention period', function () {
+    Meeting::factory()->create([
         'user_id' => $this->user->id,
-        'team_member_id' => $member->id,
         'updated_at' => now()->subDays(90),
     ]);
 
     $this->service->pruneForUser($this->user);
 
-    $this->assertDatabaseCount('bilas', 1);
+    $this->assertDatabaseCount('meetings', 1);
 });
 
 test('agreements are never pruned by retention period', function () {

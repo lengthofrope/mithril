@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\User;
@@ -37,7 +37,7 @@ test('counters endpoint returns standard api response with all counter keys', fu
                 'urgent_tasks',
                 'overdue_follow_ups',
                 'today_follow_ups',
-                'bilas_this_week',
+                'meetings_this_week',
             ],
         ]);
 });
@@ -53,7 +53,7 @@ test('counters endpoint returns zero counts when no data exists', function () {
     expect($data['urgent_tasks'])->toBe(0);
     expect($data['overdue_follow_ups'])->toBe(0);
     expect($data['today_follow_ups'])->toBe(0);
-    expect($data['bilas_this_week'])->toBe(0);
+    expect($data['meetings_this_week'])->toBe(0);
 });
 
 test('counters endpoint counts open tasks correctly', function () {
@@ -106,19 +106,19 @@ test('counters endpoint counts today follow-ups correctly', function () {
     expect($response->json('data.today_follow_ups'))->toBe(1);
 });
 
-test('counters endpoint counts bilas this week correctly', function () {
+test('counters endpoint counts meetings this week correctly', function () {
     /** @var \Tests\TestCase $this */
     $this->travelTo(Carbon::create(2026, 3, 4, 10, 0, 0));
     $user = User::factory()->create();
 
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addDay()]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now()->addWeeks(2)]);
-    Bila::factory()->create(['user_id' => $user->id, 'scheduled_date' => now(), 'is_done' => true]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addDay()]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now()->addWeeks(2)]);
+    Meeting::factory()->create(['user_id' => $user->id, 'scheduled_at' => now(), 'is_done' => true]);
 
     $response = $this->actingAs($user)->getJson('/api/v1/counters');
 
-    expect($response->json('data.bilas_this_week'))->toBe(2);
+    expect($response->json('data.meetings_this_week'))->toBe(2);
 });
 
 test('counters endpoint requires authentication', function () {

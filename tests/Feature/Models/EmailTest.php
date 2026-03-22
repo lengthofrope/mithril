@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Enums\EmailImportance;
-use App\Models\Bila;
 use App\Models\Email;
 use App\Models\EmailLink;
 use App\Models\FollowUp;

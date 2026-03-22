@@ -123,6 +123,25 @@ test('new occurrence inherits recurrence_series_id from completed task', functio
     ]);
 });
 
+test('marking a recurring task as Done via Eloquent creates exactly one new occurrence', function () {
+    $user = User::factory()->create();
+    $task = Task::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Integration recurrence test',
+        'is_recurring' => true,
+        'recurrence_interval' => RecurrenceInterval::Weekly,
+        'deadline' => Carbon::parse('2026-03-14'),
+        'status' => TaskStatus::Open,
+    ]);
+
+    $initialCount = Task::count();
+
+    $task->update(['status' => TaskStatus::Done]);
+
+    expect(Task::count())->toBe($initialCount + 1)
+        ->and(Task::where('recurrence_parent_id', $task->id)->count())->toBe(1);
+});
+
 test('new occurrence user_id matches the completed task user_id', function () {
     $user = User::factory()->create();
     $task = Task::factory()->create([

@@ -126,7 +126,7 @@
                 x-data="{
                     tasks: '{{ $user->dashboard_upcoming_tasks ?? 5 }}',
                     followUps: '{{ $user->dashboard_upcoming_follow_ups ?? 5 }}',
-                    bilas: '{{ $user->dashboard_upcoming_bilas ?? 5 }}',
+                    meetings: '{{ $user->dashboard_upcoming_meetings ?? 5 }}',
                     saving: false,
                     saved: false,
                     error: '',
@@ -145,7 +145,7 @@
                                 body: JSON.stringify({
                                     dashboard_upcoming_tasks: this.tasks === '' ? null : parseInt(this.tasks),
                                     dashboard_upcoming_follow_ups: this.followUps === '' ? null : parseInt(this.followUps),
-                                    dashboard_upcoming_bilas: this.bilas === '' ? null : parseInt(this.bilas),
+                                    dashboard_upcoming_meetings: this.meetings === '' ? null : parseInt(this.meetings),
                                 }),
                             });
                             if (response.ok) {
@@ -200,12 +200,12 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-4">
-                    <label for="dashboard-upcoming-bilas" class="text-sm font-medium text-gray-800 dark:text-white/90">Bilas</label>
+                    <label for="dashboard-upcoming-meetings" class="text-sm font-medium text-gray-800 dark:text-white/90">Meetings</label>
                     <div class="flex items-center gap-2">
                         <input
-                            id="dashboard-upcoming-bilas"
+                            id="dashboard-upcoming-meetings"
                             type="number"
-                            x-model="bilas"
+                            x-model="meetings"
                             x-on:change="save()"
                             min="0"
                             max="20"

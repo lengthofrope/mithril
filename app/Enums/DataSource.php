@@ -21,6 +21,7 @@ enum DataSource: string
     case TasksOverTime = 'tasks_over_time';
     case TaskActivity = 'task_activity';
     case FollowUpsOverTime = 'follow_ups_over_time';
+    case MeetingsByType = 'meetings_by_type';
 
     /**
      * Returns the human-readable display label for this data source.
@@ -42,6 +43,7 @@ enum DataSource: string
             self::TasksOverTime      => 'Tasks Over Time',
             self::TaskActivity       => 'Task Activity',
             self::FollowUpsOverTime  => 'Follow-ups Over Time',
+            self::MeetingsByType     => 'Meetings by Type',
         };
     }
 
@@ -63,7 +65,8 @@ enum DataSource: string
                 ChartType::Bar,
                 ChartType::BarHorizontal,
             ],
-            self::TasksByMember => [
+            self::TasksByMember,
+            self::MeetingsByType => [
                 ChartType::Bar,
                 ChartType::BarHorizontal,
             ],

@@ -42,7 +42,7 @@
                         <p class="text-lg font-semibold text-purple-700 dark:text-purple-400">
                             {{ $weekStats['bilas_held'] ?? 0 }}
                         </p>
-                        <p class="text-[0.65rem] leading-tight text-purple-600 dark:text-purple-500">Bilas</p>
+                        <p class="text-[0.65rem] leading-tight text-purple-600 dark:text-purple-500">Meetings</p>
                     </div>
                     <div class="rounded-lg bg-teal-50 p-2.5 text-center dark:bg-teal-500/10">
                         <p class="text-lg font-semibold text-teal-700 dark:text-teal-400">

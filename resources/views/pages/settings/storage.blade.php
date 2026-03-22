@@ -18,14 +18,14 @@
             \App\Models\Task::class => 'Task',
             \App\Models\FollowUp::class => 'Follow-up',
             \App\Models\Note::class => 'Note',
-            \App\Models\Bila::class => 'Bila',
+            \App\Models\Meeting::class => 'Meeting',
         ];
 
         $parentRouteNames = [
             \App\Models\Task::class => 'tasks.show',
             \App\Models\FollowUp::class => 'follow-ups.show',
             \App\Models\Note::class => 'notes.show',
-            \App\Models\Bila::class => 'bilas.show',
+            \App\Models\Meeting::class => 'meetings.show',
         ];
 
         $getParentTitle = function ($activity) {
@@ -36,7 +36,7 @@
                 $parent instanceof \App\Models\Task => $parent->title,
                 $parent instanceof \App\Models\FollowUp => $parent->description,
                 $parent instanceof \App\Models\Note => $parent->title,
-                $parent instanceof \App\Models\Bila => 'Bila' . ($parent->scheduled_date ? ' — ' . $parent->scheduled_date->format('d M Y') : ''),
+                $parent instanceof \App\Models\Meeting => 'Meeting' . ($parent->scheduled_at ? ' — ' . $parent->scheduled_at->format('d M Y') : ''),
                 default => null,
             };
         };
@@ -83,8 +83,14 @@
                         ></div>
                     </div>
 
+                    @php
+                        $totalFiles = $attachments->count() + $recordings->count();
+                    @endphp
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ $attachments->count() }} {{ $attachments->count() === 1 ? 'file' : 'files' }} stored
+                        {{ $totalFiles }} {{ $totalFiles === 1 ? 'file' : 'files' }} stored
+                        @if($recordings->isNotEmpty())
+                            ({{ $recordings->count() }} {{ $recordings->count() === 1 ? 'recording' : 'recordings' }})
+                        @endif
                     </p>
                 </div>
             </div>
@@ -129,6 +135,51 @@
         </div>
 
         {{-- File list --}}
+        <div class="space-y-6">
+
+        {{-- Recordings --}}
+        @if($recordings->isNotEmpty())
+            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Recordings</h2>
+                </div>
+
+                <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                    @foreach($recordings as $recording)
+                        <div class="flex items-center gap-3 px-5 py-3">
+                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-red-50 dark:bg-red-500/10" aria-hidden="true">
+                                <svg class="h-4 w-4 text-red-500 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                </svg>
+                            </span>
+
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-medium text-gray-800 dark:text-white/90">
+                                    {{ $recording->original_filename ?? 'Recording' }}
+                                </p>
+                                <p class="truncate text-xs text-gray-400 dark:text-gray-500">
+                                    {{ number_format($recording->size_bytes / 1024 / 1024, 1) }} MB
+                                    · {{ $recording->created_at->diffForHumans() }}
+                                    @if($recording->duration_seconds)
+                                        · {{ floor($recording->duration_seconds / 60) }}:{{ str_pad((string) ($recording->duration_seconds % 60), 2, '0', STR_PAD_LEFT) }}
+                                    @endif
+                                </p>
+                                @if($recording->meeting)
+                                    <p class="mt-0.5 truncate text-xs text-gray-400 dark:text-gray-500">
+                                        Meeting:
+                                        <a href="{{ route('meetings.show', $recording->meeting) }}" class="text-brand-600 underline-offset-2 hover:underline dark:text-brand-400">
+                                            {{ $recording->meeting->title }}
+                                        </a>
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- Attachments --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Files</h2>
@@ -289,6 +340,8 @@
                 </div>
             @endif
         </div>
+
+        </div>{{-- end space-y-6 wrapper --}}
 
     </div>
 @endsection

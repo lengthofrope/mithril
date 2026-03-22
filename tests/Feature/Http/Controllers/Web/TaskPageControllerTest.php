@@ -588,6 +588,59 @@ test('task kanban overdue filter returns only overdue tasks', function () {
     $response->assertDontSee('Not overdue');
 });
 
+test('task index hides completed tasks by default', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $group = TaskGroup::factory()->create(['user_id' => $user->id]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Open task', 'status' => TaskStatus::Open, 'task_group_id' => $group->id]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Done task', 'status' => TaskStatus::Done, 'task_group_id' => $group->id]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('Open task');
+    $response->assertDontSee('Done task');
+});
+
+test('task index shows completed tasks when show_completed filter is active', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $group = TaskGroup::factory()->create(['user_id' => $user->id]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Open task', 'status' => TaskStatus::Open, 'task_group_id' => $group->id]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Done task', 'status' => TaskStatus::Done, 'task_group_id' => $group->id]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks?show_completed=1', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('Open task');
+    $response->assertSee('Done task');
+});
+
+test('task index hides completed ungrouped tasks by default', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Open ungrouped', 'status' => TaskStatus::Open, 'task_group_id' => null]);
+    Task::factory()->create(['user_id' => $user->id, 'title' => 'Done ungrouped', 'status' => TaskStatus::Done, 'task_group_id' => null]);
+
+    $response = $this->actingAs($user)
+        ->get('/tasks', [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'text/html',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('Open ungrouped');
+    $response->assertDontSee('Done ungrouped');
+});
+
 test('task kanban filters by is_private', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();

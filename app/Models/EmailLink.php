@@ -50,7 +50,7 @@ class EmailLink extends Model
     }
 
     /**
-     * Get the linked resource (Task, FollowUp, Note, or Bila).
+     * Get the linked resource (Task, FollowUp, Note, or Meeting).
      *
      * @return MorphTo<Model, EmailLink>
      */
