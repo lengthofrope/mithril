@@ -1068,6 +1068,71 @@
                         return Math.min(95, Math.round((this.diarizationElapsedSeconds / this.estimatedDiarizationSeconds) * 100));
                     },
 
+                    get totalPhases() {
+                        return this.diarizationEnabled ? 2 : 1;
+                    },
+
+                    get currentPhase() {
+                        if (this.status === 'pending' || this.status === 'processing') return 1;
+                        if (this.isDiarizing) return 2;
+                        return null;
+                    },
+
+                    get currentPhaseLabel() {
+                        if (this.status === 'pending') return 'Waiting to start transcription…';
+                        if (this.status === 'processing') return 'Transcribing audio…';
+                        if (this.isDiarizing) return 'Identifying speakers…';
+                        return '';
+                    },
+
+                    get currentElapsedSeconds() {
+                        return this.currentPhase === 2 ? this.diarizationElapsedSeconds : this.elapsedSeconds;
+                    },
+
+                    get currentEstimatedSeconds() {
+                        return this.currentPhase === 2 ? this.estimatedDiarizationSeconds : this.estimatedDurationSeconds;
+                    },
+
+                    get currentProgressPercent() {
+                        return this.currentPhase === 2 ? this.diarizationProgressPercent : this.progressPercent;
+                    },
+
+                    get currentStartedAt() {
+                        return this.currentPhase === 2 ? this.diarizationStartedAt : this.processingStartedAt;
+                    },
+
+                    get isProcessing() {
+                        return this.currentPhase !== null;
+                    },
+
+                    get totalEstimatedSeconds() {
+                        const transcription = this.estimatedDurationSeconds || 0;
+                        const diarization = this.diarizationEnabled ? (this.estimatedDiarizationSeconds || 0) : 0;
+                        return transcription + diarization || null;
+                    },
+
+                    get totalElapsedSeconds() {
+                        if (this.currentPhase === 1) {
+                            return this.elapsedSeconds;
+                        }
+                        if (this.currentPhase === 2) {
+                            const phase1 = this.estimatedDurationSeconds || this.elapsedSeconds;
+                            return phase1 + this.diarizationElapsedSeconds;
+                        }
+                        return 0;
+                    },
+
+                    get totalRemainingSeconds() {
+                        if (!this.totalEstimatedSeconds) return null;
+                        const remaining = this.totalEstimatedSeconds - this.totalElapsedSeconds;
+                        return Math.max(0, remaining);
+                    },
+
+                    get overallProgressPercent() {
+                        if (!this.totalEstimatedSeconds) return null;
+                        return Math.min(95, Math.round((this.totalElapsedSeconds / this.totalEstimatedSeconds) * 100));
+                    },
+
                     startDiarizationTimer() {
                         this.stopDiarizationTimer();
                         if (!this.diarizationStartedAt) return;
@@ -1294,35 +1359,42 @@
                 </div>
 
                 <div class="p-5">
-                    {{-- Pending / Processing --}}
-                    <template x-if="status === 'pending' || status === 'processing'">
+                    {{-- Unified processing progress --}}
+                    <template x-if="isProcessing">
                         <div class="space-y-3">
                             <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                                 <svg class="h-4 w-4 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                 </svg>
-                                <span x-text="status === 'pending' ? 'Waiting to start transcription…' : 'Transcribing audio…'"></span>
+                                <span>
+                                    <span x-show="totalPhases > 1" class="font-medium" x-text="'Step ' + currentPhase + '/' + totalPhases + ': '"></span>
+                                    <span x-text="currentPhaseLabel"></span>
+                                </span>
                             </div>
 
-                            <template x-if="status === 'processing' && processingStartedAt">
+                            {{-- Overall progress bar (weighted by estimates) --}}
+                            <template x-if="overallProgressPercent !== null">
                                 <div class="space-y-2">
-                                    <template x-if="progressPercent !== null">
-                                        <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                                            <div
-                                                class="h-1.5 rounded-full bg-brand-500 transition-all duration-1000"
-                                                :style="'width: ' + progressPercent + '%'"
-                                            ></div>
-                                        </div>
-                                    </template>
-                                    <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500">
-                                        <span x-text="'Elapsed: ' + formatDuration(elapsedSeconds)"></span>
-                                        <template x-if="estimatedDurationSeconds">
-                                            <span x-text="elapsedSeconds < estimatedDurationSeconds
-                                                ? 'Est. remaining: ~' + formatDuration(estimatedDurationSeconds - elapsedSeconds)
-                                                : 'Taking longer than expected…'"></span>
-                                        </template>
+                                    <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                        <div
+                                            class="h-2 rounded-full bg-brand-500 transition-all duration-1000"
+                                            :style="'width: ' + overallProgressPercent + '%'"
+                                        ></div>
                                     </div>
+                                    <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+                                        <span x-text="'Elapsed: ' + formatDuration(currentElapsedSeconds)"></span>
+                                        <span x-text="totalRemainingSeconds > 0
+                                            ? 'Est. remaining: ~' + formatDuration(totalRemainingSeconds)
+                                            : 'Taking longer than expected…'"></span>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- Fallback: show elapsed only when no estimate available --}}
+                            <template x-if="overallProgressPercent === null && currentStartedAt">
+                                <div class="text-xs text-gray-400 dark:text-gray-500">
+                                    <span x-text="'Elapsed: ' + formatDuration(currentElapsedSeconds)"></span>
                                 </div>
                             </template>
                         </div>
@@ -1333,40 +1405,6 @@
                         <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
                             <p class="font-medium">Transcription failed</p>
                             <p class="mt-1 text-xs" x-text="errorMessage"></p>
-                        </div>
-                    </template>
-
-                    {{-- Diarizing speakers --}}
-                    <template x-if="status === 'completed' && isDiarizing && !showManualInput">
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                                <svg class="h-4 w-4 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
-                                <span>Identifying speakers…</span>
-                            </div>
-
-                            <template x-if="diarizationStartedAt">
-                                <div class="space-y-2">
-                                    <template x-if="diarizationProgressPercent !== null">
-                                        <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                                            <div
-                                                class="h-1.5 rounded-full bg-brand-500 transition-all duration-1000"
-                                                :style="'width: ' + diarizationProgressPercent + '%'"
-                                            ></div>
-                                        </div>
-                                    </template>
-                                    <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500">
-                                        <span x-text="'Elapsed: ' + formatDuration(diarizationElapsedSeconds)"></span>
-                                        <template x-if="estimatedDiarizationSeconds">
-                                            <span x-text="diarizationElapsedSeconds < estimatedDiarizationSeconds
-                                                ? 'Est. remaining: ~' + formatDuration(estimatedDiarizationSeconds - diarizationElapsedSeconds)
-                                                : 'Taking longer than expected…'"></span>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
                         </div>
                     </template>
 
