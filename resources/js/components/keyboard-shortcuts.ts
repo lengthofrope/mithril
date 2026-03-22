@@ -21,7 +21,7 @@ const SHORTCUT_ROUTES: ShortcutRoutes = {
     '3': '/follow-ups',
     '4': '/teams',
     '5': '/notes',
-    '6': '/bilas',
+    '6': '/meetings',
     '7': '/weekly',
 };
 

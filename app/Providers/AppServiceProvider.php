@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Events\BilaScheduled;
-use App\Events\TaskStatusChanged;
-use App\Listeners\CreateFollowUpOnWaiting;
-use App\Listeners\CreateRecurringTaskOccurrence;
-use App\Listeners\ScheduleNextBila;
-use App\Models\Bila;
+use App\Services\MeetingInsights\MeetingInsightExtractorInterface;
+use App\Services\MeetingInsights\OpenAiInsightExtractor;
+use App\Services\MeetingInsights\AnthropicInsightExtractor;
+use App\Services\MeetingInsights\OpenRouterInsightExtractor;
+use App\Services\Diarization\DiarizationServiceInterface;
+use App\Services\Diarization\PyAnnoteDiarizationService;
+use App\Services\Transcription\TranscriptionServiceInterface;
+use App\Services\Transcription\WhisperCppTranscriptionService;
+use App\Services\Transcription\WhisperTranscriptionService;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Task;
 use App\Observers\ActivityObserver;
 use App\Observers\TaskObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -34,6 +37,37 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(MeetingInsightExtractorInterface::class, function (): MeetingInsightExtractorInterface {
+            $apiKey = config('ai.api_key') ?? '';
+            $model = config('ai.model') ?? 'gpt-4o-mini';
+
+            $provider = config('ai.provider') ?? 'openai';
+
+            return match ($provider) {
+                'openai' => new OpenAiInsightExtractor(apiKey: $apiKey, model: $model),
+                'openrouter' => new OpenRouterInsightExtractor(apiKey: $apiKey, model: $model),
+                'anthropic' => new AnthropicInsightExtractor(apiKey: $apiKey, model: $model),
+                default => throw new \InvalidArgumentException("Unsupported AI provider: {$provider}"),
+            };
+        });
+
+        $this->app->bind(DiarizationServiceInterface::class, function (): DiarizationServiceInterface {
+            return new PyAnnoteDiarizationService(
+                baseUrl: config('meetings.diarization.pyannote.base_url') ?? 'http://localhost:8081',
+            );
+        });
+
+        $this->app->bind(TranscriptionServiceInterface::class, function (): TranscriptionServiceInterface {
+            return match (config('meetings.transcription.provider')) {
+                'whisper' => new WhisperTranscriptionService(
+                    apiKey: config('meetings.transcription.whisper.api_key') ?? '',
+                    model: config('meetings.transcription.whisper.model') ?? 'whisper-1',
+                ),
+                default => new WhisperCppTranscriptionService(
+                    baseUrl: config('meetings.transcription.whisper_cpp.base_url') ?? 'http://localhost:8080',
+                ),
+            };
+        });
     }
 
     /**
@@ -46,11 +80,7 @@ class AppServiceProvider extends ServiceProvider
         Task::observe(TaskObserver::class);
         Task::observe(ActivityObserver::class);
         FollowUp::observe(ActivityObserver::class);
-        Bila::observe(ActivityObserver::class);
-
-        Event::listen(TaskStatusChanged::class, CreateFollowUpOnWaiting::class);
-        Event::listen(TaskStatusChanged::class, CreateRecurringTaskOccurrence::class);
-        Event::listen(BilaScheduled::class, ScheduleNextBila::class);
+        Meeting::observe(ActivityObserver::class);
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
     }

@@ -5,10 +5,10 @@ declare(strict_types=1);
 use App\Enums\ChartType;
 use App\Enums\DataSource;
 
-test('data source enum has exactly 12 cases', function () {
+test('data source enum has exactly 13 cases', function () {
     $cases = DataSource::cases();
 
-    expect($cases)->toHaveCount(12);
+    expect($cases)->toHaveCount(13);
 
     $names = array_map(fn ($case) => $case->name, $cases);
     expect($names)->toContain('TasksByStatus')

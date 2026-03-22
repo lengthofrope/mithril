@@ -203,14 +203,14 @@ test('updateDashboardWidgets saves all three values', function () {
     $response = $this->actingAs($user)->patchJson('/settings/dashboard-widgets', [
         'dashboard_upcoming_tasks' => 5,
         'dashboard_upcoming_follow_ups' => 3,
-        'dashboard_upcoming_bilas' => 2,
+        'dashboard_upcoming_meetings' => 2,
     ]);
 
     $response->assertOk()->assertJson(['success' => true]);
     $user->refresh();
     expect($user->dashboard_upcoming_tasks)->toBe(5);
     expect($user->dashboard_upcoming_follow_ups)->toBe(3);
-    expect($user->dashboard_upcoming_bilas)->toBe(2);
+    expect($user->dashboard_upcoming_meetings)->toBe(2);
 });
 
 test('updateDashboardWidgets accepts null values to disable upcoming', function () {
@@ -218,20 +218,20 @@ test('updateDashboardWidgets accepts null values to disable upcoming', function 
     $user = User::factory()->create([
         'dashboard_upcoming_tasks' => 5,
         'dashboard_upcoming_follow_ups' => 3,
-        'dashboard_upcoming_bilas' => 2,
+        'dashboard_upcoming_meetings' => 2,
     ]);
 
     $response = $this->actingAs($user)->patchJson('/settings/dashboard-widgets', [
         'dashboard_upcoming_tasks' => null,
         'dashboard_upcoming_follow_ups' => null,
-        'dashboard_upcoming_bilas' => null,
+        'dashboard_upcoming_meetings' => null,
     ]);
 
     $response->assertOk()->assertJson(['success' => true]);
     $user->refresh();
     expect($user->dashboard_upcoming_tasks)->toBeNull();
     expect($user->dashboard_upcoming_follow_ups)->toBeNull();
-    expect($user->dashboard_upcoming_bilas)->toBeNull();
+    expect($user->dashboard_upcoming_meetings)->toBeNull();
 });
 
 test('updateDashboardWidgets validates max value is 20', function () {

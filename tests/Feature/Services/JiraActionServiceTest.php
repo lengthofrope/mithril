@@ -183,7 +183,7 @@ test('buildPrefillData returns correct note prefill', function (): void {
     expect($data['content'])->toBe('Some description text');
 });
 
-test('buildPrefillData returns correct bila prefill with team member', function (): void {
+test('buildPrefillData returns correct meeting prefill with team member', function (): void {
     $member = TeamMember::factory()->create([
         'user_id'          => $this->user->id,
         'jira_account_id'  => 'jira-acc-123',
@@ -194,18 +194,18 @@ test('buildPrefillData returns correct bila prefill with team member', function 
         'assignee_account_id' => 'jira-acc-123',
     ]);
 
-    $data = $this->service->buildPrefillData($issue, 'bila');
+    $data = $this->service->buildPrefillData($issue, 'meeting');
 
     expect($data['prep_item_content'])->toBe('Discuss architecture');
     expect($data['team_member_id'])->toBe($member->id);
 });
 
-test('buildPrefillData throws for bila without team member match', function (): void {
+test('buildPrefillData throws for meeting without team member match', function (): void {
     $issue = JiraIssue::factory()->for($this->user)->create([
         'assignee_account_id' => 'no-match-acc',
     ]);
 
-    $this->service->buildPrefillData($issue, 'bila');
+    $this->service->buildPrefillData($issue, 'meeting');
 })->throws(\InvalidArgumentException::class);
 
 test('linkResource creates a JiraIssueLink', function (): void {

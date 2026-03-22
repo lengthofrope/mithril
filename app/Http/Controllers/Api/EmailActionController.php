@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\BilaScheduled;
+use App\Events\MeetingScheduled;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
-use App\Models\Bila;
-use App\Models\BilaPrepItem;
 use App\Models\Email;
 use App\Models\EmailLink;
 use App\Models\FollowUp;
+use App\Models\Meeting;
+use App\Models\MeetingPrepItem;
 use App\Models\Note;
 use App\Models\Task;
 use App\Services\EmailActionService;
@@ -123,7 +123,7 @@ class EmailActionController extends Controller
         unset($data['team_member_name']);
 
         $resource = match ($type) {
-            'bila' => $this->createBila($email, $data),
+            'meeting' => $this->createMeeting($email, $data),
             'task' => Task::create([
                 'title'          => $data['title'],
                 'priority'       => $data['priority'] ?? null,
@@ -175,46 +175,51 @@ class EmailActionController extends Controller
     }
 
     /**
-     * Create a Bila resource from an email.
+     * Create a Meeting resource from an email.
      *
-     * If an upcoming Bila exists for the team member, adds a prep item instead.
+     * If an upcoming meeting exists for the team member, adds a prep item instead.
      *
-     * @param Email              $email The source email.
-     * @param array<string, mixed> $data The merged prefill + request data.
-     * @return Bila The created or existing Bila.
+     * @param Email                $email The source email.
+     * @param array<string, mixed> $data  The merged prefill + request data.
+     * @return Meeting The created or existing Meeting.
      */
-    private function createBila(Email $email, array $data): Bila
+    private function createMeeting(Email $email, array $data): Meeting
     {
-        $existingBila = Bila::query()
-            ->where('team_member_id', $data['team_member_id'])
-            ->where('is_done', false)
-            ->where('scheduled_date', '>=', now()->toDateString())
-            ->orderBy('scheduled_date')
-            ->first();
+        $existingMeeting = !empty($data['team_member_id'])
+            ? Meeting::query()
+                ->whereHas('attendees', fn ($q) => $q->where('team_member_id', $data['team_member_id']))
+                ->where('is_done', false)
+                ->where('scheduled_at', '>=', now())
+                ->orderBy('scheduled_at')
+                ->first()
+            : null;
 
-        if ($existingBila) {
-            BilaPrepItem::create([
-                'bila_id' => $existingBila->id,
+        if ($existingMeeting) {
+            MeetingPrepItem::create([
+                'meeting_id' => $existingMeeting->id,
                 'content' => $data['prep_item_content'] ?? $email->subject,
             ]);
 
-            return $existingBila;
+            return $existingMeeting;
         }
 
-        $bila = Bila::create([
-            'team_member_id' => $data['team_member_id'],
-            'scheduled_date' => now()->addDays(7)->toDateString(),
+        $meeting = Meeting::create([
+            'title' => $email->subject ?? 'Meeting',
+            'type' => 'one_on_one',
+            'scheduled_at' => now()->addDays(7),
         ]);
 
-        BilaPrepItem::create([
-            'bila_id' => $bila->id,
+        if (!empty($data['team_member_id'])) {
+            $meeting->attendees()->attach($data['team_member_id']);
+        }
+
+        MeetingPrepItem::create([
+            'meeting_id' => $meeting->id,
             'content' => $data['prep_item_content'] ?? $email->subject,
         ]);
 
-        if (class_exists(BilaScheduled::class)) {
-            event(new BilaScheduled($bila));
-        }
+        event(new MeetingScheduled($meeting));
 
-        return $bila;
+        return $meeting;
     }
 }

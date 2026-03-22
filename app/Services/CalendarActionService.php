@@ -76,7 +76,7 @@ class CalendarActionService
      * expected input fields. Throws if an unsupported resource type is given.
      *
      * @param CalendarEvent $event        The source calendar event.
-     * @param string        $resourceType One of: bila, task, follow-up, note.
+     * @param string        $resourceType One of: meeting, task, follow-up, note.
      * @return array<string, mixed> Pre-fill data keyed by field name.
      * @throws \InvalidArgumentException When resourceType is not supported.
      */
@@ -90,9 +90,13 @@ class CalendarActionService
         ];
 
         return match ($resourceType) {
-            'bila' => array_merge($base, [
-                'scheduled_date' => $event->start_at->toDateString(),
-            ]),
+            'meeting' => $teamMember !== null
+                ? array_merge($base, [
+                    'title'        => $event->subject,
+                    'type'         => 'one_on_one',
+                    'scheduled_at' => $event->start_at->toIso8601String(),
+                ])
+                : throw new \InvalidArgumentException('no matching team member'),
             'task' => array_merge($base, [
                 'title'    => $event->subject,
                 'deadline' => $event->start_at->toDateString(),
@@ -114,7 +118,7 @@ class CalendarActionService
      * Uses firstOrCreate to prevent duplicate links for the same event/resource pair.
      *
      * @param CalendarEvent $event    The calendar event to link from.
-     * @param Model         $resource The resource to link to (Bila, Task, FollowUp, or Note).
+     * @param Model         $resource The resource to link to (Meeting, Task, FollowUp, or Note).
      * @return CalendarEventLink The existing or newly created link.
      */
     public function linkResource(CalendarEvent $event, Model $resource): CalendarEventLink

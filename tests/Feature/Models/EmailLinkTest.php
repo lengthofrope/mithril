@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\Email;
 use App\Models\EmailLink;
 use App\Models\FollowUp;
@@ -58,17 +58,17 @@ describe('EmailLink model', function (): void {
             ->and($link->linkable->id)->toBe($note->id);
     });
 
-    it('morphs to a bila', function (): void {
-        $user  = User::factory()->create();
-        $email = Email::factory()->create(['user_id' => $user->id]);
-        $bila  = Bila::factory()->create(['user_id' => $user->id]);
+    it('morphs to a meeting', function (): void {
+        $user    = User::factory()->create();
+        $email   = Email::factory()->create(['user_id' => $user->id]);
+        $meeting = Meeting::factory()->create(['user_id' => $user->id]);
 
-        $link = EmailLink::factory()->forBila($bila)->create([
+        $link = EmailLink::factory()->forMeeting($meeting)->create([
             'email_id' => $email->id,
         ]);
 
-        expect($link->linkable)->toBeInstanceOf(Bila::class)
-            ->and($link->linkable->id)->toBe($bila->id);
+        expect($link->linkable)->toBeInstanceOf(Meeting::class)
+            ->and($link->linkable->id)->toBe($meeting->id);
     });
 
     it('sets email_id to NULL when email is deleted (SET NULL)', function (): void {

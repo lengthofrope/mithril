@@ -14,6 +14,7 @@ use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -31,8 +32,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property StatusSource $status_source
  * @property \Illuminate\Support\Carbon|null $status_synced_at
  * @property string|null $avatar_path
- * @property int $bila_interval_days
- * @property \Illuminate\Support\Carbon|null $next_bila_date
+ * @property int $meeting_interval_days
+ * @property \Illuminate\Support\Carbon|null $next_meeting_date
  * @property int $sort_order
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
@@ -63,8 +64,8 @@ class TeamMember extends Model
         'status_source',
         'status_synced_at',
         'avatar_path',
-        'bila_interval_days',
-        'next_bila_date',
+        'meeting_interval_days',
+        'next_meeting_date',
         'sort_order',
     ];
 
@@ -96,7 +97,7 @@ class TeamMember extends Model
             'status' => MemberStatus::class,
             'status_source' => StatusSource::class,
             'status_synced_at' => 'datetime',
-            'next_bila_date' => 'date',
+            'next_meeting_date' => 'date',
         ];
     }
 
@@ -130,13 +131,14 @@ class TeamMember extends Model
 
 
     /**
-     * Get all bilas for this member.
+     * Get all meetings this member attends.
      *
-     * @return HasMany<Bila>
+     * @return BelongsToMany<Meeting>
      */
-    public function bilas(): HasMany
+    public function meetings(): BelongsToMany
     {
-        return $this->hasMany(Bila::class);
+        return $this->belongsToMany(Meeting::class, 'meeting_attendees')
+            ->withTimestamps();
     }
 
     /**
@@ -150,13 +152,13 @@ class TeamMember extends Model
     }
 
     /**
-     * Get all bila prep items for this member.
+     * Get all meeting prep items assigned to this member.
      *
-     * @return HasMany<BilaPrepItem>
+     * @return HasMany<MeetingPrepItem>
      */
-    public function bilaPrepItems(): HasMany
+    public function meetingPrepItems(): HasMany
     {
-        return $this->hasMany(BilaPrepItem::class);
+        return $this->hasMany(MeetingPrepItem::class);
     }
 
     /**

@@ -1,0 +1,38 @@
+x-common: &common
+  container_name: mithril-pyannote
+  restart: unless-stopped
+  ports:
+    - "${PYANNOTE_PORT:-8081}:8081"
+  volumes:
+    - pyannote-models:/models
+  environment:
+    - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+    - WHISPER_MODEL_SIZE=${WHISPER_MODEL_SIZE:-large-v3-turbo}
+    - MODEL_CACHE_DIR=/models
+
+services:
+  pyannote:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ["cpu"]
+
+  pyannote-gpu:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.cuda
+    profiles: ["cuda"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  pyannote-models:
+    name: pyannote_pyannote-models
+    external: true

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Enums\ActivityType;
 use App\Models\Activity;
 use App\Models\Attachment;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
@@ -193,19 +193,19 @@ describe('ActivityController', function (): void {
             ]);
         });
 
-        it('works with bila parent type', function (): void {
+        it('works with meeting parent type', function (): void {
             $user = User::factory()->create();
-            $bila = Bila::factory()->create(['user_id' => $user->id]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
 
-            $response = $this->actingAs($user)->postJson("/api/v1/bilas/{$bila->id}/activities", [
+            $response = $this->actingAs($user)->postJson("/api/v1/meetings/{$meeting->id}/activities", [
                 'type' => 'comment',
-                'body' => 'Comment on bila',
+                'body' => 'Comment on meeting',
             ]);
 
             $response->assertStatus(201);
             $this->assertDatabaseHas('activities', [
-                'activityable_type' => Bila::class,
-                'activityable_id' => $bila->id,
+                'activityable_type' => Meeting::class,
+                'activityable_id' => $meeting->id,
             ]);
         });
 

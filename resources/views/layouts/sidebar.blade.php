@@ -231,19 +231,33 @@
                                         </div>
                                     @else
                                         <!-- Simple Menu Item -->
+                                        @php
+                                            $viewPaths = $item['viewPaths'] ?? null;
+                                            $viewPref = $item['viewPreference'] ?? null;
+                                            $allPaths = $viewPaths ? array_values($viewPaths) : [$item['path']];
+                                            $activeExpr = count($allPaths) > 1
+                                                ? '(' . implode(' || ', array_map(fn ($p) => "isActive('{$p}')", $allPaths)) . ')'
+                                                : "isActive('{$allPaths[0]}')";
+                                        @endphp
                                         <div class="relative" x-data="{ tooltipOpen: false, tooltipY: 0 }">
-                                            <a href="{{ $item['path'] }}" class="menu-item group"
+                                            <a
+                                                @if($viewPref && $viewPaths)
+                                                    :href="(() => { const v = localStorage.getItem('{{ $viewPref }}'); return {{ json_encode($viewPaths) }}[v] || '{{ $item['path'] }}'; })()"
+                                                @else
+                                                    href="{{ $item['path'] }}"
+                                                @endif
+                                                class="menu-item group"
                                                 @mouseenter="if (!$store.sidebar.isExpanded && !$store.sidebar.isMobileOpen) { tooltipY = $el.getBoundingClientRect().top + $el.offsetHeight / 2; tooltipOpen = true; }"
                                                 @mouseleave="tooltipOpen = false"
                                                 :class="[
-                                                    isActive('{{ $item['path'] }}') ? 'menu-item-active' :
+                                                    {{ $activeExpr }} ? 'menu-item-active' :
                                                     'menu-item-inactive',
                                                     isCollapsed ? 'xl:justify-center' : 'justify-start'
                                                 ]">
 
                                                 <!-- Icon -->
                                                 <span
-                                                    :class="isActive('{{ $item['path'] }}') ? 'menu-item-icon-active' :
+                                                    :class="{{ $activeExpr }} ? 'menu-item-icon-active' :
                                                         'menu-item-icon-inactive'">
                                                     {!! MenuHelper::getIconSvg($item['icon']) !!}
                                                 </span>

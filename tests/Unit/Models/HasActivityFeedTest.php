@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\ActivityType;
 use App\Models\Activity;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
@@ -26,8 +26,8 @@ describe('HasActivityFeed trait', function (): void {
             expect(in_array(HasActivityFeed::class, class_uses_recursive(Note::class)))->toBeTrue();
         });
 
-        it('is used by Bila model', function (): void {
-            expect(in_array(HasActivityFeed::class, class_uses_recursive(Bila::class)))->toBeTrue();
+        it('is used by Meeting model', function (): void {
+            expect(in_array(HasActivityFeed::class, class_uses_recursive(Meeting::class)))->toBeTrue();
         });
     });
 

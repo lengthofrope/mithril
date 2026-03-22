@@ -184,7 +184,8 @@
             {{-- Actions --}}
             <div class="mt-4 flex items-center gap-3">
                 <a
-                    href="{{ route('tasks.index') }}"
+                    x-data
+                    :href="localStorage.getItem('tasks.view') === 'kanban' ? '{{ route('tasks.kanban') }}' : '{{ route('tasks.index') }}'"
                     class="text-sm text-blue-600 hover:underline dark:text-blue-400"
                 >
                     &larr; Back to tasks
@@ -343,7 +344,7 @@
                                         credentials: 'same-origin',
                                     });
                                     if (response.ok) {
-                                        window.location.href = '{{ route('tasks.index') }}';
+                                        window.location.href = localStorage.getItem('tasks.view') === 'kanban' ? '{{ route('tasks.kanban') }}' : '{{ route('tasks.index') }}';
                                     }
                                 } finally {
                                     this.isProcessing = false;

@@ -20,7 +20,7 @@ interface LinkTypeInfo {
 }
 
 const LINK_TYPE_MAP: Record<string, LinkTypeInfo> = {
-    'App\\Models\\Bila': { label: 'Bila', badge: 'B', urlPrefix: '/bilas/' },
+    'App\\Models\\Meeting': { label: 'Meeting', badge: 'M', urlPrefix: '/meetings/' },
     'App\\Models\\Task': { label: 'Task', badge: 'T', urlPrefix: '/tasks/' },
     'App\\Models\\FollowUp': { label: 'Follow-up', badge: 'F', urlPrefix: '/follow-ups/' },
     'App\\Models\\Note': { label: 'Note', badge: 'N', urlPrefix: '/notes/' },
@@ -51,11 +51,11 @@ function getCSRFToken(): string {
 /**
  * Alpine.js component for managing calendar event actions (create resources, view links).
  */
-function calendarEventActions(eventId: number, initialLinks: CalendarEventLink[] = [], canCreateBila: boolean = true): Record<string, unknown> {
+function calendarEventActions(eventId: number, initialLinks: CalendarEventLink[] = [], canCreateMeeting: boolean = true): Record<string, unknown> {
     return {
         eventId,
         links: initialLinks.map(mapLinkToBadge),
-        canCreateBila,
+        canCreateMeeting,
         menuOpen: false,
         isLoading: false,
         errorMessage: '',

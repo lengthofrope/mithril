@@ -11,8 +11,8 @@ use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Models\Activity;
 use App\Models\Agreement;
-use App\Models\Bila;
-use App\Models\BilaPrepItem;
+use App\Models\Meeting;
+use App\Models\MeetingPrepItem;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\NoteTag;
@@ -48,7 +48,7 @@ class DatabaseSeeder extends Seeder
         $tasks = $this->createTasks($teamAlpha, $teamBeta, $allMembers, $groups, $categories, $admin->id);
 
         $this->createFollowUps($tasks, $allMembers, $admin->id);
-        $this->createBilasWithPrepItems($allMembers, $admin->id);
+        $this->createMeetingsWithPrepItems($allMembers, $admin->id);
         $this->createAgreements($allMembers, $admin->id);
         $this->createNotes($teamAlpha, $teamBeta, $allMembers, $admin->id);
         $this->createWeeklyReflection($admin->id);
@@ -117,8 +117,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'Frontend Developer',
                 'email' => 'sarah@example.com',
                 'status' => MemberStatus::Available,
-                'bila_interval_days' => 14,
-                'next_bila_date' => now()->addDays(7)->toDateString(),
+                'meeting_interval_days' => 14,
+                'next_meeting_date' => now()->addDays(7)->toDateString(),
             ]),
             TeamMember::create([
                 'user_id' => $userId,
@@ -127,8 +127,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'Backend Developer',
                 'email' => 'marcus@example.com',
                 'status' => MemberStatus::Available,
-                'bila_interval_days' => 14,
-                'next_bila_date' => now()->addDays(3)->toDateString(),
+                'meeting_interval_days' => 14,
+                'next_meeting_date' => now()->addDays(3)->toDateString(),
             ]),
             TeamMember::create([
                 'user_id' => $userId,
@@ -137,8 +137,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'UX Designer',
                 'email' => 'priya@example.com',
                 'status' => MemberStatus::PartiallyAvailable,
-                'bila_interval_days' => 21,
-                'next_bila_date' => now()->addDays(14)->toDateString(),
+                'meeting_interval_days' => 21,
+                'next_meeting_date' => now()->addDays(14)->toDateString(),
             ]),
             TeamMember::create([
                 'user_id' => $userId,
@@ -147,8 +147,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'QA Engineer',
                 'email' => 'tom@example.com',
                 'status' => MemberStatus::Available,
-                'bila_interval_days' => 14,
-                'next_bila_date' => now()->addDays(5)->toDateString(),
+                'meeting_interval_days' => 14,
+                'next_meeting_date' => now()->addDays(5)->toDateString(),
             ]),
         ];
     }
@@ -170,8 +170,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'DevOps Engineer',
                 'email' => 'elena@example.com',
                 'status' => MemberStatus::Available,
-                'bila_interval_days' => 14,
-                'next_bila_date' => now()->addDays(2)->toDateString(),
+                'meeting_interval_days' => 14,
+                'next_meeting_date' => now()->addDays(2)->toDateString(),
             ]),
             TeamMember::create([
                 'user_id' => $userId,
@@ -180,8 +180,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'Data Engineer',
                 'email' => 'david@example.com',
                 'status' => MemberStatus::Absent,
-                'bila_interval_days' => 14,
-                'next_bila_date' => now()->addDays(10)->toDateString(),
+                'meeting_interval_days' => 14,
+                'next_meeting_date' => now()->addDays(10)->toDateString(),
             ]),
             TeamMember::create([
                 'user_id' => $userId,
@@ -190,8 +190,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'Systems Analyst',
                 'email' => 'fatima@example.com',
                 'status' => MemberStatus::Available,
-                'bila_interval_days' => 21,
-                'next_bila_date' => now()->addDays(6)->toDateString(),
+                'meeting_interval_days' => 21,
+                'next_meeting_date' => now()->addDays(6)->toDateString(),
             ]),
         ];
     }
@@ -440,19 +440,20 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Create bilas with prep items for a selection of members.
+     * Create meetings with prep items for a selection of members.
      *
      * @param list<TeamMember> $members
      * @param int $userId
      * @return void
      */
-    private function createBilasWithPrepItems(array $members, int $userId): void
+    private function createMeetingsWithPrepItems(array $members, int $userId): void
     {
-        $bilaData = [
+        $meetingData = [
             [
                 'member' => $members[0],
-                'date' => now()->subDays(14)->toDateString(),
-                'notes' => "# Sarah - Bila 1\n\nDiscussed frontend performance. Action: set up profiling tooling.\n\nMood: positive, engaged.",
+                'date' => now()->subDays(14),
+                'title' => '1-on-1 Sarah',
+                'notes' => "# Sarah - Meeting 1\n\nDiscussed frontend performance. Action: set up profiling tooling.\n\nMood: positive, engaged.",
                 'items' => [
                     ['content' => 'Review sprint velocity', 'is_discussed' => true],
                     ['content' => 'Address feedback from design review', 'is_discussed' => true],
@@ -461,8 +462,9 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'member' => $members[1],
-                'date' => now()->subDays(7)->toDateString(),
-                'notes' => "# Marcus - Bila 1\n\nTalked through auth service refactor scope.\n\nAction: create task breakdown by Friday.",
+                'date' => now()->subDays(7),
+                'title' => '1-on-1 Marcus',
+                'notes' => "# Marcus - Meeting 1\n\nTalked through auth service refactor scope.\n\nAction: create task breakdown by Friday.",
                 'items' => [
                     ['content' => 'Auth service scope and timeline', 'is_discussed' => true],
                     ['content' => 'Code review backlog', 'is_discussed' => true],
@@ -470,8 +472,9 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'member' => $members[4],
-                'date' => now()->subDays(3)->toDateString(),
-                'notes' => "# Elena - Bila 1\n\nCI/CD pipeline progress on track. Discussed staging rollout plan.",
+                'date' => now()->subDays(3),
+                'title' => '1-on-1 Elena',
+                'notes' => "# Elena - Meeting 1\n\nCI/CD pipeline progress on track. Discussed staging rollout plan.",
                 'items' => [
                     ['content' => 'CI/CD pipeline status update', 'is_discussed' => true],
                     ['content' => 'Grafana dashboard setup', 'is_discussed' => false],
@@ -480,7 +483,8 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'member' => $members[2],
-                'date' => now()->addDays(5)->toDateString(),
+                'date' => now()->addDays(5),
+                'title' => '1-on-1 Priya',
                 'notes' => null,
                 'items' => [
                     ['content' => 'Onboarding flow design progress', 'is_discussed' => false],
@@ -489,19 +493,22 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($bilaData as $data) {
-            $bila = Bila::create([
+        foreach ($meetingData as $data) {
+            $meeting = Meeting::create([
                 'user_id' => $userId,
-                'team_member_id' => $data['member']->id,
-                'scheduled_date' => $data['date'],
+                'title' => $data['title'],
+                'type' => 'one_on_one',
+                'scheduled_at' => $data['date'],
                 'notes' => $data['notes'],
             ]);
 
+            $meeting->attendees()->attach($data['member']->id);
+
             foreach ($data['items'] as $itemData) {
-                BilaPrepItem::create([
+                MeetingPrepItem::create([
                     'user_id' => $userId,
+                    'meeting_id' => $meeting->id,
                     'team_member_id' => $data['member']->id,
-                    'bila_id' => $bila->id,
                     'content' => $itemData['content'],
                     'is_discussed' => $itemData['is_discussed'],
                 ]);

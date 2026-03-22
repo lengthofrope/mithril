@@ -101,7 +101,7 @@ it('includes all expected navigation items', function (): void {
     expect($names)->toContain('Tasks');
     expect($names)->toContain('Follow-ups');
     expect($names)->toContain('Notes');
-    expect($names)->toContain("Bila's");
+    expect($names)->toContain('Meetings');
     expect($names)->toContain('Teams');
     expect($names)->toContain('Weekly Review');
     expect($names)->toContain('Analytics');

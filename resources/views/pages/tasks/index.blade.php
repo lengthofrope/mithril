@@ -1,55 +1,42 @@
 @extends('layouts.app')
 
 @section('content')
+    <div x-data x-init="localStorage.setItem('tasks.view', 'list')"></div>
     <x-common.page-breadcrumb pageTitle="Tasks" />
 
-    {{-- Filter bar --}}
-    <div class="mb-6">
-        <x-tl.filter-bar
-            :endpoint="route('tasks.index')"
-            results-selector="#tasks-results"
-            :filters="[
-                ['field' => 'search', 'type' => 'search', 'label' => 'Search'],
-                ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
-                ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
-                ['field' => 'task_category_id', 'type' => 'select', 'label' => 'Category', 'options' => $categoryOptions],
-                ['field' => 'status', 'type' => 'select', 'label' => 'Status', 'options' => [
-                    ['value' => 'open', 'label' => 'Open'],
-                    ['value' => 'in_progress', 'label' => 'In Progress'],
-                    ['value' => 'waiting', 'label' => 'Waiting'],
-                    ['value' => 'done', 'label' => 'Done'],
-                ]],
-                ['field' => 'priority', 'type' => 'select', 'label' => 'Priority', 'options' => [
-                    ['value' => 'urgent', 'label' => 'Urgent'],
-                    ['value' => 'high', 'label' => 'High'],
-                    ['value' => 'normal', 'label' => 'Normal'],
-                    ['value' => 'low', 'label' => 'Low'],
-                ]],
-                ['field' => 'task_group_id', 'type' => 'select', 'label' => 'Group', 'options' => $groupOptions],
-                ['field' => 'is_private', 'type' => 'boolean', 'label' => 'Private only'],
-                ['field' => 'overdue', 'type' => 'boolean', 'label' => 'Overdue'],
-                ['field' => 'is_recurring', 'type' => 'boolean', 'label' => 'Recurring'],
-            ]"
-        />
-    </div>
-
-    {{-- Toolbar --}}
+    {{-- Filter bar + toolbar --}}
     <div x-data="{ showAddGroup: false }" class="mb-4 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                {{-- Toggle completed --}}
-                <button
-                    type="button"
-                    x-on:click="$store.taskList.showCompleted = !$store.taskList.showCompleted"
-                    x-bind:aria-pressed="$store.taskList.showCompleted"
-                    class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800"
-                >
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                    </svg>
-                    <span x-text="$store.taskList.showCompleted ? 'Hide completed' : 'Show completed'">Show completed</span>
-                </button>
+        <div class="relative">
+            <x-tl.filter-bar
+                :endpoint="route('tasks.index')"
+                results-selector="#tasks-results"
+                :filters="[
+                    ['field' => 'search', 'type' => 'search', 'label' => 'Search'],
+                    ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
+                    ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
+                    ['field' => 'task_category_id', 'type' => 'select', 'label' => 'Category', 'options' => $categoryOptions],
+                    ['field' => 'status', 'type' => 'select', 'label' => 'Status', 'options' => [
+                        ['value' => 'open', 'label' => 'Open'],
+                        ['value' => 'in_progress', 'label' => 'In Progress'],
+                        ['value' => 'waiting', 'label' => 'Waiting'],
+                        ['value' => 'done', 'label' => 'Done'],
+                    ]],
+                    ['field' => 'priority', 'type' => 'select', 'label' => 'Priority', 'options' => [
+                        ['value' => 'urgent', 'label' => 'Urgent'],
+                        ['value' => 'high', 'label' => 'High'],
+                        ['value' => 'normal', 'label' => 'Normal'],
+                        ['value' => 'low', 'label' => 'Low'],
+                    ]],
+                    ['field' => 'task_group_id', 'type' => 'select', 'label' => 'Group', 'options' => $groupOptions],
+                    ['field' => 'show_completed', 'type' => 'boolean', 'label' => 'Show completed'],
+                    ['field' => 'is_private', 'type' => 'boolean', 'label' => 'Private only'],
+                    ['field' => 'overdue', 'type' => 'boolean', 'label' => 'Overdue'],
+                    ['field' => 'is_recurring', 'type' => 'boolean', 'label' => 'Recurring'],
+                ]"
+            />
 
+            {{-- Action buttons anchored to top-right of filter bar --}}
+            <div class="absolute right-0 top-0 flex items-center gap-2">
                 {{-- Add group toggle --}}
                 <button
                     type="button"
@@ -62,9 +49,7 @@
                     </svg>
                     Add group
                 </button>
-            </div>
 
-            <div class="flex items-center gap-2">
                 {{-- View toggle --}}
                 <a
                     href="{{ route('tasks.kanban') }}"

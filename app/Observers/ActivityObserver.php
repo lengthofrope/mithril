@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +18,7 @@ use UnitEnum;
  * Supported models and their tracked fields:
  *  - Task:     status, priority
  *  - FollowUp: status, snoozed_until
- *  - Bila:     is_done
+ *  - Meeting:  is_done
  */
 class ActivityObserver
 {
@@ -41,7 +41,7 @@ class ActivityObserver
             'status'        => 'enum',
             'snoozed_until' => 'date',
         ],
-        Bila::class => [
+        Meeting::class => [
             'is_done' => 'boolean',
         ],
     ];

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\Team;
@@ -179,7 +179,8 @@ test('team member passes member with related data to view', function () {
 
     Task::factory()->count(2)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
     FollowUp::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
-    Bila::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+    $meeting->attendees()->attach($member->id);
     Agreement::factory()->count(1)->create(['user_id' => $user->id, 'team_member_id' => $member->id, 'follow_up_date' => null]);
 
     $response = $this->actingAs($user)->get("/teams/member/{$member->id}");
@@ -187,14 +188,14 @@ test('team member passes member with related data to view', function () {
     $response->assertViewHas('member');
     $response->assertViewHas('memberTasks');
     $response->assertViewHas('memberFollowUps');
-    $response->assertViewHas('memberBilas');
+    $response->assertViewHas('memberMeetings');
     $response->assertViewHas('memberAgreements');
 
     $viewMember = $response->viewData('member');
     expect($viewMember->id)->toBe($member->id);
     expect($response->viewData('memberTasks'))->toHaveCount(2);
     expect($response->viewData('memberFollowUps'))->toHaveCount(1);
-    expect($response->viewData('memberBilas'))->toHaveCount(1);
+    expect($response->viewData('memberMeetings'))->toHaveCount(1);
     expect($response->viewData('memberAgreements'))->toHaveCount(1);
 });
 
@@ -229,20 +230,20 @@ test('member profile page has an edit button that opens a modal with auto-save f
     $response->assertSee('jane@company.com');
 });
 
-test('member profile page shows auto-save fields for bila interval and next bila date', function () {
+test('member profile page shows auto-save fields for meeting interval and next meeting date', function () {
     /** @var \Tests\TestCase $this */
     $user   = User::factory()->create();
     $member = TeamMember::factory()->create([
-        'user_id'            => $user->id,
-        'bila_interval_days' => 14,
-        'next_bila_date'     => '2026-04-01',
+        'user_id'                => $user->id,
+        'meeting_interval_days'  => 14,
+        'next_meeting_date'      => '2026-04-01',
     ]);
 
     $response = $this->actingAs($user)->get(route('teams.member', $member));
 
     $response->assertOk();
-    $response->assertSee("field: 'bila_interval_days'", false);
-    $response->assertSee("field: 'next_bila_date'", false);
+    $response->assertSee("field: 'meeting_interval_days'", false);
+    $response->assertSee("field: 'next_meeting_date'", false);
 });
 
 test('member profile page shows status select when status_source is manual', function () {
