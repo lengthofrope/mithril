@@ -18,10 +18,12 @@ class UnifiedSpeechTranscriptionService implements TranscriptionServiceInterface
     /**
      * Create the unified speech transcription service.
      *
-     * @param string $baseUrl Base URL of the mithril-speech service (e.g. http://localhost:8090).
+     * @param string $baseUrl   Base URL of the mithril-speech service (e.g. http://localhost:8090).
+     * @param string $authToken Optional authentication token sent as X-Speech-Token header.
      */
     public function __construct(
         private readonly string $baseUrl,
+        private readonly string $authToken = '',
     ) {}
 
     /**
@@ -41,7 +43,13 @@ class UnifiedSpeechTranscriptionService implements TranscriptionServiceInterface
         $url = rtrim($this->baseUrl, '/') . '/transcribe';
 
         try {
-            $response = Http::timeout(600)
+            $request = Http::timeout(600);
+
+            if ($this->authToken !== '') {
+                $request = $request->withHeaders(['X-Speech-Token' => $this->authToken]);
+            }
+
+            $response = $request
                 ->attach('file', fopen($audioPath, 'r'), basename($audioPath))
                 ->post($url, [
                     'language' => $language,

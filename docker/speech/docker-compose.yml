@@ -13,6 +13,8 @@ services:
       - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
       - MODEL_CACHE_DIR=/models
       - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
+      - SPEECH_AUTH_TOKEN=${SPEECH_AUTH_TOKEN:-}
+      - SPEECH_CORS_ORIGINS=${SPEECH_CORS_ORIGINS:-*}
 
 volumes:
   speech-models:

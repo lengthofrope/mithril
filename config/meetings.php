@@ -35,6 +35,10 @@ return [
         'base_url' => env('UNIFIED_SPEECH_BASE_URL', 'http://localhost:8090'),
     ],
 
+    'speech' => [
+        'auth_token' => env('SPEECH_AUTH_TOKEN', ''),
+    ],
+
     'extraction' => [
         // Provider, API key, and model are now configured globally in config/ai.php
         // (AI_PROVIDER, AI_API_KEY, AI_MODEL env vars).

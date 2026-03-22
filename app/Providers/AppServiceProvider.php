@@ -53,12 +53,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(DiarizationServiceInterface::class, function (): DiarizationServiceInterface {
             return new UnifiedSpeechDiarizationService(
                 baseUrl: config('meetings.diarization.base_url') ?? 'http://localhost:8090',
+                authToken: config('meetings.speech.auth_token') ?? '',
             );
         });
 
         $this->app->bind(TranscriptionServiceInterface::class, function (): TranscriptionServiceInterface {
             return new UnifiedSpeechTranscriptionService(
                 baseUrl: config('meetings.transcription.base_url') ?? 'http://localhost:8090',
+                authToken: config('meetings.speech.auth_token') ?? '',
             );
         });
     }

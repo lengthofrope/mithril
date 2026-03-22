@@ -1,7 +1,7 @@
 # Speech Service Token Authentication
 
 **Created:** 2026-03-22
-**Status:** Approved
+**Status:** Complete
 **Author:** Bas de Kort + Claude
 
 ## Problem Statement
@@ -48,24 +48,24 @@ Two-sided change: FastAPI gets a middleware that validates the `X-Speech-Token` 
 ### Phase 1: FastAPI Token Auth + CORS
 - **Goal:** Secure the speech service endpoints with optional token authentication
 - **Specs:**
-  - [ ] FastAPI middleware checks `X-Speech-Token` header against `SPEECH_AUTH_TOKEN` env var on `/transcribe` and `/diarize`
-  - [ ] Requests without the header or with wrong value return 401 Unauthorized with JSON error body
-  - [ ] When `SPEECH_AUTH_TOKEN` is empty or unset, no auth check is performed
-  - [ ] `/health` endpoint remains accessible without authentication
-  - [ ] CORS middleware added via FastAPI `CORSMiddleware`, origins configurable via `SPEECH_CORS_ORIGINS` env var (default `*`)
-  - [ ] `.env.example` updated with `SPEECH_AUTH_TOKEN` and `SPEECH_CORS_ORIGINS`
+  - [x] FastAPI middleware checks `X-Speech-Token` header against `SPEECH_AUTH_TOKEN` env var on `/transcribe` and `/diarize`
+  - [x] Requests without the header or with wrong value return 401 Unauthorized with JSON error body
+  - [x] When `SPEECH_AUTH_TOKEN` is empty or unset, no auth check is performed
+  - [x] `/health` endpoint remains accessible without authentication
+  - [x] CORS middleware added via FastAPI `CORSMiddleware`, origins configurable via `SPEECH_CORS_ORIGINS` env var (default `*`)
+  - [x] `.env.example` updated with `SPEECH_AUTH_TOKEN` and `SPEECH_CORS_ORIGINS`
 - **Files:** `docker/speech/app/server.py`, `docker/speech/.env.example`
 
 ### Phase 2: Laravel Token Integration
 - **Goal:** Laravel sends the auth token with all speech service HTTP requests
 - **Specs:**
-  - [ ] `config/meetings.php` adds `'speech_auth_token' => env('SPEECH_AUTH_TOKEN', '')` under a new `'speech'` key
-  - [ ] `UnifiedSpeechTranscriptionService` constructor accepts optional `string $authToken = ''` parameter
-  - [ ] When `$authToken` is non-empty, it is sent as `X-Speech-Token` header on the HTTP request
-  - [ ] `UnifiedSpeechDiarizationService` gets the same `$authToken` parameter and header logic
-  - [ ] `AppServiceProvider` passes `config('meetings.speech.auth_token')` to both service constructors
-  - [ ] `.env.example` updated with `SPEECH_AUTH_TOKEN` variable
-  - [ ] Existing tests remain green (token defaults to empty string, no behavioral change when empty)
+  - [x] `config/meetings.php` adds `'speech_auth_token' => env('SPEECH_AUTH_TOKEN', '')` under a new `'speech'` key
+  - [x] `UnifiedSpeechTranscriptionService` constructor accepts optional `string $authToken = ''` parameter
+  - [x] When `$authToken` is non-empty, it is sent as `X-Speech-Token` header on the HTTP request
+  - [x] `UnifiedSpeechDiarizationService` gets the same `$authToken` parameter and header logic
+  - [x] `AppServiceProvider` passes `config('meetings.speech.auth_token')` to both service constructors
+  - [x] `.env.example` updated with `SPEECH_AUTH_TOKEN` variable
+  - [x] Existing tests remain green (token defaults to empty string, no behavioral change when empty)
 - **Files:** `config/meetings.php`, `.env.example`, `UnifiedSpeechTranscriptionService.php`, `UnifiedSpeechDiarizationService.php`, `AppServiceProvider.php`
 
 ## Out of Scope

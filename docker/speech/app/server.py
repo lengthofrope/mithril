@@ -15,7 +15,9 @@ from contextlib import asynccontextmanager
 import ctranslate2
 from dataclasses import dataclass
 from diarize import diarize as diarize_audio
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from faster_whisper import WhisperModel
 
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +26,8 @@ logger = logging.getLogger(__name__)
 WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL", "large-v3-turbo")
 MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR", "/models")
 HUGGINGFACE_TOKEN = os.environ.get("HUGGINGFACE_TOKEN", "")
+SPEECH_AUTH_TOKEN = os.environ.get("SPEECH_AUTH_TOKEN", "")
+SPEECH_CORS_ORIGINS = os.environ.get("SPEECH_CORS_ORIGINS", "*")
 def _detect_device() -> str:
     """Detect CUDA GPU via CTranslate2 (used by faster-whisper)."""
     try:
@@ -92,6 +96,32 @@ async def lifespan(application: FastAPI):
 
 
 app = FastAPI(title="Mithril Speech Service", lifespan=lifespan)
+
+PROTECTED_PATHS = {"/transcribe", "/diarize"}
+
+
+@app.middleware("http")
+async def token_auth_middleware(request: Request, call_next):
+    """Validate X-Speech-Token header on protected endpoints."""
+    if SPEECH_AUTH_TOKEN and request.url.path in PROTECTED_PATHS:
+        token = request.headers.get("X-Speech-Token", "")
+        if token != SPEECH_AUTH_TOKEN:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid or missing authentication token."},
+            )
+    return await call_next(request)
+
+
+cors_origins = [o.strip() for o in SPEECH_CORS_ORIGINS.split(",") if o.strip()]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def ensure_wav(audio_path: str) -> str:
