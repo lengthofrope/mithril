@@ -20,12 +20,16 @@ interface TranscriptionViewerConfig {
     diarizationStartedAt: string | null;
     estimatedDiarizationSeconds: number | null;
     transcriptionEnabled: boolean;
+    canChooseMode: boolean;
+    hasRecordings: boolean;
+    provider: string | null;
 }
 
 interface TranscriptionViewerState {
     status: string | null;
     content: string;
     errorMessage: string;
+    provider: string | null;
     diarizationStatus: string | null;
     diarizedContent: string;
     diarizationError: string;
@@ -39,6 +43,14 @@ interface TranscriptionViewerState {
     diarizationElapsedTimer: ReturnType<typeof setInterval> | null;
     diarizationElapsedSeconds: number;
     transcriptionEnabled: boolean;
+    canChooseMode: boolean;
+    hasRecordings: boolean;
+    showDeletePrompt: boolean;
+    showDeleteModal: boolean;
+    showManualConfirmModal: boolean;
+    showRetranscribeModal: boolean;
+    showDeleteTranscriptionModal: boolean;
+    processingMode: 'transcribe' | 'diarize';
     showManualInput: boolean;
     manualContent: string;
     polling: boolean;
@@ -56,6 +68,9 @@ interface TranscriptionViewerState {
     retry(): Promise<void>;
     retranscribeAll(): Promise<void>;
     saveManual(): Promise<void>;
+    deleteTranscription(): Promise<void>;
+    deleteRecordings(): Promise<void>;
+    isManual: boolean;
 
     segments: DiarizedSegment[];
     hasDiarization: boolean;
@@ -87,6 +102,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         status: config.status,
         content: config.content,
         errorMessage: config.errorMessage,
+        provider: config.provider,
         diarizationStatus: config.diarizationStatus,
         diarizedContent: config.diarizedContent,
         diarizationError: config.diarizationError,
@@ -100,6 +116,14 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         diarizationElapsedTimer: null as ReturnType<typeof setInterval> | null,
         diarizationElapsedSeconds: 0,
         transcriptionEnabled: config.transcriptionEnabled,
+        canChooseMode: config.canChooseMode,
+        hasRecordings: config.hasRecordings,
+        showDeletePrompt: false,
+        showDeleteModal: false,
+        showManualConfirmModal: false,
+        showRetranscribeModal: false,
+        showDeleteTranscriptionModal: false,
+        processingMode: (config.canChooseMode ? 'diarize' : (config.diarizationEnabled ? 'diarize' : 'transcribe')) as 'transcribe' | 'diarize',
         showManualInput: !config.transcriptionEnabled,
         manualContent: '',
         polling: false,
@@ -130,6 +154,14 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         /**
          * Whether completed diarization data is available.
          */
+        /**
+         * Whether the current transcription is manual input.
+         */
+        get isManual(): boolean {
+            const self = this as unknown as TranscriptionViewerState;
+            return self.provider === 'manual';
+        },
+
         get hasDiarization(): boolean {
             const self = this as unknown as TranscriptionViewerState;
             return self.diarizationStatus === 'completed' && self.segments.length > 0;
@@ -194,8 +226,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Total number of processing phases.
          */
         get totalPhases(): number {
-            const self = this as unknown as TranscriptionViewerState;
-            return self.diarizationEnabled ? 2 : 1;
+            return 1;
         },
 
         /**
@@ -213,9 +244,10 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get currentPhaseLabel(): string {
             const self = this as unknown as TranscriptionViewerState;
-            if (self.status === 'pending') return 'Waiting to start transcription…';
+            if (self.status === 'pending') return 'Waiting to start…';
+            if (self.status === 'processing' && self.processingMode === 'diarize') return 'Transcribing & identifying speakers…';
             if (self.status === 'processing') return 'Transcribing audio…';
-            if (self.isDiarizing) return 'Identifying speakers…';
+            if (self.isDiarizing) return 'Transcribing & identifying speakers…';
             return '';
         },
 
@@ -356,7 +388,8 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Apply API response data to component state.
          */
         applyData(this: TranscriptionViewerState, data: Record<string, unknown>): void {
-            this.status = data.status as string;
+            const newStatus = data.status as string | null;
+            this.status = (newStatus === null && this.status === 'pending') ? 'pending' : newStatus;
             this.content = (data.content as string) ?? '';
             this.errorMessage = (data.error_message as string) ?? '';
             this.diarizationStatus = data.diarization_status as string | null;
@@ -366,6 +399,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
             this.estimatedDurationSeconds = data.estimated_duration_seconds as number | null;
             this.diarizationStartedAt = data.diarization_started_at as string | null;
             this.estimatedDiarizationSeconds = data.estimated_diarization_seconds as number | null;
+            this.provider = (data.provider as string) ?? null;
         },
 
         /**
@@ -381,12 +415,6 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
             if (this.isDiarizing) {
                 this.startDiarizationTimer();
             }
-            const el = (this as unknown as { $el: HTMLElement }).$el;
-            el.closest('[x-data]')?.addEventListener('tab-activated', ((e: CustomEvent) => {
-                if (e.detail?.tab === 'transcription') {
-                    this.refreshData();
-                }
-            }) as EventListener);
         },
 
         /**
@@ -452,6 +480,10 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
 
                         if (!this.shouldPoll) {
                             this.polling = false;
+
+                            if (this.status === 'completed' && prev !== 'completed' && this.hasRecordings) {
+                                this.showDeletePrompt = true;
+                            }
                         }
                     }
                 } catch { /* continue polling */ }
@@ -467,7 +499,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 headers: {
                     'X-CSRF-TOKEN': config.csrfToken,
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({ mode: this.processingMode }),
             });
             if (response.ok) {
                 this.status = 'pending';
@@ -488,7 +522,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 headers: {
                     'X-CSRF-TOKEN': config.csrfToken,
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({ mode: this.processingMode }),
             });
             if (response.ok) {
                 this.status = 'pending';
@@ -515,11 +551,57 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 body: JSON.stringify({ content: this.manualContent }),
             });
             if (response.ok) {
-                this.content = this.manualContent;
-                this.status = 'completed';
-                this.showManualInput = false;
-                this.manualContent = '';
+                window.location.reload();
             }
+        },
+
+        /**
+         * Delete the manual transcription, resetting to empty state.
+         */
+        async deleteTranscription(this: TranscriptionViewerState): Promise<void> {
+            const response = await fetch(`${baseUrl}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': config.csrfToken,
+                    'Accept': 'application/json',
+                },
+            });
+            if (response.ok) {
+                this.status = null;
+                this.content = '';
+                this.provider = null;
+                this.diarizedContent = '';
+                this.diarizationStatus = null;
+                this.showManualInput = false;
+            }
+        },
+
+        /**
+         * Delete all recordings for this meeting.
+         */
+        async deleteRecordings(this: TranscriptionViewerState): Promise<void> {
+            const recordingsUrl = `/api/v1/meetings/${config.meetingId}/recordings`;
+            const response = await fetch(recordingsUrl, {
+                headers: { 'Accept': 'application/json' },
+            });
+
+            if (!response.ok) return;
+
+            const json = await response.json();
+            const recordings = json.data ?? [];
+
+            for (const recording of recordings) {
+                await fetch(`${recordingsUrl}/${recording.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+            }
+
+            this.hasRecordings = false;
+            this.showDeletePrompt = false;
         },
     };
 }

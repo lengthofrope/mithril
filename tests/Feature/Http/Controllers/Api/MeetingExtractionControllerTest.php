@@ -32,7 +32,7 @@ describe('MeetingExtractionController', function (): void {
 
             $response->assertOk()
                 ->assertJson(['success' => true])
-                ->assertJsonCount(2, 'data');
+                ->assertJsonCount(2, 'data.extractions');
         });
 
         it('returns extractions ordered by id ascending', function (): void {
@@ -46,7 +46,7 @@ describe('MeetingExtractionController', function (): void {
             );
 
             $response->assertOk();
-            $ids = collect($response->json('data'))->pluck('id')->all();
+            $ids = collect($response->json('data.extractions'))->pluck('id')->all();
             expect($ids)->toBe([$first->id, $second->id]);
         });
 

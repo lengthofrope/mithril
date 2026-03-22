@@ -241,8 +241,8 @@ describe('MeetingTranscriptionController', function (): void {
             Queue::assertPushed(TranscribeMeetingJob::class);
         });
 
-        it('chains diarization after transcription when diarization is enabled', function (): void {
-            Bus::fake();
+        it('dispatches only DiarizeMeetingJob when diarization is enabled', function (): void {
+            Queue::fake();
             Config::set('meetings.diarization.enabled', true);
 
             $user = User::factory()->create();
@@ -253,10 +253,8 @@ describe('MeetingTranscriptionController', function (): void {
                 "/api/v1/meetings/{$meeting->id}/transcription/retry"
             );
 
-            Bus::assertChained([
-                TranscribeMeetingJob::class,
-                DiarizeMeetingJob::class,
-            ]);
+            Queue::assertPushed(DiarizeMeetingJob::class);
+            Queue::assertNotPushed(TranscribeMeetingJob::class);
         });
 
         it('resets an existing transcription status to pending on retry', function (): void {
@@ -424,8 +422,8 @@ describe('MeetingTranscriptionController', function (): void {
             ]);
         });
 
-        it('appends diarization job to the chain when diarization is enabled', function (): void {
-            Bus::fake();
+        it('dispatches only DiarizeMeetingJob when diarization is enabled', function (): void {
+            Queue::fake();
             Config::set('meetings.diarization.enabled', true);
 
             $user = User::factory()->create();
@@ -439,10 +437,8 @@ describe('MeetingTranscriptionController', function (): void {
                 "/api/v1/meetings/{$meeting->id}/transcription/retranscribe"
             );
 
-            Bus::assertChained([
-                TranscribeMeetingJob::class,
-                DiarizeMeetingJob::class,
-            ]);
+            Queue::assertPushed(DiarizeMeetingJob::class);
+            Queue::assertNotPushed(TranscribeMeetingJob::class);
         });
 
         it('returns 422 when no recordings exist', function (): void {
@@ -614,91 +610,28 @@ describe('MeetingTranscriptionController', function (): void {
         });
     });
 
-    describe('diarize (POST /api/v1/meetings/{meeting}/transcription/diarize)', function (): void {
-        it('dispatches a diarization job when transcription is completed', function (): void {
+    describe('retry with mode parameter', function (): void {
+        it('dispatches DiarizeMeetingJob when mode is diarize', function (): void {
             Queue::fake();
 
             $user = User::factory()->create();
             $meeting = Meeting::factory()->create(['user_id' => $user->id]);
-            $recording = MeetingRecording::factory()->create([
+            MeetingRecording::factory()->create([
                 'meeting_id' => $meeting->id,
                 'user_id' => $user->id,
-            ]);
-            MeetingTranscription::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-                'status' => TranscriptionStatus::Completed,
-                'content' => 'Some transcription text.',
             ]);
 
             $response = $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/diarize"
+                "/api/v1/meetings/{$meeting->id}/transcription/retry",
+                ['mode' => 'diarize'],
             );
 
-            $response->assertOk()
-                ->assertJson(['success' => true]);
-
+            $response->assertOk();
             Queue::assertPushed(DiarizeMeetingJob::class);
+            Queue::assertNotPushed(TranscribeMeetingJob::class);
         });
 
-        it('rejects diarization when transcription is not completed', function (): void {
-            $user = User::factory()->create();
-            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
-            MeetingRecording::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-            ]);
-            MeetingTranscription::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-                'status' => TranscriptionStatus::Processing,
-            ]);
-
-            $response = $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/diarize"
-            );
-
-            $response->assertUnprocessable();
-        });
-
-        it('rejects diarization when no recording exists', function (): void {
-            $user = User::factory()->create();
-            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
-            MeetingTranscription::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-                'status' => TranscriptionStatus::Completed,
-            ]);
-
-            $response = $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/diarize"
-            );
-
-            $response->assertUnprocessable();
-        });
-
-        it('rejects diarization when already in progress', function (): void {
-            $user = User::factory()->create();
-            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
-            MeetingRecording::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-            ]);
-            MeetingTranscription::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-                'status' => TranscriptionStatus::Completed,
-                'diarization_status' => DiarizationStatus::Processing,
-            ]);
-
-            $response = $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/diarize"
-            );
-
-            $response->assertUnprocessable();
-        });
-
-        it('sets diarization_status to pending when dispatching', function (): void {
+        it('dispatches TranscribeMeetingJob when mode is transcribe', function (): void {
             Queue::fake();
 
             $user = User::factory()->create();
@@ -707,70 +640,40 @@ describe('MeetingTranscriptionController', function (): void {
                 'meeting_id' => $meeting->id,
                 'user_id' => $user->id,
             ]);
-            $transcription = MeetingTranscription::factory()->create([
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retry",
+                ['mode' => 'transcribe'],
+            );
+
+            $response->assertOk();
+            Queue::assertPushed(TranscribeMeetingJob::class);
+            Queue::assertNotPushed(DiarizeMeetingJob::class);
+        });
+
+        it('defaults to diarize mode when diarization is enabled', function (): void {
+            Queue::fake();
+            Config::set('meetings.diarization.enabled', true);
+
+            $user = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create([
                 'meeting_id' => $meeting->id,
                 'user_id' => $user->id,
-                'status' => TranscriptionStatus::Completed,
             ]);
 
             $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/diarize"
+                "/api/v1/meetings/{$meeting->id}/transcription/retry"
             );
-
-            expect($transcription->fresh()->diarization_status)->toBe(DiarizationStatus::Pending);
-        });
-    });
-
-    describe('retryDiarization (POST /api/v1/meetings/{meeting}/transcription/retry-diarization)', function (): void {
-        it('dispatches a diarization job on retry', function (): void {
-            Queue::fake();
-
-            $user = User::factory()->create();
-            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
-            MeetingRecording::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-            ]);
-            MeetingTranscription::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-                'status' => TranscriptionStatus::Completed,
-                'diarization_status' => DiarizationStatus::Failed,
-                'diarization_error' => 'Connection timeout',
-            ]);
-
-            $response = $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/retry-diarization"
-            );
-
-            $response->assertOk()
-                ->assertJson(['success' => true]);
 
             Queue::assertPushed(DiarizeMeetingJob::class);
+            Queue::assertNotPushed(TranscribeMeetingJob::class);
         });
 
-        it('rejects retry when diarization is already in progress', function (): void {
-            $user = User::factory()->create();
-            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
-            MeetingRecording::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-            ]);
-            MeetingTranscription::factory()->create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-                'status' => TranscriptionStatus::Completed,
-                'diarization_status' => DiarizationStatus::Processing,
-            ]);
+        it('defaults to transcribe mode when diarization is disabled', function (): void {
+            Queue::fake();
+            Config::set('meetings.diarization.enabled', false);
 
-            $response = $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/retry-diarization"
-            );
-
-            $response->assertUnprocessable();
-        });
-
-        it('rejects retry when no transcription exists', function (): void {
             $user = User::factory()->create();
             $meeting = Meeting::factory()->create(['user_id' => $user->id]);
             MeetingRecording::factory()->create([
@@ -778,11 +681,12 @@ describe('MeetingTranscriptionController', function (): void {
                 'user_id' => $user->id,
             ]);
 
-            $response = $this->actingAs($user)->postJson(
-                "/api/v1/meetings/{$meeting->id}/transcription/retry-diarization"
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/retry"
             );
 
-            $response->assertUnprocessable();
+            Queue::assertPushed(TranscribeMeetingJob::class);
+            Queue::assertNotPushed(DiarizeMeetingJob::class);
         });
     });
 

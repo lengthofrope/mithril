@@ -237,21 +237,19 @@ describe('DiarizeMeetingJob', function (): void {
         });
     });
 
-    describe('handle — missing transcription', function (): void {
-        it('skips gracefully and logs a warning when no transcription exists', function (): void {
+    describe('handle — standalone (no prior transcription)', function (): void {
+        it('creates a transcription record and completes when no prior transcription exists', function (): void {
             /** @var \Tests\TestCase $this */
             Storage::fake('local');
             Storage::disk('local')->put('recordings/test.webm', 'fake audio');
 
-            Log::shouldReceive('warning')
-                ->once()
-                ->with('DiarizeMeetingJob: No transcription found, skipping.', \Mockery::type('array'));
+            $result = makeDiarizationResult();
 
             $mock = $this->mock(DiarizationServiceInterface::class);
-            $mock->shouldReceive('diarize')->never();
+            $mock->shouldReceive('diarize')->once()->andReturn($result);
 
             $user = User::factory()->create();
-            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id, 'transcription_language' => 'nl']);
             $recording = MeetingRecording::factory()->create([
                 'meeting_id' => $meeting->id,
                 'user_id' => $user->id,
@@ -261,7 +259,14 @@ describe('DiarizeMeetingJob', function (): void {
 
             (new DiarizeMeetingJob($meeting, $recording))->handle($mock);
 
-            expect(MeetingTranscription::withoutGlobalScopes()->count())->toBe(0);
+            $transcription = MeetingTranscription::withoutGlobalScopes()->first();
+
+            expect($transcription)->not->toBeNull()
+                ->and($transcription->status->value)->toBe('completed')
+                ->and($transcription->diarization_status)->toBe(DiarizationStatus::Completed)
+                ->and($transcription->content)->toBe($result->toFormattedText())
+                ->and($transcription->diarized_content)->toBe($result->toJson())
+                ->and($transcription->provider)->toBe('unified');
         });
     });
 

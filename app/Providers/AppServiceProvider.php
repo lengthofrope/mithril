@@ -9,10 +9,9 @@ use App\Services\MeetingInsights\OpenAiInsightExtractor;
 use App\Services\MeetingInsights\AnthropicInsightExtractor;
 use App\Services\MeetingInsights\OpenRouterInsightExtractor;
 use App\Services\Diarization\DiarizationServiceInterface;
-use App\Services\Diarization\PyAnnoteDiarizationService;
+use App\Services\Diarization\UnifiedSpeechDiarizationService;
 use App\Services\Transcription\TranscriptionServiceInterface;
-use App\Services\Transcription\WhisperCppTranscriptionService;
-use App\Services\Transcription\WhisperTranscriptionService;
+use App\Services\Transcription\UnifiedSpeechTranscriptionService;
 use App\Models\FollowUp;
 use App\Models\Meeting;
 use App\Models\Task;
@@ -52,21 +51,17 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(DiarizationServiceInterface::class, function (): DiarizationServiceInterface {
-            return new PyAnnoteDiarizationService(
-                baseUrl: config('meetings.diarization.pyannote.base_url') ?? 'http://localhost:8081',
+            return new UnifiedSpeechDiarizationService(
+                baseUrl: config('meetings.diarization.base_url') ?? 'http://localhost:8090',
+                authToken: config('meetings.speech.auth_token') ?? '',
             );
         });
 
         $this->app->bind(TranscriptionServiceInterface::class, function (): TranscriptionServiceInterface {
-            return match (config('meetings.transcription.provider')) {
-                'whisper' => new WhisperTranscriptionService(
-                    apiKey: config('meetings.transcription.whisper.api_key') ?? '',
-                    model: config('meetings.transcription.whisper.model') ?? 'whisper-1',
-                ),
-                default => new WhisperCppTranscriptionService(
-                    baseUrl: config('meetings.transcription.whisper_cpp.base_url') ?? 'http://localhost:8080',
-                ),
-            };
+            return new UnifiedSpeechTranscriptionService(
+                baseUrl: config('meetings.transcription.base_url') ?? 'http://localhost:8090',
+                authToken: config('meetings.speech.auth_token') ?? '',
+            );
         });
     }
 

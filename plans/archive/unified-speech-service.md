@@ -1,7 +1,7 @@
 # Unified Speech Processing Service
 
 **Created:** 2026-03-22
-**Status:** Approved
+**Status:** Complete
 **Author:** Bas de Kort + Claude
 
 ## PRD References
@@ -98,62 +98,79 @@ sequenceDiagram
 - **Goal:** Working `/transcribe` and `/health` endpoints in a single Docker container
 - **PRD criteria:** AC 1, 2, 4, 5, 8, 9, 10, 11, 15
 - **Specs:**
-  - [ ] `POST /transcribe` accepts multipart audio file + `language` param, returns `{ "text": "..." }`
-  - [ ] `GET /health` returns `{ "ready": bool, "device": "cpu"|"cuda", "models": {...}, "queue_depth": int }`
-  - [ ] Service detects CUDA GPU automatically at startup, falls back to CPU
-  - [ ] FIFO queue processes one request at a time; concurrent requests wait in order
-  - [ ] Models downloaded on first startup, cached in `/models` volume
-  - [ ] `WHISPER_MODEL` env var selects model size (default: `large-v3-turbo`)
-  - [ ] Container starts with `docker compose up` on CPU-only host
-  - [ ] Container starts with `docker compose up` on CUDA-equipped host (same image)
-- **Files:** `docker/speech/server.py`, `docker/speech/Dockerfile`, `docker/speech/docker-compose.yml`, `docker/speech/.env.example`, `docker/speech/requirements.txt`
+  - [x] `POST /transcribe` accepts multipart audio file + `language` param, returns `{ "text": "..." }`
+  - [x] `GET /health` returns `{ "ready": bool, "device": "cpu"|"cuda", "models": {...}, "queue_depth": int }`
+  - [x] Service detects CUDA GPU automatically at startup, falls back to CPU
+  - [x] FIFO queue processes one request at a time; concurrent requests wait in order
+  - [x] Models downloaded on first startup, cached in `/models` volume
+  - [x] `WHISPER_MODEL` env var selects model size (default: `large-v3-turbo`)
+  - [x] Container starts with `docker compose up` on CPU-only host
+  - [x] Container starts with `docker compose up` on CUDA-equipped host (same image, GPU via compose override — see ADR-027)
+- **Files:** `docker/speech/server.py`, `docker/speech/Dockerfile`, `docker/speech/docker-compose.yml`, `docker/speech/docker-compose.gpu.yml`, `docker/speech/.env.example`, `docker/speech/requirements.txt`
 
 ### Phase 2: Diarization — Default Engine
 - **Goal:** Working `/diarize` endpoint using a non-gated diarization engine
 - **PRD criteria:** AC 3, 6, 9, 11
 - **Specs:**
-  - [ ] `POST /diarize` accepts multipart audio file + `language` param
-  - [ ] Returns `{ "segments": [{ "speaker": str, "start": float, "end": float, "text": str }], "speakers": [str] }` — same format as current pyannote service
-  - [ ] Default engine requires no HuggingFace token or gated model access
+  - [x] `POST /diarize` accepts multipart audio file + `language` param
+  - [x] Returns `{ "segments": [{ "speaker": str, "start": float, "end": float, "text": str }], "speakers": [str] }` — same format as current pyannote service
+  - [x] Default engine requires no HuggingFace token or gated model access
   - [ ] Default engine + transcription model combined disk < 4GB
-  - [ ] Diarization requests go through the same FIFO queue as transcription
-  - [ ] `/health` reports which diarization engine is active
-- **Files:** `docker/speech/server.py` (extend), `docker/speech/requirements.txt` (extend)
+  - [x] Diarization requests go through the same FIFO queue as transcription
+  - [x] `/health` reports which diarization engine is active
+- **Files:** `docker/speech/app/server.py` (extend), `docker/speech/app/requirements.txt` (extend)
 - **Note:** Uses `diarize` by FoxNoseTech (ONNX, Apache 2.0, ~10.8% DER). Prototype spike to validate quality on real meeting recordings before finalizing.
 
 ### Phase 3: Diarization — Optional Pyannote
 - **Goal:** Pyannote as higher-quality diarization option when HF token is provided
 - **PRD criteria:** AC 7
 - **Specs:**
-  - [ ] When `HUGGINGFACE_TOKEN` env var is set, service uses pyannote for diarization
-  - [ ] When `HUGGINGFACE_TOKEN` is absent, service uses default engine (Phase 2)
-  - [ ] Pyannote models cached in same `/models` volume
-  - [ ] `/health` reports `diarization_engine: "pyannote"` or `"default"`
-  - [ ] Response format identical regardless of engine
-- **Files:** `docker/speech/server.py` (extend), `docker/speech/requirements.txt` (extend)
+  - [x] When `HUGGINGFACE_TOKEN` env var is set, service uses pyannote for diarization
+  - [x] When `HUGGINGFACE_TOKEN` is absent, service uses default engine (Phase 2)
+  - [x] Pyannote models cached in same `/models` volume
+  - [x] `/health` reports `diarization_engine: "pyannote"` or `"default"`
+  - [x] Response format identical regardless of engine
+- **Files:** `docker/speech/app/server.py` (extend), `docker/speech/app/requirements.txt` (extend)
 
 ### Phase 4: Laravel Integration
 - **Goal:** New `unified` provider wired into Mithril's service layer
 - **PRD criteria:** AC 12, 13
 - **Specs:**
-  - [ ] `UnifiedSpeechTranscriptionService` implements `TranscriptionServiceInterface` and calls `/transcribe`
-  - [ ] `UnifiedSpeechDiarizationService` implements `DiarizationServiceInterface` and calls `/diarize`
-  - [ ] `DiarizationResult::fromResponse()` works with unified service response without changes
-  - [ ] `config/meetings.php` accepts `unified` as provider for both transcription and diarization
-  - [ ] `AppServiceProvider` binds the new services when `unified` is selected
-  - [ ] `UNIFIED_SPEECH_BASE_URL` env var defaults to `http://localhost:8090`
-  - [ ] Feature tests verify correct response parsing for both endpoints
+  - [x] `UnifiedSpeechTranscriptionService` implements `TranscriptionServiceInterface` and calls `/transcribe`
+  - [x] `UnifiedSpeechDiarizationService` implements `DiarizationServiceInterface` and calls `/diarize`
+  - [x] `DiarizationResult::fromResponse()` works with unified service response without changes
+  - [x] `config/meetings.php` accepts `unified` as provider for both transcription and diarization
+  - [x] `AppServiceProvider` binds the new services when `unified` is selected
+  - [x] `UNIFIED_SPEECH_BASE_URL` env var defaults to `http://localhost:8090`
+  - [x] Feature tests verify correct response parsing for both endpoints (13 tests, 22 assertions)
 - **Files:** `app/Services/Transcription/UnifiedSpeechTranscriptionService.php`, `app/Services/Diarization/UnifiedSpeechDiarizationService.php`, `config/meetings.php`, `app/Providers/AppServiceProvider.php`, `tests/`
 
 ### Phase 5: Documentation & Cleanup
 - **Goal:** Deployment docs and legacy container deprecation
 - **PRD criteria:** AC 14
 - **Specs:**
-  - [ ] `docker/speech/README.md` covers: quick start, env vars, GPU setup, model sizes, production deployment, troubleshooting
-  - [ ] `docker/whispercpp/` and `docker/pyannote/` marked as deprecated in their READMEs (not deleted — migration path)
-  - [ ] Root `.env.example` updated with unified speech service vars
-  - [ ] `docker-compose.yml` (if project-level exists) includes the unified service
+  - [x] `docker/speech/README.md` covers: quick start, env vars, GPU setup, model sizes, diarization engines, troubleshooting
+  - [x] `docker/whispercpp/` and `docker/pyannote/` marked as deprecated in their READMEs (not deleted — migration path)
+  - [x] Root `.env.example` updated with unified speech service vars
+  - [x] No project-level `docker-compose.yml` exists — speech service has its own standalone compose
 - **Files:** `docker/speech/README.md`, `docker/whispercpp/README.md`, `docker/pyannote/README.md`, `.env.example`
+
+## Parallelization
+
+**Strategy:** Partial parallel
+
+### Parallel Group 1: Service + Laravel
+- **Teammates:** 2
+- **Phases/tasks:**
+  - Teammate A (Python): Phases 1, 2, 3 (sequential within)
+  - Teammate B (PHP): Phase 4
+- **File ownership:**
+  - Teammate A: `docker/speech/*`
+  - Teammate B: `app/Services/Transcription/UnifiedSpeechTranscriptionService.php`, `app/Services/Diarization/UnifiedSpeechDiarizationService.php`, `config/meetings.php`, `app/Providers/AppServiceProvider.php`, `tests/`
+- **Sync point:** Both complete before Phase 5
+
+### Sequential remainder
+- Phase 5 (Documentation & Cleanup): runs after parallel group completes because it touches files from both tracks and needs final review
 
 ## Out of Scope
 
@@ -167,7 +184,7 @@ sequenceDiagram
 
 ## Open Questions
 
-_None — all questions resolved._
+- **Single-endpoint optimization:** When diarization is enabled, `/diarize` already returns the full transcription text per segment. The Laravel Jobs could be refactored so that when diarization is enabled, only `/diarize` is called (skipping the separate `/transcribe` call), and the plain text is extracted from the diarized segments. This would halve the processing time for diarization-enabled meetings. Requires changes to `TranscribeMeetingJob` / `DiarizeMeetingJob` orchestration — future iteration.
 
 ### Resolved
 

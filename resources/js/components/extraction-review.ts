@@ -31,6 +31,7 @@ interface ExtractionReviewState {
     summary: string;
     selectedIds: number[];
     loading: boolean;
+    extracting: boolean;
     editingId: number | null;
     editContent: string;
     editType: string;
@@ -52,6 +53,7 @@ interface ExtractionReviewState {
     bulkAccept(): Promise<void>;
     bulkReject(): Promise<void>;
     reExtract(): Promise<void>;
+    pollForExtractions(): Promise<void>;
     toggleSelection(id: number): void;
     selectAll(): void;
     deselectAll(): void;
@@ -73,6 +75,7 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         summary: config.summary,
         selectedIds: [] as number[],
         loading: false,
+        extracting: false,
         editingId: null as number | null,
         editContent: '',
         editType: '',
@@ -87,14 +90,7 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         /**
          * Initialize the component.
          */
-        init(this: ExtractionReviewState): void {
-            const el = (this as unknown as { $el: HTMLElement }).$el;
-            el.closest('[x-data]')?.addEventListener('tab-activated', ((e: CustomEvent) => {
-                if (e.detail?.tab === 'extractions') {
-                    this.refreshData();
-                }
-            }) as EventListener);
-        },
+        init(): void {},
 
         /**
          * Refresh extractions and transcription status from the API.
@@ -106,8 +102,9 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
                 });
                 if (response.ok) {
                     const json = await response.json();
-                    const data = json.data ?? [];
-                    this.extractions = data.map((e: Record<string, unknown>) => ({
+                    const data = json.data ?? {};
+                    const items = data.extractions ?? (Array.isArray(data) ? data : []);
+                    this.extractions = items.map((e: Extraction) => ({
                         id: e.id,
                         type: e.type,
                         content: e.content,
@@ -117,6 +114,9 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
                         deadline: e.deadline,
                         status: e.status,
                     }));
+                    if (data.summary !== undefined) {
+                        this.summary = data.summary ?? '';
+                    }
                 }
             } catch { /* silent */ }
 
@@ -293,6 +293,9 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
         async reExtract(this: ExtractionReviewState): Promise<void> {
             this.showReExtractConfirm = false;
             this.loading = true;
+            this.extracting = true;
+            this.extractions = [];
+            this.summary = '';
 
             const response = await fetch(`${baseUrl}/re-extract`, {
                 method: 'POST',
@@ -302,11 +305,36 @@ function extractionReview(config: ExtractionReviewConfig): Record<string, unknow
                 },
             });
 
+            this.loading = false;
+
             if (response.ok) {
-                window.location.reload();
+                await this.pollForExtractions();
+            } else {
+                this.extracting = false;
+            }
+        },
+
+        /**
+         * Poll for extraction results until they arrive or timeout.
+         */
+        async pollForExtractions(this: ExtractionReviewState): Promise<void> {
+            const maxAttempts = 60;
+            let attempts = 0;
+
+            while (this.extracting && attempts < maxAttempts) {
+                await new Promise(r => setTimeout(r, 3000));
+                attempts++;
+
+                try {
+                    await this.refreshData();
+
+                    if (this.extractions.length > 0) {
+                        this.extracting = false;
+                    }
+                } catch { /* continue polling */ }
             }
 
-            this.loading = false;
+            this.extracting = false;
         },
 
         /**

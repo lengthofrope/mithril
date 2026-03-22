@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\DiarizationStatus;
 use App\Enums\TranscriptionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
@@ -64,10 +63,11 @@ class MeetingTranscriptionController extends Controller
     /**
      * Retry a failed transcription by re-dispatching the job.
      *
+     * @param Request $request
      * @param Meeting $meeting
      * @return JsonResponse
      */
-    public function retry(Meeting $meeting): JsonResponse
+    public function retry(Request $request, Meeting $meeting): JsonResponse
     {
         $recording = $meeting->recordings()->latest()->first();
 
@@ -88,11 +88,10 @@ class MeetingTranscriptionController extends Controller
             ]);
         }
 
-        if (config('meetings.diarization.enabled', false)) {
-            Bus::chain([
-                new TranscribeMeetingJob($meeting, $recording),
-                new DiarizeMeetingJob($meeting, $recording),
-            ])->dispatch();
+        $mode = $request->input('mode', $this->defaultMode());
+
+        if ($mode === 'diarize') {
+            DiarizeMeetingJob::dispatch($meeting, $recording);
         } else {
             TranscribeMeetingJob::dispatch($meeting, $recording);
         }
@@ -103,13 +102,14 @@ class MeetingTranscriptionController extends Controller
     /**
      * Reset and retranscribe all recordings for a meeting from scratch.
      *
-     * Clears existing transcription content and dispatches a chained job
-     * for each recording in chronological order.
+     * Clears existing transcription content and dispatches the appropriate
+     * job based on the requested mode (transcribe or diarize).
      *
+     * @param Request $request
      * @param Meeting $meeting
      * @return JsonResponse
      */
-    public function retranscribe(Meeting $meeting): JsonResponse
+    public function retranscribe(Request $request, Meeting $meeting): JsonResponse
     {
         $recordings = $meeting->recordings()->oldest()->get();
 
@@ -126,21 +126,26 @@ class MeetingTranscriptionController extends Controller
         if ($transcription !== null) {
             $transcription->update([
                 'content' => null,
+                'diarized_content' => null,
+                'diarization_status' => null,
+                'diarization_error' => null,
                 'status' => TranscriptionStatus::Pending,
                 'error_message' => null,
             ]);
         }
 
-        $jobs = $recordings->map(
-            fn ($recording) => new TranscribeMeetingJob($meeting, $recording)
-        )->all();
+        $mode = $request->input('mode', $this->defaultMode());
 
-        if (config('meetings.diarization.enabled', false)) {
+        if ($mode === 'diarize') {
             $lastRecording = $recordings->last();
-            $jobs[] = new DiarizeMeetingJob($meeting, $lastRecording);
-        }
+            DiarizeMeetingJob::dispatch($meeting, $lastRecording);
+        } else {
+            $jobs = $recordings->map(
+                fn ($recording) => new TranscribeMeetingJob($meeting, $recording)
+            )->all();
 
-        Bus::chain($jobs)->dispatch();
+            Bus::chain($jobs)->dispatch();
+        }
 
         return $this->successResponse(null, 'Retranscription jobs dispatched.');
     }
@@ -164,6 +169,9 @@ class MeetingTranscriptionController extends Controller
         if ($transcription !== null) {
             $transcription->update([
                 'content' => $validated['content'],
+                'diarized_content' => null,
+                'diarization_status' => null,
+                'diarization_error' => null,
                 'language' => $validated['language'] ?? $meeting->transcription_language,
                 'provider' => 'manual',
                 'status' => TranscriptionStatus::Completed,
@@ -184,71 +192,32 @@ class MeetingTranscriptionController extends Controller
     }
 
     /**
-     * Trigger speaker diarization for a meeting's transcription.
+     * Delete a meeting's transcription.
      *
      * @param Meeting $meeting
      * @return JsonResponse
      */
-    public function diarize(Meeting $meeting): JsonResponse
+    public function destroy(Meeting $meeting): JsonResponse
     {
-        $recording = $meeting->recordings()->latest()->first();
-
-        if ($recording === null) {
-            return $this->errorResponse('No recording available for diarization.', statusCode: 422);
-        }
-
-        $transcription = $meeting->transcription;
-
-        if ($transcription === null || $transcription->status !== TranscriptionStatus::Completed) {
-            return $this->errorResponse('Transcription must be completed before diarization.', statusCode: 422);
-        }
-
-        if ($transcription->diarization_status === DiarizationStatus::Processing) {
-            return $this->errorResponse('Diarization is already in progress.', statusCode: 422);
-        }
-
-        $transcription->update([
-            'diarization_status' => DiarizationStatus::Pending,
-            'diarization_error' => null,
-        ]);
-
-        DiarizeMeetingJob::dispatch($meeting, $recording);
-
-        return $this->successResponse(null, 'Diarization job dispatched.');
-    }
-
-    /**
-     * Retry a failed diarization by re-dispatching the job.
-     *
-     * @param Meeting $meeting
-     * @return JsonResponse
-     */
-    public function retryDiarization(Meeting $meeting): JsonResponse
-    {
-        $recording = $meeting->recordings()->latest()->first();
-
-        if ($recording === null) {
-            return $this->errorResponse('No recording available for diarization.', statusCode: 422);
-        }
-
         $transcription = $meeting->transcription;
 
         if ($transcription === null) {
-            return $this->errorResponse('No transcription available.', statusCode: 422);
+            return $this->errorResponse('No transcription to delete.', statusCode: 422);
         }
 
-        if ($transcription->diarization_status === DiarizationStatus::Processing) {
-            return $this->errorResponse('Diarization is already in progress.', statusCode: 422);
-        }
+        $transcription->delete();
 
-        $transcription->update([
-            'diarization_status' => DiarizationStatus::Pending,
-            'diarization_error' => null,
-        ]);
+        return $this->successResponse(null, 'Transcription deleted.');
+    }
 
-        DiarizeMeetingJob::dispatch($meeting, $recording);
-
-        return $this->successResponse(null, 'Diarization retry job dispatched.');
+    /**
+     * Determine the default processing mode based on configuration.
+     *
+     * @return string 'diarize' or 'transcribe'
+     */
+    private function defaultMode(): string
+    {
+        return config('meetings.diarization.enabled', false) ? 'diarize' : 'transcribe';
     }
 
     /**
