@@ -185,13 +185,13 @@ The "Speech Service" section in settings should contain:
 ### Phase 5: Transcription Viewer — Local Mode Integration
 - **Goal:** Integrate client-side processing into the existing transcription viewer
 - **Specs:**
-  - [ ] Transcription viewer config receives `speechServiceMode`, `speechServiceUrl`, `speechServiceToken` from controller
-  - [ ] When in Local mode and recording is uploaded (via `$dispatch` event or page refresh), viewer starts client-side processing
-  - [ ] Flow: fetch audio blob from stream endpoint → call local speech service → POST result to client-result endpoint
-  - [ ] UI shows "Processing locally — keep this tab open" indicator with elapsed timer
-  - [ ] Retry and retranscribe actions work in Local mode (download recording → reprocess locally → post result)
-  - [ ] Error states shown clearly: "Could not connect to your speech service at [url]", "Authentication failed (401)", "Speech service not ready (503)"
-  - [ ] When processing completes, normal transcription display takes over (same as server mode)
+  - [x] Transcription viewer config receives `speechServiceMode`, `speechServiceUrl`, `speechServiceToken` from controller
+  - [x] When in Local mode and recording is uploaded (via `$dispatch` event or page refresh), viewer starts client-side processing
+  - [x] Flow: fetch audio blob from stream endpoint → call local speech service → POST result to client-result endpoint
+  - [x] UI shows "Processing locally — keep this tab open" indicator with elapsed timer
+  - [x] Retry and retranscribe actions work in Local mode (download recording → reprocess locally → post result)
+  - [x] Error states shown clearly: "Could not connect to your speech service at [url]", "Authentication failed (401)", "Speech service not ready (503)"
+  - [x] When processing completes, normal transcription display takes over (same as server mode)
 - **Files:** `transcription-viewer.ts`, `MeetingPageController.php`
 
 ### Phase 6: Settings UI & Connection Test

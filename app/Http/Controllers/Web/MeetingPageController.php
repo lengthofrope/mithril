@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Enums\MeetingStatus;
 use App\Enums\MeetingType;
 use App\Events\MeetingScheduled;
+use App\Enums\SpeechServiceMode;
 use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Models\MeetingPrepItem;
@@ -210,6 +211,12 @@ class MeetingPageController extends Controller
             'aiEnabled' => (bool) config('ai.enabled', true),
             'estimatedTranscriptionSeconds' => $this->estimateTranscriptionDuration($meeting->transcription),
             'estimatedDiarizationSeconds' => $this->estimateDiarizationDuration($meeting->transcription),
+            'speechServiceMode' => auth()->user()->speech_service_mode?->value,
+            'speechServiceUrl' => auth()->user()->speech_service_url,
+            'speechServiceToken' => auth()->user()->isLocalSpeechMode() ? auth()->user()->speech_service_token : null,
+            'recordingStreamUrl' => $meeting->recordings->isNotEmpty()
+                ? "/api/v1/meetings/{$meeting->id}/recordings/{$meeting->recordings->last()->id}/stream"
+                : null,
         ]);
     }
 

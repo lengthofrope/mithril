@@ -995,6 +995,10 @@
                     canChooseMode: @js($transcriptionEnabled && config('meetings.diarization.enabled')),
                     hasRecordings: @js($meeting->recordings->count() > 0),
                     provider: @js($meeting->transcription?->provider),
+                    speechServiceMode: @js($speechServiceMode),
+                    speechServiceUrl: @js($speechServiceUrl),
+                    speechServiceToken: @js($speechServiceToken),
+                    recordingStreamUrl: @js($recordingStreamUrl),
                 })"
 
             >
