@@ -153,10 +153,10 @@ The "Speech Service" section in settings should contain:
 ### Phase 2: Recording Controller — Mode-Aware Dispatch
 - **Goal:** Skip server-side job dispatch when user is in Local mode
 - **Specs:**
-  - [ ] `MeetingRecordingController@store` checks `auth()->user()->isLocalSpeechMode()` before dispatching transcription/diarization jobs
-  - [ ] When Local mode: recording is saved but no job dispatched; response includes `processing_mode: 'local'` flag
-  - [ ] When Server mode: behavior unchanged (jobs dispatched as before)
-  - [ ] Existing recording tests updated to cover both modes
+  - [x] `MeetingRecordingController@store` checks `auth()->user()->isLocalSpeechMode()` before dispatching transcription/diarization jobs
+  - [x] When Local mode: recording is saved but no job dispatched; response includes `processing_mode: 'local'` flag
+  - [x] When Server mode: behavior unchanged (jobs dispatched as before)
+  - [x] Existing recording tests updated to cover both modes
 - **Files:** `MeetingRecordingController.php`
 
 ### Phase 3: Client Transcription API

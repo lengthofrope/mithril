@@ -81,7 +81,9 @@ class MeetingRecordingController extends Controller
             ]);
         }
 
-        if (config('meetings.transcription.enabled', true) && config('meetings.transcription.auto_start', true)) {
+        $isLocalMode = auth()->user()->isLocalSpeechMode();
+
+        if (!$isLocalMode && config('meetings.transcription.enabled', true) && config('meetings.transcription.auto_start', true)) {
             if (config('meetings.diarization.enabled', false)) {
                 DiarizeMeetingJob::dispatch($meeting, $recording);
             } else {
@@ -89,7 +91,11 @@ class MeetingRecordingController extends Controller
             }
         }
 
-        return $this->successResponse($recording, 'Recording saved.', 201);
+        $response = $this->successResponse($recording, 'Recording saved.', 201);
+        $payload = json_decode($response->getContent(), true);
+        $payload['processing_mode'] = $isLocalMode ? 'local' : 'server';
+
+        return response()->json($payload, 201);
     }
 
     /**

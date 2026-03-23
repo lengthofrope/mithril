@@ -3,11 +3,15 @@
 declare(strict_types=1);
 
 use App\Enums\MeetingStatus;
+use App\Enums\SpeechServiceMode;
+use App\Jobs\DiarizeMeetingJob;
+use App\Jobs\TranscribeMeetingJob;
 use App\Models\Meeting;
 use App\Models\MeetingRecording;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
@@ -233,6 +237,135 @@ describe('MeetingRecordingController', function (): void {
             );
 
             $response->assertUnauthorized();
+        });
+    });
+
+    describe('store — mode-aware dispatch', function (): void {
+        it('dispatches a transcription job in server mode', function (): void {
+            Bus::fake([TranscribeMeetingJob::class, DiarizeMeetingJob::class]);
+            Storage::fake('local');
+
+            config([
+                'meetings.transcription.enabled' => true,
+                'meetings.transcription.auto_start' => true,
+                'meetings.diarization.enabled' => false,
+                'meetings.custom_url_enabled' => true,
+            ]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Server,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $file = UploadedFile::fake()->create('recording.webm', 1024, 'audio/webm');
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/recordings",
+                ['audio' => $file]
+            );
+
+            Bus::assertDispatched(TranscribeMeetingJob::class);
+        });
+
+        it('does not dispatch any job in local mode', function (): void {
+            Bus::fake([TranscribeMeetingJob::class, DiarizeMeetingJob::class]);
+            Storage::fake('local');
+
+            config([
+                'meetings.transcription.enabled' => true,
+                'meetings.transcription.auto_start' => true,
+                'meetings.diarization.enabled' => false,
+                'meetings.custom_url_enabled' => true,
+            ]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $file = UploadedFile::fake()->create('recording.webm', 1024, 'audio/webm');
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/recordings",
+                ['audio' => $file]
+            );
+
+            Bus::assertNotDispatched(TranscribeMeetingJob::class);
+            Bus::assertNotDispatched(DiarizeMeetingJob::class);
+        });
+
+        it('includes processing_mode local in response when user is in local mode', function (): void {
+            Bus::fake([TranscribeMeetingJob::class, DiarizeMeetingJob::class]);
+            Storage::fake('local');
+
+            config([
+                'meetings.transcription.enabled' => true,
+                'meetings.transcription.auto_start' => true,
+                'meetings.custom_url_enabled' => true,
+            ]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $file = UploadedFile::fake()->create('recording.webm', 1024, 'audio/webm');
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/recordings",
+                ['audio' => $file]
+            );
+
+            $response->assertStatus(201)
+                ->assertJsonPath('processing_mode', 'local');
+        });
+
+        it('includes processing_mode server in response when user is in server mode', function (): void {
+            Bus::fake([TranscribeMeetingJob::class, DiarizeMeetingJob::class]);
+            Storage::fake('local');
+
+            config([
+                'meetings.transcription.enabled' => true,
+                'meetings.transcription.auto_start' => true,
+                'meetings.diarization.enabled' => false,
+                'meetings.custom_url_enabled' => true,
+            ]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Server,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $file = UploadedFile::fake()->create('recording.webm', 1024, 'audio/webm');
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/recordings",
+                ['audio' => $file]
+            );
+
+            $response->assertStatus(201)
+                ->assertJsonPath('processing_mode', 'server');
+        });
+
+        it('dispatches job when custom_url_enabled is false regardless of user mode', function (): void {
+            Bus::fake([TranscribeMeetingJob::class, DiarizeMeetingJob::class]);
+            Storage::fake('local');
+
+            config([
+                'meetings.transcription.enabled' => true,
+                'meetings.transcription.auto_start' => true,
+                'meetings.diarization.enabled' => false,
+                'meetings.custom_url_enabled' => false,
+            ]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            $file = UploadedFile::fake()->create('recording.webm', 1024, 'audio/webm');
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/recordings",
+                ['audio' => $file]
+            );
+
+            Bus::assertDispatched(TranscribeMeetingJob::class);
         });
     });
 
