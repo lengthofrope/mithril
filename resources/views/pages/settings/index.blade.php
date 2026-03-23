@@ -261,6 +261,245 @@
 
       <div class="space-y-6">
 
+        @if(config('meetings.custom_url_enabled'))
+        {{-- Speech Service --}}
+        <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Speech Service</h2>
+            </div>
+            <div
+                class="p-5 space-y-5"
+                x-data="{
+                    mode: '{{ $user->speech_service_mode?->value ?? 'server' }}',
+                    url: '{{ $user->speech_service_url ?? '' }}',
+                    token: '{{ $user->speech_service_token ?? '' }}',
+                    saving: false,
+                    saved: false,
+                    error: '',
+                    testResult: null,
+                    testing: false,
+                    serverTranscriptionEnabled: {{ config('meetings.transcription.enabled') ? 'true' : 'false' }},
+                    async save() {
+                        this.saving = true;
+                        this.saved = false;
+                        this.error = '';
+                        try {
+                            const response = await fetch('{{ route('settings.updateSpeechService') }}', {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    speech_service_mode: this.mode,
+                                    speech_service_url: this.url,
+                                    speech_service_token: this.token,
+                                }),
+                            });
+                            if (response.ok) {
+                                this.saved = true;
+                                setTimeout(() => this.saved = false, 2000);
+                            } else {
+                                const data = await response.json();
+                                this.error = Object.values(data.errors ?? {}).flat()[0] ?? 'Failed to save.';
+                            }
+                        } finally {
+                            this.saving = false;
+                        }
+                    },
+                    async testConnection() {
+                        if (!this.url) return;
+                        this.testing = true;
+                        this.testResult = null;
+                        try {
+                            const headers = {};
+                            if (this.token) headers['X-Speech-Token'] = this.token;
+                            const response = await fetch(this.url.replace(/\/+$/, '') + '/health', { headers });
+                            if (response.ok) {
+                                const data = await response.json();
+                                this.testResult = { success: true, device: data.device ?? 'unknown', ready: data.ready ?? false };
+                            } else if (response.status === 401) {
+                                this.testResult = { success: false, error: 'Authentication failed (401). Check your token.' };
+                            } else {
+                                this.testResult = { success: false, error: 'Service returned status ' + response.status + '.' };
+                            }
+                        } catch {
+                            this.testResult = { success: false, error: 'Could not connect to ' + this.url + '. Is the service running?' };
+                        } finally {
+                            this.testing = false;
+                        }
+                    }
+                }"
+            >
+                @if(config('meetings.transcription.enabled'))
+                {{-- System status card --}}
+                <div
+                    class="rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/50"
+                    x-data="{
+                        systemHealth: null,
+                        loading: true,
+                        async init() {
+                            try {
+                                const response = await fetch('/api/v1/speech-service/health', {
+                                    headers: { 'Accept': 'application/json' },
+                                });
+                                if (response.ok) {
+                                    const json = await response.json();
+                                    this.systemHealth = json.data;
+                                }
+                            } finally {
+                                this.loading = false;
+                            }
+                        }
+                    }"
+                >
+                    <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">System Speech Service</p>
+                    <div class="mt-2">
+                        <template x-if="loading">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Checking...</p>
+                        </template>
+                        <template x-if="!loading && systemHealth && systemHealth.ready">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-block h-2 w-2 rounded-full bg-green-500" aria-hidden="true"></span>
+                                <span class="text-sm text-green-600 dark:text-green-400">Online</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400" x-text="'(' + (systemHealth.device ?? 'unknown') + ')'"></span>
+                            </div>
+                        </template>
+                        <template x-if="!loading && (!systemHealth || !systemHealth.ready)">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-block h-2 w-2 rounded-full bg-red-500" aria-hidden="true"></span>
+                                <span class="text-sm text-red-600 dark:text-red-400">Offline</span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                @endif
+
+                {{-- Mode selector --}}
+                <div>
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90">Processing mode</p>
+
+                    @if(!config('meetings.transcription.enabled'))
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Server-side transcription is not available; configure a local speech service to enable transcription.</p>
+                    @endif
+
+                    <div class="mt-3 space-y-2">
+                        @if(config('meetings.transcription.enabled'))
+                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 transition hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600" :class="{ 'border-blue-500 dark:border-blue-500': mode === 'server' }">
+                            <input
+                                type="radio"
+                                name="speech_service_mode"
+                                value="server"
+                                x-model="mode"
+                                x-on:change="save()"
+                                class="mt-0.5"
+                            >
+                            <div>
+                                <p class="text-sm font-medium text-gray-800 dark:text-white/90">Server</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Transcription is processed on the server in the background. You can close your browser after uploading a recording.</p>
+                            </div>
+                        </label>
+                        @endif
+
+                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 transition hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600" :class="{ 'border-blue-500 dark:border-blue-500': mode === 'local' }">
+                            <input
+                                type="radio"
+                                name="speech_service_mode"
+                                value="local"
+                                x-model="mode"
+                                x-on:change="save()"
+                                class="mt-0.5"
+                            >
+                            <div>
+                                <p class="text-sm font-medium text-gray-800 dark:text-white/90">Local (your computer)</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Transcription is processed by a speech service running on your own computer. This can be much faster if you have a GPU. Your browser tab must remain open during processing.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- Local mode configuration --}}
+                <template x-if="mode === 'local'">
+                    <div class="space-y-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+                        <div>
+                            <label for="speech-service-url" class="text-sm font-medium text-gray-800 dark:text-white/90">Speech service URL</label>
+                            <input
+                                id="speech-service-url"
+                                type="url"
+                                x-model="url"
+                                x-on:change="save()"
+                                placeholder="http://localhost:8090"
+                                required
+                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="speech-service-token" class="text-sm font-medium text-gray-800 dark:text-white/90">Authentication token</label>
+                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Optional; depends on your local service configuration</p>
+                            <input
+                                id="speech-service-token"
+                                type="password"
+                                x-model="token"
+                                x-on:change="save()"
+                                placeholder="Leave empty if not required"
+                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                            >
+                        </div>
+
+                        <div>
+                            <button
+                                type="button"
+                                x-on:click="testConnection()"
+                                :disabled="!url || testing"
+                                class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                            >
+                                <span x-show="!testing">Test Connection</span>
+                                <span x-show="testing" x-cloak>Testing...</span>
+                            </button>
+
+                            <template x-if="testResult">
+                                <div class="mt-2">
+                                    <template x-if="testResult.success">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-block h-2 w-2 rounded-full bg-green-500" aria-hidden="true"></span>
+                                            <span class="text-sm text-green-600 dark:text-green-400">Connected</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400" x-text="'(device: ' + testResult.device + ')'"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="!testResult.success">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-block h-2 w-2 rounded-full bg-red-500" aria-hidden="true"></span>
+                                            <span class="text-sm text-red-600 dark:text-red-400" x-text="testResult.error"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="flex items-center gap-2 min-h-5">
+                    <span
+                        x-show="saved"
+                        x-transition:leave="transition ease-in duration-200"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="text-xs text-green-600 dark:text-green-400"
+                        x-cloak
+                    >Saved</span>
+                    <p
+                        x-show="error"
+                        x-text="error"
+                        class="text-xs text-red-600 dark:text-red-400"
+                        x-cloak
+                    ></p>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Data pruning --}}
         <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">

@@ -54,6 +54,8 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::post('meetings/{meeting}/extractions/bulk', [App\Http\Controllers\Api\MeetingExtractionController::class, 'bulk'])->name('meetings.extractions.bulk');
     Route::post('meetings/{meeting}/extractions/re-extract', [App\Http\Controllers\Api\MeetingExtractionController::class, 'reExtract'])->name('meetings.extractions.re-extract');
 
+    Route::get('speech-service/health', [App\Http\Controllers\Api\SpeechServiceHealthController::class, 'system'])->name('speech-service.health');
+
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);
 

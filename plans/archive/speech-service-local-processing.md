@@ -1,7 +1,7 @@
 # Per-User Local Speech Service Processing
 
 **Created:** 2026-03-22
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort + Claude
 **Depends on:** [speech-service-token-auth.md](speech-service-token-auth.md) (must be implemented first)
 
@@ -197,15 +197,15 @@ The "Speech Service" section in settings should contain:
 ### Phase 6: Settings UI & Connection Test
 - **Goal:** Users can manage speech service settings and verify connectivity
 - **Specs:**
-  - [ ] Settings page shows "Speech Service" section when `SPEECH_CUSTOM_URL_ENABLED` is true (regardless of `MEETING_TRANSCRIPTION_ENABLED`)
-  - [ ] System status card shown only when server-side transcription is enabled; proxied health check to system speech service URL showing device info (cpu/cuda), model, queue depth
-  - [ ] `SpeechServiceHealthController` with `system()` method: proxies health check to system `UNIFIED_SPEECH_BASE_URL`
-  - [ ] Mode selector: Server / Local radio buttons with explanation text. When server-side transcription is disabled, Server option is hidden and Local is auto-selected with an explanatory note ("Server-side transcription is not available; configure a local speech service to enable transcription.")
-  - [ ] Local mode shows URL input (placeholder `http://localhost:8090`), token input (password), "Test Connection" button
-  - [ ] "Test Connection" calls URL directly from browser (not proxied, since it's the user's localhost)
-  - [ ] Connection test shows success with device info or failure with error
-  - [ ] Auto-saves mode, URL, token via AJAX (debounced)
-  - [ ] Validation: Local mode requires non-empty URL
+  - [x] Settings page shows "Speech Service" section when `SPEECH_CUSTOM_URL_ENABLED` is true (regardless of `MEETING_TRANSCRIPTION_ENABLED`)
+  - [x] System status card shown only when server-side transcription is enabled; proxied health check to system speech service URL showing device info (cpu/cuda), model, queue depth
+  - [x] `SpeechServiceHealthController` with `system()` method: proxies health check to system `UNIFIED_SPEECH_BASE_URL`
+  - [x] Mode selector: Server / Local radio buttons with explanation text. When server-side transcription is disabled, Server option is hidden and Local is auto-selected with an explanatory note ("Server-side transcription is not available; configure a local speech service to enable transcription.")
+  - [x] Local mode shows URL input (placeholder `http://localhost:8090`), token input (password), "Test Connection" button
+  - [x] "Test Connection" calls URL directly from browser (not proxied, since it's the user's localhost)
+  - [x] Connection test shows success with device info or failure with error
+  - [x] Auto-saves mode, URL, token via AJAX (debounced)
+  - [x] Validation: Local mode requires non-empty URL
 - **Files:** `SettingsController.php`, `SpeechServiceHealthController.php`, `settings/index.blade.php`, `routes/web.php`, `routes/api.php`
 
 ## Parallelization
