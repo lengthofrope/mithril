@@ -1,7 +1,7 @@
 # Per-User Local Speech Service Processing
 
 **Created:** 2026-03-22
-**Status:** Draft
+**Status:** In Progress
 **Author:** Bas de Kort + Claude
 **Depends on:** [speech-service-token-auth.md](speech-service-token-auth.md) (must be implemented first)
 
@@ -142,12 +142,12 @@ The "Speech Service" section in settings should contain:
 ### Phase 1: User Model & Mode Configuration
 - **Goal:** Database and model support for per-user speech service settings
 - **Specs:**
-  - [ ] `SpeechServiceMode` enum with `Server` and `Local` string-backed values
-  - [ ] Migration adds nullable columns to `users`: `speech_service_mode` (string), `speech_service_url` (string), `speech_service_token` (string)
-  - [ ] `User` model: fields in `$fillable`, `speech_service_token` in `$hidden` and cast as `encrypted`
-  - [ ] `User` model has `isLocalSpeechMode(): bool` method (checks mode AND `custom_url_enabled` config; also returns true if `custom_url_enabled` is true, mode is Local, and server-side transcription is disabled)
-  - [ ] `config/meetings.php` adds `'custom_url_enabled' => (bool) env('SPEECH_CUSTOM_URL_ENABLED', false)`
-  - [ ] `.env.example` updated with `SPEECH_CUSTOM_URL_ENABLED=false`
+  - [x] `SpeechServiceMode` enum with `Server` and `Local` string-backed values
+  - [x] Migration adds nullable columns to `users`: `speech_service_mode` (string), `speech_service_url` (string), `speech_service_token` (string)
+  - [x] `User` model: fields in `$fillable`, `speech_service_token` in `$hidden` and cast as `encrypted`
+  - [x] `User` model has `isLocalSpeechMode(): bool` method (checks mode AND `custom_url_enabled` config; also returns true if `custom_url_enabled` is true, mode is Local, and server-side transcription is disabled)
+  - [x] `config/meetings.php` adds `'custom_url_enabled' => (bool) env('SPEECH_CUSTOM_URL_ENABLED', false)`
+  - [x] `.env.example` updated with `SPEECH_CUSTOM_URL_ENABLED=false`
 - **Files:** `SpeechServiceMode.php`, migration, `User.php`, `config/meetings.php`, `.env.example`
 
 ### Phase 2: Recording Controller — Mode-Aware Dispatch
@@ -207,6 +207,26 @@ The "Speech Service" section in settings should contain:
   - [ ] Auto-saves mode, URL, token via AJAX (debounced)
   - [ ] Validation: Local mode requires non-empty URL
 - **Files:** `SettingsController.php`, `SpeechServiceHealthController.php`, `settings/index.blade.php`, `routes/web.php`, `routes/api.php`
+
+## Parallelization
+
+**Strategy:** Partial parallel
+
+### Sequential: Phase 1
+Phase 1 (User Model & Config) is the foundation; all other phases depend on it.
+
+### Parallel Group 1: Phases 2, 3, 4, 6
+After Phase 1 completes, these can run concurrently:
+- **Teammate: backend** — Phase 2 (Recording Controller) + Phase 3 (Client Transcription API)
+  - Files: `MeetingRecordingController.php`, `ClientTranscriptionController.php`, `ClientTranscriptionRequest.php`, `routes/api.php`
+- **Teammate: typescript** — Phase 4 (Browser Speech Service Client)
+  - Files: `resources/js/services/local-speech-service.ts`, `resources/js/types/speech-service.ts`
+- **Teammate: frontend** — Phase 6 (Settings UI & Connection Test)
+  - Files: `SettingsController.php`, `SpeechServiceHealthController.php`, `settings/index.blade.php`, `routes/web.php`
+- **Sync point:** All four phases complete before Phase 5 starts
+
+### Sequential: Phase 5
+Phase 5 (Transcription Viewer integration) depends on Phase 3 (client-result API) and Phase 4 (local-speech-service.ts).
 
 ## Out of Scope
 
