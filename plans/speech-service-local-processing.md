@@ -162,13 +162,13 @@ The "Speech Service" section in settings should contain:
 ### Phase 3: Client Transcription API
 - **Goal:** Accept transcription/diarization results submitted by the browser
 - **Specs:**
-  - [ ] `POST /api/v1/meetings/{meeting}/transcription/client-result` endpoint
-  - [ ] Accepts `{ content: string, diarized_content?: object, language: string }`
-  - [ ] Validates user is in Local mode and `custom_url_enabled` is true (403 otherwise)
-  - [ ] Creates/updates `MeetingTranscription` with provider `unified`, status `completed`
-  - [ ] If `diarized_content` provided, sets `diarization_status` to `completed`
-  - [ ] Returns standard API response
-  - [ ] Form request validates content is non-empty string, diarized_content structure matches expected schema
+  - [x] `POST /api/v1/meetings/{meeting}/transcription/client-result` endpoint
+  - [x] Accepts `{ content: string, diarized_content?: object, language: string }`
+  - [x] Validates user is in Local mode and `custom_url_enabled` is true (403 otherwise)
+  - [x] Creates/updates `MeetingTranscription` with provider `unified`, status `completed`
+  - [x] If `diarized_content` provided, sets `diarization_status` to `completed`
+  - [x] Returns standard API response
+  - [x] Form request validates content is non-empty string, diarized_content structure matches expected schema
 - **Files:** `ClientTranscriptionController.php`, `ClientTranscriptionRequest.php`, `routes/api.php`
 
 ### Phase 4: Browser Speech Service Client
