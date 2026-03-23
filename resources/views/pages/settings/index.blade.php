@@ -270,9 +270,9 @@
             <div
                 class="p-5 space-y-5"
                 x-data="{
-                    mode: '{{ $user->speech_service_mode?->value ?? 'server' }}',
-                    url: '{{ $user->speech_service_url ?? '' }}',
-                    token: '{{ $user->speech_service_token ?? '' }}',
+                    mode: @js($user->speech_service_mode?->value ?? 'server'),
+                    url: @js($user->speech_service_url ?? ''),
+                    token: @js($user->speech_service_token ?? ''),
                     saving: false,
                     saved: false,
                     error: '',

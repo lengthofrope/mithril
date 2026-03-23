@@ -25,8 +25,16 @@ class SpeechServiceHealthController extends Controller
     {
         $baseUrl = config('meetings.transcription.base_url', 'http://localhost:8090');
 
+        $authToken = config('meetings.speech.auth_token', '');
+
         try {
-            $response = Http::timeout(5)->get("{$baseUrl}/health");
+            $request = Http::timeout(5);
+
+            if ($authToken !== '') {
+                $request = $request->withHeaders(['X-Speech-Token' => $authToken]);
+            }
+
+            $response = $request->get("{$baseUrl}/health");
 
             if ($response->successful()) {
                 return $this->successResponse($response->json());
