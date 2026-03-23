@@ -19,7 +19,8 @@ The server deployment may run a CPU-only speech service, resulting in slow trans
 6. The settings page shows a "Speech Service" section with mode selection, URL/token configuration, and connection test
 7. The settings page always shows the system speech service status (health check with device info)
 8. Both modes explained clearly in the UI with their trade-offs
-9. All existing tests remain passing; new behavior is covered by tests
+9. When `SPEECH_CUSTOM_URL_ENABLED` is true but server-side transcription is disabled, Local mode is still available as the only option
+10. All existing tests remain passing; new behavior is covered by tests
 
 ## Technical Design
 
@@ -116,6 +117,7 @@ sequenceDiagram
 - CORS: local speech service on `localhost:8090` receives requests from Mithril domain; CORS headers required (handled by token auth plan)
 - User switches from Local to Server → existing pending transcriptions can be retranscribed server-side
 - `SPEECH_CUSTOM_URL_ENABLED=false` → all users use Server mode, settings section hidden
+- `SPEECH_CUSTOM_URL_ENABLED=true` but server-side transcription disabled (`MEETING_TRANSCRIPTION_ENABLED=false` or no system speech service) → Speech Service section still shown; Server mode disabled/hidden, Local mode is the only option and auto-selected
 - Local mode without URL configured → validation prevents saving; UI disables save until URL provided
 - Large audio files → browser uses streaming fetch where possible
 
@@ -126,8 +128,9 @@ The "Speech Service" section in settings should contain:
 1. **System status card** — Always visible. Shows health check result from the system speech service (device: cpu/cuda, model, queue depth). Fetched via server-side proxy.
 
 2. **Mode selector** — Radio buttons:
-   - **Server (default)** — "Transcription is processed on the server in the background. You can close your browser after uploading a recording."
+   - **Server (default)** — "Transcription is processed on the server in the background. You can close your browser after uploading a recording." Only shown when server-side transcription is enabled (`MEETING_TRANSCRIPTION_ENABLED=true` and system speech service configured).
    - **Local (your computer)** — "Transcription is processed by a speech service running on your own computer. This can be much faster if you have a GPU. Your browser tab must remain open during processing."
+   - When server-side transcription is disabled, only Local mode is shown (no radio selector needed; just a label explaining why).
 
 3. **Local mode configuration** (shown when Local selected):
    - URL input (placeholder: `http://localhost:8090`)
@@ -142,7 +145,7 @@ The "Speech Service" section in settings should contain:
   - [ ] `SpeechServiceMode` enum with `Server` and `Local` string-backed values
   - [ ] Migration adds nullable columns to `users`: `speech_service_mode` (string), `speech_service_url` (string), `speech_service_token` (string)
   - [ ] `User` model: fields in `$fillable`, `speech_service_token` in `$hidden` and cast as `encrypted`
-  - [ ] `User` model has `isLocalSpeechMode(): bool` method (checks mode AND `custom_url_enabled` config)
+  - [ ] `User` model has `isLocalSpeechMode(): bool` method (checks mode AND `custom_url_enabled` config; also returns true if `custom_url_enabled` is true, mode is Local, and server-side transcription is disabled)
   - [ ] `config/meetings.php` adds `'custom_url_enabled' => (bool) env('SPEECH_CUSTOM_URL_ENABLED', false)`
   - [ ] `.env.example` updated with `SPEECH_CUSTOM_URL_ENABLED=false`
 - **Files:** `SpeechServiceMode.php`, migration, `User.php`, `config/meetings.php`, `.env.example`
@@ -194,10 +197,10 @@ The "Speech Service" section in settings should contain:
 ### Phase 6: Settings UI & Connection Test
 - **Goal:** Users can manage speech service settings and verify connectivity
 - **Specs:**
-  - [ ] Settings page shows "Speech Service" section when `SPEECH_CUSTOM_URL_ENABLED` and `MEETING_TRANSCRIPTION_ENABLED` are both true
-  - [ ] System status card always visible: proxied health check to system speech service URL showing device info (cpu/cuda), model, queue depth
+  - [ ] Settings page shows "Speech Service" section when `SPEECH_CUSTOM_URL_ENABLED` is true (regardless of `MEETING_TRANSCRIPTION_ENABLED`)
+  - [ ] System status card shown only when server-side transcription is enabled; proxied health check to system speech service URL showing device info (cpu/cuda), model, queue depth
   - [ ] `SpeechServiceHealthController` with `system()` method: proxies health check to system `UNIFIED_SPEECH_BASE_URL`
-  - [ ] Mode selector: Server / Local radio buttons with explanation text
+  - [ ] Mode selector: Server / Local radio buttons with explanation text. When server-side transcription is disabled, Server option is hidden and Local is auto-selected with an explanatory note ("Server-side transcription is not available; configure a local speech service to enable transcription.")
   - [ ] Local mode shows URL input (placeholder `http://localhost:8090`), token input (password), "Test Connection" button
   - [ ] "Test Connection" calls URL directly from browser (not proxied, since it's the user's localhost)
   - [ ] Connection test shows success with device info or failure with error
