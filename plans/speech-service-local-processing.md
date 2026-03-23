@@ -174,12 +174,12 @@ The "Speech Service" section in settings should contain:
 ### Phase 4: Browser Speech Service Client
 - **Goal:** TypeScript module for browser → local speech service communication
 - **Specs:**
-  - [ ] `local-speech-service.ts` exports `transcribe(audioBlob, language, url, token): Promise<{ text: string }>`
-  - [ ] Exports `diarize(audioBlob, language, url, token): Promise<{ segments: DiarizedSegment[], speakers: string[] }>`
-  - [ ] Exports `health(url, token): Promise<{ ready: boolean, device: string, models: object }>`
-  - [ ] Sends audio as multipart form data with `X-Speech-Token` header
-  - [ ] Handles errors with descriptive messages: connection refused, 401 unauthorized, 503 not ready
-  - [ ] TypeScript strict mode, exported types for all responses
+  - [x] `local-speech-service.ts` exports `transcribe(audioBlob, language, url, token): Promise<{ text: string }>`
+  - [x] Exports `diarize(audioBlob, language, url, token): Promise<{ segments: DiarizedSegment[], speakers: string[] }>`
+  - [x] Exports `health(url, token): Promise<{ ready: boolean, device: string, models: object }>`
+  - [x] Sends audio as multipart form data with `X-Speech-Token` header
+  - [x] Handles errors with descriptive messages: connection refused, 401 unauthorized, 503 not ready
+  - [x] TypeScript strict mode, exported types for all responses
 - **Files:** `resources/js/services/local-speech-service.ts`, `resources/js/types/speech-service.ts`
 
 ### Phase 5: Transcription Viewer — Local Mode Integration
