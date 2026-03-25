@@ -278,7 +278,7 @@
                     error: '',
                     testResult: null,
                     testing: false,
-                    serverTranscriptionEnabled: {{ config('meetings.transcription.enabled') ? 'true' : 'false' }},
+                    serverTranscriptionEnabled: {{ config('meetings.speech.server_enabled') ? 'true' : 'false' }},
                     async save() {
                         this.saving = true;
                         this.saved = false;
@@ -332,7 +332,7 @@
                     }
                 }"
             >
-                @if(config('meetings.transcription.enabled'))
+                @if(config('meetings.speech.server_enabled'))
                 {{-- System status card --}}
                 <div
                     class="rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/50"
@@ -380,12 +380,12 @@
                 <div>
                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">Processing mode</p>
 
-                    @if(!config('meetings.transcription.enabled'))
+                    @if(!config('meetings.speech.server_enabled'))
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Server-side transcription is not available; configure a local speech service to enable transcription.</p>
                     @endif
 
                     <div class="mt-3 space-y-2">
-                        @if(config('meetings.transcription.enabled'))
+                        @if(config('meetings.speech.server_enabled'))
                         <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 transition hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600" :class="{ 'border-blue-500 dark:border-blue-500': mode === 'server' }">
                             <input
                                 type="radio"

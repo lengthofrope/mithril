@@ -83,7 +83,7 @@ class MeetingRecordingController extends Controller
 
         $isLocalMode = auth()->user()->isLocalSpeechMode();
 
-        if (!$isLocalMode && config('meetings.transcription.enabled', true) && config('meetings.transcription.auto_start', true)) {
+        if (!$isLocalMode && config('meetings.speech.server_enabled', true) && config('meetings.transcription.auto_start', true)) {
             if (config('meetings.diarization.enabled', false)) {
                 DiarizeMeetingJob::dispatch($meeting, $recording);
             } else {

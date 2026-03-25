@@ -992,7 +992,7 @@
                     diarizationStartedAt: @js($meeting->transcription?->diarization_started_at?->toIso8601String()),
                     estimatedDiarizationSeconds: @js($estimatedDiarizationSeconds),
                     transcriptionEnabled: @js($transcriptionEnabled),
-                    canChooseMode: @js($transcriptionEnabled && config('meetings.diarization.enabled')),
+                    canChooseMode: @js($serverSpeechEnabled && config('meetings.diarization.enabled')),
                     hasRecordings: @js($meeting->recordings->count() > 0),
                     provider: @js($meeting->transcription?->provider),
                     speechServiceMode: @js($speechServiceMode),
