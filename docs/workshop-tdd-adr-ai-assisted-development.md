@@ -217,7 +217,9 @@ ANVIL leidt de lifecycle state af uit bestanden: de status in een plan, de aanwe
 
 **2. Kleine, gefocuste agents**
 
-In plaats van een enkele AI-sessie die steeds langer wordt (en steeds meer vergeet), splitst ANVIL werk op in gespecialiseerde agents. Een Builder-agent krijgt alleen de specs voor zijn fase, de relevante ADRs, en de projectconventies. Zijn context window bevat precies wat hij nodig heeft; niet de volledige geschiedenis van het project. Dit voorkomt attention decay doordat elke agent een kort, gefocust window heeft.
+In plaats van een enkele AI-sessie die steeds langer wordt (en steeds meer vergeet), splitst ANVIL werk op in gespecialiseerde agents. Een Builder-agent krijgt alleen de specs voor zijn fase, de relevante ADRs, en de projectconventies. Zijn context window bevat precies wat hij nodig heeft; niet de volledige geschiedenis van het project. Dit voorkomt attention decay doordat elke agent een kort, gefocust window heeft. Een bijkomend voordeel: kleinere context windows betekenen minder tokens per agent-aanroep, wat de API-kosten drukt en de responstijd verkort. Agents werken sneller omdat ze minder tekst hoeven te verwerken en minder last hebben van ruis.
+
+Een kanttekening: de orchestrator zelf accumuleert wel state gedurende de sessie; elke agent-dispatch, elk resultaat en elke gebruikersbeslissing vergroot zijn context. Bij complexe plannen met veel fases kan de orchestrator op termijn tegen dezelfde context-limieten aanlopen die de agents juist vermijden. Context management blijft dus wel belangrijk om te monitoren.
 
 **3. Mechanische bewaking vervangt geheugen**
 
@@ -234,6 +236,10 @@ De twee hooks (TDD Enforce en ADR Watch) vangen fouten die ontstaan door context
 ### De kern blijft
 
 ANVIL automatiseert de *flow*, maar de principes zijn dezelfde als in deel 2: PRDs, plannen, tests en beslissingen; vastgelegd in bestanden die elke sessie overleven. De tooling maakt het makkelijker om de discipline vol te houden, maar je kunt dezelfde aanpak toepassen met elk AI-hulpmiddel en een teksteditor.
+
+### Zelf uitproberen
+
+ANVIL is op dit moment nog in actieve ontwikkeling, maar ik zal de skill binnenkort beschikbaar stellen voor iedereen binnen Proud Nerds die hem wil uitproberen. Houd er rekening mee dat het een Claude Code skill is; je hebt een werkende Claude Code setup nodig om ermee aan de slag te gaan.
 
 ---
 
