@@ -995,6 +995,10 @@
                     canChooseMode: @js($transcriptionEnabled && config('meetings.diarization.enabled')),
                     hasRecordings: @js($meeting->recordings->count() > 0),
                     provider: @js($meeting->transcription?->provider),
+                    speechServiceMode: @js($speechServiceMode),
+                    speechServiceUrl: @js($speechServiceUrl),
+                    speechServiceToken: @js($speechServiceToken),
+                    recordingStreamUrl: @js($recordingStreamUrl),
                 })"
 
             >
@@ -1333,7 +1337,7 @@
                             </template>
 
                             {{-- Fallback: show elapsed only when no estimate available --}}
-                            <template x-if="overallProgressPercent === null && currentStartedAt">
+                            <template x-if="overallProgressPercent === null && (currentStartedAt || localProcessing)">
                                 <div class="text-xs text-gray-400 dark:text-gray-500">
                                     <span x-text="'Elapsed: ' + formatDuration(currentElapsedSeconds)"></span>
                                 </div>
@@ -1385,8 +1389,16 @@
                         <div class="max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed text-gray-700 whitespace-pre-line dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300" x-text="content"></div>
                     </template>
 
+                    {{-- Local processing error --}}
+                    <template x-if="localProcessingError && !localProcessing">
+                        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                            <p class="font-medium">Local processing failed</p>
+                            <p class="mt-1 text-xs" x-text="localProcessingError"></p>
+                        </div>
+                    </template>
+
                     {{-- No transcription yet --}}
-                    <template x-if="!status && !showManualInput">
+                    <template x-if="!status && !showManualInput && !isProcessing && !localProcessingError">
                         <div class="space-y-3">
                             @if($transcriptionEnabled && $meeting->recordings->count() > 0)
                                 <p class="text-sm text-gray-400 dark:text-gray-500">Recording available. Start transcription or enter it manually.</p>

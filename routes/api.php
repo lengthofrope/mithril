@@ -46,12 +46,15 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::post('meetings/{meeting}/transcription/retranscribe', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'retranscribe'])->name('meetings.transcription.retranscribe');
     Route::post('meetings/{meeting}/transcription/manual', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'storeManual'])->name('meetings.transcription.manual');
     Route::delete('meetings/{meeting}/transcription', [App\Http\Controllers\Api\MeetingTranscriptionController::class, 'destroy'])->name('meetings.transcription.destroy');
+    Route::post('meetings/{meeting}/transcription/client-result', [App\Http\Controllers\Api\ClientTranscriptionController::class, 'storeResult'])->name('meetings.transcription.client-result');
 
     Route::get('meetings/{meeting}/extractions', [App\Http\Controllers\Api\MeetingExtractionController::class, 'index'])->name('meetings.extractions.index');
     Route::post('meetings/{meeting}/extractions/{extraction}/accept', [App\Http\Controllers\Api\MeetingExtractionController::class, 'accept'])->name('meetings.extractions.accept');
     Route::post('meetings/{meeting}/extractions/{extraction}/reject', [App\Http\Controllers\Api\MeetingExtractionController::class, 'reject'])->name('meetings.extractions.reject');
     Route::post('meetings/{meeting}/extractions/bulk', [App\Http\Controllers\Api\MeetingExtractionController::class, 'bulk'])->name('meetings.extractions.bulk');
     Route::post('meetings/{meeting}/extractions/re-extract', [App\Http\Controllers\Api\MeetingExtractionController::class, 'reExtract'])->name('meetings.extractions.re-extract');
+
+    Route::get('speech-service/health', [App\Http\Controllers\Api\SpeechServiceHealthController::class, 'system'])->name('speech-service.health');
 
     Route::post('reorder', ReorderController::class);
     Route::post('auto-save', AutoSaveController::class);

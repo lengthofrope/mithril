@@ -5,11 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-03-25
+
+### Added
+
+- **Local speech service mode** — Users can now connect to their own speech service instance for transcription and diarization instead of relying on the system-wide server; configurable per user via Settings with mode selection (server/local), custom URL, and authentication token
+- **Speech service health check endpoint** — New API endpoint to proxy health checks to the system speech service, with authentication token support
+- **Client transcription submission** — New API endpoint accepting transcription and diarization results submitted directly from the browser when in local mode
+- **In-browser local processing** — Transcription viewer now supports local speech service processing with status indicators, error handling, and progress feedback
+- **Speech service settings UI** — New settings section for configuring speech service mode, custom service URL, and token; includes connection test functionality
+
+### Changed
+
+- **CSP connect-src directive** — When custom speech service URLs are enabled, `localhost` and `127.0.0.1` origins are allowed in Content-Security-Policy to support local service connections
+- **Meeting recording processing** — Recording controller now respects the user's speech service mode; local mode skips server-side job dispatch
+- **Meeting detail page** — Added speech service mode context to the transcription viewer component
+
 ## [1.9.2] - 2026-03-22
 
 ### Fixed
 
-- **OpenRouter API integration** — Responses wrapped in markdown code fences (`` ```json ``) are now correctly parsed; moved shared `extractJson()` method to `AbstractInsightExtractor` base class so all providers (OpenAI, Anthropic, OpenRouter) benefit from resilient JSON extraction
+- **OpenRouter API integration** — Responses wrapped in markdown code fences are now correctly parsed; moved shared `extractJson()` method to `AbstractInsightExtractor` base class so all providers (OpenAI, Anthropic, OpenRouter) benefit from resilient JSON extraction
 
 ### Changed
 

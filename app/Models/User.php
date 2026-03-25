@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\SpeechServiceMode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -39,6 +40,9 @@ class User extends Authenticatable
         'dashboard_upcoming_follow_ups',
         'dashboard_upcoming_meetings',
         'sidebar_collapsed',
+        'speech_service_mode',
+        'speech_service_url',
+        'speech_service_token',
     ];
 
     /**
@@ -55,6 +59,7 @@ class User extends Authenticatable
         'microsoft_refresh_token',
         'jira_access_token',
         'jira_refresh_token',
+        'speech_service_token',
     ];
 
     /**
@@ -80,6 +85,8 @@ class User extends Authenticatable
             'dashboard_upcoming_meetings'      => 'integer',
             'sidebar_collapsed'                 => 'boolean',
             'is_active'                     => 'boolean',
+            'speech_service_mode'           => SpeechServiceMode::class,
+            'speech_service_token'          => 'encrypted',
         ];
     }
 
@@ -113,6 +120,15 @@ class User extends Authenticatable
     public function getEffectiveTimezone(): string
     {
         return $this->timezone ?? 'Europe/Amsterdam';
+    }
+
+    /**
+     * Determine whether the user is configured for local speech service processing.
+     */
+    public function isLocalSpeechMode(): bool
+    {
+        return config('meetings.custom_url_enabled', false)
+            && $this->speech_service_mode === SpeechServiceMode::Local;
     }
 
     /**

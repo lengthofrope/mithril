@@ -1,3 +1,6 @@
+import { transcribe, diarize, SpeechServiceError } from '@/services/local-speech-service';
+import type { SpeechServiceMode } from '@/types/speech-service';
+
 interface DiarizedSegment {
     speaker: string;
     text: string;
@@ -23,6 +26,10 @@ interface TranscriptionViewerConfig {
     canChooseMode: boolean;
     hasRecordings: boolean;
     provider: string | null;
+    speechServiceMode: SpeechServiceMode | null;
+    speechServiceUrl: string | null;
+    speechServiceToken: string | null;
+    recordingStreamUrl: string | null;
 }
 
 interface TranscriptionViewerState {
@@ -55,6 +62,14 @@ interface TranscriptionViewerState {
     manualContent: string;
     polling: boolean;
     speakerColors: string[];
+    speechServiceMode: SpeechServiceMode | null;
+    speechServiceUrl: string | null;
+    speechServiceToken: string | null;
+    recordingStreamUrl: string | null;
+    localProcessing: boolean;
+    localProcessingError: string | null;
+    localElapsedTimer: ReturnType<typeof setInterval> | null;
+    localElapsedSeconds: number;
 
     init(): void;
     refreshData(): Promise<void>;
@@ -70,7 +85,11 @@ interface TranscriptionViewerState {
     saveManual(): Promise<void>;
     deleteTranscription(): Promise<void>;
     deleteRecordings(): Promise<void>;
+    processLocally(): Promise<void>;
+    startLocalElapsedTimer(): void;
+    stopLocalElapsedTimer(): void;
     isManual: boolean;
+    isLocalMode: boolean;
 
     segments: DiarizedSegment[];
     hasDiarization: boolean;
@@ -127,6 +146,14 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         showManualInput: !config.transcriptionEnabled,
         manualContent: '',
         polling: false,
+        speechServiceMode: config.speechServiceMode ?? null,
+        speechServiceUrl: config.speechServiceUrl ?? null,
+        speechServiceToken: config.speechServiceToken ?? null,
+        recordingStreamUrl: config.recordingStreamUrl ?? null,
+        localProcessing: false,
+        localProcessingError: null as string | null,
+        localElapsedTimer: null as ReturnType<typeof setInterval> | null,
+        localElapsedSeconds: 0,
 
         speakerColors: [
             'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -160,6 +187,14 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         get isManual(): boolean {
             const self = this as unknown as TranscriptionViewerState;
             return self.provider === 'manual';
+        },
+
+        /**
+         * Whether the user is configured for local speech service processing.
+         */
+        get isLocalMode(): boolean {
+            const self = this as unknown as TranscriptionViewerState;
+            return self.speechServiceMode === 'local' && !!self.speechServiceUrl;
         },
 
         get hasDiarization(): boolean {
@@ -244,6 +279,8 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get currentPhaseLabel(): string {
             const self = this as unknown as TranscriptionViewerState;
+            if (self.localProcessing && self.diarizationEnabled) return 'Transcribing & identifying speakers locally…';
+            if (self.localProcessing) return 'Transcribing audio locally…';
             if (self.status === 'pending') return 'Waiting to start…';
             if (self.status === 'processing' && self.processingMode === 'diarize') return 'Transcribing & identifying speakers…';
             if (self.status === 'processing') return 'Transcribing audio…';
@@ -256,6 +293,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get currentElapsedSeconds(): number {
             const self = this as unknown as TranscriptionViewerState;
+            if (self.localProcessing) return self.localElapsedSeconds;
             return self.currentPhase === 2 ? self.diarizationElapsedSeconds : self.elapsedSeconds;
         },
 
@@ -280,7 +318,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get isProcessing(): boolean {
             const self = this as unknown as TranscriptionViewerState;
-            return self.currentPhase !== null;
+            return self.currentPhase !== null || self.localProcessing;
         },
 
         /**
@@ -406,6 +444,11 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Initialize the component.
          */
         init(this: TranscriptionViewerState): void {
+            if (this.isLocalMode && this.hasRecordings && (this.status === null || this.status === 'pending')) {
+                this.processLocally();
+                return;
+            }
+
             if (this.shouldPoll) {
                 this.startPolling();
             }
@@ -494,6 +537,17 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Retry a failed transcription.
          */
         async retry(this: TranscriptionViewerState): Promise<void> {
+            if (this.isLocalMode) {
+                this.status = 'pending';
+                this.errorMessage = '';
+                this.localProcessingError = null;
+                this.diarizationStatus = null;
+                this.diarizedContent = '';
+                this.resetTimers();
+                this.processLocally();
+                return;
+            }
+
             const response = await fetch(`${baseUrl}/retry`, {
                 method: 'POST',
                 headers: {
@@ -517,6 +571,18 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Retranscribe all recordings from scratch.
          */
         async retranscribeAll(this: TranscriptionViewerState): Promise<void> {
+            if (this.isLocalMode) {
+                this.status = 'pending';
+                this.content = '';
+                this.errorMessage = '';
+                this.localProcessingError = null;
+                this.diarizationStatus = null;
+                this.diarizedContent = '';
+                this.resetTimers();
+                this.processLocally();
+                return;
+            }
+
             const response = await fetch(`${baseUrl}/retranscribe`, {
                 method: 'POST',
                 headers: {
@@ -602,6 +668,109 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
 
             this.hasRecordings = false;
             this.showDeletePrompt = false;
+        },
+
+        /**
+         * Start the local processing elapsed timer.
+         */
+        startLocalElapsedTimer(this: TranscriptionViewerState): void {
+            this.stopLocalElapsedTimer();
+            const started = Date.now();
+            this.localElapsedSeconds = 0;
+            this.localElapsedTimer = setInterval(() => {
+                this.localElapsedSeconds = Math.floor((Date.now() - started) / 1000);
+            }, 1000);
+        },
+
+        /**
+         * Stop the local processing elapsed timer.
+         */
+        stopLocalElapsedTimer(this: TranscriptionViewerState): void {
+            if (this.localElapsedTimer) {
+                clearInterval(this.localElapsedTimer);
+                this.localElapsedTimer = null;
+            }
+        },
+
+        /**
+         * Process a recording locally via the user's speech service.
+         *
+         * Downloads the audio from the server, sends it to the local speech
+         * service, and posts the result back to the Mithril API.
+         */
+        async processLocally(this: TranscriptionViewerState): Promise<void> {
+            if (!this.speechServiceUrl || !this.recordingStreamUrl) return;
+
+            this.localProcessing = true;
+            this.localProcessingError = null;
+            this.startLocalElapsedTimer();
+
+            try {
+                const audioResponse = await fetch(this.recordingStreamUrl, {
+                    headers: { 'Accept': '*/*' },
+                });
+
+                if (!audioResponse.ok) {
+                    throw new Error('Failed to download recording from server.');
+                }
+
+                const audioBlob = await audioResponse.blob();
+                const language = 'nl';
+                const useDiarize = this.diarizationEnabled;
+
+                let content: string;
+                let diarizedContent: string | null = null;
+
+                if (useDiarize) {
+                    const result = await diarize(
+                        audioBlob,
+                        language,
+                        this.speechServiceUrl,
+                        this.speechServiceToken,
+                    );
+                    content = result.segments.map(s => s.text).join(' ');
+                    diarizedContent = JSON.stringify(result);
+                } else {
+                    const result = await transcribe(
+                        audioBlob,
+                        language,
+                        this.speechServiceUrl,
+                        this.speechServiceToken,
+                    );
+                    content = result.text;
+                }
+
+                const postResponse = await fetch(`${baseUrl}/client-result`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content,
+                        diarized_content: diarizedContent,
+                        language,
+                    }),
+                });
+
+                if (!postResponse.ok) {
+                    throw new Error('Failed to save transcription result.');
+                }
+
+                await this.refreshData();
+            } catch (error) {
+                if (error instanceof SpeechServiceError) {
+                    this.localProcessingError = error.message;
+                } else if (error instanceof Error) {
+                    this.localProcessingError = error.message;
+                } else {
+                    this.localProcessingError = 'An unknown error occurred during local processing.';
+                }
+            } finally {
+                this.localProcessing = false;
+                this.stopLocalElapsedTimer();
+            }
         },
     };
 }

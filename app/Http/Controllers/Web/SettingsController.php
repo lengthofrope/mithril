@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\SpeechServiceMode;
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
 use App\Models\MeetingRecording;
@@ -147,6 +148,45 @@ class SettingsController extends Controller
             'dashboard_upcoming_tasks' => $validated['dashboard_upcoming_tasks'] ?? null,
             'dashboard_upcoming_follow_ups' => $validated['dashboard_upcoming_follow_ups'] ?? null,
             'dashboard_upcoming_meetings' => $validated['dashboard_upcoming_meetings'] ?? null,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Update the authenticated user's speech service settings.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateSpeechService(Request $request): JsonResponse
+    {
+        $customUrlEnabled = config('meetings.custom_url_enabled', false);
+        $mode = $request->input('speech_service_mode');
+
+        $rules = [
+            'speech_service_mode' => ['required', Rule::enum(SpeechServiceMode::class)],
+            'speech_service_token' => ['nullable', 'string'],
+        ];
+
+        if (!$customUrlEnabled && $mode !== SpeechServiceMode::Server->value) {
+            $rules['speech_service_mode'][] = Rule::in([SpeechServiceMode::Server->value]);
+        }
+
+        if ($mode === 'local') {
+            $rules['speech_service_url'] = ['required', 'string', 'url'];
+        } else {
+            $rules['speech_service_url'] = ['nullable', 'string'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $request->user()->update([
+            'speech_service_mode' => $validated['speech_service_mode'],
+            'speech_service_url' => $validated['speech_service_url'] ?? $request->user()->speech_service_url,
+            'speech_service_token' => array_key_exists('speech_service_token', $validated)
+                ? $validated['speech_service_token']
+                : $request->user()->speech_service_token,
         ]);
 
         return response()->json(['success' => true]);

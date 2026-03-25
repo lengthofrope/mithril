@@ -35,6 +35,8 @@ return [
         'base_url' => env('UNIFIED_SPEECH_BASE_URL', 'http://localhost:8090'),
     ],
 
+    'custom_url_enabled' => (bool) env('SPEECH_CUSTOM_URL_ENABLED', false),
+
     'speech' => [
         'auth_token' => env('SPEECH_AUTH_TOKEN', ''),
     ],

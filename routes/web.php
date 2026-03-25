@@ -107,6 +107,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/settings/prune', [SettingsController::class, 'prune'])->name('settings.prune');
     Route::patch('/settings/dashboard-widgets', [SettingsController::class, 'updateDashboardWidgets'])->name('settings.updateDashboardWidgets');
     Route::patch('/settings/sidebar-collapsed', [SettingsController::class, 'updateSidebarCollapsed'])->name('settings.updateSidebarCollapsed');
+    Route::patch('/settings/speech-service', [SettingsController::class, 'updateSpeechService'])->name('settings.updateSpeechService');
     Route::post('/tasks/bulk-update', [TaskPageController::class, 'bulkUpdate'])->name('tasks.bulk-update');
     Route::post('/tasks/move', [TaskPageController::class, 'move'])->name('tasks.move');
 
