@@ -1115,3 +1115,38 @@ test('show page passes teamOptions for team and other meeting types', function (
 
     $response->assertViewHas('teamOptions');
 });
+
+// ---------------------------------------------------------------------------
+// Speech service view variables
+// ---------------------------------------------------------------------------
+
+test('show page passes null speech service vars when custom_url_enabled is false', function () {
+    config(['meetings.custom_url_enabled' => false]);
+
+    $user = User::factory()->create([
+        'speech_service_mode' => 'local',
+        'speech_service_url' => 'http://localhost:8090',
+    ]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get('/meetings/' . $meeting->id);
+
+    $response->assertViewHas('speechServiceMode', null)
+        ->assertViewHas('speechServiceUrl', null)
+        ->assertViewHas('speechServiceToken', null);
+});
+
+test('show page passes actual speech service vars when custom_url_enabled is true', function () {
+    config(['meetings.custom_url_enabled' => true]);
+
+    $user = User::factory()->create([
+        'speech_service_mode' => 'local',
+        'speech_service_url' => 'http://localhost:8090',
+    ]);
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get('/meetings/' . $meeting->id);
+
+    $response->assertViewHas('speechServiceMode', 'local')
+        ->assertViewHas('speechServiceUrl', 'http://localhost:8090');
+});

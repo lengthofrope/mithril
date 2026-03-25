@@ -99,7 +99,7 @@ describe('Settings — Speech Service', function (): void {
             $response->assertOk();
         });
 
-        it('returns 403 when custom_url_enabled is false', function (): void {
+        it('rejects local mode when custom_url_enabled is false', function (): void {
             config(['meetings.custom_url_enabled' => false]);
 
             $user = User::factory()->create();
@@ -109,7 +109,27 @@ describe('Settings — Speech Service', function (): void {
                 ['speech_service_mode' => 'local']
             );
 
-            $response->assertForbidden();
+            $response->assertUnprocessable()
+                ->assertJsonValidationErrors(['speech_service_mode']);
+        });
+
+        it('allows resetting to server mode when custom_url_enabled is false', function (): void {
+            config(['meetings.custom_url_enabled' => false]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => 'local',
+                'speech_service_url' => 'http://localhost:8090',
+            ]);
+
+            $response = $this->actingAs($user)->patchJson(
+                route('settings.updateSpeechService'),
+                ['speech_service_mode' => 'server']
+            );
+
+            $response->assertOk()
+                ->assertJson(['success' => true]);
+
+            expect($user->fresh()->speech_service_mode)->toBe(SpeechServiceMode::Server);
         });
 
         it('returns 401 for unauthenticated requests', function (): void {
