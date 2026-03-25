@@ -161,16 +161,17 @@ class SettingsController extends Controller
      */
     public function updateSpeechService(Request $request): JsonResponse
     {
-        if (!config('meetings.custom_url_enabled', false)) {
-            return response()->json(['message' => 'Speech service configuration is not available.'], 403);
-        }
-
+        $customUrlEnabled = config('meetings.custom_url_enabled', false);
         $mode = $request->input('speech_service_mode');
 
         $rules = [
             'speech_service_mode' => ['required', Rule::enum(SpeechServiceMode::class)],
             'speech_service_token' => ['nullable', 'string'],
         ];
+
+        if (!$customUrlEnabled && $mode !== SpeechServiceMode::Server->value) {
+            $rules['speech_service_mode'][] = Rule::in([SpeechServiceMode::Server->value]);
+        }
 
         if ($mode === 'local') {
             $rules['speech_service_url'] = ['required', 'string', 'url'];

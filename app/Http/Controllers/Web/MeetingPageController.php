@@ -211,8 +211,8 @@ class MeetingPageController extends Controller
             'aiEnabled' => (bool) config('ai.enabled', true),
             'estimatedTranscriptionSeconds' => $this->estimateTranscriptionDuration($meeting->transcription),
             'estimatedDiarizationSeconds' => $this->estimateDiarizationDuration($meeting->transcription),
-            'speechServiceMode' => auth()->user()->speech_service_mode?->value,
-            'speechServiceUrl' => auth()->user()->speech_service_url,
+            'speechServiceMode' => auth()->user()->isLocalSpeechMode() ? auth()->user()->speech_service_mode?->value : null,
+            'speechServiceUrl' => auth()->user()->isLocalSpeechMode() ? auth()->user()->speech_service_url : null,
             'speechServiceToken' => auth()->user()->isLocalSpeechMode() ? auth()->user()->speech_service_token : null,
             'recordingStreamUrl' => $meeting->recordings->isNotEmpty()
                 ? "/api/v1/meetings/{$meeting->id}/recordings/{$meeting->recordings->last()->id}/stream"
