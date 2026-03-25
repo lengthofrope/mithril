@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-03-25
+
+### Changed
+
+- **`SPEECH_SERVER_ENABLED` env var** — New independent flag to enable/disable server-side speech processing; decoupled from `MEETING_TRANSCRIPTION_ENABLED` and `MEETING_DIARIZATION_ENABLED` so server and local modes can be toggled independently
+
+### Fixed
+
+- **Private Network Access** — Speech service Docker container now responds with `Access-Control-Allow-Private-Network: true` header, allowing browsers to connect from public origins to local loopback services
+
 ## [1.10.0] - 2026-03-25
 
 ### Added
