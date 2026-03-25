@@ -35,7 +35,7 @@
                     'memberOptions' => $memberOptions,
                 ])
 
-                @include('partials.bila-create-modal', [
+                @include('partials.meeting-create-modal', [
                     'teamOptions' => $teamOptions,
                     'memberOptions' => $memberOptions,
                 ])
@@ -86,11 +86,11 @@
             </x-tl.counter-card>
 
             <x-tl.counter-card
-                title="Bilas this week"
-                :count="$counters['bilas_this_week']"
+                title="Meetings this week"
+                :count="$counters['meetings_this_week']"
                 color="purple"
-                :link="route('bilas.index')"
-                counterKey="bilas_this_week"
+                :link="route('meetings.index')"
+                counterKey="meetings_this_week"
             >
                 <x-slot name="icon">
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -117,7 +117,7 @@
             </div>
         </div>
 
-        {{-- Follow-ups + Bilas (app-specific) --}}
+        {{-- Follow-ups + Meetings (app-specific) --}}
         <div class="flex flex-col gap-6">
             <div
                 x-data="refreshable({ url: '{{ route('partials.dashboard.follow-ups') }}', topics: ['follow_ups'], pollInterval: 30000 })"
@@ -131,12 +131,12 @@
             </div>
 
             <div
-                x-data="refreshable({ url: '{{ route('partials.dashboard.bilas') }}', topics: ['bilas'], pollInterval: 30000 })"
+                x-data="refreshable({ url: '{{ route('partials.dashboard.meetings') }}', topics: ['meetings'], pollInterval: 30000 })"
             >
                 <div data-refresh-target>
-                    @include('partials.dashboard.bilas', [
-                        'todayBilas' => $todayBilas,
-                        'upcomingBilas' => $upcomingBilas,
+                    @include('partials.dashboard.meetings', [
+                        'todayMeetings' => $todayMeetings,
+                        'upcomingMeetings' => $upcomingMeetings,
                     ])
                 </div>
             </div>

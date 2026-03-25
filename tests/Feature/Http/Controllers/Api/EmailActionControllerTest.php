@@ -148,7 +148,7 @@ describe('GET /api/v1/emails/{email}/prefill/{type}', function (): void {
             ->and($response->json('data.team_member_id'))->toBe($member->id);
     });
 
-    it('returns 422 for bila when sender is not a team member', function (): void {
+    it('returns 422 for meeting when sender is not a team member', function (): void {
         $user  = User::factory()->create();
         $email = Email::factory()->create([
             'user_id'      => $user->id,
@@ -156,7 +156,7 @@ describe('GET /api/v1/emails/{email}/prefill/{type}', function (): void {
         ]);
 
         $response = $this->actingAs($user)
-            ->getJson("/api/v1/emails/{$email->id}/prefill/bila");
+            ->getJson("/api/v1/emails/{$email->id}/prefill/meeting");
 
         $response->assertStatus(422);
     });
@@ -198,7 +198,7 @@ describe('POST /api/v1/emails/{email}/create/{type}', function (): void {
         expect(Note::count())->toBe(1);
     });
 
-    it('returns 422 for bila when sender is not a team member', function (): void {
+    it('returns 422 for meeting when sender is not a team member', function (): void {
         $user  = User::factory()->create();
         $email = Email::factory()->create([
             'user_id'      => $user->id,
@@ -206,7 +206,7 @@ describe('POST /api/v1/emails/{email}/create/{type}', function (): void {
         ]);
 
         $response = $this->actingAs($user)
-            ->postJson("/api/v1/emails/{$email->id}/create/bila");
+            ->postJson("/api/v1/emails/{$email->id}/create/meeting");
 
         $response->assertStatus(422);
     });

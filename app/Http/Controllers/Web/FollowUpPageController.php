@@ -76,7 +76,7 @@ class FollowUpPageController extends Controller
             'later' => $upcoming,
         ];
 
-        if ($request->wantsJson()) {
+        if ($request->ajax()) {
             return view('partials.follow-ups-list', [
                 'sections' => $sections,
             ]);

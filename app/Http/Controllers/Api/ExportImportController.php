@@ -7,8 +7,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\Agreement;
-use App\Models\Bila;
-use App\Models\BilaPrepItem;
+use App\Models\Meeting;
+use App\Models\MeetingAttendee;
+use App\Models\MeetingPrepItem;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\NoteTag;
@@ -144,8 +145,9 @@ class ExportImportController extends Controller
                 'task_groups' => TaskGroup::all()->toArray(),
                 'tasks' => Task::all()->toArray(),
                 'follow_ups' => FollowUp::all()->toArray(),
-                'bilas' => Bila::all()->toArray(),
-                'bila_prep_items' => BilaPrepItem::all()->toArray(),
+                'meetings' => Meeting::all()->toArray(),
+                'meeting_attendees' => MeetingAttendee::all()->toArray(),
+                'meeting_prep_items' => MeetingPrepItem::all()->toArray(),
                 'agreements' => Agreement::all()->toArray(),
                 'notes' => Note::all()->toArray(),
                 'note_tags' => NoteTag::all()->toArray(),
@@ -163,8 +165,9 @@ class ExportImportController extends Controller
     {
         NoteTag::withoutGlobalScopes()->where('user_id', $userId)->delete();
         Note::withoutGlobalScopes()->where('user_id', $userId)->delete();
-        BilaPrepItem::withoutGlobalScopes()->where('user_id', $userId)->delete();
-        Bila::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        MeetingPrepItem::withoutGlobalScopes()->where('user_id', $userId)->delete();
+        MeetingAttendee::query()->whereHas('meeting', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $userId))->delete();
+        Meeting::withoutGlobalScopes()->where('user_id', $userId)->delete();
         Agreement::withoutGlobalScopes()->where('user_id', $userId)->delete();
         FollowUp::withoutGlobalScopes()->where('user_id', $userId)->delete();
         Task::withoutGlobalScopes()->where('user_id', $userId)->delete();
@@ -208,8 +211,8 @@ class ExportImportController extends Controller
         $this->insertIfPresent($data, 'task_groups', TaskGroup::class, $userId);
         $this->insertIfPresent($data, 'tasks', Task::class, $userId);
         $this->insertIfPresent($data, 'follow_ups', FollowUp::class, $userId);
-        $this->insertIfPresent($data, 'bilas', Bila::class, $userId);
-        $this->insertIfPresent($data, 'bila_prep_items', BilaPrepItem::class, $userId);
+        $this->insertIfPresent($data, 'meetings', Meeting::class, $userId);
+        $this->insertIfPresent($data, 'meeting_prep_items', MeetingPrepItem::class, $userId);
         $this->insertIfPresent($data, 'agreements', Agreement::class, $userId);
         $this->insertIfPresent($data, 'notes', Note::class, $userId);
         $this->insertIfPresent($data, 'note_tags', NoteTag::class, $userId);

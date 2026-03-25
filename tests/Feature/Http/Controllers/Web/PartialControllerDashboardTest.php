@@ -62,11 +62,11 @@ describe('PartialController dashboard sections', function (): void {
         });
     });
 
-    describe('dashboard bilas section', function (): void {
-        it('returns HTML partial for dashboard bilas section', function (): void {
+    describe('dashboard meetings section', function (): void {
+        it('returns HTML partial for dashboard meetings section', function (): void {
             $user = User::factory()->create();
 
-            $response = $this->actingAs($user)->get('/partials/dashboard/bilas');
+            $response = $this->actingAs($user)->get('/partials/dashboard/meetings');
 
             $response->assertOk()
                 ->assertHeader('ETag');

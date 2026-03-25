@@ -9,7 +9,7 @@
     $selectFilters = collect($filters)->whereIn('type', ['select', 'multi-select', 'date-range']);
     $booleanFilters = collect($filters)->where('type', 'boolean');
     $hasDropdowns = $selectFilters->isNotEmpty() || $booleanFilters->isNotEmpty();
-    $selectClasses = 'w-full appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-9 py-1.5 text-sm text-gray-800 sm:w-40 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-400';
+    $selectClasses = 'w-full rounded-lg border border-gray-200 bg-white pl-3 py-1.5 text-sm text-gray-800 sm:w-40 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-400';
 @endphp
 
 <div
@@ -123,23 +123,16 @@
                                     >
                                 </div>
                             @elseif(!empty($filter['linked_to']))
-                                <div class="relative">
-                                    <select
-                                        id="filter-{{ $filter['field'] }}"
-                                        x-model="filterState['{{ $filter['field'] }}']"
-                                        class="{{ $selectClasses }}"
-                                    >
-                                        <option value="">All</option>
-                                        <template x-for="opt in @js($filter['options'] ?? []).filter(o => !filterState['{{ $filter['linked_to'] }}'] || String(o.{{ $filter['linked_to'] }}) === String(filterState['{{ $filter['linked_to'] }}']))" :key="opt.value">
-                                            <option :value="opt.value" x-text="opt.label"></option>
-                                        </template>
-                                    </select>
-                                    <span class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-400">
-                                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
-                                </div>
+                                <select
+                                    id="filter-{{ $filter['field'] }}"
+                                    x-model="filterState['{{ $filter['field'] }}']"
+                                    class="{{ $selectClasses }}"
+                                >
+                                    <option value="">All</option>
+                                    <template x-for="opt in @js($filter['options'] ?? []).filter(o => !filterState['{{ $filter['linked_to'] }}'] || String(o.{{ $filter['linked_to'] }}) === String(filterState['{{ $filter['linked_to'] }}']))" :key="opt.value">
+                                        <option :value="opt.value" x-text="opt.label"></option>
+                                    </template>
+                                </select>
                             @elseif($filter['type'] === 'multi-select')
                                 <select
                                     id="filter-{{ $filter['field'] }}"
@@ -152,23 +145,16 @@
                                     @endforeach
                                 </select>
                             @else
-                                <div class="relative">
-                                    <select
-                                        id="filter-{{ $filter['field'] }}"
-                                        x-model="filterState['{{ $filter['field'] }}']"
-                                        class="{{ $selectClasses }}"
-                                    >
-                                        <option value="">All</option>
-                                        @foreach($filter['options'] ?? [] as $option)
-                                            <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-                                        @endforeach
-                                    </select>
-                                    <span class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-400">
-                                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
-                                </div>
+                                <select
+                                    id="filter-{{ $filter['field'] }}"
+                                    x-model="filterState['{{ $filter['field'] }}']"
+                                    class="{{ $selectClasses }}"
+                                >
+                                    <option value="">All</option>
+                                    @foreach($filter['options'] ?? [] as $option)
+                                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                                    @endforeach
+                                </select>
                             @endif
                         </div>
                     @endforeach

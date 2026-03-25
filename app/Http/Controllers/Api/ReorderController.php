@@ -30,7 +30,7 @@ class ReorderController extends Controller
         'task_category'    => \App\Models\TaskCategory::class,
         'team'             => \App\Models\Team::class,
         'team_member'      => \App\Models\TeamMember::class,
-        'bila_prep_item'   => \App\Models\BilaPrepItem::class,
+        'meeting_prep_item' => \App\Models\MeetingPrepItem::class,
         'analytics_widget' => \App\Models\AnalyticsWidget::class,
     ];
 

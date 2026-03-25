@@ -7,7 +7,7 @@ use App\Enums\FollowUpStatus;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Models\Activity;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\User;
@@ -90,15 +90,15 @@ describe('ActivityObserver', function (): void {
             expect($activities)->not->toBeEmpty();
         });
 
-        it('logs a system event when bila is_done changes', function (): void {
+        it('logs a system event when meeting is_done changes', function (): void {
             $user = User::factory()->create();
             $this->actingAs($user);
 
-            $bila = Bila::factory()->create(['user_id' => $user->id, 'is_done' => false]);
-            $bila->update(['is_done' => true]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id, 'is_done' => false]);
+            $meeting->update(['is_done' => true]);
 
-            $activity = Activity::where('activityable_type', Bila::class)
-                ->where('activityable_id', $bila->id)
+            $activity = Activity::where('activityable_type', Meeting::class)
+                ->where('activityable_id', $meeting->id)
                 ->where('type', 'system')
                 ->first();
 

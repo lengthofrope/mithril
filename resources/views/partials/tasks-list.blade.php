@@ -99,7 +99,7 @@
                             :groupId="$group->id"
                         >
                             @foreach($group->tasks->sortBy('sort_order') as $task)
-                                <x-tl.task-card :task="$task" :hideWhenDone="true" :taskGroups="$taskGroups" />
+                                <x-tl.task-card :task="$task" :taskGroups="$taskGroups" />
                             @endforeach
                         </x-tl.sortable-container>
                     </div>
@@ -122,7 +122,7 @@
                     :groupId="0"
                 >
                     @foreach($ungroupedTasks->sortBy('sort_order') as $task)
-                        <x-tl.task-card :task="$task" :hideWhenDone="true" :taskGroups="$taskGroups" />
+                        <x-tl.task-card :task="$task" :taskGroups="$taskGroups" />
                     @endforeach
                 </x-tl.sortable-container>
             </div>

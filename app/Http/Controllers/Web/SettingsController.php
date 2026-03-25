@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\SpeechServiceMode;
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
+use App\Models\MeetingRecording;
 use App\Models\TaskCategory;
 use App\Models\TaskGroup;
 use App\Services\BreadcrumbBuilder;
@@ -139,13 +141,51 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'dashboard_upcoming_tasks' => ['nullable', 'integer', 'min:0', 'max:20'],
             'dashboard_upcoming_follow_ups' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'dashboard_upcoming_bilas' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'dashboard_upcoming_meetings' => ['nullable', 'integer', 'min:0', 'max:20'],
         ]);
 
         $request->user()->update([
             'dashboard_upcoming_tasks' => $validated['dashboard_upcoming_tasks'] ?? null,
             'dashboard_upcoming_follow_ups' => $validated['dashboard_upcoming_follow_ups'] ?? null,
-            'dashboard_upcoming_bilas' => $validated['dashboard_upcoming_bilas'] ?? null,
+            'dashboard_upcoming_meetings' => $validated['dashboard_upcoming_meetings'] ?? null,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Update the authenticated user's speech service settings.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateSpeechService(Request $request): JsonResponse
+    {
+        if (!config('meetings.custom_url_enabled', false)) {
+            return response()->json(['message' => 'Speech service configuration is not available.'], 403);
+        }
+
+        $mode = $request->input('speech_service_mode');
+
+        $rules = [
+            'speech_service_mode' => ['required', Rule::enum(SpeechServiceMode::class)],
+            'speech_service_token' => ['nullable', 'string'],
+        ];
+
+        if ($mode === 'local') {
+            $rules['speech_service_url'] = ['required', 'string', 'url'];
+        } else {
+            $rules['speech_service_url'] = ['nullable', 'string'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $request->user()->update([
+            'speech_service_mode' => $validated['speech_service_mode'],
+            'speech_service_url' => $validated['speech_service_url'] ?? $request->user()->speech_service_url,
+            'speech_service_token' => array_key_exists('speech_service_token', $validated)
+                ? $validated['speech_service_token']
+                : $request->user()->speech_service_token,
         ]);
 
         return response()->json(['success' => true]);
@@ -177,11 +217,18 @@ class SettingsController extends Controller
     public function storage(Request $request): View
     {
         $user = $request->user();
-        $usedBytes = (int) Attachment::where('user_id', $user->id)->sum('size');
+        $attachmentBytes = (int) Attachment::where('user_id', $user->id)->sum('size');
+        $recordingBytes = (int) MeetingRecording::where('user_id', $user->id)->sum('size_bytes');
+        $usedBytes = $attachmentBytes + $recordingBytes;
         $maxBytes = config('attachments.max_storage_mb') * 1024 * 1024;
 
         $attachments = Attachment::where('user_id', $user->id)
             ->with('activity.activityable')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $recordings = MeetingRecording::where('user_id', $user->id)
+            ->with('meeting')
             ->orderByDesc('created_at')
             ->get();
 
@@ -198,6 +245,7 @@ class SettingsController extends Controller
             'usedBytes' => $usedBytes,
             'maxBytes' => $maxBytes,
             'attachments' => $attachments,
+            'recordings' => $recordings,
             'orphanedBytes' => (int) $orphaned->sum('size'),
             'orphanedCount' => $orphaned->count(),
         ]);

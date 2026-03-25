@@ -6,7 +6,7 @@ namespace App\Services;
 
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Task;
 
@@ -31,9 +31,9 @@ class DashboardStatsService
             ->count();
         $overdueFollowUpCount = FollowUp::overdue()->count();
         $todayFollowUpCount = FollowUp::dueToday()->count();
-        $upcomingBilaCount = Bila::where('is_done', false)
+        $upcomingMeetingCount = Meeting::where('is_done', false)
             ->whereBetween(
-                'scheduled_date',
+                'scheduled_at',
                 [now()->startOfWeek()->toDateString(), now()->endOfWeek()->toDateString()]
             )->count();
 
@@ -43,7 +43,7 @@ class DashboardStatsService
             'overdue_tasks' => $overdueTaskCount,
             'overdue_follow_ups' => $overdueFollowUpCount,
             'today_follow_ups' => $todayFollowUpCount,
-            'bilas_this_week' => $upcomingBilaCount,
+            'meetings_this_week' => $upcomingMeetingCount,
         ];
     }
 }

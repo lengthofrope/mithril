@@ -1,0 +1,31 @@
+# Architecture Decision Records
+
+| # | Tag | Title | Phase | Status | Date |
+|---|-----|-------|-------|--------|------|
+| 001 | backend, traits, eloquent | HasFollowUp trait redesign to whereHas-based scopes | 2 | Accepted | 2026-03-06 |
+| 002 | backend, multi-tenancy, eloquent, security | Multi-tenant user scoping for all core entities | 4 | Accepted | 2026-03-06 |
+| 003 | backend, routing, api | Prefix all API route names with `api.` | 4 | Accepted | 2026-03-07 |
+| 004 | frontend, backend, apexcharts, analytics, widgets | Analytics dashboard implementation | Analytics | Accepted | 2026-03-08 |
+| 005 | backend, frontend, analytics, snapshots, line-charts | Time-series line charts via daily analytics snapshots | Analytics | Accepted | 2026-03-08 |
+| 006 | frontend, backend, navigation, breadcrumbs | Contextual hierarchical breadcrumbs | UI | Accepted | 2026-03-09 |
+| 007 | frontend, backend, alpine, api-client, real-time | Live UI refresh via central event dispatch | UI | Accepted | 2026-03-10 |
+| 008 | integration, backend, microsoft, oauth2, calendar, availability | Office 365 Calendar and Availability Integration | Implementation (Phase 1-3) | Accepted | 2026-03-10 |
+| 009 | integration, backend, microsoft, ux, auto-detection | Auto-detect O365 status source from member email | Implementation (Phase 1-3) | Accepted | 2026-03-10 |
+| 010 | backend, frontend, settings, calendar, timezone | User timezone setting for display-time conversion | Implementation (Phase 1-3) | Accepted | 2026-03-10 |
+| 011 | backend, frontend, calendar, microsoft, polymorphic, pivot | Calendar event resource linking via polymorphic pivot table | Calendar Actions | Accepted | 2026-03-10 |
+| 012 | backend, auth, artisan, middleware, users | Disable user accounts via boolean flag and artisan commands | Operations | Accepted | 2026-03-11 |
+| 013 | backend, frontend, tasks, recurrence, observer, events | Recurring tasks via copy-on-complete with model observer event dispatch | Recurring Tasks | Accepted | 2026-03-11 |
+| 014 | backend, frontend, dashboard, settings, user-preferences | Configurable dashboard upcoming items | Dashboard | Accepted | 2026-03-12 |
+| 015 | backend, microsoft, email, sync, graph-api | Email sync fetches all inbox emails with per-message source tagging | Email Integration | Accepted | 2026-03-12 |
+| 016 | backend, frontend, email, ux, microsoft | Remove email dismiss functionality | Email Integration | Accepted | 2026-03-12 |
+| 017 | backend, frontend, artisan, notifications, broadcast | System broadcast notifications | Operations | Accepted | 2026-03-13 |
+| 018 | backend, frontend, jira, privacy, atlassian, caching, api | Remove personal data from Jira integration for Atlassian Marketplace compliance | Jira Privacy Compliance | Accepted | 2026-03-13 |
+| 019 | backend, database, attachments, data-integrity | Remove FK constraint on attachments.activity_id | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 020 | backend, frontend, polymorphic, observer, activity-feed, traits | Polymorphic activity feed with observer-based system event logging | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 021 | backend, services, polymorphic, security, conversion, global-scopes | MetadataTransferService bypasses BelongsToUser scope for entity conversion | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 022 | backend, frontend, storage, attachments, artisan, settings | Storage management with quota enforcement and dual cleanup strategy | Activity Feed & Polling | Accepted | 2026-03-14 |
+| 023 | backend, migration, data-integrity, meetings | Orphaned prep items dropped during Bila→Meeting migration | Meetings (Phase 1) | Accepted | 2026-03-18 |
+| 024 | backend, meetings, scheduling, events | Auto-scheduling scoped to one-on-one meetings with single attendee | Meetings (Phase 1) | Accepted | 2026-03-18 |
+| 025 | backend, meetings, ai, extraction, data-integrity | Fallback strategies for AI extraction resource creation | Meetings (Phase 5) | Accepted | 2026-03-18 |
+| 026 | backend, docker, meetings, diarization, pyannote, transcription | Speaker diarization via self-hosted pyannote-audio service | Meetings (Diarization) | Accepted | 2026-03-19 |
+| 027 | docker, gpu, speech, infrastructure | GPU support via Docker Compose override file | Unified Speech Service (Phase 1) | Accepted | 2026-03-22 |

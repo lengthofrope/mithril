@@ -92,7 +92,7 @@
     };
 
     /**
-     * Pre-compute which events can create a Bila (have exactly one matching team member).
+     * Pre-compute which events can create a Meeting (have exactly one matching team member).
      * Uses a single query for all team member emails to avoid N+1.
      */
     $user = auth()->user();
@@ -128,7 +128,7 @@
             ->all();
     };
 
-    $canCreateBila = function (\App\Models\CalendarEvent $event) use ($userEmails, $emailToMemberId): bool {
+    $canCreateMeeting = function (\App\Models\CalendarEvent $event) use ($userEmails, $emailToMemberId): bool {
         $attendees = $event->attendees ?? [];
         $candidateEmails = collect($attendees)
             ->map(fn (array $a) => strtolower($a['email'] ?? ''))
@@ -240,7 +240,7 @@
                                 @if($past) @php $hasPastEvent = true; @endphp @endif
 
                                 <div
-                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateBila($event) ? 'true' : 'false' }})"
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateMeeting($event) ? 'true' : 'false' }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >
@@ -350,7 +350,7 @@
                                 @endphp
 
                                 <div
-                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateBila($event) ? 'true' : 'false' }})"
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateMeeting($event) ? 'true' : 'false' }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >

@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Enums\TaskStatus;
 use App\Enums\FollowUpStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
@@ -32,7 +32,7 @@ class WeeklyReflectionController extends Controller
         '#22c55e', // green  — completed / done
         '#f59e0b', // amber  — open / pending
         '#3b82f6', // blue   — follow-ups
-        '#a855f7', // purple — bilas
+        '#a855f7', // purple — meetings
         '#14b8a6', // teal   — notes
     ];
 
@@ -72,7 +72,7 @@ class WeeklyReflectionController extends Controller
                 'tasks_completed' => $summaryData['completed_tasks_count'],
                 'tasks_open' => $summaryData['open_tasks_count'],
                 'follow_ups_handled' => $summaryData['handled_follow_ups_count'],
-                'bilas_held' => $summaryData['bilas_held_count'],
+                'meetings_held' => $summaryData['meetings_held_count'],
                 'notes_written' => $summaryData['notes_written_count'],
             ],
             'chartData' => $this->buildChartData($summaryData),
@@ -141,7 +141,7 @@ class WeeklyReflectionController extends Controller
     }
 
     /**
-     * Build weekly activity data including tasks, follow-ups, bilas, and notes.
+     * Build weekly activity data including tasks, follow-ups, meetings, and notes.
      *
      * @param Carbon $weekStart
      * @param Carbon $weekEnd
@@ -169,10 +169,10 @@ class WeeklyReflectionController extends Controller
             ->whereNot('status', FollowUpStatus::Done->value)
             ->get();
 
-        $bilasHeld = Bila::query()
+        $meetingsHeld = Meeting::query()
             ->where('is_done', true)
             ->whereBetween('updated_at', [$weekStart, $weekEnd])
-            ->with('teamMember')
+            ->with('attendees')
             ->get();
 
         $notesWritten = Note::query()
@@ -186,8 +186,8 @@ class WeeklyReflectionController extends Controller
             'handled_follow_ups' => $handledFollowUps,
             'handled_follow_ups_count' => $handledFollowUps->count(),
             'open_follow_ups_count' => $openFollowUps->count(),
-            'bilas_held' => $bilasHeld,
-            'bilas_held_count' => $bilasHeld->count(),
+            'meetings_held' => $meetingsHeld,
+            'meetings_held_count' => $meetingsHeld->count(),
             'notes_written_count' => $notesWritten->count(),
         ];
     }
@@ -210,11 +210,11 @@ class WeeklyReflectionController extends Controller
                 'colors' => [self::PALETTE[0], self::PALETTE[1]],
             ],
             'bar' => [
-                'labels' => ['Tasks done', 'Follow-ups', 'Bilas', 'Notes'],
+                'labels' => ['Tasks done', 'Follow-ups', 'Meetings', 'Notes'],
                 'series' => [
                     $summaryData['completed_tasks_count'],
                     $summaryData['handled_follow_ups_count'],
-                    $summaryData['bilas_held_count'],
+                    $summaryData['meetings_held_count'],
                     $summaryData['notes_written_count'],
                 ],
                 'colors' => [
@@ -241,7 +241,7 @@ class WeeklyReflectionController extends Controller
         $open = $summaryData['open_tasks_count'];
         $followUps = $summaryData['handled_follow_ups_count'];
         $openFollowUps = $summaryData['open_follow_ups_count'];
-        $bilas = $summaryData['bilas_held_count'];
+        $meetings = $summaryData['meetings_held_count'];
         $notes = $summaryData['notes_written_count'];
 
         $lines[] = "**{$completed}** " . ($completed === 1 ? 'task' : 'tasks') . " completed this week.";
@@ -252,8 +252,8 @@ class WeeklyReflectionController extends Controller
             $lines[] = "**{$openFollowUps}** follow-" . ($openFollowUps === 1 ? 'up' : 'ups') . " still pending.";
         }
 
-        if ($bilas > 0) {
-            $lines[] = "**{$bilas}** " . ($bilas === 1 ? 'bila' : 'bilas') . " held.";
+        if ($meetings > 0) {
+            $lines[] = "**{$meetings}** " . ($meetings === 1 ? 'meeting' : 'meetings') . " held.";
         }
 
         if ($notes > 0) {
@@ -290,14 +290,13 @@ class WeeklyReflectionController extends Controller
             }
         }
 
-        if ($summaryData['bilas_held']->isNotEmpty()) {
+        if ($summaryData['meetings_held']->isNotEmpty()) {
             $lines[] = '';
-            $lines[] = '### Bilas held';
+            $lines[] = '### Meetings held';
 
-            foreach ($summaryData['bilas_held'] as $bila) {
-                $label = $bila->teamMember
-                    ? $bila->teamMember->name
-                    : 'Bila';
+            foreach ($summaryData['meetings_held'] as $meeting) {
+                $attendee = $meeting->attendees->first();
+                $label = $attendee ? $attendee->name : $meeting->title;
 
                 $lines[] = "- {$label}";
             }

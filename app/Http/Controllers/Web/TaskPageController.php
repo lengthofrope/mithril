@@ -55,11 +55,16 @@ class TaskPageController extends Controller
 
         $searchTerm = (string) $request->get('search', '');
         $isOverdue = (bool) $request->get('overdue', false);
+        $showCompleted = (bool) $request->get('show_completed', false);
+        $statusFilterIsDone = ($filters['status'] ?? '') === TaskStatus::Done->value;
+
+        $excludeDone = fn ($q) => $q->where('status', '!=', TaskStatus::Done);
 
         $query = Task::query()
             ->applyFilters($filters)
             ->search($searchTerm)
             ->when($isOverdue, fn ($q) => $q->overdue())
+            ->when(!$showCompleted && !$statusFilterIsDone, $excludeDone)
             ->orderBySortOrder()
             ->with(['teamMember', 'taskGroup', 'taskCategory', 'team']);
 
@@ -72,7 +77,7 @@ class TaskPageController extends Controller
         }
 
         $allGroups = TaskGroup::orderBySortOrder()
-            ->with(['tasks' => fn ($q) => $q->applyFilters($filters)->search($searchTerm)->when($isOverdue, fn ($q) => $q->overdue())->orderBySortOrder()->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])])
+            ->with(['tasks' => fn ($q) => $q->applyFilters($filters)->search($searchTerm)->when($isOverdue, fn ($q) => $q->overdue())->when(!$showCompleted && !$statusFilterIsDone, $excludeDone)->orderBySortOrder()->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])])
             ->get();
 
         $ungroupedTasks = Task::query()
@@ -80,6 +85,7 @@ class TaskPageController extends Controller
             ->applyFilters($filters)
             ->search($searchTerm)
             ->when($isOverdue, fn ($q) => $q->overdue())
+            ->when(!$showCompleted && !$statusFilterIsDone, $excludeDone)
             ->orderBySortOrder()
             ->with(['teamMember', 'taskGroup', 'taskCategory', 'team'])
             ->get();

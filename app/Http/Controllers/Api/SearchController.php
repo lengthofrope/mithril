@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\TeamMember;
@@ -34,7 +35,7 @@ class SearchController extends Controller
     private const int RESULTS_PER_TYPE = 10;
 
     /**
-     * Perform a global search across tasks, notes, follow-ups, and team members.
+     * Perform a global search across tasks, notes, follow-ups, meetings, and team members.
      *
      * @param Request $request
      * @return JsonResponse
@@ -55,6 +56,7 @@ class SearchController extends Controller
             'tasks' => $this->searchTasks($term),
             'notes' => $this->searchNotes($term),
             'follow_ups' => $this->searchFollowUps($term),
+            'meetings' => $this->searchMeetings($term),
             'team_members' => $this->searchTeamMembers($term),
         ];
 
@@ -100,6 +102,20 @@ class SearchController extends Controller
             ->with('teamMember')
             ->limit(self::RESULTS_PER_TYPE)
             ->get(['id', 'description', 'status', 'follow_up_date', 'team_member_id']);
+    }
+
+    /**
+     * Search meetings by title and notes.
+     *
+     * @param string $term
+     * @return \Illuminate\Support\Collection
+     */
+    private function searchMeetings(string $term): \Illuminate\Support\Collection
+    {
+        return Meeting::search($term)
+            ->with('attendees')
+            ->limit(self::RESULTS_PER_TYPE)
+            ->get(['id', 'title', 'type', 'status', 'scheduled_at', 'is_done']);
     }
 
     /**

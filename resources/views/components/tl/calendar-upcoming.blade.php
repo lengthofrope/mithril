@@ -60,7 +60,7 @@
         ])->filter()->mapWithKeys(fn (string $e) => [$e => $m->id]))
         ->all();
 
-    $canCreateBila = function (\App\Models\CalendarEvent $event) use ($userEmails, $emailToMemberId): bool {
+    $canCreateMeeting = function (\App\Models\CalendarEvent $event) use ($userEmails, $emailToMemberId): bool {
         $attendees = $event->attendees ?? [];
         $candidateEmails = collect($attendees)
             ->map(fn (array $a) => strtolower($a['email'] ?? ''))
@@ -105,7 +105,7 @@
                 @endphp
 
                 <div
-                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateBila($event) ? 'true' : 'false' }})"
+                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateMeeting($event) ? 'true' : 'false' }})"
                     class="px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                 >
                     <div class="flex items-center gap-3">

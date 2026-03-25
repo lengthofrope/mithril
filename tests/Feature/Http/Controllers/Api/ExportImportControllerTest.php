@@ -39,8 +39,8 @@ test('export returns structured data with all entity keys', function () {
                     'task_groups',
                     'tasks',
                     'follow_ups',
-                    'bilas',
-                    'bila_prep_items',
+                    'meetings',
+                    'meeting_prep_items',
                     'agreements',
                     'notes',
                     'note_tags',
@@ -268,8 +268,8 @@ test('import handles ISO-8601 date strings in date columns', function () {
                     'role' => 'Developer',
                     'email' => 'test@example.com',
                     'status' => 'available',
-                    'bila_interval_days' => 14,
-                    'next_bila_date' => '2026-03-30T00:00:00.000000Z',
+                    'meeting_interval_days' => 14,
+                    'next_meeting_date' => '2026-03-30T00:00:00.000000Z',
                     'sort_order' => 1,
                     'created_at' => '2026-03-10T12:00:00.000000Z',
                     'updated_at' => '2026-03-10T12:00:00.000000Z',
@@ -280,7 +280,7 @@ test('import handles ISO-8601 date strings in date columns', function () {
 
     $response->assertOk();
     expect(TeamMember::count())->toBe(1);
-    expect(TeamMember::first()->next_bila_date->format('Y-m-d'))->toBe('2026-03-30');
+    expect(TeamMember::first()->next_meeting_date->format('Y-m-d'))->toBe('2026-03-30');
 });
 
 test('web import handles ISO-8601 date strings in uploaded file', function () {
@@ -302,8 +302,8 @@ test('web import handles ISO-8601 date strings in uploaded file', function () {
                     'role' => 'Dev',
                     'email' => 'member@example.com',
                     'status' => 'available',
-                    'bila_interval_days' => 14,
-                    'next_bila_date' => '2026-04-15T00:00:00.000000Z',
+                    'meeting_interval_days' => 14,
+                    'next_meeting_date' => '2026-04-15T00:00:00.000000Z',
                     'sort_order' => 1,
                     'created_at' => '2026-03-10T12:00:00.000000Z',
                     'updated_at' => '2026-03-10T12:00:00.000000Z',
@@ -320,7 +320,7 @@ test('web import handles ISO-8601 date strings in uploaded file', function () {
 
     $response->assertRedirect(route('settings.index'));
     expect(TeamMember::count())->toBe(1);
-    expect(TeamMember::first()->next_bila_date->format('Y-m-d'))->toBe('2026-04-15');
+    expect(TeamMember::first()->next_meeting_date->format('Y-m-d'))->toBe('2026-04-15');
 });
 
 test('web import shows error when json has no data key', function () {

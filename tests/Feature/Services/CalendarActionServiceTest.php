@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\Bila;
+use App\Models\Meeting;
 use App\Models\CalendarEvent;
 use App\Models\CalendarEventLink;
 use App\Models\FollowUp;
@@ -157,7 +157,7 @@ it('returns null when attendees is null', function (): void {
 
 // --- buildPrefillData ---
 
-it('builds prefill data for bila', function (): void {
+it('builds prefill data for meeting', function (): void {
     $team   = Team::factory()->create(['user_id' => $this->user->id]);
     $member = TeamMember::factory()->create([
         'user_id'         => $this->user->id,
@@ -174,12 +174,12 @@ it('builds prefill data for bila', function (): void {
         ],
     ]);
 
-    $data = $this->service->buildPrefillData($event, 'bila');
+    $data = $this->service->buildPrefillData($event, 'meeting');
 
     expect($data)->toMatchArray([
         'team_member_id'   => $member->id,
         'team_member_name' => 'Alice',
-        'scheduled_date'   => '2026-03-15',
+        'scheduled_at'     => '2026-03-15T10:00:00+00:00',
     ]);
 });
 
@@ -262,45 +262,29 @@ it('includes null team_member when no match found', function (): void {
 // --- linkResource ---
 
 it('creates a link between event and resource', function (): void {
-    $team   = Team::factory()->create(['user_id' => $this->user->id]);
-    $member = TeamMember::factory()->create([
-        'user_id' => $this->user->id,
-        'team_id' => $team->id,
-    ]);
-    $event = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
-    $bila  = Bila::factory()->create([
-        'user_id'        => $this->user->id,
-        'team_member_id' => $member->id,
-    ]);
+    $event   = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id]);
 
-    $link = $this->service->linkResource($event, $bila);
+    $link = $this->service->linkResource($event, $meeting);
 
     expect($link)->toBeInstanceOf(CalendarEventLink::class);
     expect($link->calendar_event_id)->toBe($event->id);
-    expect($link->linkable_type)->toBe(Bila::class);
-    expect($link->linkable_id)->toBe($bila->id);
+    expect($link->linkable_type)->toBe(Meeting::class);
+    expect($link->linkable_id)->toBe($meeting->id);
 
     $this->assertDatabaseHas('calendar_event_links', [
         'calendar_event_id' => $event->id,
-        'linkable_type'     => Bila::class,
-        'linkable_id'       => $bila->id,
+        'linkable_type'     => Meeting::class,
+        'linkable_id'       => $meeting->id,
     ]);
 });
 
 it('prevents duplicate links', function (): void {
-    $team   = Team::factory()->create(['user_id' => $this->user->id]);
-    $member = TeamMember::factory()->create([
-        'user_id' => $this->user->id,
-        'team_id' => $team->id,
-    ]);
-    $event = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
-    $bila  = Bila::factory()->create([
-        'user_id'        => $this->user->id,
-        'team_member_id' => $member->id,
-    ]);
+    $event   = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id]);
 
-    $link1 = $this->service->linkResource($event, $bila);
-    $link2 = $this->service->linkResource($event, $bila);
+    $link1 = $this->service->linkResource($event, $meeting);
+    $link2 = $this->service->linkResource($event, $meeting);
 
     expect($link1->id)->toBe($link2->id);
     expect(CalendarEventLink::count())->toBe(1);
@@ -309,29 +293,21 @@ it('prevents duplicate links', function (): void {
 // --- getLinkedResources ---
 
 it('returns linked resources with eager-loaded models', function (): void {
-    $team   = Team::factory()->create(['user_id' => $this->user->id]);
-    $member = TeamMember::factory()->create([
-        'user_id' => $this->user->id,
-        'team_id' => $team->id,
-    ]);
-    $event = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
-    $bila  = Bila::factory()->create([
-        'user_id'        => $this->user->id,
-        'team_member_id' => $member->id,
-    ]);
+    $event   = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
+    $meeting = Meeting::factory()->create(['user_id' => $this->user->id]);
 
     CalendarEventLink::create([
         'calendar_event_id' => $event->id,
-        'linkable_type'     => Bila::class,
-        'linkable_id'       => $bila->id,
+        'linkable_type'     => Meeting::class,
+        'linkable_id'       => $meeting->id,
     ]);
 
     $links = $this->service->getLinkedResources($event);
 
     expect($links)->toHaveCount(1);
     expect($links->first())->toBeInstanceOf(CalendarEventLink::class);
-    expect($links->first()->linkable)->toBeInstanceOf(Bila::class);
-    expect($links->first()->linkable->id)->toBe($bila->id);
+    expect($links->first()->linkable)->toBeInstanceOf(Meeting::class);
+    expect($links->first()->linkable->id)->toBe($meeting->id);
 });
 
 it('returns empty collection when no links exist', function (): void {
