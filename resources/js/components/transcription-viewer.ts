@@ -279,6 +279,8 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get currentPhaseLabel(): string {
             const self = this as unknown as TranscriptionViewerState;
+            if (self.localProcessing && self.diarizationEnabled) return 'Transcribing & identifying speakers locally…';
+            if (self.localProcessing) return 'Transcribing audio locally…';
             if (self.status === 'pending') return 'Waiting to start…';
             if (self.status === 'processing' && self.processingMode === 'diarize') return 'Transcribing & identifying speakers…';
             if (self.status === 'processing') return 'Transcribing audio…';
@@ -291,6 +293,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get currentElapsedSeconds(): number {
             const self = this as unknown as TranscriptionViewerState;
+            if (self.localProcessing) return self.localElapsedSeconds;
             return self.currentPhase === 2 ? self.diarizationElapsedSeconds : self.elapsedSeconds;
         },
 
@@ -315,7 +318,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get isProcessing(): boolean {
             const self = this as unknown as TranscriptionViewerState;
-            return self.currentPhase !== null;
+            return self.currentPhase !== null || self.localProcessing;
         },
 
         /**
