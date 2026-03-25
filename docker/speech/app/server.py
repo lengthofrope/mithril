@@ -124,6 +124,15 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def private_network_access_middleware(request: Request, call_next):
+    """Add Private Network Access header for browser requests to loopback."""
+    response = await call_next(request)
+    if request.headers.get("Access-Control-Request-Private-Network") == "true":
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+    return response
+
+
 def ensure_wav(audio_path: str) -> str:
     """Convert audio to WAV (16-bit PCM, mono) if not already .wav."""
     if audio_path.lower().endswith(".wav"):
