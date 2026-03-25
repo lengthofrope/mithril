@@ -38,6 +38,7 @@ return [
     'custom_url_enabled' => (bool) env('SPEECH_CUSTOM_URL_ENABLED', false),
 
     'speech' => [
+        'server_enabled' => (bool) env('SPEECH_SERVER_ENABLED', true),
         'auth_token' => env('SPEECH_AUTH_TOKEN', ''),
     ],
 

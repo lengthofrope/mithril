@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
 
 describe('TranscribeMeetingJob feature guard', function (): void {
     it('aborts without exception when transcription is disabled', function (): void {
-        config()->set('meetings.transcription.enabled', false);
+        config()->set('meetings.speech.server_enabled', false);
         Log::shouldReceive('info')->once()->withArgs(fn (string $msg) => str_contains($msg, 'disabled'));
 
         $mock = $this->mock(TranscriptionServiceInterface::class);
@@ -35,7 +35,7 @@ describe('TranscribeMeetingJob feature guard', function (): void {
     });
 
     it('proceeds normally when transcription is enabled', function (): void {
-        config()->set('meetings.transcription.enabled', true);
+        config()->set('meetings.speech.server_enabled', true);
 
         $mock = $this->mock(TranscriptionServiceInterface::class);
         $mock->shouldReceive('transcribe')->once()->andReturn('Transcription text');
@@ -52,7 +52,7 @@ describe('TranscribeMeetingJob feature guard', function (): void {
 
 describe('DiarizeMeetingJob feature guard', function (): void {
     it('aborts without exception when transcription is disabled', function (): void {
-        config()->set('meetings.transcription.enabled', false);
+        config()->set('meetings.speech.server_enabled', false);
         Log::shouldReceive('info')->once()->withArgs(fn (string $msg) => str_contains($msg, 'disabled'));
 
         $mock = $this->mock(DiarizationServiceInterface::class);

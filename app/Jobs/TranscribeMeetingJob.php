@@ -70,8 +70,8 @@ class TranscribeMeetingJob implements ShouldQueue
      */
     public function handle(TranscriptionServiceInterface $transcriptionService): void
     {
-        if (!config('meetings.transcription.enabled', true)) {
-            Log::info('TranscribeMeetingJob: transcription feature disabled, skipping.', [
+        if (!config('meetings.speech.server_enabled', true)) {
+            Log::info('TranscribeMeetingJob: server speech service disabled, skipping.', [
                 'meeting_id' => $this->meeting->id,
             ]);
             return;

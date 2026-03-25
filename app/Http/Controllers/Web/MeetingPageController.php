@@ -208,6 +208,7 @@ class MeetingPageController extends Controller
             ])->all(),
             'recordingEnabled' => (bool) config('meetings.recording.enabled', true),
             'transcriptionEnabled' => (bool) config('meetings.transcription.enabled', true),
+            'serverSpeechEnabled' => (bool) config('meetings.speech.server_enabled', true),
             'aiEnabled' => (bool) config('ai.enabled', true),
             'estimatedTranscriptionSeconds' => $this->estimateTranscriptionDuration($meeting->transcription),
             'estimatedDiarizationSeconds' => $this->estimateDiarizationDuration($meeting->transcription),

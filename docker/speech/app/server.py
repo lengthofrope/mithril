@@ -18,6 +18,7 @@ from diarize import diarize as diarize_audio
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.types import ASGIApp, Receive, Scope, Send
 from faster_whisper import WhisperModel
 
 logging.basicConfig(level=logging.INFO)
@@ -113,6 +114,41 @@ async def token_auth_middleware(request: Request, call_next):
     return await call_next(request)
 
 
+class PrivateNetworkAccessMiddleware:
+    """Add Private Network Access header for browser requests to loopback.
+
+    Pure ASGI middleware that wraps CORSMiddleware to inject the header
+    into preflight responses.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        """Store the wrapped ASGI application."""
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Intercept HTTP responses to add PNA header when requested."""
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request_headers = dict(scope.get("headers", []))
+        needs_pna = request_headers.get(b"access-control-request-private-network") == b"true"
+
+        if not needs_pna:
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_pna(message) -> None:
+            """Inject Access-Control-Allow-Private-Network into response headers."""
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                headers.append((b"access-control-allow-private-network", b"true"))
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_with_pna)
+
+
 cors_origins = [o.strip() for o in SPEECH_CORS_ORIGINS.split(",") if o.strip()]
 
 app.add_middleware(
@@ -122,15 +158,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.middleware("http")
-async def private_network_access_middleware(request: Request, call_next):
-    """Add Private Network Access header for browser requests to loopback."""
-    response = await call_next(request)
-    if request.headers.get("Access-Control-Request-Private-Network") == "true":
-        response.headers["Access-Control-Allow-Private-Network"] = "true"
-    return response
+app.add_middleware(PrivateNetworkAccessMiddleware)
 
 
 def ensure_wav(audio_path: str) -> str:

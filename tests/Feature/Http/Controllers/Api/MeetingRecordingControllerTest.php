@@ -246,7 +246,7 @@ describe('MeetingRecordingController', function (): void {
             Storage::fake('local');
 
             config([
-                'meetings.transcription.enabled' => true,
+                'meetings.speech.server_enabled' => true,
                 'meetings.transcription.auto_start' => true,
                 'meetings.diarization.enabled' => false,
                 'meetings.custom_url_enabled' => true,
@@ -271,7 +271,7 @@ describe('MeetingRecordingController', function (): void {
             Storage::fake('local');
 
             config([
-                'meetings.transcription.enabled' => true,
+                'meetings.speech.server_enabled' => true,
                 'meetings.transcription.auto_start' => true,
                 'meetings.diarization.enabled' => false,
                 'meetings.custom_url_enabled' => true,
@@ -297,7 +297,7 @@ describe('MeetingRecordingController', function (): void {
             Storage::fake('local');
 
             config([
-                'meetings.transcription.enabled' => true,
+                'meetings.speech.server_enabled' => true,
                 'meetings.transcription.auto_start' => true,
                 'meetings.custom_url_enabled' => true,
             ]);
@@ -322,7 +322,7 @@ describe('MeetingRecordingController', function (): void {
             Storage::fake('local');
 
             config([
-                'meetings.transcription.enabled' => true,
+                'meetings.speech.server_enabled' => true,
                 'meetings.transcription.auto_start' => true,
                 'meetings.diarization.enabled' => false,
                 'meetings.custom_url_enabled' => true,
@@ -348,7 +348,7 @@ describe('MeetingRecordingController', function (): void {
             Storage::fake('local');
 
             config([
-                'meetings.transcription.enabled' => true,
+                'meetings.speech.server_enabled' => true,
                 'meetings.transcription.auto_start' => true,
                 'meetings.diarization.enabled' => false,
                 'meetings.custom_url_enabled' => false,
