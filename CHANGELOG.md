@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.2] - 2026-03-26
+
+### Added
+
+- **Local processing blocking modal** — Non-dismissable modal overlay during local speech processing warns users to keep the page open; includes elapsed timer, processing status, browser `beforeunload` guard, and focus trap
+
+### Fixed
+
+- **Duplicate local speech processing** — Every page visit triggered a new speech service request because no server-side state was set before the long-running call; new `POST /start-local` endpoint marks transcription as `processing` before contacting the speech service, preventing re-triggers on subsequent visits
+- **Local mode ignoring `auto_start` config** — Local speech processing started automatically on page load regardless of `MEETING_AUTO_TRANSCRIBE` setting; now respects the config and only auto-starts when enabled
+- **Hardcoded transcription language** — Local processing always submitted `nl` as the language; now uses the meeting's configured `transcription_language`
+- **Completed transcription overwrite** — `start-local` endpoint could overwrite a completed transcription back to `processing` status; now guards against both `processing` and `completed` states
+
+### Changed
+
+- **`language` and `provider` columns** — Made nullable on `meeting_transcriptions` table to support stub records created before language/provider are known
+
 ## [1.10.1] - 2026-03-25
 
 ### Changed
