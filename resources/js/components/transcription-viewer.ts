@@ -706,6 +706,20 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
             this.startLocalElapsedTimer();
 
             try {
+                const startResponse = await fetch(`${baseUrl}/start-local`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+
+                if (!startResponse.ok) {
+                    throw new Error('Failed to start local processing.');
+                }
+
+                this.status = 'processing';
+
                 const audioResponse = await fetch(this.recordingStreamUrl, {
                     headers: { 'Accept': '*/*' },
                 });

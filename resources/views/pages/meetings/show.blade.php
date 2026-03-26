@@ -1304,6 +1304,60 @@
                         </div>
                     </div>
 
+                    {{-- Local processing blocking modal --}}
+                    <div
+                        x-show="localProcessing"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="local-processing-dialog-title"
+                    >
+                        <div class="fixed inset-0 bg-gray-900/70 backdrop-blur-sm"></div>
+
+                        <div
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <div class="flex items-start gap-4">
+                                <div class="shrink-0 mt-0.5">
+                                    <svg class="h-6 w-6 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <h2
+                                        id="local-processing-dialog-title"
+                                        class="text-base font-semibold text-gray-900 dark:text-white"
+                                        x-text="currentPhaseLabel"
+                                    ></h2>
+
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        Elapsed: <span class="font-medium" x-text="formatDuration(localElapsedSeconds)"></span>
+                                    </p>
+
+                                    <p class="mt-3 text-sm text-amber-700 dark:text-amber-400">
+                                        Please keep this page open. Closing or navigating away will interrupt the transcription.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Unified processing progress --}}
                     <template x-if="isProcessing">
                         <div class="space-y-3">

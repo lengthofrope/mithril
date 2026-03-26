@@ -6,6 +6,7 @@ use App\Enums\DiarizationStatus;
 use App\Enums\SpeechServiceMode;
 use App\Enums\TranscriptionStatus;
 use App\Models\Meeting;
+use App\Models\MeetingRecording;
 use App\Models\MeetingTranscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -211,6 +212,173 @@ describe('ClientTranscriptionController', function (): void {
                     'content' => 'Test',
                     'language' => 'en',
                 ]
+            );
+
+            $response->assertUnauthorized();
+        });
+    });
+
+    describe('startProcessing (POST /api/v1/meetings/{meeting}/transcription/start-local)', function (): void {
+        it('creates a transcription with status processing when none exists', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertOk()
+                ->assertJson(['success' => true]);
+
+            $transcription = MeetingTranscription::where('meeting_id', $meeting->id)->first();
+            expect($transcription)->not->toBeNull()
+                ->and($transcription->status)->toBe(TranscriptionStatus::Processing)
+                ->and($transcription->processing_started_at)->not->toBeNull();
+        });
+
+        it('is idempotent when transcription already has status processing', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+
+            $existing = MeetingTranscription::forceCreate([
+                'user_id' => $user->id,
+                'meeting_id' => $meeting->id,
+                'status' => TranscriptionStatus::Processing,
+                'processing_started_at' => now()->subMinutes(2),
+            ]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertOk()
+                ->assertJson(['success' => true]);
+
+            expect(MeetingTranscription::where('meeting_id', $meeting->id)->count())->toBe(1);
+
+            $transcription = MeetingTranscription::where('meeting_id', $meeting->id)->first();
+            expect($transcription->processing_started_at->toDateTimeString())
+                ->toBe($existing->processing_started_at->toDateTimeString());
+        });
+
+        it('updates status to processing when transcription exists with status pending', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+
+            MeetingTranscription::forceCreate([
+                'user_id' => $user->id,
+                'meeting_id' => $meeting->id,
+                'status' => TranscriptionStatus::Pending,
+            ]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertOk();
+
+            $transcription = MeetingTranscription::where('meeting_id', $meeting->id)->first();
+            expect($transcription->status)->toBe(TranscriptionStatus::Processing)
+                ->and($transcription->processing_started_at)->not->toBeNull();
+        });
+
+        it('updates status to processing when transcription exists with status failed', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+
+            MeetingTranscription::forceCreate([
+                'user_id' => $user->id,
+                'meeting_id' => $meeting->id,
+                'status' => TranscriptionStatus::Failed,
+                'error_message' => 'Previous failure.',
+            ]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertOk();
+
+            $transcription = MeetingTranscription::where('meeting_id', $meeting->id)->first();
+            expect($transcription->status)->toBe(TranscriptionStatus::Processing)
+                ->and($transcription->processing_started_at)->not->toBeNull();
+        });
+
+        it('returns 403 when user is not in local speech service mode', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Server,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertForbidden();
+        });
+
+        it('returns 422 when meeting has no recordings', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertUnprocessable();
+        });
+
+        it('sets processing_started_at timestamp', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+
+            $before = now()->subSecond();
+
+            $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $transcription = MeetingTranscription::where('meeting_id', $meeting->id)->first();
+            expect($transcription->processing_started_at)->not->toBeNull()
+                ->and($transcription->processing_started_at->isAfter($before))->toBeTrue();
+        });
+
+        it('returns 404 for meeting belonging to another user', function (): void {
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $otherUser = User::factory()->create();
+            $meeting = Meeting::factory()->create(['user_id' => $otherUser->id]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertNotFound();
+        });
+
+        it('returns 401 for unauthenticated requests', function (): void {
+            $meeting = Meeting::factory()->create();
+
+            $response = $this->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
             );
 
             $response->assertUnauthorized();
