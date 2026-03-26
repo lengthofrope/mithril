@@ -31,6 +31,7 @@ interface TranscriptionViewerConfig {
     speechServiceToken: string | null;
     recordingStreamUrl: string | null;
     transcriptionLanguage: string;
+    autoStart: boolean;
 }
 
 interface TranscriptionViewerState {
@@ -68,6 +69,7 @@ interface TranscriptionViewerState {
     speechServiceToken: string | null;
     recordingStreamUrl: string | null;
     transcriptionLanguage: string;
+    autoStart: boolean;
     localProcessing: boolean;
     localProcessingError: string | null;
     localElapsedTimer: ReturnType<typeof setInterval> | null;
@@ -153,6 +155,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         speechServiceToken: config.speechServiceToken ?? null,
         recordingStreamUrl: config.recordingStreamUrl ?? null,
         transcriptionLanguage: config.transcriptionLanguage,
+        autoStart: config.autoStart,
         localProcessing: false,
         localProcessingError: null as string | null,
         localElapsedTimer: null as ReturnType<typeof setInterval> | null,
@@ -447,7 +450,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          * Initialize the component.
          */
         init(this: TranscriptionViewerState): void {
-            if (this.isLocalMode && this.hasRecordings && (this.status === null || this.status === 'pending')) {
+            if (this.isLocalMode && this.autoStart && this.hasRecordings && (this.status === null || this.status === 'pending')) {
                 this.processLocally();
                 return;
             }

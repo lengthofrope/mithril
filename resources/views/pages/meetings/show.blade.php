@@ -1000,6 +1000,7 @@
                     speechServiceToken: @js($speechServiceToken),
                     recordingStreamUrl: @js($recordingStreamUrl),
                     transcriptionLanguage: @js($meeting->transcription_language),
+                    autoStart: @js((bool) config('meetings.transcription.auto_start', true)),
                 })"
 
             >
