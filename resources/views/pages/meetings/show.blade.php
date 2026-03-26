@@ -999,6 +999,7 @@
                     speechServiceUrl: @js($speechServiceUrl),
                     speechServiceToken: @js($speechServiceToken),
                     recordingStreamUrl: @js($recordingStreamUrl),
+                    transcriptionLanguage: @js($meeting->transcription_language),
                 })"
 
             >
@@ -1308,6 +1309,8 @@
                     <div
                         x-show="localProcessing"
                         x-cloak
+                        x-on:keydown.tab.prevent
+                        x-effect="if (localProcessing) { $nextTick(() => $refs.localProcessingCard?.focus()); window._anvilBeforeUnload = (e) => { e.preventDefault(); }; window.addEventListener('beforeunload', window._anvilBeforeUnload); } else if (window._anvilBeforeUnload) { window.removeEventListener('beforeunload', window._anvilBeforeUnload); window._anvilBeforeUnload = null; }"
                         x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0"
                         x-transition:enter-end="opacity-100"
@@ -1315,20 +1318,22 @@
                         x-transition:leave-start="opacity-100"
                         x-transition:leave-end="opacity-0"
                         class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                        role="dialog"
+                        role="alertdialog"
                         aria-modal="true"
                         aria-labelledby="local-processing-dialog-title"
+                        aria-describedby="local-processing-dialog-warning"
                     >
                         <div class="fixed inset-0 bg-gray-900/70 backdrop-blur-sm"></div>
 
                         <div
+                            x-ref="localProcessingCard"
+                            tabindex="-1"
                             x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 scale-95"
                             x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-150"
                             x-transition:leave-start="opacity-100 scale-100"
                             x-transition:leave-end="opacity-0 scale-95"
-                            x-on:click.stop
                             class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
                         >
                             <div class="flex items-start gap-4">
@@ -1346,11 +1351,11 @@
                                         x-text="currentPhaseLabel"
                                     ></h2>
 
-                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
                                         Elapsed: <span class="font-medium" x-text="formatDuration(localElapsedSeconds)"></span>
                                     </p>
 
-                                    <p class="mt-3 text-sm text-amber-700 dark:text-amber-400">
+                                    <p id="local-processing-dialog-warning" class="mt-3 text-sm text-amber-700 dark:text-amber-400">
                                         Please keep this page open. Closing or navigating away will interrupt the transcription.
                                     </p>
                                 </div>

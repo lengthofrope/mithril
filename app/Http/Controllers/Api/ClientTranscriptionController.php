@@ -45,7 +45,10 @@ class ClientTranscriptionController extends Controller
 
         $transcription = $meeting->transcription;
 
-        if ($transcription !== null && $transcription->status === TranscriptionStatus::Processing) {
+        if ($transcription !== null && in_array($transcription->status, [
+            TranscriptionStatus::Processing,
+            TranscriptionStatus::Completed,
+        ], true)) {
             return $this->successResponse(null, 'Processing already in progress.');
         }
 

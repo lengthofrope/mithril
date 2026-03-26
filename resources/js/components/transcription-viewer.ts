@@ -30,6 +30,7 @@ interface TranscriptionViewerConfig {
     speechServiceUrl: string | null;
     speechServiceToken: string | null;
     recordingStreamUrl: string | null;
+    transcriptionLanguage: string;
 }
 
 interface TranscriptionViewerState {
@@ -66,6 +67,7 @@ interface TranscriptionViewerState {
     speechServiceUrl: string | null;
     speechServiceToken: string | null;
     recordingStreamUrl: string | null;
+    transcriptionLanguage: string;
     localProcessing: boolean;
     localProcessingError: string | null;
     localElapsedTimer: ReturnType<typeof setInterval> | null;
@@ -150,6 +152,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         speechServiceUrl: config.speechServiceUrl ?? null,
         speechServiceToken: config.speechServiceToken ?? null,
         recordingStreamUrl: config.recordingStreamUrl ?? null,
+        transcriptionLanguage: config.transcriptionLanguage,
         localProcessing: false,
         localProcessingError: null as string | null,
         localElapsedTimer: null as ReturnType<typeof setInterval> | null,
@@ -179,9 +182,6 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         },
 
         /**
-         * Whether completed diarization data is available.
-         */
-        /**
          * Whether the current transcription is manual input.
          */
         get isManual(): boolean {
@@ -197,6 +197,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
             return self.speechServiceMode === 'local' && !!self.speechServiceUrl;
         },
 
+        /**
+         * Whether completed diarization data is available.
+         */
         get hasDiarization(): boolean {
             const self = this as unknown as TranscriptionViewerState;
             return self.diarizationStatus === 'completed' && self.segments.length > 0;
@@ -729,7 +732,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 }
 
                 const audioBlob = await audioResponse.blob();
-                const language = 'nl';
+                const language = this.transcriptionLanguage;
                 const useDiarize = this.diarizationEnabled;
 
                 let content: string;
@@ -774,13 +777,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
 
                 await this.refreshData();
             } catch (error) {
-                if (error instanceof SpeechServiceError) {
-                    this.localProcessingError = error.message;
-                } else if (error instanceof Error) {
-                    this.localProcessingError = error.message;
-                } else {
-                    this.localProcessingError = 'An unknown error occurred during local processing.';
-                }
+                this.localProcessingError = error instanceof Error
+                    ? error.message
+                    : 'An unknown error occurred during local processing.';
             } finally {
                 this.localProcessing = false;
                 this.stopLocalElapsedTimer();

@@ -220,6 +220,8 @@ describe('ClientTranscriptionController', function (): void {
 
     describe('startProcessing (POST /api/v1/meetings/{meeting}/transcription/start-local)', function (): void {
         it('creates a transcription with status processing when none exists', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
             $user = User::factory()->create([
                 'speech_service_mode' => SpeechServiceMode::Local,
             ]);
@@ -240,6 +242,8 @@ describe('ClientTranscriptionController', function (): void {
         });
 
         it('is idempotent when transcription already has status processing', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
             $user = User::factory()->create([
                 'speech_service_mode' => SpeechServiceMode::Local,
             ]);
@@ -268,6 +272,8 @@ describe('ClientTranscriptionController', function (): void {
         });
 
         it('updates status to processing when transcription exists with status pending', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
             $user = User::factory()->create([
                 'speech_service_mode' => SpeechServiceMode::Local,
             ]);
@@ -292,6 +298,8 @@ describe('ClientTranscriptionController', function (): void {
         });
 
         it('updates status to processing when transcription exists with status failed', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
             $user = User::factory()->create([
                 'speech_service_mode' => SpeechServiceMode::Local,
             ]);
@@ -317,6 +325,8 @@ describe('ClientTranscriptionController', function (): void {
         });
 
         it('returns 403 when user is not in local speech service mode', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
             $user = User::factory()->create([
                 'speech_service_mode' => SpeechServiceMode::Server,
             ]);
@@ -329,7 +339,53 @@ describe('ClientTranscriptionController', function (): void {
             $response->assertForbidden();
         });
 
+        it('returns 403 when custom_url_enabled is false', function (): void {
+            config(['meetings.custom_url_enabled' => false]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertForbidden();
+        });
+
+        it('does not overwrite a completed transcription', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
+            $user = User::factory()->create([
+                'speech_service_mode' => SpeechServiceMode::Local,
+            ]);
+            $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+            MeetingRecording::factory()->create(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+
+            MeetingTranscription::forceCreate([
+                'user_id' => $user->id,
+                'meeting_id' => $meeting->id,
+                'content' => 'Finished transcription.',
+                'language' => 'nl',
+                'provider' => 'unified',
+                'status' => TranscriptionStatus::Completed,
+            ]);
+
+            $response = $this->actingAs($user)->postJson(
+                "/api/v1/meetings/{$meeting->id}/transcription/start-local"
+            );
+
+            $response->assertOk();
+
+            $transcription = MeetingTranscription::where('meeting_id', $meeting->id)->first();
+            expect($transcription->status)->toBe(TranscriptionStatus::Completed)
+                ->and($transcription->content)->toBe('Finished transcription.');
+        });
+
         it('returns 422 when meeting has no recordings', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
             $user = User::factory()->create([
                 'speech_service_mode' => SpeechServiceMode::Local,
             ]);
@@ -343,6 +399,8 @@ describe('ClientTranscriptionController', function (): void {
         });
 
         it('sets processing_started_at timestamp', function (): void {
+            config(['meetings.custom_url_enabled' => true]);
+
             $user = User::factory()->create([
                 'speech_service_mode' => SpeechServiceMode::Local,
             ]);
