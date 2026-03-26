@@ -19,8 +19,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $meeting_id
  * @property string|null $content
  * @property string|null $diarized_content
- * @property string $language
- * @property string $provider
+ * @property string|null $language
+ * @property string|null $provider
  * @property TranscriptionStatus $status
  * @property DiarizationStatus|null $diarization_status
  * @property string|null $error_message

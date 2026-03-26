@@ -12,6 +12,7 @@ use App\Http\Traits\ApiResponse;
 use App\Models\Meeting;
 use App\Models\MeetingTranscription;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Accepts transcription and diarization results submitted by the browser
@@ -20,6 +21,53 @@ use Illuminate\Http\JsonResponse;
 class ClientTranscriptionController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Mark a meeting transcription as processing before audio is sent to the local speech service.
+     *
+     * Creates a new MeetingTranscription with status processing when none exists, or updates
+     * an existing pending/failed transcription to processing. Idempotent for already-processing
+     * transcriptions to handle concurrent tab scenarios.
+     *
+     * @param Request $request
+     * @param Meeting $meeting
+     * @return JsonResponse
+     */
+    public function startProcessing(Request $request, Meeting $meeting): JsonResponse
+    {
+        if (! $request->user()->isLocalSpeechMode()) {
+            return $this->errorResponse('Forbidden.', [], 403);
+        }
+
+        if ($meeting->recordings()->doesntExist()) {
+            return $this->errorResponse('Meeting has no recordings.', [], 422);
+        }
+
+        $transcription = $meeting->transcription;
+
+        if ($transcription !== null && in_array($transcription->status, [
+            TranscriptionStatus::Processing,
+            TranscriptionStatus::Completed,
+        ], true)) {
+            return $this->successResponse(null, 'Processing already in progress.');
+        }
+
+        if ($transcription !== null) {
+            $transcription->update([
+                'status' => TranscriptionStatus::Processing,
+                'processing_started_at' => now(),
+            ]);
+        } else {
+            MeetingTranscription::forceCreate([
+                'user_id' => $meeting->user_id,
+                'meeting_id' => $meeting->id,
+                'status' => TranscriptionStatus::Processing,
+                'processing_started_at' => now(),
+            ]);
+        }
+
+        return $this->successResponse(null, 'Processing started.');
+    }
 
     /**
      * Store a transcription result submitted from the browser's local speech service.
