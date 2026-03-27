@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,9 +24,17 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \App\Http\Middleware\ValidateCsrfTokenUnlessBearerAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (AuthenticationException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Unauthenticated.',
+                ], 401);
+            }
+        });
     })->create();

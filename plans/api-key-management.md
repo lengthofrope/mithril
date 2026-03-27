@@ -1,7 +1,7 @@
 # API Key Management & External API Access
 
 **Created:** 2026-03-27
-**Status:** Approved
+**Status:** In Progress
 **Author:** Bas de Kort
 **PRDs:** PRD-004
 
@@ -121,15 +121,15 @@ Session-authenticated requests (auth:web) bypass ability checks entirely; abilit
 - **Goal:** Install Sanctum, configure dual-guard authentication, verify zero regression on existing session auth
 - **PRD criteria:** 9, 11, 12
 - **Specs:**
-  - [ ] Laravel Sanctum is installed via Composer and configured
-  - [ ] `personal_access_tokens` migration exists and runs on both MariaDB and SQLite
-  - [ ] User model has `HasApiTokens` trait
-  - [ ] API routes accept both `auth:web` and `auth:sanctum` guards
-  - [ ] CSRF middleware is properly configured to not block token-based requests
-  - [ ] All existing tests continue to pass with the new dual-guard setup
-  - [ ] A Bearer token request with a valid Sanctum token returns authenticated data
-  - [ ] A request with an invalid/missing token returns 401 in ApiResponse format
-  - [ ] `EnsureAccountIsActive` middleware works for both session and token users
+  - [x] Laravel Sanctum is installed via Composer and configured
+  - [x] `personal_access_tokens` migration exists and runs on both MariaDB and SQLite
+  - [x] User model has `HasApiTokens` trait
+  - [x] API routes accept both `auth:web` and `auth:sanctum` guards
+  - [x] CSRF middleware is properly configured to not block token-based requests
+  - [x] All existing tests continue to pass with the new dual-guard setup
+  - [x] A Bearer token request with a valid Sanctum token returns authenticated data
+  - [x] A request with an invalid/missing token returns 401 in ApiResponse format
+  - [x] `EnsureAccountIsActive` middleware works for both session and token users
 - **Files:** `composer.json`, `config/sanctum.php`, `database/migrations/`, `app/Models/User.php`, `bootstrap/app.php`, `routes/api.php`
 
 ### Phase 2: Ability System & Scope Enforcement
