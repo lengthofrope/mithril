@@ -155,7 +155,7 @@
         <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">Past weeks</h2>
 
         {{-- Add past reflection --}}
-        <div x-data="{ open: false }" class="relative">
+        <div x-data="toggleState({ open: false })" class="relative">
             <button
                 type="button"
                 x-on:click="open = !open"
@@ -205,7 +205,7 @@
         <div class="space-y-2">
             @foreach($pastReflections as $pastReflection)
                 <div
-                    x-data="{ expanded: false, confirmDelete: false }"
+                    x-data="toggleState({ expanded: false, confirmDelete: false })"
                     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                 >
                     <div class="flex w-full items-center justify-between px-5 py-4">

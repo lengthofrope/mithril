@@ -59,32 +59,7 @@
             </div>
             <div class="p-5">
                 <div
-                    x-data="{
-                        timezone: '{{ $user->getEffectiveTimezone() }}',
-                        saving: false,
-                        saved: false,
-                        async save() {
-                            this.saving = true;
-                            this.saved = false;
-                            try {
-                                const response = await fetch('{{ route('settings.updateTimezone') }}', {
-                                    method: 'PATCH',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                        'Accept': 'application/json',
-                                    },
-                                    body: JSON.stringify({ timezone: this.timezone }),
-                                });
-                                if (response.ok) {
-                                    this.saved = true;
-                                    setTimeout(() => this.saved = false, 2000);
-                                }
-                            } finally {
-                                this.saving = false;
-                            }
-                        }
-                    }"
+                    x-data="settingsTimezone({ endpoint: '{{ route('settings.updateTimezone') }}', initialTimezone: '{{ $user->getEffectiveTimezone() }}' })"
                 >
                     <div class="flex items-center justify-between gap-4">
                         <div class="min-w-0 flex-1">
@@ -123,43 +98,7 @@
             </div>
             <div
                 class="p-5 space-y-4"
-                x-data="{
-                    tasks: '{{ $user->dashboard_upcoming_tasks ?? 5 }}',
-                    followUps: '{{ $user->dashboard_upcoming_follow_ups ?? 5 }}',
-                    meetings: '{{ $user->dashboard_upcoming_meetings ?? 5 }}',
-                    saving: false,
-                    saved: false,
-                    error: '',
-                    async save() {
-                        this.saving = true;
-                        this.saved = false;
-                        this.error = '';
-                        try {
-                            const response = await fetch('{{ route('settings.updateDashboardWidgets') }}', {
-                                method: 'PATCH',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                    'Accept': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    dashboard_upcoming_tasks: this.tasks === '' ? null : parseInt(this.tasks),
-                                    dashboard_upcoming_follow_ups: this.followUps === '' ? null : parseInt(this.followUps),
-                                    dashboard_upcoming_meetings: this.meetings === '' ? null : parseInt(this.meetings),
-                                }),
-                            });
-                            if (response.ok) {
-                                this.saved = true;
-                                setTimeout(() => this.saved = false, 2000);
-                            } else {
-                                const data = await response.json();
-                                this.error = Object.values(data.errors ?? {}).flat()[0] ?? 'Failed to save.';
-                            }
-                        } finally {
-                            this.saving = false;
-                        }
-                    }
-                }"
+                x-data="settingsDashboardWidgets({ endpoint: '{{ route('settings.updateDashboardWidgets') }}', tasks: '{{ $user->dashboard_upcoming_tasks ?? 5 }}', followUps: '{{ $user->dashboard_upcoming_follow_ups ?? 5 }}', meetings: '{{ $user->dashboard_upcoming_meetings ?? 5 }}' })"
             >
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                     Show upcoming items after today's entries on each dashboard widget. Leave empty for today only.
@@ -280,90 +219,13 @@
             </div>
             <div
                 class="p-5 space-y-5"
-                x-data="{
-                    mode: @js($user->speech_service_mode?->value ?? 'server'),
-                    url: @js($user->speech_service_url ?? ''),
-                    token: @js($user->speech_service_token ?? ''),
-                    saving: false,
-                    saved: false,
-                    error: '',
-                    testResult: null,
-                    testing: false,
-                    serverTranscriptionEnabled: {{ config('meetings.speech.server_enabled') ? 'true' : 'false' }},
-                    async save() {
-                        this.saving = true;
-                        this.saved = false;
-                        this.error = '';
-                        try {
-                            const response = await fetch('{{ route('settings.updateSpeechService') }}', {
-                                method: 'PATCH',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                    'Accept': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    speech_service_mode: this.mode,
-                                    speech_service_url: this.url,
-                                    speech_service_token: this.token,
-                                }),
-                            });
-                            if (response.ok) {
-                                this.saved = true;
-                                setTimeout(() => this.saved = false, 2000);
-                            } else {
-                                const data = await response.json();
-                                this.error = Object.values(data.errors ?? {}).flat()[0] ?? 'Failed to save.';
-                            }
-                        } finally {
-                            this.saving = false;
-                        }
-                    },
-                    async testConnection() {
-                        if (!this.url) return;
-                        this.testing = true;
-                        this.testResult = null;
-                        try {
-                            const headers = {};
-                            if (this.token) headers['X-Speech-Token'] = this.token;
-                            const response = await fetch(this.url.replace(/\/+$/, '') + '/health', { headers });
-                            if (response.ok) {
-                                const data = await response.json();
-                                this.testResult = { success: true, device: data.device ?? 'unknown', ready: data.ready ?? false };
-                            } else if (response.status === 401) {
-                                this.testResult = { success: false, error: 'Authentication failed (401). Check your token.' };
-                            } else {
-                                this.testResult = { success: false, error: 'Service returned status ' + response.status + '.' };
-                            }
-                        } catch {
-                            this.testResult = { success: false, error: 'Could not connect to ' + this.url + '. Is the service running?' };
-                        } finally {
-                            this.testing = false;
-                        }
-                    }
-                }"
+                x-data="settingsSpeechService({ endpoint: '{{ route('settings.updateSpeechService') }}', mode: @js($user->speech_service_mode?->value ?? 'server'), url: @js($user->speech_service_url ?? ''), token: @js($user->speech_service_token ?? ''), serverTranscriptionEnabled: {{ config('meetings.speech.server_enabled') ? 'true' : 'false' }} })"
             >
                 @if(config('meetings.speech.server_enabled'))
                 {{-- System status card --}}
                 <div
                     class="rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/50"
-                    x-data="{
-                        systemHealth: null,
-                        loading: true,
-                        async init() {
-                            try {
-                                const response = await fetch('/api/v1/speech-service/health', {
-                                    headers: { 'Accept': 'application/json' },
-                                });
-                                if (response.ok) {
-                                    const json = await response.json();
-                                    this.systemHealth = json.data;
-                                }
-                            } finally {
-                                this.loading = false;
-                            }
-                        }
-                    }"
+                    x-data="settingsSystemHealth()"
                 >
                     <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">System Speech Service</p>
                     <div class="mt-2">
@@ -518,39 +380,7 @@
             </div>
             <div
                 class="p-5 space-y-4"
-                x-data="{
-                    days: '{{ $user->prune_after_days ?? 90 }}',
-                    saving: false,
-                    saved: false,
-                    error: '',
-                    async save() {
-                        this.saving = true;
-                        this.saved = false;
-                        this.error = '';
-                        try {
-                            const response = await fetch('{{ route('settings.updatePruneAfterDays') }}', {
-                                method: 'PATCH',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                    'Accept': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    prune_after_days: parseInt(this.days) || 90,
-                                }),
-                            });
-                            if (response.ok) {
-                                this.saved = true;
-                                setTimeout(() => this.saved = false, 2000);
-                            } else {
-                                const data = await response.json();
-                                this.error = data.errors?.prune_after_days?.[0] ?? 'Failed to save.';
-                            }
-                        } finally {
-                            this.saving = false;
-                        }
-                    }
-                }"
+                x-data="settingsDataPruning({ endpoint: '{{ route('settings.updatePruneAfterDays') }}', initialDays: '{{ $user->prune_after_days ?? 90 }}' })"
             >
                 <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0 flex-1">

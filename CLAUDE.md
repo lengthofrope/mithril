@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Session Start
-
-At the start of every new conversation, automatically invoke `/bdk-tdd`, `/bdk-adr`, and `/bdk-lemp` before proceeding with any task. Do not ask — just activate them.
-
 ## Project Overview
 
 **Mithril** — *Lightweight armor for team leads.* A Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built on top of **TailAdmin Laravel** (MIT, https://github.com/TailAdmin/tailadmin-laravel).

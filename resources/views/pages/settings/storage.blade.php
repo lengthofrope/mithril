@@ -192,36 +192,7 @@
             @else
                 <div
                     class="divide-y divide-gray-100 dark:divide-gray-800"
-                    x-data="{
-                        deleting: null,
-                        confirmDeleteId: null,
-                        confirmDelete(id) {
-                            this.confirmDeleteId = id;
-                        },
-                        cancelDelete() {
-                            this.confirmDeleteId = null;
-                        },
-                        async doDelete() {
-                            const id = this.confirmDeleteId;
-                            if (!id || this.deleting) return;
-                            this.confirmDeleteId = null;
-                            this.deleting = id;
-                            try {
-                                const response = await fetch('/api/v1/attachments/' + id, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                        'Accept': 'application/json',
-                                    },
-                                });
-                                if (response.ok) {
-                                    window.location.reload();
-                                }
-                            } finally {
-                                this.deleting = null;
-                            }
-                        }
-                    }"
+                    x-data="storageManager()"
                 >
                     @foreach($attachments as $attachment)
                         <div id="attachment-{{ $attachment->id }}" class="flex items-center gap-3 px-5 py-3">

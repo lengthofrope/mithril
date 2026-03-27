@@ -4,7 +4,7 @@
     <x-common.page-breadcrumb pageTitle="Teams" />
 
     {{-- Toolbar --}}
-    <div class="mb-6 flex items-center justify-end" x-data="{ addOpen: false }">
+    <div class="mb-6 flex items-center justify-end" x-data="toggleState({ addOpen: false })">
         <button
             type="button"
             x-on:click="addOpen = !addOpen"

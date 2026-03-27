@@ -48,7 +48,7 @@
                 </div>
             </div>
 
-            <div x-data="{ mode: 'code' }" class="elvish-card rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] sm:px-8">
+            <div x-data="toggleState({ mode: 'code' })" class="elvish-card rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] sm:px-8">
 
                 <div class="mb-6 text-center">
                     <svg class="mx-auto mb-3 h-12 w-12 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">

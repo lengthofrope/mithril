@@ -115,6 +115,7 @@ function filterManager(config: FilterManagerConfig): Record<string, unknown> {
 
     return {
         filterState: { ...initialState } as FilterState,
+        filtersOpen: false,
         isLoading: false,
         hasError: false,
 

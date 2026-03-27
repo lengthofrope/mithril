@@ -44,7 +44,7 @@
         </div>
 
         {{-- Kebab menu --}}
-        <div class="relative" x-data="{ menuOpen: false }">
+        <div class="relative" x-data="toggleState({ menuOpen: false })">
             <button
                 type="button"
                 @click="menuOpen = !menuOpen"

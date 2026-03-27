@@ -195,7 +195,7 @@
         @if(!empty($prominentGroups))
             <div class="grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-gray-100 dark:divide-gray-800">
                 @foreach($prominentGroups as $dayLabel => $dayEvents)
-                    <div x-data="{ open: true }">
+                    <div x-data="toggleState({ open: true })">
                         {{-- Day group header --}}
                         <button
                             type="button"
@@ -317,7 +317,7 @@
         @if(!empty($laterGroups))
             <div class="divide-y divide-gray-100 dark:divide-gray-800 {{ !empty($prominentGroups) ? 'border-t border-gray-100 dark:border-gray-800' : '' }}">
                 @foreach($laterGroups as $dayLabel => $dayEvents)
-                    <div x-data="{ open: false }">
+                    <div x-data="toggleState({ open: false })">
                         {{-- Day group header --}}
                         <button
                             type="button"

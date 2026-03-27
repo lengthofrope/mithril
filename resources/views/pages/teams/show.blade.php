@@ -5,7 +5,7 @@
 
     {{-- Team header --}}
     <div
-        x-data="{ editOpen: false, deleteOpen: false }"
+        x-data="toggleState({ editOpen: false, deleteOpen: false })"
         class="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]"
     >
         <div
@@ -168,7 +168,7 @@
     </div>
 
     {{-- Members header + add button --}}
-    <div class="mb-4 flex items-center justify-between" x-data="{ addMemberOpen: false }">
+    <div class="mb-4 flex items-center justify-between" x-data="toggleState({ addMemberOpen: false })">
         <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">Members</h2>
 
         <button

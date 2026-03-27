@@ -1,35 +1,6 @@
 {{-- Schedule meeting modal --}}
 <div
-    x-data="{
-        addOpen: false,
-        selectedTeamId: '',
-        selectedType: 'one_on_one',
-        selectedTeamIds: [],
-        allMembers: @js($memberOptions),
-        allTeams: @js($teamOptions),
-        get filteredMembers() {
-            if (!this.selectedTeamId) return this.allMembers;
-            return this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId));
-        },
-        get isOneOnOne() {
-            return this.selectedType === 'one_on_one';
-        },
-        addTeam(teamId) {
-            if (teamId && !this.selectedTeamIds.includes(Number(teamId))) {
-                this.selectedTeamIds.push(Number(teamId));
-            }
-        },
-        removeTeam(teamId) {
-            this.selectedTeamIds = this.selectedTeamIds.filter(id => id !== teamId);
-        },
-        teamLabel(teamId) {
-            const team = this.allTeams.find(t => t.value === teamId);
-            return team ? team.label : '';
-        },
-        get availableTeams() {
-            return this.allTeams.filter(t => !this.selectedTeamIds.includes(t.value));
-        },
-    }"
+    x-data="createModal({ memberOptions: @js($memberOptions), teamOptions: @js($teamOptions) })"
     x-effect="if (selectedType === 'one_on_one') { selectedTeamIds = []; }"
 >
     <button

@@ -1,5 +1,5 @@
 @props(['items' => ['View More','Delete']])
-<div x-data="{openDropDown: false}" class="relative h-fit">
+<div x-data="toggleState({ openDropDown: false })" class="relative h-fit">
     <button
         @click="openDropDown = !openDropDown"
         :class="openDropDown ? 'text-gray-700 dark:text-white' : 'text-gray-400 hover:text-gray-700 dark:hover:text-white'"

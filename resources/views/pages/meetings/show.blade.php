@@ -33,42 +33,7 @@
                     @endphp
 
                     <div
-                        x-data="{
-                            ...autoSaveField({ endpoint: '{{ route('meetings.update', $meeting->id) }}', field: 'type' }),
-                            showOneOnOneWarning: false,
-                            pendingValue: null,
-                            attendeeCount: @js($meeting->attendees->count()),
-
-                            handleTypeChange(newValue) {
-                                if (newValue === 'one_on_one' && this.attendeeCount > 1) {
-                                    this.pendingValue = newValue;
-                                    this.showOneOnOneWarning = true;
-                                    this.$nextTick(() => {
-                                        this.$refs.typeSelect.value = this.value;
-                                    });
-                                    return;
-                                }
-                                this.value = newValue;
-                                $dispatch('meeting-type-changed', { value: newValue });
-                            },
-
-                            confirmTypeChange() {
-                                this.showOneOnOneWarning = false;
-                                this.value = this.pendingValue;
-                                this.pendingValue = null;
-                                this.$nextTick(() => {
-                                    this.$refs.typeSelect.value = this.value;
-                                });
-                                $dispatch('meeting-type-changed', { value: this.value });
-                                $dispatch('meeting-clear-attendees');
-                            },
-
-                            cancelTypeChange() {
-                                this.showOneOnOneWarning = false;
-                                this.pendingValue = null;
-                            },
-                        }"
-                        x-init="value = @js($meeting->type->value)"
+                        x-data="meetingTypeChanger({ endpoint: '{{ route('meetings.update', $meeting->id) }}', initialValue: @js($meeting->type->value), attendeeCount: @js($meeting->attendees->count()) })"
                         x-on:meeting-attendee-count.window="attendeeCount = $event.detail.count"
                         class="inline-flex items-center"
                     >
@@ -164,25 +129,7 @@
 
             {{-- Status transition controls --}}
             <div
-                x-data="{
-                    currentStatus: @js($meeting->status->value),
-                    async transition(status) {
-                        const response = await fetch('{{ route('meetings.transition', $meeting->id) }}', {
-                            method: 'PATCH',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ status }),
-                        });
-
-                        if (response.ok) {
-                            this.currentStatus = status;
-                            window.location.reload();
-                        }
-                    },
-                }"
+                x-data="meetingStatusTransition({ endpoint: '{{ route('meetings.transition', $meeting->id) }}', initialStatus: @js($meeting->status->value) })"
                 class="flex items-center gap-2"
             >
                 <template x-if="currentStatus === 'scheduled'">
@@ -214,78 +161,7 @@
         {{-- Attendees --}}
         <div
             class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 dark:border-gray-800"
-            x-data="{
-                attendees: @js($meeting->attendees->map(fn ($a) => ['id' => $a->id, 'name' => $a->name, 'role' => $a->role])),
-                allMembers: @js($memberOptions),
-                allTeams: @js($teamOptions),
-                meetingType: @js($meeting->type->value),
-                showPicker: false,
-                saving: false,
-
-                get isOneOnOne() {
-                    return this.meetingType === 'one_on_one';
-                },
-
-                get canAddMore() {
-                    if (this.isOneOnOne) return this.attendees.length < 1;
-                    return true;
-                },
-
-                get availableMembers() {
-                    const currentIds = this.attendees.map(a => a.id);
-                    return this.allMembers.filter(m => !currentIds.includes(m.value));
-                },
-
-                get availableTeams() {
-                    return this.allTeams.filter(t => {
-                        const teamMemberIds = this.allMembers.filter(m => m.team_id === t.value).map(m => m.value);
-                        const currentIds = this.attendees.map(a => a.id);
-                        return teamMemberIds.some(id => !currentIds.includes(id));
-                    });
-                },
-
-                async syncAttendees() {
-                    this.saving = true;
-                    await fetch('{{ route('meetings.update', $meeting->id) }}', {
-                        method: 'PATCH',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ attendee_ids: this.attendees.map(a => a.id) }),
-                    });
-                    this.saving = false;
-                },
-
-                addMember(memberId) {
-                    const member = this.allMembers.find(m => m.value === Number(memberId));
-                    if (member) {
-                        this.attendees.push({ id: member.value, name: member.label, role: '' });
-                        this.syncAttendees();
-                    }
-                    this.showPicker = false;
-                },
-
-                addTeam(teamId) {
-                    const teamMembers = this.allMembers.filter(m => m.team_id === Number(teamId));
-                    const currentIds = this.attendees.map(a => a.id);
-                    let added = false;
-                    teamMembers.forEach(m => {
-                        if (!currentIds.includes(m.value)) {
-                            this.attendees.push({ id: m.value, name: m.label, role: '' });
-                            added = true;
-                        }
-                    });
-                    if (added) this.syncAttendees();
-                    this.showPicker = false;
-                },
-
-                removeMember(id) {
-                    this.attendees = this.attendees.filter(a => a.id !== id);
-                    this.syncAttendees();
-                },
-            }"
+            x-data="meetingAttendees({ attendees: @js($meeting->attendees->map(fn ($a) => ['id' => $a->id, 'name' => $a->name, 'role' => $a->role])), memberOptions: @js($memberOptions), teamOptions: @js($teamOptions), meetingType: @js($meeting->type->value), syncEndpoint: '{{ route('meetings.update', $meeting->id) }}' })"
             x-on:meeting-type-changed.window="meetingType = $event.detail.value"
             x-on:meeting-clear-attendees.window="attendees = []; syncAttendees()"
             x-effect="$dispatch('meeting-attendee-count', { count: attendees.length })"
@@ -420,24 +296,12 @@
 
     {{-- Tabbed content --}}
     <div
-        x-data="{
-            availableTabs: @js(array_values(array_filter([
-                'prep',
-                $recordingEnabled ? 'recording' : null,
-                'transcription',
-                $aiEnabled ? 'extractions' : null,
-            ]))),
-            activeTab: null,
-            init() {
-                const requested = new URLSearchParams(window.location.search).get('tab') || 'prep';
-                this.activeTab = this.availableTabs.includes(requested) ? requested : 'prep';
-            },
-            setTab(tab) {
-                const url = new URL(window.location);
-                url.searchParams.set('tab', tab);
-                window.location.href = url.toString();
-            },
-        }"
+        x-data="meetingTabs({ availableTabs: @js(array_values(array_filter([
+            'prep',
+            $recordingEnabled ? 'recording' : null,
+            'transcription',
+            $aiEnabled ? 'extractions' : null,
+        ]))) })"
         class="space-y-6"
     >
         {{-- Tab bar --}}
@@ -476,92 +340,7 @@
                 {{-- Prep items --}}
                 <div
                     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
-                    x-data="{
-                        items: @js($meeting->prepItems->sortBy('sort_order')->values()->map(fn($item) => [
-                            'id' => $item->id,
-                            'content' => $item->content,
-                            'type' => $item->type->value,
-                            'duration_minutes' => $item->duration_minutes,
-                            'is_discussed' => $item->is_discussed,
-                            'team_member_name' => $item->teamMember?->name,
-                        ])),
-                        newType: 'agenda_item',
-                        newDuration: '',
-                        newAssignee: '',
-                        newContent: '',
-                        csrfToken: document.querySelector('meta[name=csrf-token]')?.content ?? '',
-
-                        typeConfig: {
-                            agenda_item: { icon: 'A', class: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
-                            question: { icon: 'Q', class: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
-                            action: { icon: '!', class: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
-                        },
-
-                        get totalMinutes() {
-                            return this.items.reduce((sum, item) => sum + (item.duration_minutes || 0), 0);
-                        },
-
-                        async addPrepItem() {
-                            const payload = {
-                                meeting_id: {{ $meeting->id }},
-                                content: this.newContent,
-                                type: this.newType,
-                            };
-                            if (this.newDuration) payload.duration_minutes = parseInt(this.newDuration, 10);
-                            if (this.newAssignee) payload.team_member_id = parseInt(this.newAssignee, 10);
-
-                            const response = await fetch('{{ route('prep-items.store') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': this.csrfToken,
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(payload),
-                            });
-
-                            if (response.ok) {
-                                const json = await response.json();
-                                this.items.push(json.data);
-                                this.newContent = '';
-                                this.newDuration = '';
-                                this.newAssignee = '';
-                            }
-                        },
-
-                        async toggleDiscussed(index) {
-                            const item = this.items[index];
-                            const newValue = !item.is_discussed;
-
-                            item.is_discussed = newValue;
-
-                            await fetch('/prep-items/' + item.id, {
-                                method: 'PATCH',
-                                headers: {
-                                    'X-CSRF-TOKEN': this.csrfToken,
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ is_discussed: newValue }),
-                            });
-                        },
-
-                        async deletePrepItem(index) {
-                            const item = this.items[index];
-
-                            const response = await fetch('/prep-items/' + item.id, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-CSRF-TOKEN': this.csrfToken,
-                                    'Accept': 'application/json',
-                                },
-                            });
-
-                            if (response.ok) {
-                                this.items.splice(index, 1);
-                            }
-                        },
-                    }"
+                    x-data="meetingPrepItems({ items: @js($meeting->prepItems->sortBy('sort_order')->values()->map(fn($item) => ['id' => $item->id, 'content' => $item->content, 'type' => $item->type->value, 'duration_minutes' => $item->duration_minutes, 'is_discussed' => $item->is_discussed, 'team_member_name' => $item->teamMember?->name])), meetingId: {{ $meeting->id }}, storeEndpoint: '{{ route('prep-items.store') }}', memberOptions: @js($attendeeOptions) })"
                 >
                     <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                         <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Prep items</h2>
@@ -801,21 +580,7 @@
                             </div>
 
                             <div
-                                x-data="{
-                                    async deleteRecording() {
-                                        if (!confirm('Delete this recording?')) return;
-
-                                        const response = await fetch('/api/v1/meetings/{{ $meeting->id }}/recordings/{{ $recording->id }}', {
-                                            method: 'DELETE',
-                                            headers: {
-                                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                                'Accept': 'application/json',
-                                            },
-                                        });
-
-                                        if (response.ok) window.location.reload();
-                                    },
-                                }"
+                                x-data="recordingDelete({ endpoint: '/api/v1/meetings/{{ $meeting->id }}/recordings/{{ $recording->id }}' })"
                             >
                                 @if($meeting->transcription?->status === 'completed')
                                     <p class="text-xs text-green-600 dark:text-green-400">Transcription available — audio can be safely deleted</p>
