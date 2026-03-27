@@ -28,5 +28,4 @@ Thumbs.db
 .claude/session-handoff.md
 .claude/settings.local.json
 plans/research/
-docs/security-reports/agent-memory/
-docs/security-reports/*/data/
+docs/security-reports/

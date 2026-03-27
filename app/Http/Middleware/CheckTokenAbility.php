@@ -45,6 +45,7 @@ class CheckTokenAbility
      * Route resource prefixes mapped to their ability resource name.
      *
      * Sub-resources (e.g. meetings.recordings) map to the parent resource.
+     * Routes without a matching ApiAbility should be in the session-only group.
      */
     private const array RESOURCE_MAP = [
         'tasks' => 'tasks',
@@ -55,12 +56,10 @@ class CheckTokenAbility
         'meetings' => 'meetings',
         'agreements' => 'agreements',
         'activities' => 'activities',
-        'attachments' => 'attachments',
         'counters' => 'counters',
         'search' => 'search',
         'export' => 'export',
         'import' => 'export',
-        'system-notifications' => 'system-notifications',
     ];
 
     /**
@@ -79,7 +78,11 @@ class CheckTokenAbility
         $ability = $this->resolveAbility($request);
 
         if ($ability === null) {
-            return $next($request);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Insufficient permissions.',
+            ], 403);
         }
 
         if ($request->user()->tokenCan($ability)) {
@@ -89,7 +92,7 @@ class CheckTokenAbility
         return response()->json([
             'success' => false,
             'data' => null,
-            'message' => "This token does not have the required ability: {$ability}",
+            'message' => 'Insufficient permissions.',
         ], 403);
     }
 
@@ -150,11 +153,17 @@ class CheckTokenAbility
     /**
      * Resolve the action type from route name segments.
      *
+     * Single-segment route names (e.g. 'counters') are treated as implicit read.
+     *
      * @param array<int, string> $segments
      * @return string|null
      */
     private function resolveAction(array $segments): ?string
     {
+        if (count($segments) === 1) {
+            return 'read';
+        }
+
         $lastSegment = end($segments);
 
         return self::ACTION_MAP[$lastSegment] ?? null;

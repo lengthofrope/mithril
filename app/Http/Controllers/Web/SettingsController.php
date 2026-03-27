@@ -30,6 +30,10 @@ use Illuminate\Validation\Rules\Password;
 class SettingsController extends Controller
 {
     /**
+     * Maximum number of personal access tokens a user may have.
+     */
+    private const int MAX_TOKENS_PER_USER = 25;
+    /**
      * Display the settings page for the authenticated user.
      *
      * @param Request $request
@@ -402,6 +406,13 @@ class SettingsController extends Controller
      */
     public function storeToken(Request $request): JsonResponse
     {
+        if ($request->user()->tokens()->count() >= self::MAX_TOKENS_PER_USER) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maximum number of tokens (' . self::MAX_TOKENS_PER_USER . ') reached. Please revoke an existing token first.',
+            ], 422);
+        }
+
         $validAbilities = array_map(
             fn (ApiAbility $a): string => $a->value,
             ApiAbility::cases(),
@@ -419,7 +430,7 @@ class SettingsController extends Controller
             ? $scope->abilityValues()
             : ($validated['abilities'] ?? []);
 
-        if (empty($abilities)) {
+        if (empty($abilities) || in_array('*', $abilities, true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'At least one scope or ability is required.',

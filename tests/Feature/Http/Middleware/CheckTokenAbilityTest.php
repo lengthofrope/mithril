@@ -76,7 +76,7 @@ describe('CheckTokenAbility middleware', function (): void {
                     'success' => false,
                     'data' => null,
                 ])
-                ->assertJsonFragment(['message' => 'This token does not have the required ability: tasks:write']);
+                ->assertJsonFragment(['message' => 'Insufficient permissions.']);
         });
 
         it('rejects token with tasks:read on PATCH tasks', function (): void {
@@ -111,7 +111,7 @@ describe('CheckTokenAbility middleware', function (): void {
                     'success' => false,
                     'data' => null,
                 ])
-                ->assertJsonFragment(['message' => 'This token does not have the required ability: tasks:delete']);
+                ->assertJsonFragment(['message' => 'Insufficient permissions.']);
         });
 
         it('allows token with tasks:write to POST tasks', function (): void {
@@ -279,8 +279,8 @@ describe('CheckTokenAbility middleware', function (): void {
         });
     });
 
-    describe('routes without ability mapping', function (): void {
-        it('allows token with wildcard ability on unmapped routes', function (): void {
+    describe('routes moved to session-only group', function (): void {
+        it('rejects token auth on speech-service health endpoint', function (): void {
             $user = User::factory()->create();
             $token = $user->createToken('test', ['*'])->plainTextToken;
 
@@ -288,7 +288,7 @@ describe('CheckTokenAbility middleware', function (): void {
                 'Authorization' => 'Bearer ' . $token,
             ]);
 
-            $response->assertOk();
+            $response->assertUnauthorized();
         });
     });
 });
