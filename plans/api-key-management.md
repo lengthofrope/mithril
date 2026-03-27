@@ -136,15 +136,15 @@ Session-authenticated requests (auth:web) bypass ability checks entirely; abilit
 - **Goal:** Define all API abilities, tier presets, and route-level enforcement middleware
 - **PRD criteria:** 3, 4, 5, 10, 14
 - **Specs:**
-  - [ ] `ApiAbility` enum lists all granular abilities (resource:action format)
-  - [ ] `ApiAbility` provides helper methods: `readAbilities()`, `writeAbilities()`, `deleteAbilities()`, `forResource(string)`, `groupedByResource()`
-  - [ ] `ApiScope` enum defines read-only, read-write, full-access tiers with mappings to ApiAbility sets
-  - [ ] `CheckTokenAbility` middleware resolves required ability from route name and checks token abilities
-  - [ ] `CheckTokenAbility` is a no-op for session-authenticated (non-token) requests
-  - [ ] Token with `tasks:read` can GET `/api/v1/tasks` but gets 403 on POST/PATCH/DELETE
-  - [ ] Token with read-only scope can read all resources but gets 403 on writes
-  - [ ] Token with full-access scope can perform all operations
-  - [ ] 403 response uses ApiResponse format with descriptive message
+  - [x] `ApiAbility` enum lists all granular abilities (resource:action format)
+  - [x] `ApiAbility` provides helper methods: `readAbilities()`, `writeAbilities()`, `deleteAbilities()`, `forResource(string)`, `groupedByResource()`
+  - [x] `ApiScope` enum defines read-only, read-write, full-access tiers with mappings to ApiAbility sets
+  - [x] `CheckTokenAbility` middleware resolves required ability from route name and checks token abilities
+  - [x] `CheckTokenAbility` is a no-op for session-authenticated (non-token) requests
+  - [x] Token with `tasks:read` can GET `/api/v1/tasks` but gets 403 on POST/PATCH/DELETE
+  - [x] Token with read-only scope can read all resources but gets 403 on writes
+  - [x] Token with full-access scope can perform all operations
+  - [x] 403 response uses ApiResponse format with descriptive message
 - **Files:** `app/Enums/ApiAbility.php`, `app/Enums/ApiScope.php`, `app/Http/Middleware/CheckTokenAbility.php`, `bootstrap/app.php`, `routes/api.php`
 
 ### Phase 3: Token CRUD API & Settings UI

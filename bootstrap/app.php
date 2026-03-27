@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', \App\Http\Middleware\EnsureAccountIsActive::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTwoFactorChallengeCompleted::class);
 
+        $middleware->alias([
+            'check.token.ability' => \App\Http\Middleware\CheckTokenAbility::class,
+        ]);
+
         $middleware->api(prepend: [
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
