@@ -19,6 +19,7 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
+        "@alpinejs/morph": "^3.15.9",
         "@floating-ui/dom": "^1.7.4",
         "alpinejs": "^3.14.9",
         "apexcharts": "^5.10.3",

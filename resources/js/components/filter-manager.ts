@@ -1,3 +1,4 @@
+import Alpine from 'alpinejs';
 import type { ApiError } from '../types/api';
 
 /**
@@ -27,6 +28,19 @@ interface FilterManagerConfig {
     endpoint: string;
     resultsSelector: string;
     filters: FilterDef[];
+}
+
+/**
+ * Builds an HTML attribute string from an element's current attributes.
+ */
+function buildAttributeString(element: HTMLElement): string {
+    const parts: string[] = [];
+
+    for (const attr of Array.from(element.attributes)) {
+        parts.push(` ${attr.name}="${attr.value.replace(/"/g, '&quot;')}"`);
+    }
+
+    return parts.join('');
 }
 
 /**
@@ -144,7 +158,7 @@ function filterManager(config: FilterManagerConfig): Record<string, unknown> {
                 }
 
                 const html = await response.text();
-                resultsContainer.innerHTML = html;
+                Alpine.morph(resultsContainer, `<${resultsContainer.tagName.toLowerCase()}${buildAttributeString(resultsContainer)}>${html}</${resultsContainer.tagName.toLowerCase()}>`);
             } catch (err) {
                 const apiError = err as ApiError;
                 console.error('[filterManager] Filter request failed:', apiError.message);

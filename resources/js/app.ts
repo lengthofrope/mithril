@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import morph from '@alpinejs/morph';
 import { initTextareaAutosize } from './utils/textarea-autosize';
 
 import { autoSaveField } from './components/auto-save-field';
@@ -76,5 +77,6 @@ Alpine.data('transcriptionViewer', transcriptionViewer as Parameters<typeof Alpi
 
 window.Alpine = Alpine;
 
+Alpine.plugin(morph);
 Alpine.start();
 initTextareaAutosize();
