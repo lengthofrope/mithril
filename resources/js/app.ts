@@ -36,6 +36,7 @@ import { audioRecorder } from './components/audio-recorder';
 import { extractionReview } from './components/extraction-review';
 import { transcriptionViewer } from './components/transcription-viewer';
 import { apiTokenManager } from './components/api-token-manager';
+import { inlineAutoSave } from './components/inline-auto-save';
 
 declare global {
     interface Window {
@@ -76,6 +77,7 @@ Alpine.data('audioRecorder', audioRecorder as Parameters<typeof Alpine.data>[1])
 Alpine.data('extractionReview', extractionReview as Parameters<typeof Alpine.data>[1]);
 Alpine.data('transcriptionViewer', transcriptionViewer as Parameters<typeof Alpine.data>[1]);
 Alpine.data('apiTokenManager', apiTokenManager as Parameters<typeof Alpine.data>[1]);
+Alpine.data('inlineAutoSave', inlineAutoSave as Parameters<typeof Alpine.data>[1]);
 
 window.Alpine = Alpine;
 

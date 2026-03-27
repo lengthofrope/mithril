@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\Note;
 use App\Models\Task;
+use App\Models\TaskCategory;
+use App\Models\TaskGroup;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -240,4 +242,174 @@ test('auto-save returns 422 validation error when id is zero', function () {
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['id']);
+});
+
+test('auto-save successfully renames a task category', function () {
+    /** @var \Tests\TestCase $this */
+    $category = TaskCategory::factory()->create(['user_id' => $this->user->id, 'name' => 'Original']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_category',
+        'id' => $category->id,
+        'field' => 'name',
+        'value' => 'Renamed Category',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true, 'message' => 'Saved.']);
+
+    $this->assertDatabaseHas('task_categories', [
+        'id' => $category->id,
+        'name' => 'Renamed Category',
+    ]);
+});
+
+test('auto-save successfully renames a task group', function () {
+    /** @var \Tests\TestCase $this */
+    $group = TaskGroup::factory()->create(['user_id' => $this->user->id, 'name' => 'Original Group']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_group',
+        'id' => $group->id,
+        'field' => 'name',
+        'value' => 'Renamed Group',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true, 'message' => 'Saved.']);
+
+    $this->assertDatabaseHas('task_groups', [
+        'id' => $group->id,
+        'name' => 'Renamed Group',
+    ]);
+});
+
+test('auto-save validates unique category name per user', function () {
+    /** @var \Tests\TestCase $this */
+    TaskCategory::factory()->create(['user_id' => $this->user->id, 'name' => 'Existing']);
+    $category = TaskCategory::factory()->create(['user_id' => $this->user->id, 'name' => 'Other']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_category',
+        'id' => $category->id,
+        'field' => 'name',
+        'value' => 'Existing',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson(['success' => false]);
+});
+
+test('auto-save allows same category name for different users', function () {
+    /** @var \Tests\TestCase $this */
+    $otherUser = User::factory()->create();
+    $this->actingAs($otherUser);
+    TaskCategory::factory()->create(['user_id' => $otherUser->id, 'name' => 'Shared Name']);
+    $this->actingAs($this->user);
+    $category = TaskCategory::factory()->create(['user_id' => $this->user->id, 'name' => 'Original']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_category',
+        'id' => $category->id,
+        'field' => 'name',
+        'value' => 'Shared Name',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+});
+
+test('auto-save allows category to keep its own name', function () {
+    /** @var \Tests\TestCase $this */
+    $category = TaskCategory::factory()->create(['user_id' => $this->user->id, 'name' => 'Keep Me']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_category',
+        'id' => $category->id,
+        'field' => 'name',
+        'value' => 'Keep Me',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+});
+
+test('auto-save rejects empty name for task category', function () {
+    /** @var \Tests\TestCase $this */
+    $category = TaskCategory::factory()->create(['user_id' => $this->user->id, 'name' => 'Valid']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_category',
+        'id' => $category->id,
+        'field' => 'name',
+        'value' => '',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson(['success' => false]);
+});
+
+test('auto-save rejects empty name for task group', function () {
+    /** @var \Tests\TestCase $this */
+    $group = TaskGroup::factory()->create(['user_id' => $this->user->id, 'name' => 'Valid']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_group',
+        'id' => $group->id,
+        'field' => 'name',
+        'value' => '',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson(['success' => false]);
+});
+
+test('auto-save rejects name exceeding 255 characters for task category', function () {
+    /** @var \Tests\TestCase $this */
+    $category = TaskCategory::factory()->create(['user_id' => $this->user->id, 'name' => 'Short']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_category',
+        'id' => $category->id,
+        'field' => 'name',
+        'value' => str_repeat('a', 256),
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson(['success' => false]);
+});
+
+test('auto-save validates hex color format for task group', function () {
+    /** @var \Tests\TestCase $this */
+    $group = TaskGroup::factory()->create(['user_id' => $this->user->id, 'color' => '#3b82f6']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_group',
+        'id' => $group->id,
+        'field' => 'color',
+        'value' => 'not-a-color',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson(['success' => false]);
+});
+
+test('auto-save successfully updates task group color', function () {
+    /** @var \Tests\TestCase $this */
+    $group = TaskGroup::factory()->create(['user_id' => $this->user->id, 'color' => '#3b82f6']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'task_group',
+        'id' => $group->id,
+        'field' => 'color',
+        'value' => '#ff5733',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('task_groups', [
+        'id' => $group->id,
+        'color' => '#ff5733',
+    ]);
 });

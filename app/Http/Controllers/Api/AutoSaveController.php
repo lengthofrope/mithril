@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AutoSaveRequest;
 use App\Http\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 /**
  * Generic controller for auto-saving individual fields on any model.
@@ -69,8 +71,55 @@ class AutoSaveController extends Controller
             return $this->errorResponse("Field '{$field}' is not fillable on {$modelKey}.", [], 422);
         }
 
+        $fieldRules = $this->getFieldValidationRules($modelKey, $field, $model);
+
+        if (!empty($fieldRules)) {
+            $fieldValidator = Validator::make(
+                ['value' => $value],
+                ['value' => $fieldRules],
+            );
+
+            if ($fieldValidator->fails()) {
+                return $this->errorResponse(
+                    $fieldValidator->errors()->first('value'),
+                    $fieldValidator->errors()->toArray(),
+                    422,
+                );
+            }
+        }
+
         $model->update([$field => $value]);
 
         return $this->successResponse($model->fresh(), 'Saved.', 200, true);
+    }
+
+    /**
+     * Return validation rules for a specific model and field combination.
+     *
+     * @param string $modelKey
+     * @param string $field
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return array<int, mixed>
+     */
+    private function getFieldValidationRules(string $modelKey, string $field, \Illuminate\Database\Eloquent\Model $model): array
+    {
+        $rulesMap = [
+            'task_category' => [
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('task_categories', 'name')
+                        ->where('user_id', $model->getAttribute('user_id'))
+                        ->ignore($model->getKey()),
+                ],
+            ],
+            'task_group' => [
+                'name' => ['required', 'string', 'max:255'],
+                'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            ],
+        ];
+
+        return $rulesMap[$modelKey][$field] ?? [];
     }
 }

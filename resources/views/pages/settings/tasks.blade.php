@@ -25,6 +25,8 @@
                             data-id="{{ $category->id }}"
                             class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                             role="listitem"
+                            x-data="inlineAutoSave({ model: 'task_category', id: {{ $category->id }}, field: 'name' })"
+                            x-init="value = '{{ str_replace("'", "\\'", $category->name) }}'"
                         >
                             <button
                                 type="button"
@@ -39,9 +41,27 @@
                                 </svg>
                             </button>
 
-                            <span class="flex-1 text-sm text-gray-800 dark:text-white/90">
-                                {{ $category->name }}
-                            </span>
+                            <label for="cat-name-{{ $category->id }}" class="sr-only">Category name</label>
+                            <input
+                                id="cat-name-{{ $category->id }}"
+                                type="text"
+                                value="{{ $category->name }}"
+                                x-model="value"
+                                maxlength="255"
+                                required
+                                class="flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 text-sm text-gray-800 transition focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white/90 dark:focus:border-gray-600 dark:focus:bg-gray-800"
+                            >
+
+                            <span
+                                x-text="statusText"
+                                class="shrink-0 text-xs"
+                                :class="{
+                                    'text-gray-400': status === 'saving',
+                                    'text-green-500': status === 'saved',
+                                    'text-red-500': status === 'error',
+                                }"
+                                aria-live="polite"
+                            ></span>
 
                             <x-tl.confirm-dialog-modal
                                 :title="'Delete ' . $category->name . '?'"
@@ -123,6 +143,8 @@
                             data-id="{{ $group->id }}"
                             class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                             role="listitem"
+                            x-data="inlineAutoSave({ model: 'task_group', id: {{ $group->id }}, field: 'name' })"
+                            x-init="value = '{{ str_replace("'", "\\'", $group->name) }}'"
                         >
                             <button
                                 type="button"
@@ -137,17 +159,42 @@
                                 </svg>
                             </button>
 
-                            @if($group->color)
-                                <span
-                                    class="h-3 w-3 shrink-0 rounded-full"
-                                    style="background-color: {{ $group->color }}"
-                                    aria-hidden="true"
-                                ></span>
-                            @endif
+                            <div
+                                x-data="inlineAutoSave({ model: 'task_group', id: {{ $group->id }}, field: 'color' })"
+                                x-init="value = '{{ $group->color ?? '#3b82f6' }}'"
+                                class="shrink-0"
+                            >
+                                <label for="group-color-{{ $group->id }}" class="sr-only">Group color</label>
+                                <input
+                                    id="group-color-{{ $group->id }}"
+                                    type="color"
+                                    value="{{ $group->color ?? '#3b82f6' }}"
+                                    x-model="value"
+                                    class="h-6 w-6 cursor-pointer rounded-full border border-gray-300 p-0 dark:border-gray-600"
+                                >
+                            </div>
 
-                            <span class="flex-1 text-sm text-gray-800 dark:text-white/90">
-                                {{ $group->name }}
-                            </span>
+                            <label for="group-name-{{ $group->id }}" class="sr-only">Group name</label>
+                            <input
+                                id="group-name-{{ $group->id }}"
+                                type="text"
+                                value="{{ $group->name }}"
+                                x-model="value"
+                                maxlength="255"
+                                required
+                                class="flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 text-sm text-gray-800 transition focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white/90 dark:focus:border-gray-600 dark:focus:bg-gray-800"
+                            >
+
+                            <span
+                                x-text="statusText"
+                                class="shrink-0 text-xs"
+                                :class="{
+                                    'text-gray-400': status === 'saving',
+                                    'text-green-500': status === 'saved',
+                                    'text-red-500': status === 'error',
+                                }"
+                                aria-live="polite"
+                            ></span>
 
                             <x-tl.confirm-dialog-modal
                                 :title="'Delete ' . $group->name . '?'"
