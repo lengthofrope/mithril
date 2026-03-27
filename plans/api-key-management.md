@@ -151,20 +151,20 @@ Session-authenticated requests (auth:web) bypass ability checks entirely; abilit
 - **Goal:** Token management API endpoints and the Settings > API page with full create/list/revoke UI
 - **PRD criteria:** 1, 2, 3, 5, 6, 7, 8, 10, 13, 14, 16, 17, 18
 - **Specs:**
-  - [ ] `POST /settings/api/tokens` creates a token with name and scope/abilities; returns plaintext token once
-  - [ ] `GET /settings/api` renders the API settings page with token list and creation form
-  - [ ] Token list shows name, scope description, creation date, last-used date
-  - [ ] "Never used" displayed when `last_used_at` is null
-  - [ ] Token creation form requires name (max 100 chars) and at least one scope selection
-  - [ ] Scope UI shows tier presets and expandable per-resource abilities grouped by resource
-  - [ ] Selecting a tier auto-checks the corresponding granular abilities
-  - [ ] After creation, plaintext token displayed with copy-to-clipboard and non-dismissable warning
-  - [ ] Individual token revocation via DELETE with confirmation dialog
-  - [ ] "Revoke all" button with confirmation dialog
-  - [ ] Settings subpage navigation includes "API" link alongside existing tabs
-  - [ ] Alpine.js component handles all token CRUD interactions
-  - [ ] Multiple tokens with same name can coexist; revocation targets specific token by ID
-- **Files:** `app/Http/Controllers/Api/ApiTokenController.php`, `app/Http/Controllers/Web/SettingsController.php`, `routes/web.php`, `resources/views/pages/settings/api.blade.php`, `resources/js/components/apiTokenManager.ts`, `resources/js/app.ts`
+  - [x] `POST /settings/api/tokens` creates a token with name and scope/abilities; returns plaintext token once
+  - [x] `GET /settings/api` renders the API settings page with token list and creation form
+  - [x] Token list shows name, scope description, creation date, last-used date
+  - [x] "Never used" displayed when `last_used_at` is null
+  - [x] Token creation form requires name (max 100 chars) and at least one scope selection
+  - [x] Scope UI shows tier presets and expandable per-resource abilities grouped by resource
+  - [x] Selecting a tier auto-checks the corresponding granular abilities
+  - [x] After creation, plaintext token displayed with copy-to-clipboard and non-dismissable warning
+  - [x] Individual token revocation via DELETE with confirmation dialog
+  - [x] "Revoke all" button with confirmation dialog
+  - [x] Settings subpage navigation includes "API" link alongside existing tabs
+  - [x] Alpine.js component handles all token CRUD interactions
+  - [x] Multiple tokens with same name can coexist; revocation targets specific token by ID
+- **Files:** `app/Http/Controllers/Web/SettingsController.php`, `routes/web.php`, `resources/views/pages/settings/api.blade.php`, `resources/js/components/api-token-manager.ts`, `resources/js/app.ts`
 
 ## Parallelization
 

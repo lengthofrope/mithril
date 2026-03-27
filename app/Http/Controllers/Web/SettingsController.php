@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\ApiAbility;
+use App\Enums\ApiScope;
 use App\Enums\SpeechServiceMode;
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
@@ -361,5 +363,123 @@ class SettingsController extends Controller
         $taskCategory->delete();
 
         return redirect()->back();
+    }
+
+    /**
+     * Display the API settings sub-page with token list and creation form.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function api(Request $request): View
+    {
+        $user = $request->user();
+        $tokens = $user->tokens()->orderByDesc('created_at')->get();
+
+        $scopeAbilityMap = [];
+        foreach (ApiScope::cases() as $scope) {
+            $scopeAbilityMap[$scope->value] = $scope->abilityValues();
+        }
+
+        return view('pages.settings.api', [
+            'title' => 'API',
+            'breadcrumbs' => (new BreadcrumbBuilder())
+                ->forPage('Settings', route('settings.index'))
+                ->addCrumb('API')
+                ->build(),
+            'tokens' => $tokens,
+            'groupedAbilities' => ApiAbility::groupedByResource(),
+            'scopes' => ApiScope::cases(),
+            'scopeAbilityMap' => $scopeAbilityMap,
+        ]);
+    }
+
+    /**
+     * Create a new personal access token with the given name and abilities.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function storeToken(Request $request): JsonResponse
+    {
+        $validAbilities = array_map(
+            fn (ApiAbility $a): string => $a->value,
+            ApiAbility::cases(),
+        );
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'scope' => ['nullable', 'string', Rule::in(array_map(fn (ApiScope $s) => $s->value, ApiScope::cases()))],
+            'abilities' => ['nullable', 'array', 'min:1'],
+            'abilities.*' => ['string', Rule::in($validAbilities)],
+        ]);
+
+        $scope = isset($validated['scope']) ? ApiScope::from($validated['scope']) : null;
+        $abilities = $scope
+            ? $scope->abilityValues()
+            : ($validated['abilities'] ?? []);
+
+        if (empty($abilities)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'At least one scope or ability is required.',
+                'errors' => ['scope' => ['At least one scope or ability is required.']],
+            ], 422);
+        }
+
+        $token = $request->user()->createToken($validated['name'], $abilities);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'plaintext_token' => $token->plainTextToken,
+                'token' => [
+                    'id' => $token->accessToken->id,
+                    'name' => $token->accessToken->name,
+                    'abilities' => $token->accessToken->abilities,
+                    'created_at' => $token->accessToken->created_at?->toIso8601String(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Revoke a specific personal access token owned by the authenticated user.
+     *
+     * @param Request $request
+     * @param int $tokenId
+     * @return JsonResponse
+     */
+    public function destroyToken(Request $request, int $tokenId): JsonResponse
+    {
+        $deleted = $request->user()->tokens()->where('id', $tokenId)->delete();
+
+        if ($deleted === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Token revoked.',
+        ]);
+    }
+
+    /**
+     * Revoke all personal access tokens for the authenticated user.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function destroyAllTokens(Request $request): JsonResponse
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All tokens revoked.',
+        ]);
     }
 }
