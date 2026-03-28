@@ -67,7 +67,7 @@
                 <template x-if="showCategoryGroups && !isLoading && emails.length > 0">
                     <div class="divide-y divide-gray-100 dark:divide-gray-800">
                         <template x-for="group in categoryGroups" :key="group.name">
-                            <div x-data="{ open: true }">
+                            <div x-data="toggleState({ open: true })">
                                 <button
                                     type="button"
                                     class="flex w-full items-center justify-between bg-gray-50 px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-900/50 dark:text-gray-400"

@@ -60,12 +60,12 @@ test('sidebar_collapsed defaults to false for new users', function () {
     expect((bool) $user->sidebar_collapsed)->toBeFalse();
 });
 
-test('sidebar collapsed preference is passed to layout view', function () {
+test('sidebar collapsed preference is passed to layout view via meta tag', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create(['sidebar_collapsed' => true]);
 
     $response = $this->actingAs($user)->get('/');
 
     $response->assertOk();
-    $response->assertSee("sidebarCollapsed: true", false);
+    $response->assertSee('<meta name="sidebar-collapsed" content="1">', false);
 });

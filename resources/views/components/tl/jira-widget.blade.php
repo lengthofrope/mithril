@@ -4,41 +4,7 @@
 
 <div
     {{ $attributes->class(['rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]']) }}
-    x-data="{
-        issues: [],
-        total: 0,
-        isLoading: true,
-        errorMessage: '',
-        limit: {{ $limit }},
-
-        async init() {
-            await this.fetchIssues();
-        },
-
-        async fetchIssues() {
-            this.isLoading = true;
-            this.errorMessage = '';
-
-            try {
-                const response = await fetch(`/api/v1/jira-issues/dashboard?limit=${this.limit}`, {
-                    headers: { 'Accept': 'application/json' },
-                });
-
-                const json = await response.json();
-
-                if (json.success && json.data) {
-                    this.issues = json.data.issues;
-                    this.total = json.data.total;
-                } else {
-                    this.errorMessage = json.message ?? 'Failed to load Jira issues.';
-                }
-            } catch {
-                this.errorMessage = 'Failed to load Jira issues.';
-            } finally {
-                this.isLoading = false;
-            }
-        }
-    }"
+    x-data="jiraDashboardWidget({ limit: {{ $limit }} })"
 >
     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
         <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Jira Issues</h2>

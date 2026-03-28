@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group(function (): void {
+Route::prefix('v1')->middleware(['auth:web,sanctum', 'throttle:api', 'check.token.ability'])->as('api.')->group(function (): void {
     Route::apiResource('tasks', TaskController::class);
     Route::apiResource('teams', TeamController::class);
     Route::apiResource('team-members', TeamMemberController::class);
@@ -55,26 +55,29 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
     Route::post('meetings/{meeting}/extractions/bulk', [App\Http\Controllers\Api\MeetingExtractionController::class, 'bulk'])->name('meetings.extractions.bulk');
     Route::post('meetings/{meeting}/extractions/re-extract', [App\Http\Controllers\Api\MeetingExtractionController::class, 'reExtract'])->name('meetings.extractions.re-extract');
 
-    Route::get('speech-service/health', [App\Http\Controllers\Api\SpeechServiceHealthController::class, 'system'])->name('speech-service.health');
-
-    Route::post('reorder', ReorderController::class);
-    Route::post('auto-save', AutoSaveController::class);
-
     Route::prefix('{type}/{id}/activities')
         ->whereIn('type', ['tasks', 'follow-ups', 'notes', 'meetings'])
         ->group(function (): void {
-            Route::post('/', [ActivityController::class, 'store']);
-            Route::patch('{activity}', [ActivityController::class, 'update']);
-            Route::delete('{activity}', [ActivityController::class, 'destroy']);
+            Route::post('/', [ActivityController::class, 'store'])->name('activities.store');
+            Route::patch('{activity}', [ActivityController::class, 'update'])->name('activities.update');
+            Route::delete('{activity}', [ActivityController::class, 'destroy'])->name('activities.destroy');
         });
 
-    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
-
     Route::get('counters', CounterController::class)->name('counters');
-    Route::get('search', [SearchController::class, 'search']);
+    Route::get('search', [SearchController::class, 'search'])->name('search');
 
-    Route::get('export', [ExportImportController::class, 'export']);
-    Route::post('import', [ExportImportController::class, 'import']);
+    Route::get('export', [ExportImportController::class, 'export'])->name('export');
+    Route::post('import', [ExportImportController::class, 'import'])->name('import.store');
+});
+
+Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group(function (): void {
+    Route::post('reorder', ReorderController::class);
+    Route::post('auto-save', AutoSaveController::class);
+
+    Route::get('speech-service/health', [App\Http\Controllers\Api\SpeechServiceHealthController::class, 'system'])->name('speech-service.health');
+    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
+    Route::patch('system-notifications/{systemNotification}/dismiss', [SystemNotificationController::class, 'dismiss'])
+        ->name('system-notifications.dismiss');
 
     Route::prefix('sync')->as('sync.')->group(function (): void {
         Route::post('jira', [SyncController::class, 'jira'])->name('jira');
@@ -120,9 +123,6 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
             ->name('unlink');
     });
 
-    Route::patch('system-notifications/{systemNotification}/dismiss', [SystemNotificationController::class, 'dismiss'])
-        ->name('system-notifications.dismiss');
-
     Route::prefix('calendar-events/{calendarEvent}')->as('calendar-events.')->group(function (): void {
         Route::get('prefill/{type}', [CalendarActionController::class, 'prefill'])
             ->name('prefill')
@@ -135,5 +135,4 @@ Route::prefix('v1')->middleware(['auth:web', 'throttle:api'])->as('api.')->group
         Route::delete('links/{calendarEventLink}', [CalendarActionController::class, 'unlink'])
             ->name('unlink');
     });
-
 });

@@ -5,7 +5,7 @@
     <x-common.page-breadcrumb pageTitle="Tasks" />
 
     {{-- Filter bar + toolbar --}}
-    <div x-data="{ showAddGroup: false }" class="mb-4 space-y-3">
+    <div x-data="toggleState({ showAddGroup: false })" class="mb-4 space-y-3">
         <div class="relative">
             <x-tl.filter-bar
                 :endpoint="route('tasks.index')"
@@ -118,20 +118,7 @@
 
     {{-- Bulk actions bar (shown when tasks are selected) --}}
     <div
-        x-data="{
-            selectedIds: [],
-            toggleTask(id) {
-                const idx = this.selectedIds.indexOf(id);
-                if (idx === -1) {
-                    this.selectedIds.push(id);
-                } else {
-                    this.selectedIds.splice(idx, 1);
-                }
-            },
-            clearSelection() {
-                this.selectedIds = [];
-            },
-        }"
+        x-data="bulkSelect()"
         id="task-list-wrapper"
     >
         <div

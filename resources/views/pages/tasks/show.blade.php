@@ -54,15 +54,7 @@
                 {{-- Row: Team + Member (linked filtering) --}}
                 <div
                     class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
-                    x-data="{
-                        allMembers: @js($memberOptions),
-                        selectedTeamId: @js((string) ($task->team_id ?? '')),
-                        get filteredMemberOptions() {
-                            return this.selectedTeamId
-                                ? this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId))
-                                : this.allMembers;
-                        },
-                    }"
+                    x-data="teamMemberFilter({ memberOptions: @js($memberOptions), initialTeamId: @js((string) ($task->team_id ?? '')) })"
                 >
                     {{-- Team select --}}
                     <div
@@ -191,230 +183,153 @@
                     &larr; Back to tasks
                 </a>
 
-                <div class="ml-auto flex items-center gap-2">
-                    <div x-data="{ isProcessing: false }" class="inline">
-                        <button
-                            type="button"
-                            x-bind:disabled="isProcessing"
-                            x-on:click="
-                                if (isProcessing) return;
-                                isProcessing = true;
-                                try {
-                                    const response = await fetch('{{ route('tasks.create-follow-up', $task) }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-Requested-With': 'XMLHttpRequest',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                        },
-                                        credentials: 'same-origin',
-                                        body: JSON.stringify({}),
-                                    });
-                                    const json = await response.json();
-                                    if (json.success && json.data?.follow_up_url) {
-                                        window.location.href = json.data.follow_up_url;
-                                    }
-                                } finally {
-                                    isProcessing = false;
-                                }
-                            "
-                            class="flex items-center gap-1 rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-700 transition hover:bg-orange-100 disabled:opacity-50 dark:border-orange-700/50 dark:bg-orange-500/10 dark:text-orange-400 dark:hover:bg-orange-500/20"
-                        >
-                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            Create follow-up
-                        </button>
-                    </div>
-
-                    <div
-                        x-data="{
-                            isOpen: false,
-                            isProcessing: false,
-                            async doConvert() {
-                                if (this.isProcessing) return;
-                                this.isProcessing = true;
-                                this.isOpen = false;
-                                try {
-                                    const response = await fetch('{{ route('tasks.convert-to-follow-up', $task) }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-Requested-With': 'XMLHttpRequest',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                        },
-                                        credentials: 'same-origin',
-                                        body: JSON.stringify({}),
-                                    });
-                                    const json = await response.json();
-                                    if (json.success && json.data?.follow_up_url) {
-                                        window.location.href = json.data.follow_up_url;
-                                    }
-                                } finally {
-                                    this.isProcessing = false;
-                                }
-                            },
-                        }"
-                        class="inline"
+                <div
+                    class="ml-auto flex items-center gap-2"
+                    x-data="taskActions({
+                        createFollowUpUrl: '{{ route('tasks.create-follow-up', $task) }}',
+                        convertToFollowUpUrl: '{{ route('tasks.convert-to-follow-up', $task) }}',
+                        deleteUrl: '{{ $taskEndpoint }}',
+                        redirectUrl: localStorage.getItem('tasks.view') === 'kanban' ? '{{ route('tasks.kanban') }}' : '{{ route('tasks.index') }}',
+                    })"
+                >
+                    <button
+                        type="button"
+                        x-bind:disabled="isCreating"
+                        x-on:click="createFollowUp()"
+                        class="flex items-center gap-1 rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-700 transition hover:bg-orange-100 disabled:opacity-50 dark:border-orange-700/50 dark:bg-orange-500/10 dark:text-orange-400 dark:hover:bg-orange-500/20"
                     >
-                        <button
-                            type="button"
-                            x-bind:disabled="isProcessing"
-                            x-on:click="isOpen = true"
-                            class="flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-700/50 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
-                        >
-                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                            </svg>
-                            Convert to follow-up
-                        </button>
+                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Create follow-up
+                    </button>
 
-                        {{-- Confirmation modal --}}
+                    <button
+                        type="button"
+                        x-bind:disabled="isConverting"
+                        x-on:click="convertOpen = true"
+                        class="flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-700/50 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
+                    >
+                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                        </svg>
+                        Convert to follow-up
+                    </button>
+
+                    {{-- Convert confirmation modal --}}
+                    <div
+                        x-show="convertOpen"
+                        x-cloak
+                        x-on:keydown.escape.window="convertOpen = false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="convert-dialog-title"
+                    >
+                        <div x-on:click="convertOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
                         <div
-                            x-show="isOpen"
-                            x-cloak
-                            x-on:keydown.escape.window="isOpen = false"
                             x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0"
-                            x-transition:enter-end="opacity-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100"
-                            x-transition:leave-end="opacity-0"
-                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                            role="dialog"
-                            aria-modal="true"
-                            aria-labelledby="convert-dialog-title"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
                         >
-                            <div x-on:click="isOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
-
-                            <div
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-150"
-                                x-transition:leave-start="opacity-100 scale-100"
-                                x-transition:leave-end="opacity-0 scale-95"
-                                x-on:click.stop
-                                class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
-                            >
-                                <h2 id="convert-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
-                                    Convert to follow-up
-                                </h2>
-                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    This will mark the task as done and create a linked follow-up. All comments, links, and files will be transferred. Continue?
-                                </p>
-                                <div class="mt-6 flex items-center justify-end gap-3">
-                                    <button
-                                        type="button"
-                                        x-on:click="isOpen = false"
-                                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="button"
-                                        x-on:click="doConvert()"
-                                        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
-                                    >
-                                        Convert
-                                    </button>
-                                </div>
+                            <h2 id="convert-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
+                                Convert to follow-up
+                            </h2>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                This will mark the task as done and create a linked follow-up. All comments, links, and files will be transferred. Continue?
+                            </p>
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="convertOpen = false"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    x-on:click="doConvert()"
+                                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
+                                >
+                                    Convert
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div
-                        x-data="{
-                            isOpen: false,
-                            isProcessing: false,
-                            async doDelete() {
-                                if (this.isProcessing) return;
-                                this.isProcessing = true;
-                                this.isOpen = false;
-                                try {
-                                    const response = await fetch('{{ $taskEndpoint }}', {
-                                        method: 'DELETE',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-Requested-With': 'XMLHttpRequest',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                        },
-                                        credentials: 'same-origin',
-                                    });
-                                    if (response.ok) {
-                                        window.location.href = localStorage.getItem('tasks.view') === 'kanban' ? '{{ route('tasks.kanban') }}' : '{{ route('tasks.index') }}';
-                                    }
-                                } finally {
-                                    this.isProcessing = false;
-                                }
-                            },
-                        }"
-                        class="inline"
+
+                    <button
+                        type="button"
+                        x-bind:disabled="isDeleting"
+                        x-on:click="deleteOpen = true"
+                        class="flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
                     >
-                        <button
-                            type="button"
-                            x-bind:disabled="isProcessing"
-                            x-on:click="isOpen = true"
-                            class="flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-700/50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                        >
-                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                            </svg>
-                            Delete task
-                        </button>
+                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                        Delete task
+                    </button>
 
-                        {{-- Confirmation modal --}}
+                    {{-- Delete confirmation modal --}}
+                    <div
+                        x-show="deleteOpen"
+                        x-cloak
+                        x-on:keydown.escape.window="deleteOpen = false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="delete-task-dialog-title"
+                    >
+                        <div x-on:click="deleteOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
                         <div
-                            x-show="isOpen"
-                            x-cloak
-                            x-on:keydown.escape.window="isOpen = false"
                             x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0"
-                            x-transition:enter-end="opacity-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100"
-                            x-transition:leave-end="opacity-0"
-                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                            role="dialog"
-                            aria-modal="true"
-                            aria-labelledby="delete-task-dialog-title"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-on:click.stop
+                            class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
                         >
-                            <div x-on:click="isOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
-
-                            <div
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-150"
-                                x-transition:leave-start="opacity-100 scale-100"
-                                x-transition:leave-end="opacity-0 scale-95"
-                                x-on:click.stop
-                                class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
-                            >
-                                <h2 id="delete-task-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
-                                    Delete task
-                                </h2>
-                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    This will permanently delete this task and all its activity, comments, links, and attachments. This cannot be undone.
-                                </p>
-                                <div class="mt-6 flex items-center justify-end gap-3">
-                                    <button
-                                        type="button"
-                                        x-on:click="isOpen = false"
-                                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="button"
-                                        x-on:click="doDelete()"
-                                        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
+                            <h2 id="delete-task-dialog-title" class="text-base font-semibold text-gray-900 dark:text-white">
+                                Delete task
+                            </h2>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                This will permanently delete this task and all its activity, comments, links, and attachments. This cannot be undone.
+                            </p>
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    x-on:click="deleteOpen = false"
+                                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    x-on:click="doDelete()"
+                                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:hover:bg-red-500"
+                                >
+                                    Delete
+                                </button>
                             </div>
                         </div>
                     </div>

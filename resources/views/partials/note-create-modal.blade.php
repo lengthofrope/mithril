@@ -1,14 +1,6 @@
 {{-- Add note modal --}}
 <div
-    x-data="{
-        addOpen: false,
-        selectedTeamId: '',
-        allMembers: @js($memberOptions),
-        get filteredMembers() {
-            if (!this.selectedTeamId) return this.allMembers;
-            return this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId));
-        },
-    }"
+    x-data="createModal({ memberOptions: @js($memberOptions) })"
 >
     <button
         type="button"

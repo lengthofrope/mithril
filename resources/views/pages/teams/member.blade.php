@@ -25,7 +25,7 @@
             $statusLabel = $statusLabelMap[$statusKey] ?? ucfirst($statusKey);
         @endphp
 
-        <div class="relative shrink-0" x-data="{ showAvatarMenu: false }">
+        <div class="relative shrink-0" x-data="toggleState({ showAvatarMenu: false })">
             <button
                 type="button"
                 class="group relative rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
@@ -140,7 +140,7 @@
             @endif
         </div>
 
-        <div class="flex flex-wrap items-center gap-2" x-data="{ editOpen: false, deleteOpen: false }">
+        <div class="flex flex-wrap items-center gap-2" x-data="toggleState({ editOpen: false, deleteOpen: false })">
             <button
                 type="button"
                 x-on:click="editOpen = true"
@@ -347,7 +347,7 @@
 
     {{-- Sections --}}
     <div
-        x-data="{ activeTab: 'tasks' }"
+        x-data="toggleState({ activeTab: 'tasks' })"
         class="space-y-6"
     >
         {{-- Tabs --}}
@@ -421,7 +421,7 @@
             <div class="space-y-3">
                 @forelse($memberMeetings as $meeting)
                     <div
-                        x-data="{ expanded: false }"
+                        x-data="toggleState({ expanded: false })"
                         class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
                     >
                         <button

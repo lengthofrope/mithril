@@ -1,11 +1,6 @@
 <header
     class="sticky top-0 flex w-full bg-gray-25 border-gray-200 z-99999 dark:border-gray-700 dark:bg-gray-800 xl:border-b"
-    x-data="{
-        isApplicationMenuOpen: false,
-        toggleApplicationMenu() {
-            this.isApplicationMenuOpen = !this.isApplicationMenuOpen;
-        }
-    }">
+    x-data="appHeaderMenu()">
     <div class="flex flex-col items-center justify-between grow xl:flex-row xl:px-6">
         <div
             class="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-700 sm:gap-4 xl:justify-normal xl:border-b-0 xl:px-0 lg:py-4">

@@ -45,15 +45,7 @@
                 {{-- Row: Team + Member (linked filtering) --}}
                 <div
                     class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
-                    x-data="{
-                        allMembers: @js($memberOptions),
-                        selectedTeamId: @js((string) ($followUp->teamMember?->team_id ?? '')),
-                        get filteredMemberOptions() {
-                            return this.selectedTeamId
-                                ? this.allMembers.filter(m => String(m.team_id) === String(this.selectedTeamId))
-                                : this.allMembers;
-                        },
-                    }"
+                    x-data="teamMemberFilter({ memberOptions: @js($memberOptions), initialTeamId: @js((string) ($followUp->teamMember?->team_id ?? '')) })"
                 >
                     {{-- Team select (display only, syncs member filter) --}}
                     <div class="flex flex-col gap-1.5">
@@ -130,34 +122,7 @@
 
                 <div class="ml-auto flex items-center gap-2">
                     <div
-                        x-data="{
-                            isOpen: false,
-                            isProcessing: false,
-                            async doConvert() {
-                                if (this.isProcessing) return;
-                                this.isProcessing = true;
-                                this.isOpen = false;
-                                try {
-                                    const response = await fetch('{{ route('follow-ups.convert', $followUp->id) }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-Requested-With': 'XMLHttpRequest',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                        },
-                                        credentials: 'same-origin',
-                                        body: JSON.stringify({}),
-                                    });
-                                    const json = await response.json();
-                                    if (json.success && json.data?.task_url) {
-                                        window.location.href = json.data.task_url;
-                                    }
-                                } finally {
-                                    this.isProcessing = false;
-                                }
-                            },
-                        }"
+                        x-data="followUpPage({ convertUrl: '{{ route('follow-ups.convert', $followUp->id) }}' })"
                         class="inline"
                     >
                         <button

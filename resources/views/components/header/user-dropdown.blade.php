@@ -1,12 +1,4 @@
-<div class="relative" x-data="{
-    dropdownOpen: false,
-    toggleDropdown() {
-        this.dropdownOpen = !this.dropdownOpen;
-    },
-    closeDropdown() {
-        this.dropdownOpen = false;
-    }
-}" @click.away="closeDropdown()">
+<div class="relative" x-data="userDropdown()" @click.away="closeDropdown()">
     <!-- User Button -->
     <button
         class="flex items-center text-gray-700 dark:text-gray-400"

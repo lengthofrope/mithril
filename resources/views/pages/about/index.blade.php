@@ -99,7 +99,7 @@
 
             <div class="divide-y divide-gray-100 dark:divide-gray-800">
                 @foreach($releases as $release)
-                    <div class="px-6 py-4" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
+                    <div class="px-6 py-4" x-data="toggleState({ open: {{ $loop->first ? 'true' : 'false' }} })">
                         <button
                             type="button"
                             class="flex w-full items-center justify-between text-left"

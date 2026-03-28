@@ -100,6 +100,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/tasks', [SettingsController::class, 'tasks'])->name('settings.tasks');
     Route::get('/settings/storage', [SettingsController::class, 'storage'])->name('settings.storage');
+    Route::get('/settings/api', [SettingsController::class, 'api'])->name('settings.api');
+    Route::post('/settings/api/tokens', [SettingsController::class, 'storeToken'])->name('settings.storeToken');
+    Route::delete('/settings/api/tokens/{tokenId}', [SettingsController::class, 'destroyToken'])->name('settings.destroyToken');
+    Route::delete('/settings/api/tokens', [SettingsController::class, 'destroyAllTokens'])->name('settings.destroyAllTokens');
     Route::post('/settings/storage/purge-orphaned', [SettingsController::class, 'purgeOrphaned'])->name('settings.purgeOrphaned');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
     Route::patch('/settings/timezone', [SettingsController::class, 'updateTimezone'])->name('settings.updateTimezone');

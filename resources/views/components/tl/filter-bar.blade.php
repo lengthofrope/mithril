@@ -13,14 +13,7 @@
 @endphp
 
 <div
-    x-data="{
-        ...filterManager({
-            endpoint: '{{ $endpoint }}',
-            resultsSelector: '{{ $resultsSelector }}',
-            filters: @js($filters),
-        }),
-        filtersOpen: false,
-    }"
+    x-data="filterManager({ endpoint: '{{ $endpoint }}', resultsSelector: '{{ $resultsSelector }}', filters: @js($filters) })"
     class="space-y-3"
 >
     {{-- Primary row: search + filter toggle + reset --}}

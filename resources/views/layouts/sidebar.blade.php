@@ -7,58 +7,12 @@
     $currentPath = request()->path();
 @endphp
 
+<script id="sidebar-menu-data" type="application/json">@json($menuGroups)</script>
+
 <aside id="sidebar"
     class="fixed flex flex-col mt-0 top-0 px-5 left-0 bg-gray-25 dark:bg-gray-800 dark:border-gray-700 text-gray-900 h-screen z-99999 border-r border-gray-200"
     x-init="requestAnimationFrame(() => $el.classList.add('transition-all', 'duration-300', 'ease-in-out'))"
-    x-data="{
-        openSubmenus: {},
-        init() {
-            this.initializeActiveMenus();
-        },
-        initializeActiveMenus() {
-            const currentPath = '{{ $currentPath }}';
-            const pathname = window.location.pathname;
-
-            @foreach ($menuGroups as $groupIndex => $menuGroup)
-                @foreach ($menuGroup['items'] as $itemIndex => $item)
-                    @if (isset($item['subItems']))
-                        @foreach ($item['subItems'] as $subItem)
-                            if (currentPath === '{{ ltrim($subItem['path'], '/') }}' ||
-                                pathname === '{{ $subItem['path'] }}' ||
-                                pathname.startsWith('{{ $subItem['path'] }}/')) {
-                                this.openSubmenus['{{ $groupIndex }}-{{ $itemIndex }}'] = true;
-                            }
-                        @endforeach
-                    @endif
-                @endforeach
-            @endforeach
-        },
-        toggleSubmenu(groupIndex, itemIndex, firstSubItemPath = null) {
-            const key = groupIndex + '-' + itemIndex;
-            const newState = !this.openSubmenus[key];
-
-            // Close all other submenus when opening a new one
-            if (newState) {
-                this.openSubmenus = {};
-            }
-
-            this.openSubmenus[key] = newState;
-
-            if (newState && firstSubItemPath) {
-                window.location.href = firstSubItemPath;
-            }
-        },
-        isSubmenuOpen(groupIndex, itemIndex) {
-            const key = groupIndex + '-' + itemIndex;
-            return this.openSubmenus[key] || false;
-        },
-        isActive(path) {
-            return window.location.pathname === path || '{{ $currentPath }}' === path.replace(/^\//, '');
-        },
-        get isCollapsed() {
-            return !$store.sidebar.isExpanded && !$store.sidebar.isMobileOpen;
-        }
-    }"
+    x-data="sidebarNav({ currentPath: '{{ $currentPath }}' })"
     :class="{
         'w-[290px]': $store.sidebar.isExpanded || $store.sidebar.isMobileOpen,
         'w-[90px]': isCollapsed,
@@ -109,7 +63,7 @@
                                 <li>
                                     @if (isset($item['subItems']))
                                         <!-- Menu Item with Submenu -->
-                                        <div class="relative" x-data="{ flyoutOpen: false, flyoutY: 0 }">
+                                        <div class="relative" x-data="toggleState({ flyoutOpen: false, flyoutY: 0 })">
                                             <!-- Expanded: toggle submenu inline -->
                                             <button x-show="!isCollapsed"
                                                 @click="toggleSubmenu({{ $groupIndex }}, {{ $itemIndex }}, '{{ $item['subItems'][0]['path'] }}')"
@@ -239,7 +193,7 @@
                                                 ? '(' . implode(' || ', array_map(fn ($p) => "isActive('{$p}')", $allPaths)) . ')'
                                                 : "isActive('{$allPaths[0]}')";
                                         @endphp
-                                        <div class="relative" x-data="{ tooltipOpen: false, tooltipY: 0 }">
+                                        <div class="relative" x-data="toggleState({ tooltipOpen: false, tooltipY: 0 })">
                                             <a
                                                 @if($viewPref && $viewPaths)
                                                     :href="(() => { const v = localStorage.getItem('{{ $viewPref }}'); return {{ json_encode($viewPaths) }}[v] || '{{ $item['path'] }}'; })()"

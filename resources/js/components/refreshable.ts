@@ -1,3 +1,4 @@
+import Alpine from 'alpinejs';
 import { debounce } from '../utils/debounce';
 
 /**
@@ -8,6 +9,19 @@ interface RefreshableConfig {
     topics?: string[];
     lazy?: boolean;
     pollInterval?: number;
+}
+
+/**
+ * Builds an HTML attribute string from an element's current attributes.
+ */
+function buildAttributeString(element: HTMLElement): string {
+    const parts: string[] = [];
+
+    for (const attr of Array.from(element.attributes)) {
+        parts.push(` ${attr.name}="${attr.value.replace(/"/g, '&quot;')}"`);
+    }
+
+    return parts.join('');
 }
 
 const DEFAULT_POLL_INTERVAL_MS = 15000;
@@ -135,7 +149,7 @@ function refreshable(config: RefreshableConfig): Record<string, unknown> {
                 const target = this.$el.querySelector<HTMLElement>('[data-refresh-target]');
 
                 if (target !== null) {
-                    target.innerHTML = html;
+                    Alpine.morph(target, `<${target.tagName.toLowerCase()}${buildAttributeString(target)}>${html}</${target.tagName.toLowerCase()}>`);
                 }
             } finally {
                 this.isLoading = false;

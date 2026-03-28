@@ -2,7 +2,7 @@
 
 *Lightweight armor for team leads.*
 
-A Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built for technical team leads who need more than basic task lists — with follow-ups, per-member context, and privacy controls.
+A Progressive Web App (PWA) serving as a personal browser start page for managing teams. Built for technical team leads who need more than basic task lists; with meetings, follow-ups, per-member context, analytics, and privacy controls.
 
 ## Screenshots
 
@@ -26,20 +26,38 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 
 ## Features
 
-- **Dashboard** — Greeting, counters, today-section, quick-create buttons, upcoming calendar events, flagged emails
-- **Tasks** — Priorities, categories, groups, privacy flag, kanban + list view, drag & drop sorting, bulk actions, recurring tasks
-- **Follow-ups** — Timeline view (overdue > today > this week > later), snooze, auto-populated from "waiting" tasks
-- **Teams & Members** — Profile pages with linked tasks, follow-ups, bila history, agreements
-- **Bilas** — Recurring 1-on-1s with prep items checklist, markdown notes
+### Core
+
+- **Dashboard** — Greeting, counters, quick-create buttons, upcoming tasks/follow-ups/meetings, calendar events, flagged emails, Jira issues
+- **Tasks** — Priorities, categories, groups, privacy flag, kanban + list view, drag-and-drop sorting, bulk actions, recurring tasks, inline auto-save configuration
+- **Follow-ups** — Timeline view (overdue > today > this week > later), snooze, task conversion, auto-populated from "waiting" tasks
+- **Meetings** — Team meetings, 1-on-1s, and custom types; multi-attendee support; prep items with types (agenda/question/action), time estimates, and assignees; status lifecycle (scheduled > in progress > completed/cancelled); previous/next navigation
 - **Notes** — Markdown with live preview, tags, pinning, full-text search
-- **Weekly Reflection** — Auto-generated summary + free-form reflection
-- **Analytics** — Configurable dashboard with charts and widgets
-- **Jira Cloud** — Browse assigned/mentioned/watched issues, create resources from issues, dismiss/undismiss, auto-sync
-- **E-mail** — Inbox sync from Microsoft 365, flagged email widget, resource linking to tasks/follow-ups/notes/bilas
-- **Office 365** — Calendar sync, team member availability, and email integration via Microsoft Graph API
-- **PWA** — Service worker, offline fallback, push notifications, installable
-- **Auth** — Email/password + remember-me cookie, two-factor authentication (TOTP)
-- **Dark mode** — Full dark mode support with Rivendell-inspired UI theme
+- **Teams & Members** — Profile pages with linked tasks, follow-ups, meeting history, agreements; team-filtered member selection across the app
+- **Weekly Reflection** — Auto-generated weekly summary with donut and bar charts, free-form markdown reflection
+- **Analytics** — Configurable widget dashboard with multiple chart types (bar, line, donut, area), drag-and-drop layout, time-series snapshots
+
+### Audio & AI
+
+- **Audio recording** — In-browser recording via MediaRecorder API with start/stop/pause controls; file upload fallback (mp3, wav, webm, m4a, ogg)
+- **Speech service** — Self-hosted Docker-based transcription (faster-whisper) and speaker diarization (pyannote-audio); CPU and GPU (CUDA) support; per-user local or server-side processing mode
+- **AI extractions** — Multi-provider AI extraction (OpenRouter, Anthropic) for meeting action items, decisions, and summaries; extraction review UI
+
+### Integrations
+
+- **Office 365** — Calendar sync, team member availability (auto-detect from email), email inbox sync via Microsoft Graph API
+- **Jira Cloud** — Browse assigned/mentioned/watched issues, link issues to resources, auto-sync every 5 minutes
+- **API** — RESTful API with Sanctum token authentication, granular `resource:action` abilities, predefined scopes (read-only, read-write, full-access)
+
+### Platform
+
+- **PWA** — Service worker, offline fallback, installable
+- **Auth** — Email/password with remember-me, two-factor authentication (TOTP), disabled account support
+- **Dark mode** — Full dark/light mode support with Rivendell-inspired UI theme (sage green, Philosopher/Outfit typography, elvish decorative elements)
+- **Auto-save** — No "Save" buttons; everything auto-saves via debounced AJAX (500ms)
+- **Activity feed** — Polymorphic activity log with comments, links, and file attachments on tasks, follow-ups, notes, and meetings
+- **System notifications** — Admin broadcast notifications via artisan command
+- **Data management** — JSON export/import, configurable auto-pruning of completed items, storage management with quota enforcement
 
 ## Tech Stack
 
@@ -47,10 +65,11 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 |-------|-----------|
 | Backend | PHP 8.4+ / Laravel 12 |
 | Database | MariaDB |
-| Frontend | Blade + Alpine.js + Tailwind CSS |
+| Frontend | Blade + Alpine.js + Tailwind CSS v4 |
 | TypeScript | Strict mode, bundled via Vite |
+| Testing | Pest PHP v4 with Laravel plugin |
 | Base template | [TailAdmin Laravel](https://github.com/TailAdmin/tailadmin-laravel) (MIT) |
-| Libraries | SortableJS, ApexCharts, Flatpickr, Marked |
+| Libraries | SortableJS, ApexCharts, Flatpickr, Marked + DOMPurify, Floating UI |
 
 ## Requirements
 
@@ -64,7 +83,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url> mithril
+   git clone git@github.com:lengthofrope/mithril.git
    cd mithril
    ```
 
@@ -119,13 +138,13 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
       - Go to **Microsoft Entra ID** > **App registrations** > **New registration**
       - Name: `Mithril` (or any name)
       - Supported account types: **Single tenant** (or multi-tenant if your team spans organisations)
-      - Redirect URI: **Web** — `https://your-domain.com/auth/microsoft/callback`
+      - Redirect URI: **Web** ; `https://your-domain.com/auth/microsoft/callback`
       - Click **Register**
 
    b. **Create a client secret:**
       - Go to **Certificates & secrets** > **New client secret**
       - Copy the **Value** column immediately (it's hidden after you leave the page)
-      - Do NOT copy the Secret ID — that's not the secret itself
+      - Do NOT copy the Secret ID; that's not the secret itself
 
    c. **Configure API permissions:**
       - Go to **API permissions** > **Add a permission** > **Microsoft Graph** > **Delegated permissions**
@@ -178,17 +197,41 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 
    e. **Connect your account** in the app at **Settings** > **Jira Cloud** > **Connect Jira**
 
-9. **Set up the cron job**
+9. **Configure speech service (optional)**
 
-   Laravel's task scheduler needs a single cron entry on your server. This runs scheduled tasks including the daily analytics snapshot, calendar sync (every 5 min), availability sync (every 5 min), email sync, and Jira sync.
+   For meeting transcription and speaker diarization, deploy the self-hosted speech service:
 
    ```bash
-   * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+   cd docker/speech
+   docker compose up -d
    ```
 
-10. **Start a queue worker**
+   For GPU acceleration, use the override file:
 
-    The calendar, availability, email sync, and Jira sync jobs run on the queue. Start a worker:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+   ```
+
+   Configure in `.env`:
+
+   ```dotenv
+   SPEECH_SERVER_ENABLED=true
+   SPEECH_SERVICE_URL=http://localhost:8090
+   ```
+
+   Users can also configure a personal local speech service instance via **Settings** > **Speech Service**.
+
+10. **Set up the cron job**
+
+    Laravel's task scheduler needs a single cron entry on your server. This runs scheduled tasks including the daily analytics snapshot, calendar sync (every 5 min), availability sync (every 5 min), email sync, and Jira sync.
+
+    ```bash
+    * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+    ```
+
+11. **Start a queue worker**
+
+    The calendar, availability, email sync, Jira sync, and transcription jobs run on the queue. Start a worker:
 
     ```bash
     php artisan queue:work --sleep=3 --tries=3
@@ -196,7 +239,7 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 
     For production, use a process manager like Supervisor to keep the worker running. See the [Laravel Queue documentation](https://laravel.com/docs/queues#supervisor-configuration) for a Supervisor config example.
 
-11. **Start the application**
+12. **Start the application**
 
    For development, use the combined dev command that starts the Laravel server, queue worker, log viewer, and Vite dev server simultaneously:
 
@@ -220,15 +263,26 @@ A Progressive Web App (PWA) serving as a personal browser start page for managin
 ```bash
 composer dev                       # Start all dev services concurrently
 php artisan test                   # Run test suite (Pest)
+php artisan test --parallel        # Run tests in parallel (faster)
 npx tsc --noEmit                   # TypeScript type checking
 npm run build                      # Production build
 php artisan migrate:fresh --seed   # Reset database with sample data
-php artisan schedule:run           # Run scheduler (analytics, calendar sync, availability sync, email sync)
-php artisan microsoft:sync-calendars    # Manually sync calendars for all connected users
-php artisan microsoft:sync-availability # Manually sync team member availability
-php artisan microsoft:detect-members    # Check manual members for O365 mailbox and upgrade
-php artisan sync:emails                 # Manually sync emails for all connected users
-php artisan jira:sync-issues            # Manually sync Jira issues for all connected users
+```
+
+### Artisan Commands
+
+```bash
+# Sync commands
+php artisan microsoft:sync-calendars    # Sync calendars for all connected users
+php artisan microsoft:sync-availability # Sync team member availability
+php artisan microsoft:detect-members    # Check manual members for O365 mailbox
+php artisan sync:emails                 # Sync emails for all connected users
+php artisan jira:sync-issues            # Sync Jira issues for all connected users
+
+# Administration
+php artisan user:disable {email}        # Disable a user account
+php artisan user:enable {email}         # Re-enable a user account
+php artisan notify:broadcast "message"  # Send system notification to all users
 ```
 
 ### Verification
@@ -236,19 +290,21 @@ php artisan jira:sync-issues            # Manually sync Jira issues for all conn
 Run all three before committing:
 
 ```bash
-php artisan test
-npx tsc --noEmit
-npm run build
+php artisan test          # All tests must pass
+npx tsc --noEmit          # TypeScript must compile clean
+npm run build             # Vite build must succeed
 ```
 
 ## Architecture
 
-- **No "Save" buttons** — everything auto-saves via debounced AJAX (500 ms)
-- **Blade for rendering, Alpine.js for interactivity** — no SPA, no client-side routing
-- **Generic controllers** — `ReorderController` and `AutoSaveController` work for any model
-- **Reusable model traits** — `HasSortOrder`, `Filterable`, `HasFollowUp`, `Searchable`, `HasResourceLinks`
-- **Laravel Events** for side-effects — keeps controllers thin
-- **TypeScript modules** exposed as Alpine.js `data()` components
+- **No "Save" buttons** ; everything auto-saves via debounced AJAX (500ms)
+- **Blade for rendering, Alpine.js for interactivity** ; no SPA, no client-side routing
+- **TypeScript components** ; all Alpine.js logic lives in typed TypeScript modules registered via `Alpine.data()`, bundled by Vite
+- **Alpine stores** ; theme and sidebar state managed via `Alpine.store()` in a TypeScript module
+- **Generic controllers** ; `ReorderController` and `AutoSaveController` work for any model
+- **Reusable model traits** ; `BelongsToUser`, `HasSortOrder`, `Filterable`, `HasFollowUp`, `Searchable`, `HasResourceLinks`
+- **Laravel Events** for side-effects ; keeps controllers thin
+- **Sanctum API tokens** ; granular `resource:action` abilities with middleware enforcement
 
 ## License
 

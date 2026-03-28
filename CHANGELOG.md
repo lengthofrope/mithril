@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-03-28
+
+### Added
+
+- **API key management** — Personal access tokens via Laravel Sanctum with granular `resource:action` abilities (e.g. `tasks:read`, `teams:write`) and predefined scopes (read-only, read-write, full-access); settings UI for creating, viewing, and revoking tokens; token limit of 5 per user
+- **API authentication** — All `/api/v1/` endpoints now accept both session-based and Bearer token authentication; new `CheckTokenAbility` middleware enforces per-route ability checks; CSRF validation automatically bypassed for Bearer-authenticated requests
+- **Inline auto-save for task configuration** — Task categories and groups on the settings page are now editable inline with auto-save, validation feedback, and reorder support; replaces the previous modal-based edit flow
+
+### Changed
+
+- **Frontend architecture overhaul** — Extracted all inline Alpine.js `x-data` blocks and `<script>` tags from 31+ Blade templates into 28 TypeScript components/modules; Alpine stores (theme, sidebar) moved from inline `<script>` tags to a bundled TypeScript module; only a minimal dark-mode flash-prevention snippet remains inline
+- **Alpine.js morph plugin** — Added `@alpinejs/morph` for smoother DOM updates during live refresh
+- **Sidebar navigation** — Menu structure now passed as JSON from `MenuHelper` via a `<script type="application/json">` element instead of generating JavaScript inside Blade `@foreach` loops
+- **Active account middleware** — Updated to support both session and token-based authentication checks
+
+### Performance
+
+- **Faster page initialization** — All JavaScript is now bundled and tree-shaken by Vite instead of parsed inline per page; reduces HTML payload size and enables browser caching of the JS bundle
+- **TypeScript strict mode** — All new components pass strict-mode compilation, catching type errors at build time
+
 ## [1.10.2] - 2026-03-26
 
 ### Added
