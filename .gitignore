@@ -27,5 +27,5 @@ Thumbs.db
 .anvil.json
 .claude/session-handoff.md
 .claude/settings.local.json
-plans/research/
-docs/security-reports/
+docs/anvil/research/
+docs/anvil/documents/security-reports/
