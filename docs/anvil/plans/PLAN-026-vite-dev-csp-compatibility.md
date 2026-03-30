@@ -1,7 +1,7 @@
 # PLAN-026: Vite Development Mode CSP Compatibility
 
 **Created:** 2026-03-30
-**Status:** Draft
+**Status:** Approved
 **Author:** Bas de Kort
 **PRDs:** PRD-005
 

@@ -6,8 +6,9 @@ This directory contains implementation plans for the project. Each plan captures
 
 | # | Title | Status | Date |
 |---|-------|--------|------|
-
-*No active plans.*
+| [PLAN-026](PLAN-026-vite-dev-csp-compatibility.md) | Vite Development Mode CSP Compatibility | Approved | 2026-03-30 |
+| [PLAN-027](PLAN-027-meeting-date-persistence-and-calendar-sync.md) | Meeting Date Persistence and Calendar Sync | Approved | 2026-03-30 |
+| [PLAN-028](PLAN-028-global-search.md) | Global Search | Approved | 2026-03-30 |
 
 ## Archived Plans
 
