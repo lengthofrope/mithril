@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Global search** — Search bar in the application header searches across tasks, notes, follow-ups, meetings, and team members from any page; results grouped by entity type with direct navigation to detail pages; 300ms debounced API calls; full keyboard navigation (arrow keys, Enter, Escape); collapses to icon on mobile with full-width expanded overlay
 - **Calendar sync date propagation** — When a linked Outlook calendar event's date changes, the next sync automatically updates the meeting's `scheduled_at` to match; respects user ownership scoping
 - **Calendar sync warning** — Non-blocking amber info alert on the meeting detail page warns users when editing a date on a calendar-linked meeting that the next sync may overwrite their change
 

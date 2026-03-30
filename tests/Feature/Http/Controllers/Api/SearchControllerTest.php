@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\FollowUp;
+use App\Models\Meeting;
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\TeamMember;
@@ -49,6 +50,7 @@ test('search returns success with grouped results structure when query is valid'
                 'tasks',
                 'notes',
                 'follow_ups',
+                'meetings',
                 'team_members',
             ],
         ]);
@@ -65,6 +67,7 @@ test('search returns empty results when nothing matches', function () {
     expect($response->json('data.tasks'))->toBeEmpty();
     expect($response->json('data.notes'))->toBeEmpty();
     expect($response->json('data.follow_ups'))->toBeEmpty();
+    expect($response->json('data.meetings'))->toBeEmpty();
     expect($response->json('data.team_members'))->toBeEmpty();
 });
 
@@ -101,6 +104,45 @@ test('search returns matching follow-ups by description', function () {
 
     $response->assertOk();
     expect($response->json('data.follow_ups'))->toHaveCount(1);
+});
+
+test('search returns matching meetings by title', function () {
+    /** @var \Tests\TestCase $this */
+    Meeting::factory()->create(['user_id' => $this->user->id, 'title' => 'Quarterly planning session']);
+    Meeting::factory()->create(['user_id' => $this->user->id, 'title' => 'Daily standup']);
+
+    $response = $this->getJson('/api/v1/search?q=planning');
+
+    $response->assertOk();
+    expect($response->json('data.meetings'))->toHaveCount(1);
+    expect($response->json('data.meetings.0.title'))->toBe('Quarterly planning session');
+});
+
+test('search does not return results belonging to other users', function () {
+    /** @var \Tests\TestCase $this */
+    $otherUser = User::factory()->create();
+
+    \Illuminate\Support\Facades\Auth::logout();
+    Task::factory()->create(['user_id' => $otherUser->id, 'title' => 'Secret task']);
+    Note::factory()->create(['user_id' => $otherUser->id, 'title' => 'Secret note']);
+    $this->actingAs($this->user);
+
+    Task::factory()->create(['user_id' => $this->user->id, 'title' => 'My visible task']);
+
+    $response = $this->getJson('/api/v1/search?q=Secret');
+
+    $response->assertOk();
+    expect($response->json('data.tasks'))->toBeEmpty();
+    expect($response->json('data.notes'))->toBeEmpty();
+});
+
+test('search requires authentication', function () {
+    /** @var \Tests\TestCase $this */
+    \Illuminate\Support\Facades\Auth::logout();
+
+    $response = $this->getJson('/api/v1/search?q=test');
+
+    $response->assertUnauthorized();
 });
 
 test('search returns matching team members by name', function () {

@@ -66,6 +66,7 @@ import { userDropdown } from './components/user-dropdown';
 import { appHeaderMenu } from './components/app-header-menu';
 import { recordingDelete } from './components/recording-delete';
 import { flashMessage } from './components/flash-message';
+import { globalSearch } from './components/global-search';
 
 declare global {
     interface Window {
@@ -134,6 +135,7 @@ Alpine.data('userDropdown', userDropdown as Parameters<typeof Alpine.data>[1]);
 Alpine.data('appHeaderMenu', appHeaderMenu as Parameters<typeof Alpine.data>[1]);
 Alpine.data('recordingDelete', recordingDelete as Parameters<typeof Alpine.data>[1]);
 Alpine.data('flashMessage', flashMessage as Parameters<typeof Alpine.data>[1]);
+Alpine.data('globalSearch', globalSearch as Parameters<typeof Alpine.data>[1]);
 
 window.Alpine = Alpine;
 

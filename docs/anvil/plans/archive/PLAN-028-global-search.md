@@ -1,7 +1,7 @@
 # PLAN-028: Global Search
 
 **Created:** 2026-03-30
-**Status:** Approved
+**Status:** Complete
 **Author:** Bas de Kort
 **PRDs:** PRD-007
 
@@ -84,27 +84,27 @@ The Alpine component needs to generate URLs for each result type. Strategy: use 
 - **Goal:** Working search bar in the header with API-driven results
 - **PRD criteria:** 1, 2, 3, 4, 5, 6, 9, 10, 11
 - **Specs:**
-  - [ ] `globalSearch` Alpine component calls `GET /api/v1/search?q=...` with 300ms debounce
-  - [ ] No API call fires when input is < 2 characters
-  - [ ] Results are displayed in a dropdown grouped by entity type with headings
-  - [ ] Each result shows the item title/name and is clickable to navigate to its detail page
-  - [ ] "No results" message appears when the query matches nothing
-  - [ ] Dropdown closes on click-outside and on Escape key
-  - [ ] Search bar is visible in the header on all authenticated pages
-  - [ ] Existing per-page search on tasks, follow-ups, and notes index pages still works
-  - [ ] API error displays a brief error message in the dropdown
+  - [x] `globalSearch` Alpine component calls `GET /api/v1/search?q=...` with 300ms debounce
+  - [x] No API call fires when input is < 2 characters
+  - [x] Results are displayed in a dropdown grouped by entity type with headings
+  - [x] Each result shows the item title/name and is clickable to navigate to its detail page
+  - [x] "No results" message appears when the query matches nothing
+  - [x] Dropdown closes on click-outside and on Escape key
+  - [x] Search bar is visible in the header on all authenticated pages
+  - [x] Existing per-page search on tasks, follow-ups, and notes index pages still works
+  - [x] API error displays a brief error message in the dropdown
 - **Files:** `resources/js/components/global-search.ts`, `resources/js/app.ts`, `resources/views/layouts/app-header.blade.php`, `resources/views/components/tl/global-search.blade.php`, `tests/Feature/Http/Controllers/Api/SearchControllerTest.php`
 
 ### Phase 2: Keyboard Navigation and Mobile
 - **Goal:** Full keyboard accessibility and mobile-responsive layout
 - **PRD criteria:** 7, 8
 - **Specs:**
-  - [ ] Search bar is focusable via Tab
-  - [ ] Arrow keys navigate through results in the dropdown
-  - [ ] Enter key on a focused result navigates to its detail page
-  - [ ] Escape key closes the dropdown and returns focus to the search input
-  - [ ] On mobile viewports, the dropdown renders full-width below the header without horizontal overflow
-  - [ ] Search bar collapses to an icon on small viewports and expands on tap/focus
+  - [x] Search bar is focusable via Tab
+  - [x] Arrow keys navigate through results in the dropdown
+  - [x] Enter key on a focused result navigates to its detail page
+  - [x] Escape key closes the dropdown and returns focus to the search input
+  - [x] On mobile viewports, the dropdown renders full-width below the header without horizontal overflow
+  - [x] Search bar collapses to an icon on small viewports and expands on tap/focus
 - **Files:** `resources/js/components/global-search.ts`, `resources/views/components/tl/global-search.blade.php`
 
 ## Parallelization
@@ -122,9 +122,12 @@ The Alpine component needs to generate URLs for each result type. Strategy: use 
 
 ## Open Questions
 
-- Should the follow-up results link to the follow-ups index page with a filter, or just to the index page? Follow-ups don't have a dedicated show page; linking to the index with a highlight or scroll-to would be ideal but adds complexity. For now, link to the index page.
+- ~~Should the follow-up results link to the follow-ups index page with a filter, or just to the index page?~~ Resolved: follow-ups do have a dedicated show page (`/follow-ups/{id}`); links now point there.
 
 ## Amendment Log
 
 | Date | Phase | Change | Reason | ADR |
 |------|-------|--------|--------|-----|
+| 2026-03-30 | 1 | Fixed team member URL from `/teams/{team_id}/members/{id}` to `/teams/member/{id}` | Actual route uses flat member ID, not nested under team | - |
+| 2026-03-30 | 1 | Fixed follow-up URL from index page (`/follow-ups`) to show page (`/follow-ups/{id}`) | Follow-ups have a dedicated show route; plan incorrectly assumed they did not | - |
+| 2026-03-30 | 1 | Removed max-width cap on search bar; fixed header flex layout for dynamic width | Search bar was too small on desktop | - |
