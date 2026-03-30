@@ -1,7 +1,7 @@
 # PLAN-026: Vite Development Mode CSP Compatibility
 
 **Created:** 2026-03-30
-**Status:** Approved
+**Status:** Complete
 **Author:** Bas de Kort
 **PRDs:** PRD-005
 
@@ -50,13 +50,13 @@ The Vite dev server runs on `http://localhost:5173` by default and uses `ws://lo
 - **Goal:** CSP permits Vite dev server in local environment only
 - **PRD criteria:** 1, 2, 3, 4, 5, 6
 - **Specs:**
-  - [ ] When `APP_ENV=local`, `connect-src` includes `http://localhost:5173 ws://localhost:5173`
-  - [ ] When `APP_ENV=local`, `font-src` includes `http://localhost:5173`
-  - [ ] When `APP_ENV=local`, `img-src` includes `http://localhost:5173`
-  - [ ] When `APP_ENV=production`, CSP directives are identical to the current hardcoded values
-  - [ ] When `APP_ENV` is unset, dev-mode origins are not present in CSP
-  - [ ] When both `APP_ENV=local` and `custom_url_enabled=true`, both sets of additional origins are present in `connect-src`
-  - [ ] The nonce mechanism is unaffected in all environments
+  - [x] When `APP_ENV=local`, `connect-src` includes `http://localhost:5173 ws://localhost:5173`
+  - [x] When `APP_ENV=local`, `font-src` includes `http://localhost:5173`
+  - [x] When `APP_ENV=local`, `img-src` includes `http://localhost:5173`
+  - [x] When `APP_ENV=production`, CSP directives are identical to the current hardcoded values
+  - [x] When `APP_ENV` is unset, dev-mode origins are not present in CSP
+  - [x] When both `APP_ENV=local` and `custom_url_enabled=true`, both sets of additional origins are present in `connect-src`
+  - [x] The nonce mechanism is unaffected in all environments
 - **Files:** `app/Http/Middleware/SecurityHeaders.php`, `tests/Feature/Http/Middleware/SecurityHeadersTest.php`
 
 ## Parallelization

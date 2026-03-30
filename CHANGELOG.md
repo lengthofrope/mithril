@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 1.12.0
+
+### Fixed
+
+- **Vite dev mode blocked by CSP** — Content Security Policy now conditionally permits the Vite dev server's WebSocket, stylesheet, font, and image origins when `Vite::isRunningHot()` is true; production CSP is completely unaffected
+- **Vite IPv6 binding** — Vite dev server explicitly binds to `127.0.0.1` to avoid IPv6 `[::1]` addresses that are invalid in CSP source expressions
+
 ## [1.11.0] - 2026-03-28
 
 ### Added
