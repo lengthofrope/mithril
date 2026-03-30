@@ -1,7 +1,7 @@
 # PLAN-027: Meeting Date Persistence and Calendar Sync
 
 **Created:** 2026-03-30
-**Status:** Approved
+**Status:** Complete
 **Author:** Bas de Kort
 **PRDs:** PRD-006
 
@@ -76,35 +76,35 @@ Two related issues: (1) changing a meeting's date on the show page doesn't save 
 - **Goal:** Meeting date changes persist via auto-save
 - **PRD criteria:** 1, 2, 3
 - **Specs:**
-  - [ ] New `autoSaveDatePicker` component initializes Flatpickr and wires `$watch('value')` in a single `init()` method
-  - [ ] Changing the date triggers a PATCH request within 500ms
-  - [ ] The patched date is returned correctly by the server and persists on reload
-  - [ ] Auto-save status indicator shows saving/saved/error states
-  - [ ] Component is registered in `app.ts`
-  - [ ] Meeting show page uses `autoSaveDatePicker` instead of `Object.assign(...)`
+  - [x] New `autoSaveDatePicker` component initializes Flatpickr and wires `$watch('value')` in a single `init()` method
+  - [x] Changing the date triggers a PATCH request within 500ms
+  - [x] The patched date is returned correctly by the server and persists on reload
+  - [x] Auto-save status indicator shows saving/saved/error states
+  - [x] Component is registered in `app.ts`
+  - [x] Meeting show page uses `autoSaveDatePicker` instead of `Object.assign(...)`
 - **Files:** `resources/js/components/auto-save-date-picker.ts`, `resources/js/app.ts`, `resources/views/pages/meetings/show.blade.php`, `tests/Feature/Http/Controllers/Web/MeetingPageControllerTest.php`
 
 ### Phase 2: Calendar Sync Date Propagation
 - **Goal:** Synced calendar event date changes propagate to linked meetings
 - **PRD criteria:** 4, 5, 9
 - **Specs:**
-  - [ ] After upsert, the sync job queries `CalendarEventLink` for meetings linked to each updated event
-  - [ ] If the calendar event's `start_at` date differs from the meeting's `scheduled_at`, the meeting is updated
-  - [ ] Meetings not linked to any calendar event are unaffected by the sync
-  - [ ] The sync respects user ownership scoping (only updates meetings belonging to the authenticated user)
-  - [ ] A meeting linked to a deleted calendar event retains its current date
+  - [x] After upsert, the sync job queries `CalendarEventLink` for meetings linked to each updated event
+  - [x] If the calendar event's `start_at` date differs from the meeting's `scheduled_at`, the meeting is updated
+  - [x] Meetings not linked to any calendar event are unaffected by the sync
+  - [x] The sync respects user ownership scoping (only updates meetings belonging to the authenticated user)
+  - [x] A meeting linked to a deleted calendar event retains its current date
 - **Files:** `app/Jobs/SyncCalendarEventsJob.php`, `tests/Unit/Jobs/SyncCalendarEventsJobTest.php`
 
 ### Phase 3: Calendar Sync Warning
 - **Goal:** Users see a warning when manually editing dates on calendar-linked meetings
 - **PRD criteria:** 6, 7, 8
 - **Specs:**
-  - [ ] When the meeting has at least one `calendarEventLink`, a non-blocking warning is displayed near the date picker
-  - [ ] The warning text explains that the next sync may overwrite the manual change
-  - [ ] The warning does not prevent saving
-  - [ ] When the meeting has no linked calendar events, no warning is displayed
-  - [ ] Warning styling matches Rivendell UI theme (TailAdmin info alert pattern)
-- **Files:** `resources/views/pages/meetings/show.blade.php`
+  - [x] When the meeting has at least one `calendarEventLink`, a non-blocking warning is displayed near the date picker
+  - [x] The warning text explains that the next sync may overwrite the manual change
+  - [x] The warning does not prevent saving
+  - [x] When the meeting has no linked calendar events, no warning is displayed
+  - [x] Warning styling matches Rivendell UI theme (TailAdmin info alert pattern)
+- **Files:** `resources/views/pages/meetings/show.blade.php`, `tests/Feature/Http/Controllers/Web/MeetingPageControllerTest.php`
 
 ## Parallelization
 
@@ -126,3 +126,4 @@ None.
 
 | Date | Phase | Change | Reason | ADR |
 |------|-------|--------|--------|-----|
+| 2026-03-30 | 3 | Remove `canCreateMeeting` gate from calendar event actions | Users need to create meetings from calendar events with external attendees (clients); backend already supports it | ADR-029 |

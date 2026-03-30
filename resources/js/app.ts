@@ -5,6 +5,7 @@ import { initTextareaAutosize } from './utils/textarea-autosize';
 import { registerAlpineStores } from './stores/alpine-stores';
 import { initBoot } from './boot';
 
+import { autoSaveDatePicker } from './components/auto-save-date-picker';
 import { autoSaveField } from './components/auto-save-field';
 import { autoSaveForm } from './components/auto-save-form';
 import { sortableList } from './components/sortable-list';
@@ -72,6 +73,7 @@ declare global {
     }
 }
 
+Alpine.data('autoSaveDatePicker', autoSaveDatePicker as Parameters<typeof Alpine.data>[1]);
 Alpine.data('autoSaveField', autoSaveField as Parameters<typeof Alpine.data>[1]);
 Alpine.data('autoSaveForm', autoSaveForm as Parameters<typeof Alpine.data>[1]);
 Alpine.data('sortableList', sortableList as Parameters<typeof Alpine.data>[1]);

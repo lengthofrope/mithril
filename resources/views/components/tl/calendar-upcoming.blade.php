@@ -44,38 +44,6 @@
             'created_at' => $link->created_at->toIso8601String(),
         ])->values()->toJson();
     };
-
-    $user = auth()->user();
-    $userEmails = collect([$user?->email, $user?->microsoft_email])
-        ->filter()
-        ->map(fn (string $e) => strtolower($e))
-        ->all();
-
-    $emailToMemberId = \App\Models\TeamMember::query()
-        ->select('id', 'email', 'microsoft_email')
-        ->get()
-        ->flatMap(fn ($m) => collect([
-            $m->email ? strtolower($m->email) : null,
-            $m->microsoft_email ? strtolower($m->microsoft_email) : null,
-        ])->filter()->mapWithKeys(fn (string $e) => [$e => $m->id]))
-        ->all();
-
-    $canCreateMeeting = function (\App\Models\CalendarEvent $event) use ($userEmails, $emailToMemberId): bool {
-        $attendees = $event->attendees ?? [];
-        $candidateEmails = collect($attendees)
-            ->map(fn (array $a) => strtolower($a['email'] ?? ''))
-            ->filter(fn (string $e) => $e !== '' && !in_array($e, $userEmails, true))
-            ->values()
-            ->all();
-
-        $matchedMemberIds = collect($candidateEmails)
-            ->map(fn (string $e) => $emailToMemberId[$e] ?? null)
-            ->filter()
-            ->unique()
-            ->values();
-
-        return $matchedMemberIds->count() === 1;
-    };
 @endphp
 
 <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -105,7 +73,7 @@
                 @endphp
 
                 <div
-                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateMeeting($event) ? 'true' : 'false' }})"
+                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }})"
                     class="px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                 >
                     <div class="flex items-center gap-3">

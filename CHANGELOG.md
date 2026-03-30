@@ -5,10 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 1.12.0
+## [1.12.0] - Unreleased
+
+### Added
+
+- **Calendar sync date propagation** — When a linked Outlook calendar event's date changes, the next sync automatically updates the meeting's `scheduled_at` to match; respects user ownership scoping
+- **Calendar sync warning** — Non-blocking amber info alert on the meeting detail page warns users when editing a date on a calendar-linked meeting that the next sync may overwrite their change
 
 ### Fixed
 
+- **Meeting date picker not saving** — `Object.assign(autoSaveField(), datePicker())` caused the date picker's `init()` to overwrite the auto-save watcher; replaced with a dedicated `autoSaveDatePicker` Alpine component that properly composes both behaviors in a single `init()` method
+- **Meeting date picker missing save indicator** — Added the `<x-tl.auto-save-status />` component to the date picker so users see "Saving..."/"Saved" feedback consistent with all other auto-save fields
+- **Create meeting button greyed out for external attendees** — Removed the `canCreateMeeting` gate that required exactly one attendee to match a team member; meetings can now be created from any calendar event, email, or Jira issue regardless of attendee composition (ADR-029)
 - **Vite dev mode blocked by CSP** — Content Security Policy now conditionally permits the Vite dev server's WebSocket, stylesheet, font, and image origins when `Vite::isRunningHot()` is true; production CSP is completely unaffected
 - **Vite IPv6 binding** — Vite dev server explicitly binds to `127.0.0.1` to avoid IPv6 `[::1]` addresses that are invalid in CSP source expressions
 
