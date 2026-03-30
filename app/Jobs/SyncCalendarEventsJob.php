@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\CalendarEvent;
+use App\Models\CalendarEventLink;
+use App\Models\Meeting;
 use App\Models\User;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -88,6 +90,8 @@ class SyncCalendarEventsJob implements ShouldQueue
                     );
 
                 $syncedEventIds[] = $calendarEvent->id;
+
+                $this->propagateDateToLinkedMeetings($calendarEvent);
             }
 
             CalendarEvent::withoutGlobalScopes()
@@ -109,6 +113,39 @@ class SyncCalendarEventsJob implements ShouldQueue
             }
 
             throw $exception;
+        }
+    }
+
+    /**
+     * Propagate the calendar event's start date to any linked meetings.
+     *
+     * Only updates meetings that belong to the same user and whose scheduled
+     * date actually differs from the calendar event's start date.
+     *
+     * @param CalendarEvent $calendarEvent The calendar event whose date may have changed.
+     * @return void
+     */
+    private function propagateDateToLinkedMeetings(CalendarEvent $calendarEvent): void
+    {
+        $links = CalendarEventLink::where('calendar_event_id', $calendarEvent->id)
+            ->where('linkable_type', Meeting::class)
+            ->get();
+
+        foreach ($links as $link) {
+            $meeting = Meeting::withoutGlobalScopes()
+                ->where('id', $link->linkable_id)
+                ->where('user_id', $this->user->id)
+                ->first();
+
+            if (!$meeting) {
+                continue;
+            }
+
+            if ($meeting->scheduled_at->toDateString() === $calendarEvent->start_at->toDateString()) {
+                continue;
+            }
+
+            $meeting->update(['scheduled_at' => $calendarEvent->start_at]);
         }
     }
 }

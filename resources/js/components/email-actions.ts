@@ -51,11 +51,10 @@ function getCSRFToken(): string {
 /**
  * Alpine.js component for managing email actions (create resources, view links).
  */
-function emailActions(emailId: number, initialLinks: EmailLink[] = [], canCreateMeeting: boolean = false): Record<string, unknown> {
+function emailActions(emailId: number, initialLinks: EmailLink[] = []): Record<string, unknown> {
     return {
         emailId,
         links: initialLinks.map(mapLinkToBadge),
-        canCreateMeeting,
         menuOpen: false,
         isLoading: false,
         errorMessage: '',

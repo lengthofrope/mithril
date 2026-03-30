@@ -51,11 +51,10 @@ function getCSRFToken(): string {
 /**
  * Alpine.js component for managing Jira issue actions (create resources, view links).
  */
-function jiraActions(issueId: number, initialLinks: JiraIssueLink[] = [], canCreateMeeting: boolean = false): Record<string, unknown> {
+function jiraActions(issueId: number, initialLinks: JiraIssueLink[] = []): Record<string, unknown> {
     return {
         issueId,
         links: initialLinks.map(mapLinkToBadge),
-        canCreateMeeting,
         menuOpen: false,
         isLoading: false,
         errorMessage: '',

@@ -6,8 +6,8 @@ This directory contains implementation plans for the project. Each plan captures
 
 | # | Title | Status | Date |
 |---|-------|--------|------|
-
-*No active plans.*
+| [PLAN-027](PLAN-027-meeting-date-persistence-and-calendar-sync.md) | Meeting Date Persistence and Calendar Sync | Approved | 2026-03-30 |
+| [PLAN-028](PLAN-028-global-search.md) | Global Search | Approved | 2026-03-30 |
 
 ## Archived Plans
 
@@ -38,3 +38,4 @@ This directory contains implementation plans for the project. Each plan captures
 | [PLAN-023](archive/PLAN-023-rename-task-categories-and-groups.md) | Rename Task Categories and Groups | Complete | 2026-03-27 |
 | [PLAN-024](archive/PLAN-024-api-key-management.md) | API Key Management & External API Access | Complete | 2026-03-27 |
 | [PLAN-025](archive/PLAN-025-extract-inline-alpine-to-typescript.md) | Extract Inline Alpine.js to TypeScript Components | Complete | 2026-03-28 |
+| [PLAN-026](archive/PLAN-026-vite-dev-csp-compatibility.md) | Vite Development Mode CSP Compatibility | Complete | 2026-03-30 |

@@ -51,11 +51,10 @@ function getCSRFToken(): string {
 /**
  * Alpine.js component for managing calendar event actions (create resources, view links).
  */
-function calendarEventActions(eventId: number, initialLinks: CalendarEventLink[] = [], canCreateMeeting: boolean = true): Record<string, unknown> {
+function calendarEventActions(eventId: number, initialLinks: CalendarEventLink[] = []): Record<string, unknown> {
     return {
         eventId,
         links: initialLinks.map(mapLinkToBadge),
-        canCreateMeeting,
         menuOpen: false,
         isLoading: false,
         errorMessage: '',

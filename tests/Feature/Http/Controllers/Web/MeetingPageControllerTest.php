@@ -6,6 +6,8 @@ use App\Enums\MeetingStatus;
 use App\Enums\MeetingType;
 use App\Enums\PrepItemType;
 use App\Events\MeetingScheduled;
+use App\Models\CalendarEvent;
+use App\Models\CalendarEventLink;
 use App\Models\Meeting;
 use App\Models\MeetingPrepItem;
 use App\Models\Team;
@@ -458,6 +460,59 @@ test('can update meeting scheduled_at via AJAX', function () {
 
     $response->assertOk();
     $response->assertJson(['success' => true]);
+});
+
+test('scheduled_at update persists in the database', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create([
+        'user_id' => $user->id,
+        'scheduled_at' => now(),
+    ]);
+    $newDate = now()->addWeeks(2)->startOfDay()->toDateString();
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'scheduled_at' => $newDate,
+    ]);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    expect($meeting->fresh()->scheduled_at->toDateString())->toBe($newDate);
+});
+
+test('scheduled_at accepts date-only format from date picker', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create([
+        'user_id' => $user->id,
+        'scheduled_at' => now(),
+    ]);
+
+    $response = $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'scheduled_at' => '2026-06-15',
+    ]);
+
+    $response->assertOk();
+    $response->assertJsonStructure(['success', 'saved_at']);
+    expect($meeting->fresh()->scheduled_at->toDateString())->toBe('2026-06-15');
+});
+
+test('scheduled_at persists and is visible on reload of show page', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create([
+        'user_id' => $user->id,
+        'scheduled_at' => '2026-01-01',
+    ]);
+
+    $this->actingAs($user)->patch('/meetings/' . $meeting->id, [
+        'scheduled_at' => '2026-07-20',
+    ])->assertOk();
+
+    $response = $this->actingAs($user)->get('/meetings/' . $meeting->id);
+
+    $response->assertOk();
+    $response->assertSee('2026-07-20');
 });
 
 test('update response includes saved_at timestamp', function () {
@@ -1149,4 +1204,34 @@ test('show page passes actual speech service vars when custom_url_enabled is tru
 
     $response->assertViewHas('speechServiceMode', 'local')
         ->assertViewHas('speechServiceUrl', 'http://localhost:8090');
+});
+
+// ---------------------------------------------------------------------------
+// Calendar Sync Warning
+// ---------------------------------------------------------------------------
+
+test('show page displays calendar sync warning when meeting has calendar event links', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+    $calendarEvent = CalendarEvent::factory()->create(['user_id' => $user->id]);
+    CalendarEventLink::factory()->forMeeting($meeting)->create([
+        'calendar_event_id' => $calendarEvent->id,
+    ]);
+
+    $response = $this->actingAs($user)->get('/meetings/' . $meeting->id);
+
+    $response->assertOk();
+    $response->assertSee('linked to a calendar event');
+});
+
+test('show page does not display calendar sync warning when meeting has no calendar event links', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $meeting = Meeting::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get('/meetings/' . $meeting->id);
+
+    $response->assertOk();
+    $response->assertDontSee('linked to a calendar event');
 });

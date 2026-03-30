@@ -90,13 +90,11 @@ class CalendarActionService
         ];
 
         return match ($resourceType) {
-            'meeting' => $teamMember !== null
-                ? array_merge($base, [
-                    'title'        => $event->subject,
-                    'type'         => 'one_on_one',
-                    'scheduled_at' => $event->start_at->toIso8601String(),
-                ])
-                : throw new \InvalidArgumentException('no matching team member'),
+            'meeting' => array_merge($base, [
+                'title'        => $event->subject,
+                'type'         => $teamMember !== null ? 'one_on_one' : 'other',
+                'scheduled_at' => $event->start_at->toIso8601String(),
+            ]),
             'task' => array_merge($base, [
                 'title'    => $event->subject,
                 'deadline' => $event->start_at->toDateString(),

@@ -32,6 +32,18 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $connectSrc = "'self'";
+        $fontSrc = "'self'";
+        $imgSrc = "'self' data:";
+        $styleSrc = "'self' 'unsafe-inline'";
+
+        if (Vite::isRunningHot()) {
+            $viteOrigins = 'http://127.0.0.1:5173 http://localhost:5173';
+            $viteWsOrigins = 'ws://127.0.0.1:5173 ws://localhost:5173';
+            $connectSrc .= " {$viteOrigins} {$viteWsOrigins}";
+            $fontSrc .= " {$viteOrigins}";
+            $imgSrc .= " {$viteOrigins}";
+            $styleSrc .= " {$viteOrigins}";
+        }
 
         if (config('meetings.custom_url_enabled', false)) {
             $connectSrc .= ' http://localhost:* http://127.0.0.1:*';
@@ -39,7 +51,7 @@ class SecurityHeaders
 
         $response->headers->set(
             'Content-Security-Policy',
-            "default-src 'self'; script-src 'self' 'nonce-{$nonce}' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src {$connectSrc}; media-src 'self' blob:; worker-src 'self' blob:; frame-src https://www.youtube.com; frame-ancestors 'none'",
+            "default-src 'self'; script-src 'self' 'nonce-{$nonce}' 'unsafe-eval'; style-src {$styleSrc}; img-src {$imgSrc}; font-src {$fontSrc}; connect-src {$connectSrc}; media-src 'self' blob:; worker-src 'self' blob:; frame-src https://www.youtube.com; frame-ancestors 'none'",
         );
 
         return $response;

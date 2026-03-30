@@ -105,15 +105,6 @@
      * Map of lowercase email → team member ID for matching attendees to members.
      * Each member can have up to two entries (email + microsoft_email).
      */
-    $emailToMemberId = \App\Models\TeamMember::query()
-        ->select('id', 'email', 'microsoft_email')
-        ->get()
-        ->flatMap(fn ($m) => collect([
-            $m->email ? strtolower($m->email) : null,
-            $m->microsoft_email ? strtolower($m->microsoft_email) : null,
-        ])->filter()->mapWithKeys(fn (string $e) => [$e => $m->id]))
-        ->all();
-
     /**
      * Return attendee names for display, excluding the current user.
      *
@@ -126,23 +117,6 @@
             ->filter()
             ->values()
             ->all();
-    };
-
-    $canCreateMeeting = function (\App\Models\CalendarEvent $event) use ($userEmails, $emailToMemberId): bool {
-        $attendees = $event->attendees ?? [];
-        $candidateEmails = collect($attendees)
-            ->map(fn (array $a) => strtolower($a['email'] ?? ''))
-            ->filter(fn (string $e) => $e !== '' && !in_array($e, $userEmails, true))
-            ->values()
-            ->all();
-
-        $matchedMemberIds = collect($candidateEmails)
-            ->map(fn (string $e) => $emailToMemberId[$e] ?? null)
-            ->filter()
-            ->unique()
-            ->values();
-
-        return $matchedMemberIds->count() === 1;
     };
 
     $grouped = $groupByDay($events);
@@ -240,7 +214,7 @@
                                 @if($past) @php $hasPastEvent = true; @endphp @endif
 
                                 <div
-                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateMeeting($event) ? 'true' : 'false' }})"
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >
@@ -350,7 +324,7 @@
                                 @endphp
 
                                 <div
-                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }}, {{ $canCreateMeeting($event) ? 'true' : 'false' }})"
+                                    x-data="calendarEventActions({{ $event->id }}, {{ $linksJson($event) }})"
                                     class="flex items-start gap-3 px-5 py-3 {{ $happening ? 'border-l-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                                     role="row"
                                 >

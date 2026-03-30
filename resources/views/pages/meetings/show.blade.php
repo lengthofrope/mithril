@@ -110,7 +110,7 @@
 
                     <div
                         class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400"
-                        x-data="Object.assign(autoSaveField({ endpoint: '{{ route('meetings.update', $meeting->id) }}', field: 'scheduled_at' }), datePicker())"
+                        x-data="autoSaveDatePicker({ endpoint: '{{ route('meetings.update', $meeting->id) }}', field: 'scheduled_at' })"
                         x-init="value = @js($meeting->scheduled_at->toDateString())"
                     >
                         <svg class="h-3.5 w-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -123,7 +123,17 @@
                             placeholder="YYYY-MM-DD"
                             class="w-32 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                         >
+                        <x-tl.auto-save-status />
                     </div>
+
+                    @if ($meeting->calendarEventLinks->isNotEmpty())
+                        <div class="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                            <svg class="h-3.5 w-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8"/><path d="M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"/>
+                            </svg>
+                            <span>This meeting is linked to a calendar event. The date may be overwritten on the next sync.</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 

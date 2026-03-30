@@ -201,7 +201,7 @@ it('creates a resource with a link to the calendar event', function (): void {
     ]);
 });
 
-it('returns 422 when creating meeting without matching team member', function (): void {
+it('creates meeting without attendee when no team member matches', function (): void {
     /** @var \Tests\TestCase $this */
     $user  = User::factory()->create(['email' => 'lead@example.com']);
     $event = CalendarEvent::factory()->create([
@@ -215,11 +215,14 @@ it('returns 422 when creating meeting without matching team member', function ()
 
     $response = $this->actingAs($user)->postJson("/api/v1/calendar-events/{$event->id}/create/meeting");
 
-    $response->assertStatus(422)
-        ->assertJson(['success' => false]);
+    $response->assertStatus(201)
+        ->assertJson(['success' => true]);
 
-    expect($response->json('message'))->toContain('no matching team member');
-    $this->assertDatabaseCount('meetings', 0);
+    $this->assertDatabaseHas('meetings', [
+        'title'   => 'External meeting',
+        'type'    => 'other',
+        'user_id' => $user->id,
+    ]);
 });
 
 it('returns 400 for invalid create type', function (): void {

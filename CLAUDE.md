@@ -107,8 +107,8 @@ npm run build             # Vite build must succeed
 
 ## Architecture Decision Records
 
-ADRs are stored in `logs/decisions/` (18 records). New architectural decisions must be documented there using the `/adr` skill.
+ADRs are stored in `docs/anvil/adrs/` (27 records). New architectural decisions must be documented there using the `/adr` skill.
 
 ## Plan Document
 
-The full project specification (in Dutch) is at [plans/teamlead-dashboard.md](plans/teamlead-dashboard.md). It contains the complete data model, UI requirements, architecture patterns, and Agent Teams build strategy.
+The full project specification (in Dutch) is at [PLAN-001-teamlead-dashboard.md](docs/anvil/plans/archive/PLAN-001-teamlead-dashboard.md). It contains the complete data model, UI requirements, architecture patterns, and Agent Teams build strategy.
