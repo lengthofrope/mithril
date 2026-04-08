@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - Unreleased
+
+### Fixed
+
+- **Dashboard task status ghosting** — When marking a task as done on the dashboard, the next task in the list visually inherited the "done" status badge until page refresh; added `key` attributes to task-card and follow-up-card root elements so Alpine.morph correctly tracks DOM nodes during partial refreshes
+- **Global search trapping keyboard shortcuts** — Pressing Escape while the search input was focused closed the dropdown but kept focus on the input, preventing all keyboard shortcuts from firing; `closeAndFocus()` now blurs the input instead
+- **Global search stealing focus on Escape** — The search component's window-level Escape handler fired on every Escape keypress, even when search was inactive; closing the shortcut help overlay (`?`) would focus the search input; handler now guards against acting when search is neither open nor focused
+
 ## [1.12.0] - 2026-03-30
 
 ### Added
