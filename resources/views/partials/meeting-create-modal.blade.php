@@ -1,6 +1,8 @@
 {{-- Schedule meeting modal --}}
 <div
     x-data="createModal({ memberOptions: @js($memberOptions), teamOptions: @js($teamOptions) })"
+    data-create-modal="meeting"
+    @create-entity.window="if ($event.detail.type === 'meeting') addOpen = true"
     x-effect="if (selectedType === 'one_on_one') { selectedTeamIds = []; }"
 >
     <button

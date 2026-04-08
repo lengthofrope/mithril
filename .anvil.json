@@ -1,0 +1,62 @@
+{
+  "anvil_version": "1.8.1",
+  "project": {
+    "name": "mithril"
+  },
+  "jira": {
+    "cloud_id": "5530f562-6f1f-45f0-b680-ac4fee3aca37",
+    "project_key": "PROJ"
+  },
+  "stack": {
+    "languages": ["php", "typescript", "scss"],
+    "framework": "laravel",
+    "framework_version": "12",
+    "namespace_root": "App\\",
+    "package_manager": "npm",
+    "test_runner": "pest",
+    "test_directory": "tests",
+    "source_directory": "app",
+    "test_patterns": ["*Test.php"],
+    "test_style": "pest-expect",
+    "build_command": "npm run build",
+    "test_command": "php artisan test --parallel",
+    "lint_command": null
+  },
+  "conventions": {
+    "architecture": "service-layer, event-driven",
+    "css_methodology": "utility-first",
+    "di_container": "laravel-container",
+    "file_organization": "layer-based",
+    "class_suffixes": ["Controller", "Service", "Request", "Job", "Observer", "Extractor", "Provider", "Notification"]
+  },
+  "environment": {
+    "setup_command": "composer install && npm install",
+    "dev_command": "composer dev",
+    "migrate_command": "php artisan migrate",
+    "seed_command": "php artisan db:seed",
+    "docker": null,
+    "env_file": ".env.example",
+    "local_url": "https://mithril.wp.prouddevelopment.com"
+  },
+  "models": {
+    "analysis": "sonnet",
+    "implementation": "opus",
+    "reporting": "haiku"
+  },
+  "paths": {
+    "plans": "docs/anvil/plans",
+    "prds": "docs/anvil/prds",
+    "adrs": "docs/anvil/adrs",
+    "archive": "docs/anvil/plans/archive",
+    "research": "docs/anvil/research",
+    "security_reports": "docs/anvil/documents/security-reports",
+    "documents": "docs/anvil/documents"
+  },
+  "performance": {
+    "max_parallel_agents": 4
+  },
+  "document": {
+    "generator": null,
+    "template": null
+  }
+}
