@@ -270,7 +270,7 @@ class MicrosoftGraphService
 
         $allMessages = [];
         $url         = config('microsoft.graph_url') . 'me/mailFolders/Inbox/messages';
-        $maxPages    = 10;
+        $maxPages    = 100;
 
         for ($page = 0; $page < $maxPages; $page++) {
             $response = Http::withToken($user->microsoft_access_token)

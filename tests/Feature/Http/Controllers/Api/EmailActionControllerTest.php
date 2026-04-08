@@ -85,6 +85,86 @@ describe('GET /api/v1/emails', function (): void {
     it('returns 401 for unauthenticated requests', function (): void {
         $this->getJson('/api/v1/emails')->assertUnauthorized();
     });
+
+    it('paginates results with default 25 per page', function (): void {
+        $user = User::factory()->create();
+        Email::factory()->count(30)->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails');
+
+        $response->assertOk()
+            ->assertJson(['success' => true]);
+
+        expect($response->json('data'))->toHaveCount(25, 'Default page size should be 25')
+            ->and($response->json('meta.current_page'))->toBe(1)
+            ->and($response->json('meta.last_page'))->toBe(2)
+            ->and($response->json('meta.per_page'))->toBe(25)
+            ->and($response->json('meta.total'))->toBe(30);
+    });
+
+    it('accepts per_page query parameter', function (): void {
+        $user = User::factory()->create();
+        Email::factory()->count(15)->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails?per_page=10');
+
+        expect($response->json('data'))->toHaveCount(10, 'Should return 10 items when per_page=10')
+            ->and($response->json('meta.per_page'))->toBe(10)
+            ->and($response->json('meta.last_page'))->toBe(2);
+    });
+
+    it('clamps per_page to a maximum of 100', function (): void {
+        $user = User::factory()->create();
+        Email::factory()->count(5)->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails?per_page=200');
+
+        expect($response->json('meta.per_page'))->toBe(100, 'per_page should be clamped to 100');
+    });
+
+    it('accepts page query parameter', function (): void {
+        $user = User::factory()->create();
+        Email::factory()->count(30)->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails?per_page=25&page=2');
+
+        $response->assertOk();
+        expect($response->json('data'))->toHaveCount(5, 'Page 2 should have remaining 5 items')
+            ->and($response->json('meta.current_page'))->toBe(2);
+    });
+
+    it('filters by source with pagination', function (): void {
+        $user = User::factory()->create();
+        Email::factory()->count(30)->create(['user_id' => $user->id, 'sources' => ['flagged']]);
+        Email::factory()->count(10)->create(['user_id' => $user->id, 'sources' => ['unread']]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails?source=flagged&per_page=25');
+
+        expect($response->json('meta.total'))->toBe(30, 'Source filter should apply before pagination')
+            ->and($response->json('meta.last_page'))->toBe(2)
+            ->and($response->json('data'))->toHaveCount(25);
+    });
+
+    it('includes sender display data in paginated results', function (): void {
+        ['user' => $user, 'email' => $email] = makeEmailFixture();
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails');
+
+        expect($response->json('data.0.sender_is_team_member'))->toBeTrue(
+            'Paginated results must still include sender display data'
+        );
+    });
+
+    it('includes email links in paginated results', function (): void {
+        $user  = User::factory()->create();
+        $email = Email::factory()->create(['user_id' => $user->id]);
+        $task  = Task::factory()->create(['user_id' => $user->id]);
+        EmailLink::factory()->forTask($task)->create(['email_id' => $email->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails');
+
+        expect($response->json('data.0.links'))->toHaveCount(1, 'Paginated results must include email links');
+    });
 });
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
@@ -129,6 +209,17 @@ describe('GET /api/v1/emails/dashboard', function (): void {
         $response = $this->actingAs($user)->getJson('/api/v1/emails/dashboard');
 
         expect($response->json('data.0.sender_is_team_member'))->toBeTrue();
+    });
+
+    it('remains unpaginated and has no meta key', function (): void {
+        $user = User::factory()->create();
+        Email::factory()->count(30)->create(['user_id' => $user->id, 'is_flagged' => true]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/emails/dashboard');
+
+        $response->assertOk();
+        expect($response->json('data'))->toHaveCount(30, 'Dashboard should return all flagged emails without pagination')
+            ->and($response->json('meta'))->toBeNull('Dashboard response should not include pagination meta');
     });
 });
 

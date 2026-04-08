@@ -219,7 +219,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
             ->and($result[1]['microsoft_message_id'])->toBe('msg-page2');
     });
 
-    it('stops pagination at a safe maximum to prevent infinite loops', function (): void {
+    it('stops pagination at 100 pages to prevent infinite loops', function (): void {
         $user = User::factory()->create([
             'microsoft_id'               => 'ms-id-123',
             'microsoft_access_token'     => 'valid-token',
@@ -231,7 +231,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
 
         $sequence = Http::fakeSequence();
 
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 105; $i++) {
             $sequence->push([
                 'value'            => [
                     [
@@ -255,7 +255,7 @@ describe('MicrosoftGraphService::getMyMessages()', function (): void {
         $service = app(MicrosoftGraphService::class);
         $result  = $service->getMyMessages($user);
 
-        expect($result->count())->toBeLessThanOrEqual(500);
+        expect($result->count())->toBe(100, 'Should stop at exactly 100 pages');
     });
 
     it('throws RuntimeException on API failure', function (): void {

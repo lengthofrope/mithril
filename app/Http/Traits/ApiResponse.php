@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Traits;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -40,6 +41,39 @@ trait ApiResponse
 
         if ($includeSavedAt) {
             $payload['saved_at'] = now()->toIso8601String();
+        }
+
+        return response()->json($payload, $statusCode);
+    }
+
+    /**
+     * Return a successful paginated JSON response with metadata.
+     *
+     * @param LengthAwarePaginator $paginator
+     * @param array<int, mixed> $transformedItems
+     * @param string $message
+     * @param int $statusCode
+     * @return JsonResponse
+     */
+    protected function paginatedSuccessResponse(
+        LengthAwarePaginator $paginator,
+        array $transformedItems,
+        string $message = '',
+        int $statusCode = 200,
+    ): JsonResponse {
+        $payload = [
+            'success' => true,
+            'data' => $transformedItems,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ];
+
+        if ($message !== '') {
+            $payload['message'] = $message;
         }
 
         return response()->json($payload, $statusCode);

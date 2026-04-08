@@ -8,6 +8,7 @@ This directory contains implementation plans for the project. Each plan captures
 |---|-------|--------|------|
 | [PLAN-027](PLAN-027-meeting-date-persistence-and-calendar-sync.md) | Meeting Date Persistence and Calendar Sync | Approved | 2026-03-30 |
 | [PLAN-028](PLAN-028-global-search.md) | Global Search | Approved | 2026-03-30 |
+| [PLAN-029](PLAN-029-email-full-sync-and-pagination.md) | Email Full Sync and Pagination | Approved | 2026-04-08 |
 
 ## Archived Plans
 
