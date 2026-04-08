@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.13.0] - Unreleased
 
+### Added
+
+- **Email pagination** — Email page now displays 25 emails per page with Previous/Next navigation controls and page indicator; total email count shown in header badge; pagination works with all source filters (all, flagged, categorized, unread)
+- **Full inbox sync** — Microsoft Graph email sync now follows up to 100 pages of results (previously 10), supporting inboxes with up to 5,000 messages
+
 ### Fixed
 
 - **Dashboard task status ghosting** — When marking a task as done on the dashboard, the next task in the list visually inherited the "done" status badge until page refresh; added `key` attributes to task-card and follow-up-card root elements so Alpine.morph correctly tracks DOM nodes during partial refreshes

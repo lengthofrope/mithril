@@ -246,8 +246,9 @@ class MicrosoftGraphService
     /**
      * Fetch filtered messages from the user's inbox, following pagination.
      *
-     * Follows @odata.nextLink to retrieve all pages. A safety cap of 10 pages
-     * prevents runaway loops on extremely large inboxes.
+     * Follows @odata.nextLink to retrieve all pages. A safety cap of 100 pages
+     * (50 messages each = 5,000 max) prevents runaway loops while accommodating
+     * large inboxes. Most active inboxes hold 500-2,000 messages.
      *
      * @param User   $user   The user whose messages should be fetched.
      * @param string $filter OData filter string for the messages query.
