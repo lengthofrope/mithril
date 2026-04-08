@@ -19,6 +19,7 @@
 @endphp
 
 <div
+    key="follow-up-{{ $followUp->id }}"
     class="group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700"
     role="listitem"
     data-href="{{ route('follow-ups.show', $followUp->id) }}"

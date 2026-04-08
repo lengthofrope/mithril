@@ -37,6 +37,23 @@ function createModal(config: CreateModalConfig): Record<string, unknown> {
         allTeams,
 
         /**
+         * Checks for a ?create=1 query parameter on page load and opens the modal
+         * automatically when present, then removes the parameter from the URL.
+         */
+        init(this: { addOpen: boolean }): void {
+            const params = new URLSearchParams(window.location.search);
+
+            if (params.has('create')) {
+                this.addOpen = true;
+                params.delete('create');
+                const newUrl = params.toString()
+                    ? `${window.location.pathname}?${params.toString()}`
+                    : window.location.pathname;
+                history.replaceState(null, '', newUrl);
+            }
+        },
+
+        /**
          * Returns member options filtered by the currently selected team.
          * When no team is selected, all members are returned.
          */

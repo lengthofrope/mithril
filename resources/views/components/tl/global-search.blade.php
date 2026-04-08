@@ -52,6 +52,7 @@
 
             <input
                 x-ref="searchInput"
+                data-global-search-input
                 type="search"
                 x-model="query"
                 @input="onInput()"

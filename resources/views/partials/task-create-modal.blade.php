@@ -1,6 +1,8 @@
 {{-- Add task modal --}}
 <div
     x-data="createModal({ memberOptions: @js($memberOptions) })"
+    data-create-modal="task"
+    @create-entity.window="if ($event.detail.type === 'task') addOpen = true"
 >
     <button
         type="button"

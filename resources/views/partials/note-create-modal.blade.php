@@ -1,6 +1,8 @@
 {{-- Add note modal --}}
 <div
     x-data="createModal({ memberOptions: @js($memberOptions) })"
+    data-create-modal="note"
+    @create-entity.window="if ($event.detail.type === 'note') addOpen = true"
 >
     <button
         type="button"

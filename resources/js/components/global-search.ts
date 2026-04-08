@@ -326,16 +326,23 @@ function globalSearch(config: GlobalSearchConfig): Record<string, unknown> {
         },
 
         /**
-         * Closes the dropdown, returns focus to the search input, and collapses on mobile if empty.
+         * Closes the dropdown and blurs the search input so keyboard shortcuts resume.
+         * Only acts when the search dropdown is open or the input is focused.
          */
         closeAndFocus(this: Record<string, unknown>): void {
             const self = this as Record<string, unknown>;
+            const refs = self.$refs as Record<string, HTMLElement>;
+            const inputFocused = refs.searchInput && document.activeElement === refs.searchInput;
+
+            if (!self.isOpen && !inputFocused) {
+                return;
+            }
+
             self.isOpen = false;
             self.activeIndex = -1;
-            const refs = self.$refs as Record<string, HTMLElement>;
 
-            if (refs.searchInput) {
-                refs.searchInput.focus();
+            if (inputFocused) {
+                refs.searchInput.blur();
             }
         },
 

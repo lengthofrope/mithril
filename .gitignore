@@ -24,8 +24,13 @@ Homestead.yaml
 Thumbs.db
 
 # ANVIL — local/generated files
-.anvil.json
+.anvil.local.json
 .claude/session-handoff.md
 .claude/settings.local.json
-docs/anvil/research/
-docs/anvil/documents/security-reports/
+docs/anvil/.private/
+
+# ATLAS — local index
+.claude/atlas/
+CLAUDE.local.md
+.mcp.json
+

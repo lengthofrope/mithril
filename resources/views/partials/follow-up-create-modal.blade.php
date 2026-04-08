@@ -1,6 +1,8 @@
 {{-- Add follow-up modal --}}
 <div
     x-data="createModal({ memberOptions: @js($memberOptions) })"
+    data-create-modal="follow-up"
+    @create-entity.window="if ($event.detail.type === 'follow-up') addOpen = true"
 >
     <button
         type="button"

@@ -56,6 +56,7 @@
             </div>
         </div>
 
+        <x-tl.shortcut-help />
     </div>
 
 </body>

@@ -51,13 +51,16 @@ class EmailActionController extends Controller
             $query->whereJsonContains('sources', $source);
         }
 
-        $emails = $query->get()->map(fn (Email $email): array => array_merge(
+        $perPage = max(1, min((int) $request->input('per_page', 25), 100));
+        $paginator = $query->paginate($perPage);
+
+        $transformedItems = collect($paginator->items())->map(fn (Email $email): array => array_merge(
             $email->toArray(),
             ['links' => $email->emailLinks->toArray()],
             $this->service->buildSenderDisplayData($email),
-        ));
+        ))->all();
 
-        return $this->successResponse($emails);
+        return $this->paginatedSuccessResponse($paginator, $transformedItems);
     }
 
     /**

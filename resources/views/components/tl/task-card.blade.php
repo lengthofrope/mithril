@@ -5,6 +5,7 @@
 @endphp
 
 <div
+    key="task-{{ $task->id }}"
     data-id="{{ $task->id }}"
     data-status="{{ $statusValue }}"
     data-href="{{ route('tasks.show', $task->id) }}"

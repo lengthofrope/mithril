@@ -37,8 +37,8 @@
                     <div class="flex items-center gap-2">
                         <x-tl.sync-button endpoint="/api/v1/sync/emails" />
                         <span
-                            x-show="!isLoading && emails.length > 0"
-                            x-text="emails.length"
+                            x-show="!isLoading && total > 0"
+                            x-text="total"
                             class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600 dark:bg-teal-500/15 dark:text-teal-400"
                         ></span>
                     </div>
@@ -128,6 +128,37 @@
                         </template>
                     </div>
                 </template>
+
+                {{-- Pagination controls --}}
+                <div
+                    x-show="hasPagination"
+                    x-cloak
+                    class="flex items-center justify-center gap-3 border-t border-gray-100 px-5 py-3 dark:border-gray-800"
+                >
+                    <button
+                        @click="previousPage()"
+                        :disabled="isFirstPage"
+                        class="rounded-md px-2.5 py-1 text-xs font-medium transition"
+                        :class="isFirstPage
+                            ? 'cursor-not-allowed text-gray-300 dark:text-gray-600'
+                            : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'"
+                    >
+                        Previous
+                    </button>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                        Page <span x-text="currentPage"></span> of <span x-text="lastPage"></span>
+                    </span>
+                    <button
+                        @click="nextPage()"
+                        :disabled="isLastPage"
+                        class="rounded-md px-2.5 py-1 text-xs font-medium transition"
+                        :class="isLastPage
+                            ? 'cursor-not-allowed text-gray-300 dark:text-gray-600'
+                            : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'"
+                    >
+                        Next
+                    </button>
+                </div>
             </section>
         </div>
     @endif
