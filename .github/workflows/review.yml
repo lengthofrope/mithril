@@ -25,4 +25,4 @@ jobs:
           # REVIEW_SEVERITY_THRESHOLD: warning
           # REVIEW_EXCLUDE_PATHS: "vendor/*,node_modules/*"
           # REVIEW_TOKEN: ${{ secrets.REVIEW_TOKEN }}
-        run: php bin/review
+        run: php /app/bin/review
