@@ -15,6 +15,14 @@ jobs:
     container:
       image: proudnerdswp/claude-review-agent:1.0.0
     steps:
+      - name: Debug config
+        env:
+          REVIEW_API_URL: ${{ secrets.REVIEW_API_URL }}
+          REVIEW_MODEL: ${{ vars.REVIEW_MODEL || 'anthropic/claude-sonnet-4' }}
+        run: |
+          echo "Model: $REVIEW_MODEL"
+          echo "URL: $REVIEW_API_URL"
+          echo "API key length: ${#REVIEW_API_KEY}"
       - name: Run review
         env:
           REVIEW_API_KEY: ${{ secrets.REVIEW_API_KEY }}
