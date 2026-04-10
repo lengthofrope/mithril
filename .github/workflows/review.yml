@@ -13,7 +13,7 @@ jobs:
     name: AI Code Review
     runs-on: ubuntu-latest
     container:
-      image: proudnerdswp/claude-review-agent:latest
+      image: proudnerdswp/claude-review-agent:1.0.0
     steps:
       - name: Run review
         env:
