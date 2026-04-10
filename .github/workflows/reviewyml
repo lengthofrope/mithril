@@ -1,0 +1,28 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    container:
+      image: proudnerdswp/claude-review-agent:latest
+    steps:
+      - name: Run review
+        env:
+          REVIEW_API_KEY: ${{ secrets.REVIEW_API_KEY }}
+          REVIEW_API_URL: ${{ secrets.REVIEW_API_URL }}
+          REVIEW_MODEL: ${{ vars.REVIEW_MODEL || 'anthropic/claude-sonnet-4' }}
+          # Optional; defaults shown:
+          # REVIEW_PROFILE: full-review
+          # REVIEW_SEVERITY_THRESHOLD: warning
+          # REVIEW_EXCLUDE_PATHS: "vendor/*,node_modules/*"
+          # REVIEW_TOKEN: ${{ secrets.REVIEW_TOKEN }}
+        run: php bin/review
