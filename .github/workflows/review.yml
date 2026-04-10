@@ -23,6 +23,7 @@ jobs:
           # Optional; defaults shown:
           # REVIEW_PROFILE: full-review
           # REVIEW_SEVERITY_THRESHOLD: warning
-          # REVIEW_EXCLUDE_PATHS: "vendor/*,node_modules/*"
+          REVIEW_EXCLUDE_PATHS: "vendor/*,node_modules/*"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # REVIEW_TOKEN: ${{ secrets.REVIEW_TOKEN }}
         run: php /app/bin/review
