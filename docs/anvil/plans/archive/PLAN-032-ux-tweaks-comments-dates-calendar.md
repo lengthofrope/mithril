@@ -1,7 +1,7 @@
 # PLAN-032: UX Tweaks — Comment Ordering, Optional Dates, Monday-First Calendar
 
 **Created:** 2026-04-21
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort
 **PRDs:** none
 
