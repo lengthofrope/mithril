@@ -115,7 +115,8 @@ class FollowUp extends Model
      */
     public function scopeOverdue(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', '<', now()->toDateString())
+        return $query->whereNotNull('follow_up_date')
+            ->whereDate('follow_up_date', '<', now()->toDateString())
             ->where('status', '!=', FollowUpStatus::Done->value);
     }
 
@@ -127,7 +128,8 @@ class FollowUp extends Model
      */
     public function scopeDueToday(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', now()->toDateString())
+        return $query->whereNotNull('follow_up_date')
+            ->whereDate('follow_up_date', now()->toDateString())
             ->where('status', '!=', FollowUpStatus::Done->value);
     }
 
@@ -139,7 +141,8 @@ class FollowUp extends Model
      */
     public function scopeDueThisWeek(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', '>', now()->toDateString())
+        return $query->whereNotNull('follow_up_date')
+            ->whereDate('follow_up_date', '>', now()->toDateString())
             ->whereDate('follow_up_date', '<=', now()->endOfWeek()->toDateString())
             ->where('status', '!=', FollowUpStatus::Done->value);
     }
@@ -152,7 +155,20 @@ class FollowUp extends Model
      */
     public function scopeUpcoming(Builder $query): Builder
     {
-        return $query->whereDate('follow_up_date', '>', now()->endOfWeek()->toDateString())
+        return $query->whereNotNull('follow_up_date')
+            ->whereDate('follow_up_date', '>', now()->endOfWeek()->toDateString())
+            ->where('status', '!=', FollowUpStatus::Done->value);
+    }
+
+    /**
+     * Scope to follow-ups with no due date set (prep items).
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeUndated(Builder $query): Builder
+    {
+        return $query->whereNull('follow_up_date')
             ->where('status', '!=', FollowUpStatus::Done->value);
     }
 

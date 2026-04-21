@@ -33,7 +33,7 @@ class MeetingRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(MeetingType::class)],
-            'scheduled_at' => ['required', 'date'],
+            'scheduled_at' => ['nullable', 'date'],
             'team_id' => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'notes' => ['nullable', 'string'],
             'transcription_language' => ['sometimes', 'string', 'in:nl,en'],

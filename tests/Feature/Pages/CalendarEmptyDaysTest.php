@@ -31,13 +31,13 @@ describe('Calendar page empty days', function (): void {
         $response = $this->actingAs($user)->get('/calendar');
 
         $response->assertOk()
+            ->assertSee('Monday, 9 March')
             ->assertSee('Today')
             ->assertSee('Tomorrow')
             ->assertSee('Thursday, 12 March')
             ->assertSee('Friday, 13 March')
             ->assertSee('Saturday, 14 March')
-            ->assertSee('Sunday, 15 March')
-            ->assertSee('Monday, 16 March');
+            ->assertSee('Sunday, 15 March');
     });
 
     it('shows a no events message for days without appointments', function (): void {

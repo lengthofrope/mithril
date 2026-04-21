@@ -115,6 +115,28 @@ class CalendarEvent extends Model
     }
 
     /**
+     * Scope to filter events that are all-day.
+     *
+     * @param Builder<CalendarEvent> $query
+     * @return Builder<CalendarEvent>
+     */
+    public function scopeAllDay(Builder $query): Builder
+    {
+        return $query->where('is_all_day', true);
+    }
+
+    /**
+     * Scope to filter events that are timed (not all-day).
+     *
+     * @param Builder<CalendarEvent> $query
+     * @return Builder<CalendarEvent>
+     */
+    public function scopeTimed(Builder $query): Builder
+    {
+        return $query->where('is_all_day', false);
+    }
+
+    /**
      * Get all resource links for this calendar event.
      *
      * @return HasMany<CalendarEventLink>

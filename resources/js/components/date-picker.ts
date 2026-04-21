@@ -1,5 +1,6 @@
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
+import { DEFAULT_FLATPICKR_OPTIONS } from '../utils/flatpickr-defaults';
 
 /**
  * Configuration for the datePicker Alpine component.
@@ -28,6 +29,7 @@ function datePicker(config: DatePickerConfig = {}): Record<string, unknown> {
             const inputEl = this.$refs.input;
 
             this._flatpickr = flatpickr(inputEl, {
+                ...DEFAULT_FLATPICKR_OPTIONS,
                 dateFormat: config.dateFormat ?? DEFAULT_DATE_FORMAT,
                 allowInput: true,
                 onChange(_selectedDates: Date[], dateStr: string): void {

@@ -1,4 +1,7 @@
-@props(['parent', 'parentType', 'activities'])
+@props(['parent', 'parentType', 'activities', 'sortOrder' => null])
+@php
+    $sortOrder = $sortOrder ?? (auth()->user()?->activity_sort_order ?? 'asc');
+@endphp
 
 <div
     class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
@@ -6,8 +9,39 @@
     x-on:confirm-delete-activity="confirmDelete($event.detail.id)"
 >
     {{-- Card header --}}
-    <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+    <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
         <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Activity</h2>
+
+        {{-- Sort order toggle.
+             Uses the same pattern as toggleState({...}): a named Alpine.data()
+             function invoked with a config object. Not an inline literal. --}}
+        <div
+            x-data="activitySortToggle({
+                userId: {{ auth()->id() }},
+                initialSortOrder: '{{ $sortOrder }}'
+            })"
+        >
+            <button
+                type="button"
+                x-on:click="toggle()"
+                x-bind:disabled="isSaving"
+                x-bind:title="isDesc ? 'Newest first; click for oldest first' : 'Oldest first; click for newest first'"
+                class="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition hover:bg-gray-100 hover:text-brand-600 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-brand-400"
+                aria-label="Toggle activity sort order"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="h-3.5 w-3.5 transition-transform duration-200"
+                    x-bind:class="isDesc ? 'rotate-180' : 'rotate-0'"
+                    aria-hidden="true"
+                >
+                    <path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 8a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 2 8Zm0 3.25a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
+                </svg>
+                <span x-text="isDesc ? 'Newest first' : 'Oldest first'"></span>
+            </button>
+        </div>
     </div>
 
     <div class="p-5">

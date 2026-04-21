@@ -62,15 +62,32 @@ class DashboardController extends Controller
         $isJiraConnected = $request->user()->hasJiraConnection();
         $isMicrosoftConnected = $request->user()->hasMicrosoftConnection();
 
-        $calendarEvents = $isMicrosoftConnected
-            ? CalendarEvent::query()
+        if ($isMicrosoftConnected) {
+            $calendarLimit = $user->dashboard_upcoming_meetings ?? 5;
+            $windowStart = now($userTz)->utc();
+            $windowEnd = now($userTz)->endOfWeek()->utc();
+
+            $timedEvents = CalendarEvent::query()
                 ->with('links')
-                ->notEndedAt(now($userTz)->utc())
-                ->until(now($userTz)->endOfWeek()->utc())
+                ->timed()
+                ->notEndedAt($windowStart)
+                ->until($windowEnd)
                 ->orderBy('start_at')
-                ->limit(3)
-                ->get()
-            : null;
+                ->limit($calendarLimit)
+                ->get();
+
+            $allDayEvents = CalendarEvent::query()
+                ->with('links')
+                ->allDay()
+                ->notEndedAt($windowStart)
+                ->until($windowEnd)
+                ->orderBy('start_at')
+                ->get();
+
+            $calendarEvents = $timedEvents->concat($allDayEvents)->sortBy('start_at')->values();
+        } else {
+            $calendarEvents = null;
+        }
 
         $flaggedEmails = $isMicrosoftConnected
             ? Email::query()

@@ -39,6 +39,7 @@ class AutoSaveController extends Controller
         'note' => \App\Models\Note::class,
         'weekly_reflection' => \App\Models\WeeklyReflection::class,
         'jira_issue' => \App\Models\JiraIssue::class,
+        'user' => \App\Models\User::class,
     ];
 
     /**
@@ -59,6 +60,11 @@ class AutoSaveController extends Controller
         }
 
         $modelClass = $this->modelMap[$modelKey];
+
+        if ($modelKey === 'user') {
+            abort_if((int) $id !== (int) $request->user()->getKey(), 403);
+        }
+
         $model = $modelClass::findOrFail($id);
 
         $blockedFields = ['id', 'user_id', 'created_at', 'updated_at', 'recurrence_parent_id', 'recurrence_series_id'];
@@ -117,6 +123,9 @@ class AutoSaveController extends Controller
             'task_group' => [
                 'name' => ['required', 'string', 'max:255'],
                 'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            ],
+            'user' => [
+                'activity_sort_order' => ['required', 'string', Rule::in(['asc', 'desc'])],
             ],
         ];
 

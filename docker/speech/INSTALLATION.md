@@ -43,9 +43,12 @@
 
    ```bash
    curl -X POST http://localhost:8090/transcribe \
+     -H "X-Speech-Token: your-token-here" \
      -F "file=@/path/to/audio.wav" \
      -F "language=en"
    ```
+
+   Omit the `X-Speech-Token` header if `SPEECH_AUTH_TOKEN` is not set in `.env`.
 
 ## GPU Installation
 

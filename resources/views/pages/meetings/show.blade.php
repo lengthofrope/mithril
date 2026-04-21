@@ -1136,6 +1136,23 @@
                                     </p>
                                 </div>
                             </div>
+
+                            <template x-if="overallProgressPercent !== null">
+                                <div class="mt-5 space-y-2">
+                                    <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                        <div
+                                            class="h-2 rounded-full bg-brand-500 transition-all duration-1000"
+                                            :style="'width: ' + overallProgressPercent + '%'"
+                                        ></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+                                        <span x-text="overallProgressPercent + '%'"></span>
+                                        <span x-text="totalRemainingSeconds > 0
+                                            ? 'Est. remaining: ~' + formatDuration(totalRemainingSeconds)
+                                            : 'Taking longer than expected…'"></span>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 

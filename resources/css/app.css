@@ -637,7 +637,7 @@ select[multiple] {
   @apply w-full;
 }
 .flatpickr-calendar {
-  @apply mt-2 !rounded-xl bg-black !p-5 !border !border-transparent dark:!border-white/5 !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
+  @apply mt-2 !rounded-xl bg-black !p-5 !border !border-transparent dark:!border-transparent !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
 }
 .flatpickr-time input {
   background-color: #edecea !important;
@@ -1077,6 +1077,108 @@ pre[class*='language-'] {
   .flatpickr-calendar.static {
     margin-right: -60px !important;
   }
+}
+
+/* Flatpickr: Monday-first week — weekend column headers (positions 6 and 7 with weekStart=1) */
+.flatpickr-weekday:nth-child(6),
+.flatpickr-weekday:nth-child(7) {
+  background-color: var(--color-gray-50);
+  border-radius: 0.25rem;
+}
+
+/* Flatpickr dark-mode: calendar surface */
+.dark .flatpickr-calendar {
+  background: var(--color-gray-800);
+  color: var(--color-gray-100);
+  border-color: var(--color-gray-700);
+}
+
+/* Flatpickr dark-mode: month bar and weekday row */
+.dark .flatpickr-months .flatpickr-month,
+.dark .flatpickr-current-month,
+.dark .flatpickr-weekdaycontainer,
+.dark .flatpickr-weekday {
+  background: transparent;
+  color: var(--color-gray-100);
+}
+
+/* Flatpickr dark-mode: month dropdown select.
+   Requires appearance:none + !important to beat Flatpickr's own specificity.
+   Note: the OS-native open option list cannot be fully styled; background/color
+   will apply to the closed select element but not the popup on all browsers. */
+.dark .flatpickr-monthDropdown-months {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--color-gray-900) !important;
+  color: var(--color-gray-100) !important;
+  border: 1px solid var(--color-gray-700) !important;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.dark .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+  background-color: var(--color-gray-900) !important;
+  color: var(--color-gray-100) !important;
+}
+
+.dark .flatpickr-monthDropdown-months option {
+  background-color: var(--color-gray-900) !important;
+  color: var(--color-gray-100) !important;
+}
+
+/* Flatpickr dark-mode: year input and arrows */
+.dark .flatpickr-current-month .numInputWrapper input.cur-year {
+  background: transparent !important;
+  color: var(--color-gray-100) !important;
+}
+
+.dark .numInputWrapper span.arrowUp,
+.dark .numInputWrapper span.arrowDown {
+  border-color: var(--color-gray-600);
+}
+
+.dark .flatpickr-current-month .numInputWrapper span.arrowUp::after {
+  border-bottom-color: var(--color-gray-400) !important;
+}
+
+.dark .flatpickr-current-month .numInputWrapper span.arrowDown::after {
+  border-top-color: var(--color-gray-400) !important;
+}
+
+.dark .flatpickr-current-month .numInputWrapper:hover {
+  background: color-mix(in oklab, var(--color-gray-700) 50%, transparent);
+}
+
+/* Flatpickr dark-mode: day cells */
+.dark .flatpickr-day {
+  color: var(--color-gray-100);
+}
+
+.dark .flatpickr-day.flatpickr-disabled,
+.dark .flatpickr-day.prevMonthDay,
+.dark .flatpickr-day.nextMonthDay {
+  color: var(--color-gray-500);
+}
+
+.dark .flatpickr-day.selected,
+.dark .flatpickr-day.startRange,
+.dark .flatpickr-day.endRange {
+  background: var(--color-brand-500, #3d8b6b);
+  border-color: var(--color-brand-500, #3d8b6b);
+  color: var(--color-white);
+}
+
+/* Flatpickr dark-mode: weekend column tint — stronger contrast against dark surface */
+.dark .flatpickr-weekday:nth-child(6),
+.dark .flatpickr-weekday:nth-child(7) {
+  background-color: var(--color-gray-700);
+}
+
+/* Hide the 6th week row when it contains only next-month days.
+   Positions 36-42 render next-month days only when the current month doesn't
+   extend into them; hiding those individual cells collapses the empty row. */
+.flatpickr-days .dayContainer > .flatpickr-day.nextMonthDay:nth-child(n + 36) {
+  display: none;
 }
 
 /* Page transitions (CSS View Transitions API) */

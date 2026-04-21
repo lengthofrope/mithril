@@ -71,12 +71,16 @@ class PartialController extends Controller
         $modelClass = $this->modelMap[$type];
         $model = $modelClass::findOrFail($id);
 
-        $activities = $model->getActivityFeed();
+        $sortOrder = $request->user()?->activity_sort_order ?? 'asc';
+        $activities = $model->getActivityFeed($sortOrder);
 
         return $this->withETag(
             $request,
             'partials.activity-feed',
-            ['activities' => $activities],
+            [
+                'activities' => $activities,
+                'sortOrder'  => $sortOrder,
+            ],
         );
     }
 
@@ -288,15 +292,32 @@ class PartialController extends Controller
         $user = $request->user();
         $timezone = $user->getEffectiveTimezone();
 
-        $calendarEvents = $user->hasMicrosoftConnection()
-            ? CalendarEvent::query()
+        if ($user->hasMicrosoftConnection()) {
+            $limit = $user->dashboard_upcoming_meetings ?? 5;
+            $windowStart = now($timezone)->utc();
+            $windowEnd = now($timezone)->endOfWeek()->utc();
+
+            $timed = CalendarEvent::query()
                 ->with('links')
-                ->notEndedAt(now($timezone)->utc())
-                ->until(now($timezone)->endOfWeek()->utc())
+                ->timed()
+                ->notEndedAt($windowStart)
+                ->until($windowEnd)
                 ->orderBy('start_at')
-                ->limit(3)
-                ->get()
-            : new Collection();
+                ->limit($limit)
+                ->get();
+
+            $allDay = CalendarEvent::query()
+                ->with('links')
+                ->allDay()
+                ->notEndedAt($windowStart)
+                ->until($windowEnd)
+                ->orderBy('start_at')
+                ->get();
+
+            $calendarEvents = $timed->concat($allDay)->sortBy('start_at')->values();
+        } else {
+            $calendarEvents = new Collection();
+        }
 
         return $this->withETag(
             $request,

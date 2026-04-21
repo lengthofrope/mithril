@@ -41,6 +41,7 @@ class User extends Authenticatable
         'dashboard_upcoming_follow_ups',
         'dashboard_upcoming_meetings',
         'sidebar_collapsed',
+        'activity_sort_order',
         'speech_service_mode',
         'speech_service_url',
         'speech_service_token',
