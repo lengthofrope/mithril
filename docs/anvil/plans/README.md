@@ -40,3 +40,4 @@ This directory contains implementation plans for the project. Each plan captures
 | [PLAN-025](archive/PLAN-025-extract-inline-alpine-to-typescript.md) | Extract Inline Alpine.js to TypeScript Components | Complete | 2026-03-28 |
 | [PLAN-026](archive/PLAN-026-vite-dev-csp-compatibility.md) | Vite Development Mode CSP Compatibility | Complete | 2026-03-30 |
 | [PLAN-029](archive/PLAN-029-email-full-sync-and-pagination.md) | Email Full Sync and Pagination | Complete | 2026-04-08 |
+| [PLAN-030](archive/PLAN-030-whisper-hallucination-fix.md) | Whisper Transcription Hallucination Fix | Complete | 2026-04-21 |

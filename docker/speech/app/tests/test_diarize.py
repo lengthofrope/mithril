@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
+import server
+
 
 def _make_diarize_segment(speaker: str, start: float, end: float):
     """Create a mock diarize segment."""
@@ -145,3 +147,60 @@ def test_diarize_uses_fifo_queue(sample_wav):
         )
 
     assert response.status_code == 200
+
+
+def test_diarize_passes_condition_on_previous_text_false(sample_wav):
+    """POST /diarize calls whisper with condition_on_previous_text=False to prevent repetition loops."""
+    diarize_segs = [_make_diarize_segment("SPEAKER_00", 0.0, 3.0)]
+    whisper_segs = [_make_whisper_segment("Test.", 0.0, 3.0)]
+
+    with _diarize_client(diarize_segs, whisper_segs) as diarize_test_client:
+        diarize_test_client.post(
+            "/diarize",
+            files={"file": ("test.wav", sample_wav, "audio/wav")},
+            data={"language": "en"},
+        )
+        kwargs = server.whisper_model.transcribe.call_args.kwargs
+
+    assert kwargs["condition_on_previous_text"] is False, (
+        f"condition_on_previous_text must be False to prevent runaway repetition loops; "
+        f"got {kwargs.get('condition_on_previous_text')}"
+    )
+
+
+def test_diarize_passes_temperature_fallback_ladder(sample_wav):
+    """POST /diarize calls whisper with a temperature fallback ladder instead of a scalar."""
+    diarize_segs = [_make_diarize_segment("SPEAKER_00", 0.0, 3.0)]
+    whisper_segs = [_make_whisper_segment("Test.", 0.0, 3.0)]
+
+    with _diarize_client(diarize_segs, whisper_segs) as diarize_test_client:
+        diarize_test_client.post(
+            "/diarize",
+            files={"file": ("test.wav", sample_wav, "audio/wav")},
+            data={"language": "en"},
+        )
+        kwargs = server.whisper_model.transcribe.call_args.kwargs
+
+    assert kwargs["temperature"] == [0.0, 0.2, 0.4, 0.6, 0.8, 1.0], (
+        f"temperature must be a fallback ladder [0.0, 0.2, 0.4, 0.6, 0.8, 1.0] to allow "
+        f"beam-search fallback on uncertain segments; got {kwargs.get('temperature')}"
+    )
+
+
+def test_diarize_does_not_pass_vad_filter(sample_wav):
+    """POST /diarize must not enable vad_filter; pyannote already provides VAD via speaker segmentation."""
+    diarize_segs = [_make_diarize_segment("SPEAKER_00", 0.0, 3.0)]
+    whisper_segs = [_make_whisper_segment("Test.", 0.0, 3.0)]
+
+    with _diarize_client(diarize_segs, whisper_segs) as diarize_test_client:
+        diarize_test_client.post(
+            "/diarize",
+            files={"file": ("test.wav", sample_wav, "audio/wav")},
+            data={"language": "en"},
+        )
+        kwargs = server.whisper_model.transcribe.call_args.kwargs
+
+    assert "vad_filter" not in kwargs, (
+        "vad_filter must not be present on the diarize path; pyannote supplies its own VAD "
+        "via speaker segmentation and combining them can drop short utterances at segment boundaries"
+    )

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.1] - Unreleased
+
+### Fixed
+
+- **Whisper transcription repetition loops** — After a few minutes of audio, the speech service could produce runaway repetitions (e.g. `"Ja. Ja ja ja. Ja."`); `WhisperModel.transcribe()` was using greedy decoding (`temperature=0.0`) with no fallback, no VAD filter, and the default `condition_on_previous_text=True`, which lets a loop in one decoder window seed the next. Both call sites in `docker/speech/app/server.py` now pass `condition_on_previous_text=False`, a temperature fallback ladder `[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]`, explicit `compression_ratio_threshold=2.4`, `log_prob_threshold=-1.0`, and `no_speech_threshold=0.6`. The plain `/transcribe` path additionally enables Silero VAD (`vad_filter=True`, `min_silence_duration_ms=500`); the `/diarize` path does not, since pyannote supplies its own VAD and combining both can drop short utterances at segment boundaries (PLAN-030)
+
 ## [1.13.0] - 2026-04-08
 
 ### Added
