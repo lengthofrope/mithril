@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.13.1] - Unreleased
+## [1.14.0] - Unreleased
+
+### Added
+
+- **Real-time speech service progress via SSE** — The speech service now exposes `POST /transcribe/stream` and `POST /diarize/stream` returning `text/event-stream`; events are emitted per Whisper segment (`progress` with monotonic 0-1 value derived from `segment.end / audio_duration`) and at each diarization stage (`converting`, `diarizing`, `transcribing`, `merging`), terminating with a final `result` event carrying the existing JSON payload. `GET /health` advertises the capability via `streaming: true`. The blocking `POST /transcribe` and `POST /diarize` endpoints remain unchanged for backwards compatibility. Auth (`X-Speech-Token`), 503 (models not ready), and client disconnect (`request.is_disconnected()` with FIFO semaphore release) all honored. TypeScript client gains `transcribeStream`/`diarizeStream` async iterators and a `supportsStreaming()` helper; the transcription-viewer Alpine component uses streaming when available and falls back to the existing blocking flow plus time estimate when not, so the progress bar reflects real server-reported progress instead of a drifting estimate (PLAN-031)
 
 ### Fixed
 

@@ -763,6 +763,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                         self.streamStage = event.stage;
                     } else if (event.type === 'result') {
                         finalResult = event.data as unknown as T;
+                        self.streamProgress = 1;
                     }
                 }
                 if (finalResult === null) {
@@ -804,7 +805,7 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
 
                 const audioBlob = await audioResponse.blob();
                 const language = this.transcriptionLanguage;
-                const useDiarize = this.diarizationEnabled;
+                const useDiarize = this.processingMode === 'diarize';
 
                 let content: string;
                 let diarizedContent: string | null = null;

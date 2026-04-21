@@ -89,12 +89,9 @@ class ClientTranscriptionController extends Controller
         ];
 
         $diarizedContent = $request->validated('diarized_content');
-
-        if ($diarizedContent !== null) {
-            $data['diarized_content'] = $diarizedContent;
-            $data['diarization_status'] = DiarizationStatus::Completed;
-            $data['diarization_error'] = null;
-        }
+        $data['diarized_content'] = $diarizedContent;
+        $data['diarization_status'] = $diarizedContent !== null ? DiarizationStatus::Completed : null;
+        $data['diarization_error'] = null;
 
         if ($transcription !== null) {
             $transcription->update($data);
