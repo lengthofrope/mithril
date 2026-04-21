@@ -100,7 +100,9 @@
 
                 @if(!$isTodayGroup && !$leafRendered && $todayHadEvents)
                     @php $leafRendered = true; @endphp
-                    <div class="elvish-divider-leaf" aria-hidden="true"></div>
+                    <div class="elvish-divider mx-5" aria-hidden="true">
+                        <span class="elvish-divider-leaf"></span>
+                    </div>
                 @endif
 
                 @foreach($orderedDayEvents as $event)

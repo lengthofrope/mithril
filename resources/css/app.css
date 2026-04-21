@@ -637,7 +637,7 @@ select[multiple] {
   @apply w-full;
 }
 .flatpickr-calendar {
-  @apply mt-2 !rounded-xl bg-black !p-5 !border !border-transparent dark:!border-white/5 !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
+  @apply mt-2 !rounded-xl bg-black !p-5 !border !border-transparent dark:!border-transparent !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
 }
 .flatpickr-time input {
   background-color: #edecea !important;
@@ -1086,12 +1086,6 @@ pre[class*='language-'] {
   border-radius: 0.25rem;
 }
 
-/* Day cells at weekend positions (6th and 7th in each 7-day row when weekStart=1) */
-.flatpickr-days .dayContainer > .flatpickr-day:nth-child(7n + 6),
-.flatpickr-days .dayContainer > .flatpickr-day:nth-child(7n + 7) {
-  background-color: var(--color-gray-50);
-}
-
 /* Flatpickr dark-mode: calendar surface */
 .dark .flatpickr-calendar {
   background: var(--color-gray-800);
@@ -1180,14 +1174,10 @@ pre[class*='language-'] {
   background-color: var(--color-gray-700);
 }
 
-.dark .flatpickr-days .dayContainer > .flatpickr-day:nth-child(7n + 6),
-.dark .flatpickr-days .dayContainer > .flatpickr-day:nth-child(7n + 7) {
-  background-color: color-mix(in oklab, var(--color-amber-900) 35%, transparent);
-}
-
 /* Hide the 6th week row when it contains only next-month days.
-   If day 36 is a nextMonthDay, days 37-42 are also next-month by definition. */
-.flatpickr-days .dayContainer:has(.flatpickr-day:nth-child(36).nextMonthDay) .flatpickr-day:nth-child(n + 36) {
+   Positions 36-42 render next-month days only when the current month doesn't
+   extend into them; hiding those individual cells collapses the empty row. */
+.flatpickr-days .dayContainer > .flatpickr-day.nextMonthDay:nth-child(n + 36) {
   display: none;
 }
 
