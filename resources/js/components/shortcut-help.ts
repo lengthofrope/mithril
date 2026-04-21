@@ -21,8 +21,15 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     {
         label: 'Navigation',
         shortcuts: [
-            { keys: ['1', '–', '7'], description: 'Dashboard, Tasks, Follow-ups, Teams, Notes, Meetings, Weekly' },
-            { keys: ['n'], description: 'Go to Tasks' },
+            { keys: ['1'], description: 'Dashboard' },
+            { keys: ['2'], description: 'Meetings' },
+            { keys: ['3'], description: 'Tasks' },
+            { keys: ['4'], description: 'Follow-ups' },
+            { keys: ['5'], description: 'Notes' },
+            { keys: ['6'], description: 'Calendar' },
+            { keys: ['7'], description: 'E-mail' },
+            { keys: ['8'], description: 'Jira' },
+            { keys: ['9'], description: 'Teams' },
         ],
     },
     {

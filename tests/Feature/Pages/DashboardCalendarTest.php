@@ -208,7 +208,7 @@ describe('Dashboard calendar display', function (): void {
             ->assertSee('View all');
     });
 
-    it('limits dashboard to 3 events even when more exist', function (): void {
+    it('shows all events without a 3-item limit on dashboard', function (): void {
         $user = User::factory()->create(['microsoft_id' => 'ms-limit']);
 
         CalendarEvent::factory()->count(5)->create([
@@ -220,7 +220,7 @@ describe('Dashboard calendar display', function (): void {
 
         $response = $this->actingAs($user)->get('/');
 
-        expect($response->viewData('calendarEvents'))->toHaveCount(3);
+        expect($response->viewData('calendarEvents'))->toHaveCount(5);
     });
 
     it('does not include events that start after the end of the current week', function (): void {

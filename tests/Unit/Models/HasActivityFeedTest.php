@@ -160,7 +160,7 @@ describe('HasActivityFeed trait', function (): void {
                 ]);
             }
 
-            $feed = $task->getActivityFeed(3);
+            $feed = $task->getActivityFeed(null, 3);
 
             expect($feed)->toHaveCount(3);
         });

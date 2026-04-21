@@ -7,6 +7,7 @@ This directory contains implementation plans for the project. Each plan captures
 | # | Title | Status | Date |
 |---|-------|--------|------|
 | [PLAN-031](PLAN-031-speech-service-progress-streaming.md) | Speech Service Progress Streaming via SSE | Approved | 2026-04-21 |
+| [PLAN-032](PLAN-032-ux-tweaks-comments-dates-calendar.md) | UX Tweaks — Comment Ordering, Optional Dates, Monday-First Calendar | In Progress | 2026-04-21 |
 
 ## Archived Plans
 

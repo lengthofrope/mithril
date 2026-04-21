@@ -1,21 +1,25 @@
 @props(['followUp'])
 
 @php
-    $now = \Carbon\Carbon::now()->startOfDay();
-    $dueDate = \Carbon\Carbon::parse($followUp->follow_up_date)->startOfDay();
+    if ($followUp->follow_up_date === null) {
+        $dateColorClass = 'text-gray-400 dark:text-gray-500';
+        $dateLabel = 'No date set';
+    } else {
+        $dueDate = \Carbon\Carbon::parse($followUp->follow_up_date)->startOfDay();
 
-    $dateColorClass = match(true) {
-        $dueDate->isPast() && !$dueDate->isToday() => 'text-red-600 dark:text-red-400',
-        $dueDate->isToday()                         => 'text-orange-600 dark:text-orange-400',
-        default                                     => 'text-green-600 dark:text-green-500',
-    };
+        $dateColorClass = match(true) {
+            $dueDate->isPast() && !$dueDate->isToday() => 'text-red-600 dark:text-red-400',
+            $dueDate->isToday()                         => 'text-orange-600 dark:text-orange-400',
+            default                                     => 'text-green-600 dark:text-green-500',
+        };
 
-    $dateLabel = match(true) {
-        $dueDate->isToday()    => 'Today',
-        $dueDate->isTomorrow() => 'Tomorrow',
-        $dueDate->isPast()     => 'Overdue · ' . $dueDate->format('d M Y'),
-        default                => $dueDate->format('d M Y'),
-    };
+        $dateLabel = match(true) {
+            $dueDate->isToday()    => 'Today',
+            $dueDate->isTomorrow() => 'Tomorrow',
+            $dueDate->isPast()     => 'Overdue · ' . $dueDate->format('d M Y'),
+            default                => $dueDate->format('d M Y'),
+        };
+    }
 @endphp
 
 <div

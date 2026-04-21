@@ -325,7 +325,7 @@ test('store requires description', function () {
     $response->assertSessionHasErrors('description');
 });
 
-test('store defaults follow_up_date to today when not provided', function () {
+test('store stores null follow_up_date when not provided', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -336,7 +336,7 @@ test('store defaults follow_up_date to today when not provided', function () {
     $this->assertDatabaseHas('follow_ups', [
         'user_id' => $user->id,
         'description' => 'Follow up immediately',
-        'follow_up_date' => now()->startOfDay()->toDateTimeString(),
+        'follow_up_date' => null,
     ]);
 });
 

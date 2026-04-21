@@ -2,6 +2,7 @@
 
 @php
     use App\Enums\CalendarEventStatus;
+    use Carbon\Carbon;
 
     $now = now($timezone);
 
@@ -34,28 +35,38 @@
     };
 
     /**
+     * Build the list of Carbon days for the current week, keyed by day label.
+     *
+     * @var array<string, \Carbon\Carbon>
+     */
+    $daysByLabel = [];
+    $weekStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+    for ($i = 0; $i < 7; $i++) {
+        $day = $weekStart->copy()->addDays($i)->startOfDay();
+
+        if ($day->isToday()) {
+            $label = 'Today';
+        } elseif ($day->isTomorrow()) {
+            $label = 'Tomorrow';
+        } else {
+            $label = $day->format('l, j F');
+        }
+
+        $daysByLabel[$label] = $day;
+    }
+
+    /**
      * Group an event collection by a human-readable day label.
      *
-     * Generates all 7 days in the window so that empty days (weekends, quiet days)
-     * are still visible in the calendar view.
+     * Uses the pre-built $daysByLabel map so empty days still appear in the
+     * calendar view.
      *
      * @param \Illuminate\Database\Eloquent\Collection $collection
      * @return array<string, \Illuminate\Database\Eloquent\Collection>
      */
-    $groupByDay = function (\Illuminate\Database\Eloquent\Collection $collection) use ($now, $timezone): array {
+    $groupByDay = function (\Illuminate\Database\Eloquent\Collection $collection) use ($daysByLabel, $timezone): array {
         $groups = [];
-
-        for ($i = 0; $i < 7; $i++) {
-            $day = $now->copy()->addDays($i)->startOfDay();
-
-            if ($day->isToday()) {
-                $label = 'Today';
-            } elseif ($day->isTomorrow()) {
-                $label = 'Tomorrow';
-            } else {
-                $label = $day->format('l, d F');
-            }
-
+        foreach (array_keys($daysByLabel) as $label) {
             $groups[$label] = collect();
         }
 
@@ -67,7 +78,7 @@
             } elseif ($localStart->isTomorrow()) {
                 $label = 'Tomorrow';
             } else {
-                $label = $localStart->format('l, d F');
+                $label = $localStart->format('l, j F');
             }
 
             $groups[$label] ??= collect();
@@ -117,6 +128,28 @@
             ->filter()
             ->values()
             ->all();
+    };
+
+    /**
+     * Return the day object for a given label from the current week.
+     * Used to check if the day is a weekend for styling purposes.
+     *
+     * @param string $label
+     * @return \Carbon\Carbon|null
+     */
+    $getDayForLabel = fn (string $label): ?\Carbon\Carbon => $daysByLabel[$label] ?? null;
+
+    /**
+     * Return Tailwind classes for weekend styling.
+     *
+     * @param \Carbon\Carbon $day
+     * @return string
+     */
+    $getWeekendClasses = function (\Carbon\Carbon $day): string {
+        if ($day->isWeekend()) {
+            return 'bg-stone-100 dark:bg-stone-900/40';
+        }
+        return '';
     };
 
     $grouped = $groupByDay($events);
@@ -169,11 +202,18 @@
         @if(!empty($prominentGroups))
             <div class="grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-gray-100 dark:divide-gray-800">
                 @foreach($prominentGroups as $dayLabel => $dayEvents)
+                    @php
+                        $dayForLabel = $getDayForLabel($dayLabel);
+                        $weekendClasses = $dayForLabel ? $getWeekendClasses($dayForLabel) : '';
+                    @endphp
                     <div x-data="toggleState({ open: true })">
                         {{-- Day group header --}}
                         <button
                             type="button"
-                            class="flex w-full items-center justify-between bg-gray-50 px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-900/50 dark:text-gray-400"
+                            class="flex w-full items-center justify-between px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 @class([
+                                'bg-gray-50 dark:bg-gray-900/50' => !$dayForLabel || !$dayForLabel->isWeekend(),
+                                $weekendClasses => $dayForLabel && $dayForLabel->isWeekend(),
+                            ])"
                             @click="open = !open"
                             :aria-expanded="open.toString()"
                             aria-label="{{ $dayLabel }}"
@@ -291,11 +331,18 @@
         @if(!empty($laterGroups))
             <div class="divide-y divide-gray-100 dark:divide-gray-800 {{ !empty($prominentGroups) ? 'border-t border-gray-100 dark:border-gray-800' : '' }}">
                 @foreach($laterGroups as $dayLabel => $dayEvents)
+                    @php
+                        $dayForLabel = $getDayForLabel($dayLabel);
+                        $weekendClasses = $dayForLabel ? $getWeekendClasses($dayForLabel) : '';
+                    @endphp
                     <div x-data="toggleState({ open: false })">
                         {{-- Day group header --}}
                         <button
                             type="button"
-                            class="flex w-full items-center justify-between bg-gray-50 px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-900/50 dark:text-gray-400"
+                            class="flex w-full items-center justify-between px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 @class([
+                                'bg-gray-50 dark:bg-gray-900/50' => !$dayForLabel || !$dayForLabel->isWeekend(),
+                                $weekendClasses => $dayForLabel && $dayForLabel->isWeekend(),
+                            ])"
                             @click="open = !open"
                             :aria-expanded="open.toString()"
                             aria-label="{{ $dayLabel }}"

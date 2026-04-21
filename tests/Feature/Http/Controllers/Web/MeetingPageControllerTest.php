@@ -293,7 +293,7 @@ test('store validation fails without type', function () {
     $response->assertSessionHasErrors('type');
 });
 
-test('store validation fails without scheduled_at', function () {
+test('store succeeds without scheduled_at creating an undated meeting', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -302,7 +302,14 @@ test('store validation fails without scheduled_at', function () {
         'type' => 'one_on_one',
     ]);
 
-    $response->assertSessionHasErrors('scheduled_at');
+    $response->assertSessionHasNoErrors();
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('meetings', [
+        'user_id' => $user->id,
+        'title' => 'No Date Meeting',
+        'scheduled_at' => null,
+    ]);
 });
 
 test('store validation fails with invalid type value', function () {

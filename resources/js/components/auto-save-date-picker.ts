@@ -1,6 +1,7 @@
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { apiClient } from '../utils/api-client';
+import { DEFAULT_FLATPICKR_OPTIONS } from '../utils/flatpickr-defaults';
 import { debounce } from '../utils/debounce';
 import type { ApiError } from '../types/api';
 
@@ -57,6 +58,7 @@ function autoSaveDatePicker(config: AutoSaveDatePickerConfig): Record<string, un
             const self = this;
 
             this._flatpickr = flatpickr(this.$refs.input, {
+                ...DEFAULT_FLATPICKR_OPTIONS,
                 dateFormat,
                 allowInput: true,
                 onChange(_selectedDates: Date[], dateStr: string): void {

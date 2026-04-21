@@ -30,6 +30,7 @@
         @include('partials.meetings-list', [
             'upcomingMeetings' => $upcomingMeetings,
             'pastMeetings' => $pastMeetings,
+            'undatedMeetings' => $undatedMeetings,
         ])
     </div>
 @endsection

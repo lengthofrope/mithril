@@ -82,16 +82,28 @@ trait HasActivityFeed
     }
 
     /**
-     * Get the activity feed in chronological order.
+     * Get the activity feed ordered by the given sort direction.
      *
+     * When no sort direction is supplied, the authenticated user's
+     * `activity_sort_order` preference is used. Falls back to `asc`
+     * when neither an explicit direction nor a user preference is set.
+     *
+     * @param string|null $sortOrder 'asc' | 'desc' | null
      * @param int $limit
      * @return Collection<int, Activity>
      */
-    public function getActivityFeed(int $limit = 50): Collection
+    public function getActivityFeed(?string $sortOrder = null, int $limit = 50): Collection
     {
-        return $this->activities()
-            ->chronological()
-            ->limit($limit)
-            ->get();
+        $resolved = $sortOrder ?? auth()->user()?->activity_sort_order ?? 'asc';
+
+        $query = $this->activities();
+
+        if ($resolved === 'desc') {
+            $query->latestFirst();
+        } else {
+            $query->chronological();
+        }
+
+        return $query->limit($limit)->get();
     }
 }

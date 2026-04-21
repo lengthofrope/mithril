@@ -26,16 +26,18 @@ interface KeyboardShortcutsComponent {
 }
 
 /**
- * Route definitions for the number keys 1–7.
+ * Route definitions for the number keys 1 to 9.
  */
 const SHORTCUT_ROUTES: ShortcutRoutes = {
     '1': '/',
-    '2': '/tasks',
-    '3': '/follow-ups',
-    '4': '/teams',
+    '2': '/meetings',
+    '3': '/tasks',
+    '4': '/follow-ups',
     '5': '/notes',
-    '6': '/meetings',
-    '7': '/weekly',
+    '6': '/calendar',
+    '7': '/mail',
+    '8': '/jira',
+    '9': '/teams',
 };
 
 /**

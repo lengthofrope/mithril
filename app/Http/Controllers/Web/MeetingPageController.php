@@ -63,12 +63,14 @@ class MeetingPageController extends Controller
 
         $upcomingMeetings = $baseQuery()
             ->where('is_done', false)
+            ->whereNotNull('scheduled_at')
             ->whereDate('scheduled_at', '>=', now()->toDateString())
             ->orderBy('scheduled_at')
             ->get();
 
         $pastMeetings = $showPast
             ? $baseQuery()
+                ->whereNotNull('scheduled_at')
                 ->where(fn ($q) => $q
                     ->where('is_done', true)
                     ->orWhereDate('scheduled_at', '<', now()->toDateString())
@@ -77,10 +79,17 @@ class MeetingPageController extends Controller
                 ->get()
             : collect();
 
+        $undatedMeetings = $baseQuery()
+            ->where('is_done', false)
+            ->whereNull('scheduled_at')
+            ->orderByDesc('updated_at')
+            ->get();
+
         if ($request->ajax()) {
             return view('partials.meetings-list', [
                 'upcomingMeetings' => $upcomingMeetings,
                 'pastMeetings' => $pastMeetings,
+                'undatedMeetings' => $undatedMeetings,
             ]);
         }
 
@@ -110,6 +119,7 @@ class MeetingPageController extends Controller
             'title' => 'Meetings',
             'upcomingMeetings' => $upcomingMeetings,
             'pastMeetings' => $pastMeetings,
+            'undatedMeetings' => $undatedMeetings,
             'selectedTeamMemberId' => $teamMemberId,
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
@@ -129,7 +139,7 @@ class MeetingPageController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(MeetingType::class)],
-            'scheduled_at' => ['required', 'date'],
+            'scheduled_at' => ['nullable', 'date'],
             'team_id' => ['nullable', 'integer', Rule::exists('teams', 'id')->where('user_id', auth()->id())],
             'attendee_ids' => ['sometimes', 'array'],
             'attendee_ids.*' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
@@ -148,7 +158,7 @@ class MeetingPageController extends Controller
             'user_id' => $request->user()->id,
             'title' => $validated['title'],
             'type' => $validated['type'],
-            'scheduled_at' => $validated['scheduled_at'],
+            'scheduled_at' => $validated['scheduled_at'] ?? null,
             'team_id' => $validated['team_id'] ?? null,
         ]);
 

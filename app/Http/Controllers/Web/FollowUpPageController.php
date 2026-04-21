@@ -69,11 +69,17 @@ class FollowUpPageController extends Controller
             ->orderBy('follow_up_date')
             ->get();
 
+        $undated = $baseQuery()
+            ->undated()
+            ->orderByDesc('updated_at')
+            ->get();
+
         $sections = [
             'overdue' => $overdue,
             'today' => $today,
             'this_week' => $thisWeek,
             'later' => $upcoming,
+            'prep' => $undated,
         ];
 
         if ($request->ajax()) {
@@ -140,7 +146,7 @@ class FollowUpPageController extends Controller
             'description'    => $validated['description'],
             'team_member_id' => $validated['team_member_id'] ?? null,
             'waiting_on'     => $validated['waiting_on'] ?? null,
-            'follow_up_date' => $validated['follow_up_date'] ?? now()->toDateString(),
+            'follow_up_date' => $validated['follow_up_date'] ?? null,
             'status'         => FollowUpStatus::Open->value,
         ]);
 
@@ -198,9 +204,9 @@ class FollowUpPageController extends Controller
     {
         $request->validate(['days' => ['required', 'integer', 'min:1']]);
 
-        $followUp->update([
-            'follow_up_date' => $followUp->follow_up_date->addDays((int) $request->input('days'))->toDateString(),
-        ]);
+        $days = (int) $request->input('days');
+        $base = $followUp->follow_up_date ? $followUp->follow_up_date->copy() : now()->startOfDay();
+        $followUp->update(['follow_up_date' => $base->addDays($days)->toDateString()]);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);

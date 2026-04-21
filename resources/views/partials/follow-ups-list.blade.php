@@ -11,6 +11,7 @@
         'today'     => ['label' => 'Today',       'color' => 'orange'],
         'this_week' => ['label' => 'This week',   'color' => 'yellow'],
         'later'     => ['label' => 'Later',       'color' => 'green'],
+        'prep'      => ['label' => 'Prep',        'color' => 'gray'],
     ];
 
     $headerColorMap = [
@@ -18,6 +19,7 @@
         'orange' => 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-900/50',
         'yellow' => 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-900/50',
         'green'  => 'bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-900/50',
+        'gray'   => 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700/40 dark:text-gray-400 dark:border-gray-700',
     ];
 @endphp
 
