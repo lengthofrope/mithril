@@ -1,5 +1,13 @@
-import { transcribe, diarize, SpeechServiceError } from '@/services/local-speech-service';
-import type { SpeechServiceMode } from '@/types/speech-service';
+import {
+    transcribe,
+    diarize,
+    health,
+    transcribeStream,
+    diarizeStream,
+    supportsStreaming,
+    SpeechServiceError,
+} from '@/services/local-speech-service';
+import type { SpeechServiceMode, TranscribeResponse, DiarizeResponse, SpeechStreamEvent } from '@/types/speech-service';
 
 interface DiarizedSegment {
     speaker: string;
@@ -74,6 +82,9 @@ interface TranscriptionViewerState {
     localProcessingError: string | null;
     localElapsedTimer: ReturnType<typeof setInterval> | null;
     localElapsedSeconds: number;
+    streamProgress: number | null;
+    streamStage: string | null;
+    streamingCapable: boolean | null;
 
     init(): void;
     refreshData(): Promise<void>;
@@ -160,6 +171,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
         localProcessingError: null as string | null,
         localElapsedTimer: null as ReturnType<typeof setInterval> | null,
         localElapsedSeconds: 0,
+        streamProgress: null as number | null,
+        streamStage: null as string | null,
+        streamingCapable: null as boolean | null,
 
         speakerColors: [
             'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -285,6 +299,17 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get currentPhaseLabel(): string {
             const self = this as unknown as TranscriptionViewerState;
+
+            if (self.localProcessing && self.streamStage !== null) {
+                const stageLabels: Record<string, string> = {
+                    converting: 'Converting audio…',
+                    diarizing: 'Identifying speakers…',
+                    transcribing: 'Transcribing audio…',
+                    merging: 'Merging segments…',
+                };
+                return stageLabels[self.streamStage] ?? 'Processing…';
+            }
+
             if (self.localProcessing && self.diarizationEnabled) return 'Transcribing & identifying speakers locally…';
             if (self.localProcessing) return 'Transcribing audio locally…';
             if (self.status === 'pending') return 'Waiting to start…';
@@ -366,6 +391,9 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          */
         get overallProgressPercent(): number | null {
             const self = this as unknown as TranscriptionViewerState;
+            if (self.streamProgress !== null) {
+                return Math.min(100, Math.round(self.streamProgress * 100));
+            }
             if (!self.totalEstimatedSeconds) return null;
             return Math.min(95, Math.round((self.totalElapsedSeconds / self.totalEstimatedSeconds) * 100));
         },
@@ -703,15 +731,55 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
          *
          * Downloads the audio from the server, sends it to the local speech
          * service, and posts the result back to the Mithril API.
+         * When the speech service reports streaming capability, uses SSE
+         * streaming endpoints for real-time progress; otherwise falls back
+         * to the blocking flow.
          */
         async processLocally(this: TranscriptionViewerState): Promise<void> {
             if (!this.speechServiceUrl || !this.recordingStreamUrl) return;
 
             this.localProcessing = true;
             this.localProcessingError = null;
+            this.streamProgress = null;
+            this.streamStage = null;
+            this.streamingCapable = null;
             this.startLocalElapsedTimer();
 
+            const self = this;
+
+            /**
+             * Consume a speech SSE generator, updating progress/stage state,
+             * and return the final result payload.
+             */
+            const consumeSpeechStream = async <T>(
+                stream: AsyncGenerator<SpeechStreamEvent>,
+            ): Promise<T> => {
+                let finalResult: T | null = null;
+                for await (const event of stream) {
+                    if (event.type === 'progress') {
+                        self.streamProgress = event.progress;
+                        self.streamStage = event.stage;
+                    } else if (event.type === 'stage') {
+                        self.streamStage = event.stage;
+                    } else if (event.type === 'result') {
+                        finalResult = event.data as unknown as T;
+                    }
+                }
+                if (finalResult === null) {
+                    throw new SpeechServiceError('Stream ended without a result event', null);
+                }
+                return finalResult;
+            };
+
             try {
+                let healthResult = null;
+                try {
+                    healthResult = await health(this.speechServiceUrl, this.speechServiceToken);
+                } catch {
+                    /* health check failure; fall back to blocking flow */
+                }
+                this.streamingCapable = supportsStreaming(healthResult);
+
                 const startResponse = await fetch(`${baseUrl}/start-local`, {
                     method: 'POST',
                     headers: {
@@ -741,23 +809,38 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
                 let content: string;
                 let diarizedContent: string | null = null;
 
-                if (useDiarize) {
-                    const result = await diarize(
-                        audioBlob,
-                        language,
-                        this.speechServiceUrl,
-                        this.speechServiceToken,
-                    );
-                    content = result.segments.map(s => s.text).join(' ');
-                    diarizedContent = JSON.stringify(result);
+                if (this.streamingCapable) {
+                    if (useDiarize) {
+                        const finalResult = await consumeSpeechStream<DiarizeResponse>(
+                            diarizeStream(audioBlob, language, this.speechServiceUrl, this.speechServiceToken),
+                        );
+                        content = finalResult.segments.map(s => s.text).join(' ');
+                        diarizedContent = JSON.stringify(finalResult);
+                    } else {
+                        const finalResult = await consumeSpeechStream<TranscribeResponse>(
+                            transcribeStream(audioBlob, language, this.speechServiceUrl, this.speechServiceToken),
+                        );
+                        content = finalResult.text;
+                    }
                 } else {
-                    const result = await transcribe(
-                        audioBlob,
-                        language,
-                        this.speechServiceUrl,
-                        this.speechServiceToken,
-                    );
-                    content = result.text;
+                    if (useDiarize) {
+                        const result = await diarize(
+                            audioBlob,
+                            language,
+                            this.speechServiceUrl,
+                            this.speechServiceToken,
+                        );
+                        content = result.segments.map(s => s.text).join(' ');
+                        diarizedContent = JSON.stringify(result);
+                    } else {
+                        const result = await transcribe(
+                            audioBlob,
+                            language,
+                            this.speechServiceUrl,
+                            this.speechServiceToken,
+                        );
+                        content = result.text;
+                    }
                 }
 
                 const postResponse = await fetch(`${baseUrl}/client-result`, {
@@ -780,11 +863,14 @@ function transcriptionViewer(config: TranscriptionViewerConfig): Record<string, 
 
                 await this.refreshData();
             } catch (error) {
-                this.localProcessingError = error instanceof Error
+                this.localProcessingError = error instanceof SpeechServiceError || error instanceof Error
                     ? error.message
                     : 'An unknown error occurred during local processing.';
             } finally {
                 this.localProcessing = false;
+                this.streamProgress = null;
+                this.streamStage = null;
+                this.streamingCapable = null;
                 this.stopLocalElapsedTimer();
             }
         },

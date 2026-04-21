@@ -6,8 +6,7 @@ This directory contains implementation plans for the project. Each plan captures
 
 | # | Title | Status | Date |
 |---|-------|--------|------|
-| [PLAN-027](PLAN-027-meeting-date-persistence-and-calendar-sync.md) | Meeting Date Persistence and Calendar Sync | Approved | 2026-03-30 |
-| [PLAN-028](PLAN-028-global-search.md) | Global Search | Approved | 2026-03-30 |
+| [PLAN-031](PLAN-031-speech-service-progress-streaming.md) | Speech Service Progress Streaming via SSE | Approved | 2026-04-21 |
 
 ## Archived Plans
 
@@ -34,10 +33,13 @@ This directory contains implementation plans for the project. Each plan captures
 | [PLAN-019](archive/PLAN-019-unified-speech-service.md) | Unified Speech Processing Service | Complete | 2026-03-22 |
 | [PLAN-020](archive/PLAN-020-fix-speech-service-sticky-mode.md) | Fix Speech Service Sticky Mode Bug | Complete | 2026-03-25 |
 | [PLAN-021](archive/PLAN-021-fix-local-speech-deduplication.md) | Fix Local Speech Processing Deduplication | Complete | 2026-03-26 |
+| [PLAN-021](archive/PLAN-021-keyboard-navigation.md) | Keyboard Navigation & Shortcut Help | Complete | 2026-04-08 |
 | [PLAN-022](archive/PLAN-022-fix-double-click-bug.md) | Fix: Double-Click Registration Bug | Complete | 2026-03-27 |
 | [PLAN-023](archive/PLAN-023-rename-task-categories-and-groups.md) | Rename Task Categories and Groups | Complete | 2026-03-27 |
 | [PLAN-024](archive/PLAN-024-api-key-management.md) | API Key Management & External API Access | Complete | 2026-03-27 |
 | [PLAN-025](archive/PLAN-025-extract-inline-alpine-to-typescript.md) | Extract Inline Alpine.js to TypeScript Components | Complete | 2026-03-28 |
 | [PLAN-026](archive/PLAN-026-vite-dev-csp-compatibility.md) | Vite Development Mode CSP Compatibility | Complete | 2026-03-30 |
+| [PLAN-027](archive/PLAN-027-meeting-date-persistence-and-calendar-sync.md) | Meeting Date Persistence and Calendar Sync | Complete | 2026-03-30 |
+| [PLAN-028](archive/PLAN-028-global-search.md) | Global Search | Complete | 2026-03-30 |
 | [PLAN-029](archive/PLAN-029-email-full-sync-and-pagination.md) | Email Full Sync and Pagination | Complete | 2026-04-08 |
 | [PLAN-030](archive/PLAN-030-whisper-hallucination-fix.md) | Whisper Transcription Hallucination Fix | Complete | 2026-04-21 |

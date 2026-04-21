@@ -1,6 +1,152 @@
 """Tests for the /transcribe endpoint."""
 
+from unittest.mock import MagicMock, patch
+
 import server
+
+
+# ---------------------------------------------------------------------------
+# _transcribe_audio progress callback contract
+# ---------------------------------------------------------------------------
+
+def _make_segment(text: str, end: float) -> MagicMock:
+    """Create a minimal mock faster-whisper segment."""
+    seg = MagicMock()
+    seg.text = text
+    seg.end = end
+    return seg
+
+
+def _make_info(duration: float) -> MagicMock:
+    """Create a minimal mock TranscriptionInfo with a known duration."""
+    info = MagicMock()
+    info.duration = duration
+    return info
+
+
+def test_transcribe_audio_invokes_on_progress_per_segment():
+    """_transcribe_audio calls on_progress once per segment (regardless of text content)."""
+    segments = [
+        _make_segment("Hello", 2.0),
+        _make_segment("world", 4.0),
+    ]
+    info = _make_info(duration=4.0)
+
+    mock_whisper = MagicMock()
+    mock_whisper.transcribe.return_value = (iter(segments), info)
+
+    recorded = []
+
+    with patch("server.whisper_model", mock_whisper):
+        server._transcribe_audio("fake.wav", "en", on_progress=recorded.append)
+
+    assert len(recorded) == 2, (
+        f"on_progress should be called once per segment (2 segments); "
+        f"got {len(recorded)} calls"
+    )
+
+
+def test_transcribe_audio_progress_values_are_monotonically_non_decreasing():
+    """_transcribe_audio progress values never go backwards, even with out-of-order segment timestamps."""
+    segments = [
+        _make_segment("A", 3.0),
+        _make_segment("B", 2.0),  # out of order: end < previous end
+        _make_segment("C", 5.0),
+    ]
+    info = _make_info(duration=5.0)
+
+    mock_whisper = MagicMock()
+    mock_whisper.transcribe.return_value = (iter(segments), info)
+
+    recorded = []
+
+    with patch("server.whisper_model", mock_whisper):
+        server._transcribe_audio("fake.wav", "en", on_progress=recorded.append)
+
+    for i in range(1, len(recorded)):
+        assert recorded[i] >= recorded[i - 1], (
+            f"Progress must be monotonically non-decreasing; "
+            f"value at index {i} ({recorded[i]}) is less than value at {i - 1} ({recorded[i - 1]})"
+        )
+
+
+def test_transcribe_audio_progress_values_are_clamped_to_1():
+    """_transcribe_audio clamps progress to 1.0 when segment.end exceeds audio duration."""
+    segments = [
+        _make_segment("Overrun", 12.0),  # end > duration
+    ]
+    info = _make_info(duration=10.0)
+
+    mock_whisper = MagicMock()
+    mock_whisper.transcribe.return_value = (iter(segments), info)
+
+    recorded = []
+
+    with patch("server.whisper_model", mock_whisper):
+        server._transcribe_audio("fake.wav", "en", on_progress=recorded.append)
+
+    assert recorded[-1] == 1.0, (
+        f"Progress must be clamped to 1.0 when segment.end exceeds audio duration; "
+        f"got {recorded[-1]}"
+    )
+
+
+def test_transcribe_audio_progress_last_value_equals_1_for_full_audio():
+    """_transcribe_audio emits progress 1.0 on the final segment of a fully-covered recording."""
+    segments = [
+        _make_segment("Hello", 5.0),
+        _make_segment("world", 10.0),
+    ]
+    info = _make_info(duration=10.0)
+
+    mock_whisper = MagicMock()
+    mock_whisper.transcribe.return_value = (iter(segments), info)
+
+    recorded = []
+
+    with patch("server.whisper_model", mock_whisper):
+        server._transcribe_audio("fake.wav", "en", on_progress=recorded.append)
+
+    assert recorded[-1] == 1.0, (
+        f"Final progress value must be 1.0 when last segment.end equals duration; "
+        f"got {recorded[-1]}"
+    )
+
+
+def test_transcribe_audio_without_on_progress_does_not_raise():
+    """_transcribe_audio works with no on_progress argument (default no-op)."""
+    segments = [_make_segment("Hello", 3.0)]
+    info = _make_info(duration=3.0)
+
+    mock_whisper = MagicMock()
+    mock_whisper.transcribe.return_value = (iter(segments), info)
+
+    with patch("server.whisper_model", mock_whisper):
+        result = server._transcribe_audio("fake.wav", "en")
+
+    assert result == "Hello", (
+        f"_transcribe_audio must still return the transcribed text when on_progress is omitted; "
+        f"got {result!r}"
+    )
+
+
+def test_transcribe_endpoint_payload_shape_is_unchanged(client, sample_wav):
+    """POST /transcribe response shape is byte-for-byte compatible: exactly {text: str}."""
+    response = client.post(
+        "/transcribe",
+        files={"file": ("test.wav", sample_wav, "audio/wav")},
+        data={"language": "en"},
+    )
+    data = response.json()
+
+    assert response.status_code == 200
+    assert set(data.keys()) == {"text"}, (
+        f"POST /transcribe must return exactly {{\"text\": str}} with no extra fields; "
+        f"got keys {set(data.keys())}"
+    )
+    assert isinstance(data["text"], str), (
+        f"text field must be a string; got {type(data['text'])}"
+    )
 
 
 def test_transcribe_returns_text(client, sample_wav):
