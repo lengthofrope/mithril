@@ -121,11 +121,11 @@ and dashboard read filtered, priority-ordered queries server-side and return Bla
 - **Model:** sonnet
 - **PRD criteria:** 3, 5 (display), 6, 6 (badge), 11-13, 16-18
 - **Specs:**
-  - [ ] `follow-up-card` renders the title wrapped in `<x-tl.privacy-shield>` when `is_private` (priority/date/status/member stay visible), and shows a priority pill — mirroring `task-card`.
-  - [ ] `follow-ups/show` exposes an editable title, a description textarea, a priority pill, and a private toggle, all auto-saving with no save button.
-  - [ ] `follow-up-create-modal` uses `title` (required) and adds optional description, priority select, and private toggle.
-  - [ ] `follow-ups/index` filter bar includes Priority (select), Status (select), and Private (boolean) filters fed by the controller-provided options.
-  - [ ] `partials/dashboard/follow-ups` shows the priority badge and applies private masking to private items.
+  - [x] `follow-up-card` renders the title wrapped in `<x-tl.privacy-shield>` when `is_private` (priority/date/status/member stay visible), and shows a priority pill — mirroring `task-card`.
+  - [x] `follow-ups/show` exposes an editable title, a description textarea, a priority pill, and a private toggle, all auto-saving with no save button.
+  - [x] `follow-up-create-modal` uses `title` (required) and adds optional description, priority select, and private toggle.
+  - [x] `follow-ups/index` filter bar includes Priority (select), Status (select), and Private (boolean) filters fed by the controller-provided options.
+  - [x] `partials/dashboard/follow-ups` shows the priority badge and applies private masking to private items.
 - **Files:** `resources/views/components/tl/follow-up-card.blade.php`, `resources/views/pages/follow-ups/show.blade.php`, `resources/views/partials/follow-up-create-modal.blade.php`, `resources/views/pages/follow-ups/index.blade.php`, `resources/views/partials/dashboard/follow-ups.blade.php`
 
 ## Parallelization

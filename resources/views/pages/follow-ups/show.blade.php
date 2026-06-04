@@ -11,19 +11,19 @@
         {{-- Main content --}}
         <div class="xl:col-span-2">
             <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-                {{-- Description --}}
+                {{-- Title --}}
                 <div class="mb-6">
                     <x-tl.auto-save-field
                         :endpoint="$endpoint"
-                        field="description"
-                        :value="$followUp->description"
+                        field="title"
+                        :value="$followUp->title"
                         type="text"
-                        label="Description"
+                        label="Title"
                     />
                 </div>
 
-                {{-- Row: Status + Follow-up date --}}
-                <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {{-- Row: Status + Follow-up date + Priority --}}
+                <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <x-tl.auto-save-field
                         :endpoint="$endpoint"
                         field="status"
@@ -39,6 +39,27 @@
                         :value="$followUp->follow_up_date ? $followUp->follow_up_date->format('Y-m-d') : ''"
                         type="date"
                         label="Follow-up date"
+                    />
+
+                    <x-tl.auto-save-field
+                        :endpoint="$endpoint"
+                        field="priority"
+                        :value="$followUp->priority instanceof \BackedEnum ? $followUp->priority->value : (string) $followUp->priority"
+                        type="select"
+                        label="Priority"
+                        :options="$priorityOptions"
+                    />
+                </div>
+
+                {{-- Private --}}
+                <div class="mb-6">
+                    <x-tl.auto-save-field
+                        :endpoint="$endpoint"
+                        field="is_private"
+                        :value="$followUp->is_private ? '1' : '0'"
+                        type="select"
+                        label="Private"
+                        :options="[['value' => '0', 'label' => 'No'], ['value' => '1', 'label' => 'Yes']]"
                     />
                 </div>
 
@@ -91,6 +112,17 @@
                         :value="$followUp->waiting_on ?? ''"
                         type="text"
                         label="Waiting on"
+                    />
+                </div>
+
+                {{-- Description --}}
+                <div class="mb-6">
+                    <x-tl.auto-save-field
+                        :endpoint="$endpoint"
+                        field="description"
+                        :value="$followUp->description ?? ''"
+                        type="textarea"
+                        label="Description"
                     />
                 </div>
 
