@@ -27,7 +27,7 @@ test('creates a follow-up when agreement is created with follow_up_date', functi
 
     $this->assertDatabaseHas('follow_ups', [
         'team_member_id' => $member->id,
-        'description' => 'Agreement: Deliver feature X by end of sprint',
+        'title' => 'Agreement: Deliver feature X by end of sprint',
         'follow_up_date' => '2026-03-15 00:00:00',
         'status' => FollowUpStatus::Open->value,
     ]);
@@ -66,7 +66,7 @@ test('creates a follow-up when agreement is updated to add follow_up_date', func
 
     $this->assertDatabaseHas('follow_ups', [
         'team_member_id' => $member->id,
-        'description' => 'Agreement: Some agreement',
+        'title' => 'Agreement: Some agreement',
         'follow_up_date' => '2026-04-01 00:00:00',
         'status' => FollowUpStatus::Open->value,
     ]);

@@ -583,3 +583,62 @@ test('todayTasks eager-loads teamMember and team relationships', function () {
     expect($task->teamMember->name)->toBe('Jane Doe');
     expect($task->team->name)->toBe('Alpha Squad');
 });
+
+test('todayFollowUps orders same-date follow-ups urgent first', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_follow_ups' => 5]);
+    $date = now()->toDateString();
+
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'follow_up_date' => $date,
+        'priority' => Priority::Low,
+        'title' => 'Low',
+    ]);
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'follow_up_date' => $date,
+        'priority' => Priority::Urgent,
+        'title' => 'Urgent',
+    ]);
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'follow_up_date' => $date,
+        'priority' => Priority::High,
+        'title' => 'High',
+    ]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $followUps = $response->viewData('todayFollowUps');
+    expect($followUps->get(0)->title)->toBe('Urgent', 'Urgent should come first in today follow-ups');
+    expect($followUps->get(1)->title)->toBe('High', 'High should come second in today follow-ups');
+    expect($followUps->get(2)->title)->toBe('Low', 'Low should come last in today follow-ups');
+});
+
+test('upcomingFollowUps orders same-date follow-ups urgent first', function () {
+    /** @var \Tests\TestCase $this */
+    $this->travelTo(Carbon::parse('2026-03-11 12:00:00', USER_TZ));
+    $user = User::factory()->create(['dashboard_upcoming_follow_ups' => 5]);
+    $futureDate = now()->addDays(2)->toDateString();
+
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'follow_up_date' => $futureDate,
+        'priority' => Priority::Normal,
+        'title' => 'Normal',
+    ]);
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'follow_up_date' => $futureDate,
+        'priority' => Priority::Urgent,
+        'title' => 'Urgent',
+    ]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $followUps = $response->viewData('upcomingFollowUps');
+    expect($followUps->get(0)->title)->toBe('Urgent', 'Urgent should come first in upcoming follow-ups');
+    expect($followUps->get(1)->title)->toBe('Normal', 'Normal should come second in upcoming follow-ups');
+});

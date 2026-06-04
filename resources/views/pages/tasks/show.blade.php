@@ -158,7 +158,7 @@
                                         href="{{ route('follow-ups.show', $followUp) }}"
                                         class="text-sm text-gray-800 hover:text-blue-600 dark:text-white/90 dark:hover:text-blue-400"
                                     >
-                                        {{ $followUp->description }}
+                                        {{ $followUp->title }}
                                     </a>
                                 </div>
                                 <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium

@@ -318,7 +318,7 @@ test('convert to follow-up creates follow-up linked to task and marks task done'
     $response = $this->actingAs($user)
         ->post("/tasks/{$task->id}/convert-to-follow-up");
 
-    $followUp = FollowUp::where('description', 'Review PR feedback')->first();
+    $followUp = FollowUp::where('title', 'Review PR feedback')->first();
     expect($followUp)->not->toBeNull();
     expect($followUp->task_id)->toBe($task->id);
     expect($followUp->team_member_id)->toBe($member->id);
@@ -340,7 +340,7 @@ test('convert to follow-up returns JSON with follow-up URL for AJAX requests', f
     $response = $this->actingAs($user)
         ->postJson("/tasks/{$task->id}/convert-to-follow-up");
 
-    $followUp = FollowUp::where('description', 'AJAX convert test')->first();
+    $followUp = FollowUp::where('title', 'AJAX convert test')->first();
     $response->assertOk()
         ->assertJson([
             'success' => true,
@@ -362,7 +362,7 @@ test('convert to follow-up defaults follow_up_date to today when task has no dea
     $this->actingAs($user)
         ->post("/tasks/{$task->id}/convert-to-follow-up");
 
-    $followUp = FollowUp::where('description', 'No deadline task')->first();
+    $followUp = FollowUp::where('title', 'No deadline task')->first();
     expect($followUp->follow_up_date->toDateString())->toBe(now()->toDateString());
 });
 
@@ -383,7 +383,7 @@ test('create follow-up from task creates linked follow-up without changing task 
 
     $followUp = FollowUp::where('task_id', $task->id)->first();
     expect($followUp)->not->toBeNull();
-    expect($followUp->description)->toBe('Ongoing task');
+    expect($followUp->title)->toBe('Ongoing task');
     expect($followUp->team_member_id)->toBe($member->id);
     expect($followUp->follow_up_date->toDateString())->toBe('2026-05-01');
     expect($followUp->status)->toBe(FollowUpStatus::Open);
@@ -434,7 +434,7 @@ test('task show displays linked follow-ups', function () {
     FollowUp::factory()->create([
         'user_id' => $user->id,
         'task_id' => $task->id,
-        'description' => 'Linked follow-up',
+        'title' => 'Linked follow-up',
     ]);
 
     $response = $this->actingAs($user)->get("/tasks/{$task->id}");
@@ -461,7 +461,7 @@ test('convert to follow-up transfers activities to the new follow-up', function 
     $this->actingAs($user)
         ->post("/tasks/{$task->id}/convert-to-follow-up");
 
-    $followUp = FollowUp::where('description', 'Transfer activities test')->first();
+    $followUp = FollowUp::where('title', 'Transfer activities test')->first();
     expect($followUp->activities)->toHaveCount(3);
     expect($task->fresh()->activities()->whereNot('type', \App\Enums\ActivityType::System)->count())->toBe(0);
 });
@@ -483,7 +483,7 @@ test('convert to follow-up transfers calendar event links', function () {
     $this->actingAs($user)
         ->post("/tasks/{$task->id}/convert-to-follow-up");
 
-    $followUp = FollowUp::where('description', 'Transfer cal links test')->first();
+    $followUp = FollowUp::where('title', 'Transfer cal links test')->first();
     expect(CalendarEventLink::where('linkable_type', FollowUp::class)->where('linkable_id', $followUp->id)->count())->toBe(1);
     expect(CalendarEventLink::where('linkable_type', Task::class)->where('linkable_id', $task->id)->count())->toBe(0);
 });
@@ -672,7 +672,28 @@ test('convert to follow-up transfers email links', function () {
     $this->actingAs($user)
         ->post("/tasks/{$task->id}/convert-to-follow-up");
 
-    $followUp = FollowUp::where('description', 'Transfer email links test')->first();
+    $followUp = FollowUp::where('title', 'Transfer email links test')->first();
     expect(EmailLink::where('linkable_type', FollowUp::class)->where('linkable_id', $followUp->id)->count())->toBe(1);
     expect(EmailLink::where('linkable_type', Task::class)->where('linkable_id', $task->id)->count())->toBe(0);
+});
+
+test('convert to follow-up carries description priority and is_private from task', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+    $task = Task::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Carry fields task',
+        'description' => 'Task body text',
+        'priority' => Priority::High,
+        'is_private' => true,
+        'status' => TaskStatus::Open,
+    ]);
+
+    $this->actingAs($user)->post("/tasks/{$task->id}/convert-to-follow-up");
+
+    $followUp = FollowUp::where('title', 'Carry fields task')->first();
+    expect($followUp)->not->toBeNull();
+    expect($followUp->description)->toBe('Task body text', 'description should carry over from task');
+    expect($followUp->priority)->toBe(Priority::High, 'priority should carry over from task');
+    expect($followUp->is_private)->toBeTrue('is_private should carry over from task');
 });

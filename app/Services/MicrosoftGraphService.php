@@ -181,7 +181,7 @@ class MicrosoftGraphService
 
         $response = Http::withToken($user->microsoft_access_token)
             ->post(config('microsoft.graph_url') . 'me/calendar/getSchedule', [
-                'schedules'                => $emails,
+                'schedules'                => array_values($emails),
                 'startTime'               => [
                     'dateTime' => $from->toIso8601String(),
                     'timeZone' => 'UTC',

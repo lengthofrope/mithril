@@ -44,3 +44,4 @@ This directory contains implementation plans for the project. Each plan captures
 | [PLAN-028](archive/PLAN-028-global-search.md) | Global Search | Complete | 2026-03-30 |
 | [PLAN-029](archive/PLAN-029-email-full-sync-and-pagination.md) | Email Full Sync and Pagination | Complete | 2026-04-08 |
 | [PLAN-030](archive/PLAN-030-whisper-hallucination-fix.md) | Whisper Transcription Hallucination Fix | Complete | 2026-04-21 |
+| [PLAN-033](archive/PLAN-033-follow-up-field-parity.md) | Follow-up Field Parity with Tasks (Priority, Private, Description) | Complete | 2026-06-04 |

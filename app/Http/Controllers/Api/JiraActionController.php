@@ -81,7 +81,7 @@ class JiraActionController extends Controller
                 'team_member_id' => $data['team_member_id'] ?? null,
             ]),
             'follow-up' => FollowUp::create([
-                'description'    => $data['description'],
+                'title'          => $data['description'],
                 'follow_up_date' => $data['follow_up_date'] ?? null,
                 'team_member_id' => $data['team_member_id'] ?? null,
             ]),

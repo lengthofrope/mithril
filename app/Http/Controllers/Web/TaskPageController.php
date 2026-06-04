@@ -353,12 +353,15 @@ class TaskPageController extends Controller
     private function createFollowUpFromTask(Request $request, Task $task): FollowUp
     {
         return FollowUp::create([
-            'user_id' => $request->user()->id,
-            'task_id' => $task->id,
-            'description' => $task->title,
+            'user_id'        => $request->user()->id,
+            'task_id'        => $task->id,
+            'title'          => $task->title,
+            'description'    => $task->description,
+            'priority'       => $task->priority,
+            'is_private'     => $task->is_private,
             'team_member_id' => $task->team_member_id,
             'follow_up_date' => $task->deadline ?? now()->toDateString(),
-            'status' => FollowUpStatus::Open->value,
+            'status'         => FollowUpStatus::Open->value,
         ]);
     }
 }

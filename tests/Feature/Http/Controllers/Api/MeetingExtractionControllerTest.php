@@ -103,7 +103,7 @@ describe('MeetingExtractionController', function (): void {
                 "/api/v1/meetings/{$meeting->id}/extractions/{$extraction->id}/accept"
             );
 
-            $this->assertDatabaseHas('follow_ups', ['description' => 'Check on project status.']);
+            $this->assertDatabaseHas('follow_ups', ['title' => 'Check on project status.']);
         });
 
         it('creates an Agreement for an agreement-type extraction', function (): void {

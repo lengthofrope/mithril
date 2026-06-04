@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2026-06-04
+
+Follow-ups gain Task-grade fields: priority, a private content mask, and a long-form description, with matching overview filters and priority-aware ordering.
+
+### Added
+
+- **Follow-up priority** follow-ups now carry a priority (urgent/high/normal/low, default normal) with an inline auto-saving badge. Dated sections on both the overview and the dashboard order same-date follow-ups urgent-first, and the list re-sorts live when priority changes inline (PLAN-033)
+- **Private follow-ups** a follow-up can be marked private, masking its title behind a "Private; click to reveal" control on cards, the detail page, and the dashboard (on-screen masking, mirroring tasks). Private items are masked, not hidden from search or the dashboard
+- **Follow-up description body** a new optional long-form description field, editable inline and covered by search
+- **Overview filters** the follow-ups overview filter bar gains Priority, Private, and Status filters, combinable with the existing team, member, and search filters
+
+### Changed
+
+- **Follow-up title/description split** the existing required short-text field is now the follow-up `title`, and a separate optional `description` holds the long body. Existing follow-ups keep their visible label (the rename preserves data). Convert-to/from-task and export carry title, description, priority, and private; legacy import payloads map the old `description` key into `title` (ADR-030)
+
+### Fixed
+
+- **Follow-ups not reordering on inline priority change** the live-refresh partial endpoints sorted only by date, so changing a follow-up's priority did not reorder the list until a full page reload. They now apply the same date-then-priority ordering as the page load
+- **Member availability sync failing on multi-batch requests** the Microsoft Graph `getSchedule` call sent its `schedules` list with non-sequential array keys (from `unique()`/`chunk()`), which serialised as a JSON object and triggered a 400 "Expected array for value of property: Collection(Edm.String)" for every batch after the first. Email lists are now reindexed (and empty addresses dropped) before the request
+
 ## [1.14.0] - 2026-04-21
 
 ### Added

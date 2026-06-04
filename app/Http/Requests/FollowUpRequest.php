@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Enums\FollowUpStatus;
+use App\Enums\Priority;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -46,12 +47,13 @@ class FollowUpRequest extends FormRequest
      */
     public function rules(): array
     {
-        $descriptionRule = $this->isMethod('POST') ? 'required' : 'sometimes';
-
         return [
             'task_id' => ['nullable', 'integer', Rule::exists('tasks', 'id')->where('user_id', auth()->id())],
             'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
-            'description' => [$descriptionRule, 'string'],
+            'title' => [$this->isMethod('PATCH') || $this->isMethod('PUT') ? 'sometimes' : 'required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'priority' => ['nullable', Rule::enum(Priority::class)],
+            'is_private' => ['boolean'],
             'waiting_on' => ['nullable', 'string', 'max:255'],
             'follow_up_date' => ['nullable', 'date'],
             'snoozed_until' => ['nullable', 'date'],

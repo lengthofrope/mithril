@@ -41,15 +41,26 @@
             <form method="POST" action="{{ route('follow-ups.store') }}">
                 @csrf
                 <div class="mb-3">
-                    <label for="new-followup-description" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Description</label>
+                    <label for="new-followup-title" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Title</label>
                     <input
-                        id="new-followup-description"
+                        id="new-followup-title"
                         type="text"
-                        name="description"
+                        name="title"
                         placeholder="What needs following up…"
                         required
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                     >
+                </div>
+
+                <div class="mb-3">
+                    <label for="new-followup-description" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Description <span class="font-normal text-gray-400">(optional)</span></label>
+                    <textarea
+                        id="new-followup-description"
+                        name="description"
+                        rows="3"
+                        placeholder="Additional details…"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                    ></textarea>
                 </div>
 
                 <div class="mb-3 grid grid-cols-2 gap-3">
@@ -75,6 +86,34 @@
                             placeholder="YYYY-MM-DD"
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
                         >
+                    </div>
+                </div>
+
+                <div class="mb-3 grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="new-followup-priority" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Priority</label>
+                        <select
+                            id="new-followup-priority"
+                            name="priority"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                            <option value="normal" selected>Normal</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="high">High</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="new-followup-private" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Private</label>
+                        <select
+                            id="new-followup-private"
+                            name="is_private"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:focus:border-blue-500"
+                        >
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
                     </div>
                 </div>
 

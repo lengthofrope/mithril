@@ -252,7 +252,7 @@ class MeetingExtractionController extends Controller
                 'meeting_id' => $meetingId,
             ]),
             ExtractionType::FollowUp => FollowUp::create([
-                'description' => $content,
+                'title' => $content,
                 'team_member_id' => $assigneeId,
                 'follow_up_date' => $deadline ?? now()->addDays(7)->toDateString(),
                 'meeting_id' => $meetingId,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Enums\FollowUpStatus;
+use App\Enums\Priority;
 use App\Http\Controllers\Controller;
 use App\Models\FollowUp;
 use App\Models\Task;
@@ -39,11 +40,14 @@ class FollowUpPageController extends Controller
         $teamMemberId = $request->get('team_member_id');
         $search = $request->get('search');
 
+        $filters = $request->only(['priority', 'is_private', 'status']);
+
         $memberIdsForTeam = $teamId
             ? TeamMember::where('team_id', $teamId)->pluck('id')
             : null;
 
         $baseQuery = fn () => FollowUp::query()
+            ->applyFilters($filters)
             ->when($memberIdsForTeam, fn ($q) => $q->whereIn('team_member_id', $memberIdsForTeam))
             ->when($teamMemberId, fn ($q) => $q->where('team_member_id', $teamMemberId))
             ->when($search, fn ($q) => $q->search($search))
@@ -52,21 +56,25 @@ class FollowUpPageController extends Controller
         $overdue = $baseQuery()
             ->overdue()
             ->orderBy('follow_up_date')
+            ->priorityOrdered()
             ->get();
 
         $today = $baseQuery()
             ->dueToday()
             ->orderBy('follow_up_date')
+            ->priorityOrdered()
             ->get();
 
         $thisWeek = $baseQuery()
             ->dueThisWeek()
             ->orderBy('follow_up_date')
+            ->priorityOrdered()
             ->get();
 
         $upcoming = $baseQuery()
             ->upcoming()
             ->orderBy('follow_up_date')
+            ->priorityOrdered()
             ->get();
 
         $undated = $baseQuery()
@@ -97,6 +105,8 @@ class FollowUpPageController extends Controller
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => $m->id, 'label' => $m->name, 'team_id' => $m->team_id])->all(),
             'selectedTeamMemberId' => $teamMemberId,
+            'priorityOptions' => $this->priorityOptionsArray(),
+            'statusOptions' => $this->overviewStatusOptionsArray(),
         ]);
     }
 
@@ -114,16 +124,45 @@ class FollowUpPageController extends Controller
         $allMembers = TeamMember::orderBySortOrder()->get();
 
         return view('pages.follow-ups.show', [
-            'title' => $followUp->description,
+            'title' => $followUp->title,
             'followUp' => $followUp,
             'breadcrumbs' => (new BreadcrumbBuilder())->forFollowUp($followUp)->build(),
             'teamOptions' => $allTeams->map(fn (Team $t) => ['value' => (string) $t->id, 'label' => $t->name])->all(),
             'memberOptions' => $allMembers->map(fn (TeamMember $m) => ['value' => (string) $m->id, 'label' => $m->name, 'team_id' => (string) $m->team_id])->all(),
-            'statusOptions' => array_map(
-                fn (FollowUpStatus $s) => ['value' => $s->value, 'label' => ucfirst($s->value)],
-                FollowUpStatus::cases(),
-            ),
+            'statusOptions' => collect(FollowUpStatus::cases())
+                ->map(fn (FollowUpStatus $s) => ['value' => $s->value, 'label' => ucfirst($s->value)])
+                ->all(),
+            'priorityOptions' => $this->priorityOptionsArray(),
         ]);
+    }
+
+    /**
+     * Build the priority option array (value + label) for filter and select controls.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function priorityOptionsArray(): array
+    {
+        return collect(Priority::cases())
+            ->map(fn (Priority $p) => ['value' => $p->value, 'label' => ucfirst($p->value)])
+            ->all();
+    }
+
+    /**
+     * Build the status option array for the overview filter.
+     *
+     * Excludes the Done status because all overview sections exclude done
+     * follow-ups, so filtering by Done would always yield an empty result.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function overviewStatusOptionsArray(): array
+    {
+        return collect(FollowUpStatus::cases())
+            ->reject(fn (FollowUpStatus $s) => $s === FollowUpStatus::Done)
+            ->map(fn (FollowUpStatus $s) => ['value' => $s->value, 'label' => ucfirst($s->value)])
+            ->values()
+            ->all();
     }
 
     /**
@@ -135,7 +174,10 @@ class FollowUpPageController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'description'    => ['required', 'string'],
+            'title'          => ['required', 'string'],
+            'description'    => ['nullable', 'string'],
+            'priority'       => ['nullable', Rule::enum(Priority::class)],
+            'is_private'     => ['nullable', 'boolean'],
             'team_member_id' => ['nullable', 'integer', Rule::exists('team_members', 'id')->where('user_id', auth()->id())],
             'waiting_on'     => ['nullable', 'string', 'max:255'],
             'follow_up_date' => ['nullable', 'date'],
@@ -143,7 +185,10 @@ class FollowUpPageController extends Controller
 
         $followUp = FollowUp::create([
             'user_id'        => $request->user()->id,
-            'description'    => $validated['description'],
+            'title'          => $validated['title'],
+            'description'    => $validated['description'] ?? null,
+            'priority'       => $validated['priority'] ?? Priority::Normal->value,
+            'is_private'     => $validated['is_private'] ?? false,
             'team_member_id' => $validated['team_member_id'] ?? null,
             'waiting_on'     => $validated['waiting_on'] ?? null,
             'follow_up_date' => $validated['follow_up_date'] ?? null,
@@ -222,15 +267,19 @@ class FollowUpPageController extends Controller
      *
      * @param Request $request
      * @param FollowUp $followUp
+     * @param MetadataTransferService $metadataTransfer
      * @return JsonResponse|RedirectResponse
      */
     public function convertToTask(Request $request, FollowUp $followUp, MetadataTransferService $metadataTransfer): JsonResponse|RedirectResponse
     {
         $task = Task::create([
-            'user_id' => $request->user()->id,
-            'title' => $followUp->description,
+            'user_id'        => $request->user()->id,
+            'title'          => $followUp->title,
+            'description'    => $followUp->description,
+            'priority'       => $followUp->priority,
+            'is_private'     => $followUp->is_private,
             'team_member_id' => $followUp->team_member_id,
-            'deadline' => $followUp->follow_up_date,
+            'deadline'       => $followUp->follow_up_date,
         ]);
 
         $metadataTransfer->transfer($followUp, $task);
