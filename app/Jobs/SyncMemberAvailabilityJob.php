@@ -149,10 +149,10 @@ class SyncMemberAvailabilityJob implements ShouldQueue
     ): array {
         $availabilityByEmail = [];
 
-        $emailBatches = $members->pluck('microsoft_email')->unique()->chunk($batchSize);
+        $emailBatches = $members->pluck('microsoft_email')->filter()->unique()->values()->chunk($batchSize);
 
         foreach ($emailBatches as $emails) {
-            $schedules = $graph->getScheduleAvailability($this->user, $emails->toArray(), $from, $to);
+            $schedules = $graph->getScheduleAvailability($this->user, $emails->values()->all(), $from, $to);
 
             foreach ($schedules as $schedule) {
                 $email    = $schedule['email'];
