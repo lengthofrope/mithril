@@ -11,18 +11,18 @@ Follow-ups gain Task-grade fields: priority, a private content mask, and a long-
 
 ### Added
 
-- **Follow-up priority**; follow-ups now carry a priority (urgent/high/normal/low, default normal) with an inline auto-saving badge. Dated sections on both the overview and the dashboard order same-date follow-ups urgent-first, and the list re-sorts live when priority changes inline (PLAN-033)
-- **Private follow-ups**; a follow-up can be marked private, masking its title behind a "Private; click to reveal" control on cards, the detail page, and the dashboard (on-screen masking, mirroring tasks). Private items are masked, not hidden from search or the dashboard
-- **Follow-up description body**; a new optional long-form description field, editable inline and covered by search
-- **Overview filters**; the follow-ups overview filter bar gains Priority, Private, and Status filters, combinable with the existing team, member, and search filters
+- **Follow-up priority** follow-ups now carry a priority (urgent/high/normal/low, default normal) with an inline auto-saving badge. Dated sections on both the overview and the dashboard order same-date follow-ups urgent-first, and the list re-sorts live when priority changes inline (PLAN-033)
+- **Private follow-ups** a follow-up can be marked private, masking its title behind a "Private; click to reveal" control on cards, the detail page, and the dashboard (on-screen masking, mirroring tasks). Private items are masked, not hidden from search or the dashboard
+- **Follow-up description body** a new optional long-form description field, editable inline and covered by search
+- **Overview filters** the follow-ups overview filter bar gains Priority, Private, and Status filters, combinable with the existing team, member, and search filters
 
 ### Changed
 
-- **Follow-up title/description split**; the existing required short-text field is now the follow-up `title`, and a separate optional `description` holds the long body. Existing follow-ups keep their visible label (the rename preserves data). Convert-to/from-task and export carry title, description, priority, and private; legacy import payloads map the old `description` key into `title` (ADR-030)
+- **Follow-up title/description split** the existing required short-text field is now the follow-up `title`, and a separate optional `description` holds the long body. Existing follow-ups keep their visible label (the rename preserves data). Convert-to/from-task and export carry title, description, priority, and private; legacy import payloads map the old `description` key into `title` (ADR-030)
 
 ### Fixed
 
-- **Follow-ups not reordering on inline priority change**; the live-refresh partial endpoints sorted only by date, so changing a follow-up's priority did not reorder the list until a full page reload. They now apply the same date-then-priority ordering as the page load
+- **Follow-ups not reordering on inline priority change** the live-refresh partial endpoints sorted only by date, so changing a follow-up's priority did not reorder the list until a full page reload. They now apply the same date-then-priority ordering as the page load
 
 ## [1.14.0] - 2026-04-21
 
