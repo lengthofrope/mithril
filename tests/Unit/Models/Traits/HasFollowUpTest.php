@@ -22,8 +22,8 @@ describe('HasFollowUp', function (): void {
         it('provides a followUps relationship on Task', function (): void {
             $user = User::factory()->create();
             $task = Task::create(['title' => 'Task with follow-ups', 'user_id' => $user->id]);
-            FollowUp::create(['task_id' => $task->id, 'description' => 'FU 1', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
-            FollowUp::create(['task_id' => $task->id, 'description' => 'FU 2', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
+            FollowUp::create(['task_id' => $task->id, 'title' => 'FU 1', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
+            FollowUp::create(['task_id' => $task->id, 'title' => 'FU 2', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
 
             expect($task->followUps)->toHaveCount(2);
         });
@@ -32,7 +32,7 @@ describe('HasFollowUp', function (): void {
             $user = User::factory()->create();
             $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
             $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
-            FollowUp::create(['team_member_id' => $member->id, 'description' => 'FU 1', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
+            FollowUp::create(['team_member_id' => $member->id, 'title' => 'FU 1', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
 
             expect($member->followUps)->toHaveCount(1);
         });
@@ -41,11 +41,11 @@ describe('HasFollowUp', function (): void {
             $user = User::factory()->create();
             $taskA = Task::create(['title' => 'Task A', 'user_id' => $user->id]);
             $taskB = Task::create(['title' => 'Task B', 'user_id' => $user->id]);
-            FollowUp::create(['task_id' => $taskA->id, 'description' => 'For A', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
-            FollowUp::create(['task_id' => $taskB->id, 'description' => 'For B', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
+            FollowUp::create(['task_id' => $taskA->id, 'title' => 'For A', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
+            FollowUp::create(['task_id' => $taskB->id, 'title' => 'For B', 'status' => FollowUpStatus::Open, 'user_id' => $user->id]);
 
             expect($taskA->followUps)->toHaveCount(1)
-                ->and($taskA->followUps->first()->description)->toBe('For A');
+                ->and($taskA->followUps->first()->title)->toBe('For A');
         });
 
         it('returns an empty collection when no follow-ups exist', function (): void {
@@ -62,7 +62,7 @@ describe('HasFollowUp', function (): void {
             $taskWithOverdue = Task::create(['title' => 'Has overdue', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskWithOverdue->id,
-                'description' => 'Overdue',
+                'title' => 'Overdue',
                 'follow_up_date' => now()->subDay(),
                 'status' => FollowUpStatus::Open,
                 'user_id' => $user->id,
@@ -71,7 +71,7 @@ describe('HasFollowUp', function (): void {
             $taskWithDone = Task::create(['title' => 'Has done overdue', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskWithDone->id,
-                'description' => 'Overdue but done',
+                'title' => 'Overdue but done',
                 'follow_up_date' => now()->subDay(),
                 'status' => FollowUpStatus::Done,
                 'user_id' => $user->id,
@@ -80,7 +80,7 @@ describe('HasFollowUp', function (): void {
             $taskWithFuture = Task::create(['title' => 'Has future', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskWithFuture->id,
-                'description' => 'Future',
+                'title' => 'Future',
                 'follow_up_date' => now()->addDay(),
                 'status' => FollowUpStatus::Open,
                 'user_id' => $user->id,
@@ -99,7 +99,7 @@ describe('HasFollowUp', function (): void {
             $taskToday = Task::create(['title' => 'Due today', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskToday->id,
-                'description' => 'Today open',
+                'title' => 'Today open',
                 'follow_up_date' => now()->toDateString(),
                 'status' => FollowUpStatus::Open,
                 'user_id' => $user->id,
@@ -108,7 +108,7 @@ describe('HasFollowUp', function (): void {
             $taskTodayDone = Task::create(['title' => 'Due today but done', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskTodayDone->id,
-                'description' => 'Today done',
+                'title' => 'Today done',
                 'follow_up_date' => now()->toDateString(),
                 'status' => FollowUpStatus::Done,
                 'user_id' => $user->id,
@@ -131,7 +131,7 @@ describe('HasFollowUp', function (): void {
             $withinWeekDate = $todayIsEndOfWeek ? $endOfWeek : now()->addDay();
             FollowUp::create([
                 'task_id' => $taskThisWeek->id,
-                'description' => 'This week',
+                'title' => 'This week',
                 'follow_up_date' => $withinWeekDate,
                 'status' => FollowUpStatus::Open,
                 'user_id' => $user->id,
@@ -140,7 +140,7 @@ describe('HasFollowUp', function (): void {
             $taskToday = Task::create(['title' => 'Today task', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskToday->id,
-                'description' => 'Today',
+                'title' => 'Today',
                 'follow_up_date' => now()->toDateString(),
                 'status' => FollowUpStatus::Open,
                 'user_id' => $user->id,
@@ -163,7 +163,7 @@ describe('HasFollowUp', function (): void {
             $taskUpcoming = Task::create(['title' => 'Upcoming task', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskUpcoming->id,
-                'description' => 'Upcoming',
+                'title' => 'Upcoming',
                 'follow_up_date' => now()->endOfWeek()->addDay(),
                 'status' => FollowUpStatus::Open,
                 'user_id' => $user->id,
@@ -172,7 +172,7 @@ describe('HasFollowUp', function (): void {
             $taskThisWeek = Task::create(['title' => 'This week task', 'user_id' => $user->id]);
             FollowUp::create([
                 'task_id' => $taskThisWeek->id,
-                'description' => 'This week',
+                'title' => 'This week',
                 'follow_up_date' => now()->endOfWeek(),
                 'status' => FollowUpStatus::Open,
                 'user_id' => $user->id,

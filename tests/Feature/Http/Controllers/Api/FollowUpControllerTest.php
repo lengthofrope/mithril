@@ -29,7 +29,7 @@ test('store creates a new follow-up and returns 201', function () {
     $user = User::factory()->create();
 
     $payload = [
-        'description' => 'Check in on project status',
+        'title' => 'Check in on project status',
         'follow_up_date' => '2026-03-15',
         'status' => FollowUpStatus::Open->value,
     ];
@@ -42,12 +42,12 @@ test('store creates a new follow-up and returns 201', function () {
             'message' => 'Created successfully.',
         ]);
 
-    expect($response->json('data.description'))->toBe('Check in on project status');
+    expect($response->json('data.title'))->toBe('Check in on project status');
 
-    $this->assertDatabaseHas('follow_ups', ['description' => 'Check in on project status']);
+    $this->assertDatabaseHas('follow_ups', ['title' => 'Check in on project status']);
 });
 
-test('store returns 422 when description is missing', function () {
+test('store returns 422 when title is missing', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
 
@@ -56,7 +56,7 @@ test('store returns 422 when description is missing', function () {
     ]);
 
     $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['description']);
+        ->assertJsonValidationErrors(['title']);
 });
 
 test('store returns 422 when status is not a valid enum value', function () {
@@ -64,7 +64,7 @@ test('store returns 422 when status is not a valid enum value', function () {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', [
-        'description' => 'Test',
+        'title' => 'Test',
         'status' => 'in_review',
     ]);
 
@@ -77,7 +77,7 @@ test('store returns 422 when team_member_id does not exist', function () {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', [
-        'description' => 'Test',
+        'title' => 'Test',
         'team_member_id' => 9999,
     ]);
 
@@ -92,14 +92,14 @@ test('store creates follow-up linked to existing team member', function () {
     $member = TeamMember::factory()->create(['user_id' => $user->id, 'team_id' => $team->id]);
 
     $response = $this->actingAs($user)->postJson('/api/v1/follow-ups', [
-        'description' => 'Discuss performance',
+        'title' => 'Discuss performance',
         'team_member_id' => $member->id,
     ]);
 
     $response->assertStatus(201);
 
     $this->assertDatabaseHas('follow_ups', [
-        'description' => 'Discuss performance',
+        'title' => 'Discuss performance',
         'team_member_id' => $member->id,
     ]);
 });
@@ -107,16 +107,16 @@ test('store creates follow-up linked to existing team member', function () {
 test('update modifies an existing follow-up', function () {
     /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
-    $followUp = FollowUp::factory()->create(['user_id' => $user->id, 'description' => 'Old description']);
+    $followUp = FollowUp::factory()->create(['user_id' => $user->id, 'title' => 'Old title']);
 
     $response = $this->actingAs($user)->putJson("/api/v1/follow-ups/{$followUp->id}", [
-        'description' => 'Updated description',
+        'title' => 'Updated title',
     ]);
 
     $response->assertOk()
         ->assertJson(['success' => true]);
 
-    expect($response->json('data.description'))->toBe('Updated description');
+    expect($response->json('data.title'))->toBe('Updated title');
 });
 
 test('update response includes saved_at timestamp', function () {
@@ -125,7 +125,7 @@ test('update response includes saved_at timestamp', function () {
     $followUp = FollowUp::factory()->create(['user_id' => $user->id]);
 
     $response = $this->actingAs($user)->putJson("/api/v1/follow-ups/{$followUp->id}", [
-        'description' => 'Updated',
+        'title' => 'Updated',
     ]);
 
     $response->assertOk();
@@ -138,7 +138,7 @@ test('update allows partial patch with only status', function () {
     $user = User::factory()->create();
     $followUp = FollowUp::factory()->create([
         'user_id' => $user->id,
-        'description' => 'Keep this',
+        'title' => 'Keep this',
         'status' => FollowUpStatus::Open,
     ]);
 
@@ -150,7 +150,7 @@ test('update allows partial patch with only status', function () {
         ->assertJson(['success' => true]);
 
     expect($response->json('data.status'))->toBe(FollowUpStatus::Done->value);
-    expect($response->json('data.description'))->toBe('Keep this');
+    expect($response->json('data.title'))->toBe('Keep this');
 });
 
 test('update allows partial patch with only follow_up_date', function () {
@@ -158,7 +158,7 @@ test('update allows partial patch with only follow_up_date', function () {
     $user = User::factory()->create();
     $followUp = FollowUp::factory()->create([
         'user_id' => $user->id,
-        'description' => 'Original',
+        'title' => 'Original',
     ]);
 
     $response = $this->actingAs($user)->patchJson("/api/v1/follow-ups/{$followUp->id}", [
@@ -176,7 +176,7 @@ test('update returns 404 when follow-up does not exist', function () {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->putJson('/api/v1/follow-ups/9999', [
-        'description' => 'Ghost',
+        'title' => 'Ghost',
     ]);
 
     $response->assertNotFound();

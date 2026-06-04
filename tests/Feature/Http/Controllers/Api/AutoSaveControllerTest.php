@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\Priority;
+use App\Models\FollowUp;
 use App\Models\Note;
 use App\Models\Task;
 use App\Models\TaskCategory;
@@ -392,6 +394,101 @@ test('auto-save validates hex color format for task group', function () {
 
     $response->assertStatus(422)
         ->assertJson(['success' => false]);
+});
+
+test('auto-save updates the title field on a follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $followUp = FollowUp::factory()->create(['user_id' => $this->user->id, 'title' => 'Old title']);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'follow_up',
+        'id' => $followUp->id,
+        'field' => 'title',
+        'value' => 'New title',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('follow_ups', [
+        'id' => $followUp->id,
+        'title' => 'New title',
+    ]);
+});
+
+test('auto-save updates the description body on a follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $followUp = FollowUp::factory()->create(['user_id' => $this->user->id, 'description' => null]);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'follow_up',
+        'id' => $followUp->id,
+        'field' => 'description',
+        'value' => 'A longer body of context.',
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('follow_ups', [
+        'id' => $followUp->id,
+        'description' => 'A longer body of context.',
+    ]);
+});
+
+test('auto-save updates the priority on a follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $followUp = FollowUp::factory()->create(['user_id' => $this->user->id, 'priority' => Priority::Normal]);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'follow_up',
+        'id' => $followUp->id,
+        'field' => 'priority',
+        'value' => Priority::Urgent->value,
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('follow_ups', [
+        'id' => $followUp->id,
+        'priority' => Priority::Urgent->value,
+    ]);
+});
+
+test('auto-save rejects an invalid priority on a follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $followUp = FollowUp::factory()->create(['user_id' => $this->user->id]);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'follow_up',
+        'id' => $followUp->id,
+        'field' => 'priority',
+        'value' => 'critical',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson(['success' => false]);
+});
+
+test('auto-save toggles the is_private flag on a follow-up', function () {
+    /** @var \Tests\TestCase $this */
+    $followUp = FollowUp::factory()->create(['user_id' => $this->user->id, 'is_private' => false]);
+
+    $response = $this->postJson('/api/v1/auto-save', [
+        'model' => 'follow_up',
+        'id' => $followUp->id,
+        'field' => 'is_private',
+        'value' => true,
+    ]);
+
+    $response->assertOk()
+        ->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('follow_ups', [
+        'id' => $followUp->id,
+        'is_private' => true,
+    ]);
 });
 
 test('auto-save successfully updates task group color', function () {

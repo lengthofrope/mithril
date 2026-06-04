@@ -162,6 +162,7 @@ class DashboardController extends Controller
         })
             ->with('teamMember')
             ->orderBy('follow_up_date')
+            ->priorityOrdered()
             ->get();
 
         $meetingsToday = Meeting::where('is_done', false)
@@ -207,6 +208,7 @@ class DashboardController extends Controller
                 ->where('status', '!=', FollowUpStatus::Done->value)
                 ->with('teamMember')
                 ->orderBy('follow_up_date')
+                ->priorityOrdered()
                 ->limit($followUpLimit)
                 ->get()
             : new Collection();

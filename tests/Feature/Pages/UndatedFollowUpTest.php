@@ -14,7 +14,7 @@ test('undated follow-up appears in prep section on index page', function (): voi
 
     FollowUp::factory()->create([
         'user_id'        => $user->id,
-        'description'    => 'Prep item no date',
+        'title'          => 'Prep item no date',
         'follow_up_date' => null,
         'status'         => FollowUpStatus::Open,
     ]);
@@ -31,14 +31,14 @@ test('overdue scope excludes null-dated follow-ups', function (): void {
 
     FollowUp::factory()->create([
         'user_id'        => $user->id,
-        'description'    => 'Null date follow-up',
+        'title'          => 'Null date follow-up',
         'follow_up_date' => null,
         'status'         => FollowUpStatus::Open,
     ]);
 
     $results = FollowUp::overdue()->get();
 
-    expect($results->pluck('description'))->not->toContain('Null date follow-up');
+    expect($results->pluck('title'))->not->toContain('Null date follow-up');
 });
 
 test('dueToday scope excludes null-dated follow-ups', function (): void {
@@ -46,14 +46,14 @@ test('dueToday scope excludes null-dated follow-ups', function (): void {
 
     FollowUp::factory()->create([
         'user_id'        => $user->id,
-        'description'    => 'Null date follow-up today',
+        'title'          => 'Null date follow-up today',
         'follow_up_date' => null,
         'status'         => FollowUpStatus::Open,
     ]);
 
     $results = FollowUp::dueToday()->get();
 
-    expect($results->pluck('description'))->not->toContain('Null date follow-up today');
+    expect($results->pluck('title'))->not->toContain('Null date follow-up today');
 });
 
 test('dueThisWeek scope excludes null-dated follow-ups', function (): void {
@@ -61,14 +61,14 @@ test('dueThisWeek scope excludes null-dated follow-ups', function (): void {
 
     FollowUp::factory()->create([
         'user_id'        => $user->id,
-        'description'    => 'Null date follow-up week',
+        'title'          => 'Null date follow-up week',
         'follow_up_date' => null,
         'status'         => FollowUpStatus::Open,
     ]);
 
     $results = FollowUp::dueThisWeek()->get();
 
-    expect($results->pluck('description'))->not->toContain('Null date follow-up week');
+    expect($results->pluck('title'))->not->toContain('Null date follow-up week');
 });
 
 test('upcoming scope excludes null-dated follow-ups', function (): void {
@@ -76,14 +76,14 @@ test('upcoming scope excludes null-dated follow-ups', function (): void {
 
     FollowUp::factory()->create([
         'user_id'        => $user->id,
-        'description'    => 'Null date follow-up upcoming',
+        'title'          => 'Null date follow-up upcoming',
         'follow_up_date' => null,
         'status'         => FollowUpStatus::Open,
     ]);
 
     $results = FollowUp::upcoming()->get();
 
-    expect($results->pluck('description'))->not->toContain('Null date follow-up upcoming');
+    expect($results->pluck('title'))->not->toContain('Null date follow-up upcoming');
 });
 
 test('follow-up card renders no date set label when follow_up_date is null', function (): void {
@@ -91,7 +91,7 @@ test('follow-up card renders no date set label when follow_up_date is null', fun
 
     FollowUp::factory()->create([
         'user_id'        => $user->id,
-        'description'    => 'Undated follow-up card check',
+        'title'          => 'Undated follow-up card check',
         'follow_up_date' => null,
         'status'         => FollowUpStatus::Open,
     ]);
@@ -106,13 +106,13 @@ test('creating a follow-up without a date stores successfully with null date', f
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post(route('follow-ups.store'), [
-        'description' => 'Follow-up with no date',
+        'title' => 'Follow-up with no date',
     ]);
 
     $response->assertRedirect();
     $response->assertSessionHasNoErrors();
 
-    $followUp = FollowUp::where('description', 'Follow-up with no date')->first();
+    $followUp = FollowUp::where('title', 'Follow-up with no date')->first();
     expect($followUp)->not->toBeNull();
     expect($followUp->follow_up_date)->toBeNull();
 });

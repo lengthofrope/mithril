@@ -134,10 +134,10 @@ class PartialController extends Controller
         $baseQuery = fn () => FollowUp::query()->with(['teamMember', 'task']);
 
         $sections = [
-            'overdue'   => $baseQuery()->overdue()->orderBy('follow_up_date')->get(),
-            'today'     => $baseQuery()->dueToday()->orderBy('follow_up_date')->get(),
-            'this_week' => $baseQuery()->dueThisWeek()->orderBy('follow_up_date')->get(),
-            'later'     => $baseQuery()->upcoming()->orderBy('follow_up_date')->get(),
+            'overdue'   => $baseQuery()->overdue()->orderBy('follow_up_date')->priorityOrdered()->get(),
+            'today'     => $baseQuery()->dueToday()->orderBy('follow_up_date')->priorityOrdered()->get(),
+            'this_week' => $baseQuery()->dueThisWeek()->orderBy('follow_up_date')->priorityOrdered()->get(),
+            'later'     => $baseQuery()->upcoming()->orderBy('follow_up_date')->priorityOrdered()->get(),
         ];
 
         return $this->withETag(
@@ -212,6 +212,7 @@ class PartialController extends Controller
         })
             ->with('teamMember')
             ->orderBy('follow_up_date')
+            ->priorityOrdered()
             ->get();
 
         $followUpLimit = $user->dashboard_upcoming_follow_ups ?? 5;
@@ -221,6 +222,7 @@ class PartialController extends Controller
                 ->where('status', '!=', FollowUpStatus::Done->value)
                 ->with('teamMember')
                 ->orderBy('follow_up_date')
+                ->priorityOrdered()
                 ->limit($followUpLimit)
                 ->get()
             : new Collection();

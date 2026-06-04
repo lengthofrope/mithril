@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\FollowUpStatus;
+use App\Enums\Priority;
 use App\Models\Traits\BelongsToUser;
 use App\Models\Traits\Filterable;
 use App\Models\Traits\HasActivityFeed;
@@ -20,9 +21,13 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * FollowUp model for tracking items that require a follow-up action.
  *
  * @property int $id
+ * @property int $user_id
  * @property int|null $task_id
  * @property int|null $team_member_id
- * @property string $description
+ * @property string $title
+ * @property string|null $description
+ * @property Priority $priority
+ * @property bool $is_private
  * @property string|null $waiting_on
  * @property \Illuminate\Support\Carbon|null $follow_up_date
  * @property \Illuminate\Support\Carbon|null $snoozed_until
@@ -47,7 +52,10 @@ class FollowUp extends Model
     protected $fillable = [
         'task_id',
         'team_member_id',
+        'title',
         'description',
+        'priority',
+        'is_private',
         'waiting_on',
         'follow_up_date',
         'snoozed_until',
@@ -63,6 +71,8 @@ class FollowUp extends Model
     protected array $filterableFields = [
         'status' => 'exact',
         'team_member_id' => 'exact',
+        'priority' => 'exact',
+        'is_private' => 'boolean',
         'follow_up_date' => 'date_range',
     ];
 
@@ -71,7 +81,7 @@ class FollowUp extends Model
      *
      * @var list<string>
      */
-    protected array $searchableFields = ['description', 'waiting_on'];
+    protected array $searchableFields = ['title', 'description', 'waiting_on'];
 
     /**
      * Get the casts for this model.
@@ -82,6 +92,8 @@ class FollowUp extends Model
     {
         return [
             'status' => FollowUpStatus::class,
+            'priority' => Priority::class,
+            'is_private' => 'boolean',
             'follow_up_date' => 'date',
             'snoozed_until' => 'date',
         ];
@@ -170,6 +182,26 @@ class FollowUp extends Model
     {
         return $query->whereNull('follow_up_date')
             ->where('status', '!=', FollowUpStatus::Done->value);
+    }
+
+    /**
+     * Scope to order follow-ups by priority (urgent first, null last).
+     *
+     * Mirrors the priority-sort expression used for tasks on the dashboard so
+     * date-grouped sections order same-date follow-ups urgent to low.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopePriorityOrdered(Builder $query): Builder
+    {
+        return $query->orderByRaw("CASE
+            WHEN priority = 'urgent' THEN 0
+            WHEN priority = 'high' THEN 1
+            WHEN priority = 'normal' THEN 2
+            WHEN priority = 'low' THEN 3
+            ELSE 4
+        END ASC");
     }
 
     /**

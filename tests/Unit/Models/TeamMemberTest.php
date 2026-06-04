@@ -125,7 +125,7 @@ describe('TeamMember model', function (): void {
             $user = User::factory()->create();
             $team = Team::create(['name' => 'Dev Team', 'user_id' => $user->id]);
             $member = TeamMember::create(['team_id' => $team->id, 'name' => 'Alice', 'user_id' => $user->id]);
-            FollowUp::create(['team_member_id' => $member->id, 'description' => 'FU 1', 'status' => 'open', 'user_id' => $user->id]);
+            FollowUp::create(['team_member_id' => $member->id, 'title' => 'FU 1', 'status' => 'open', 'user_id' => $user->id]);
 
             expect($member->followUps)->toHaveCount(1);
         });

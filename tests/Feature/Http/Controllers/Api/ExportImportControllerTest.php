@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\Priority;
+use App\Models\FollowUp;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\TeamMember;
@@ -321,6 +323,81 @@ test('web import handles ISO-8601 date strings in uploaded file', function () {
     $response->assertRedirect(route('settings.index'));
     expect(TeamMember::count())->toBe(1);
     expect(TeamMember::first()->next_meeting_date->format('Y-m-d'))->toBe('2026-04-15');
+});
+
+test('export includes title description priority and is_private for follow-ups', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    FollowUp::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Export title test',
+        'description' => 'Export body text',
+        'priority' => Priority::High,
+        'is_private' => true,
+    ]);
+
+    $response = $this->actingAs($user)->getJson('/api/v1/export');
+
+    $response->assertOk();
+    $followUp = $response->json('data.data.follow_ups.0');
+    expect($followUp['title'])->toBe('Export title test', 'title must be in the export payload');
+    expect($followUp['description'])->toBe('Export body text', 'description must be in the export payload');
+    expect($followUp['priority'])->toBe('high', 'priority must be in the export payload');
+    expect((bool) $followUp['is_private'])->toBeTrue('is_private must be in the export payload');
+});
+
+test('import of new-format follow-up payload sets all four fields', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/import', [
+        'data' => [
+            'follow_ups' => [
+                [
+                    'id' => 1,
+                    'title' => 'New format title',
+                    'description' => 'New format body',
+                    'priority' => 'urgent',
+                    'is_private' => true,
+                    'status' => 'open',
+                    'created_at' => now()->toDateTimeString(),
+                    'updated_at' => now()->toDateTimeString(),
+                ],
+            ],
+        ],
+    ]);
+
+    $response->assertOk();
+    $followUp = FollowUp::first();
+    expect($followUp->title)->toBe('New format title', 'title should be set from new-format payload');
+    expect($followUp->description)->toBe('New format body', 'description should be set from new-format payload');
+    expect($followUp->priority)->toBe(Priority::Urgent, 'priority should be set from new-format payload');
+    expect($followUp->is_private)->toBeTrue('is_private should be set from new-format payload');
+});
+
+test('import of legacy follow-up payload maps description key to title', function () {
+    /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/api/v1/import', [
+        'data' => [
+            'follow_ups' => [
+                [
+                    'id' => 1,
+                    'description' => 'Legacy label text',
+                    'status' => 'open',
+                    'created_at' => now()->toDateTimeString(),
+                    'updated_at' => now()->toDateTimeString(),
+                ],
+            ],
+        ],
+    ]);
+
+    $response->assertOk();
+    $followUp = FollowUp::first();
+    expect($followUp->title)->toBe('Legacy label text', 'legacy description value should become the title');
+    expect($followUp->description)->toBeNull('the body description should be null for legacy payload');
 });
 
 test('web import shows error when json has no data key', function () {

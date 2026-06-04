@@ -40,7 +40,7 @@ class CreateFollowUpOnWaiting
             'user_id' => $event->task->user_id,
             'task_id' => $event->task->id,
             'team_member_id' => $event->task->team_member_id,
-            'description' => $event->task->title,
+            'title' => $event->task->title,
             'waiting_on' => null,
             'follow_up_date' => now()->addDays(3)->toDateString(),
             'status' => FollowUpStatus::Open->value,

@@ -32,9 +32,19 @@
 >
     <div class="flex items-start justify-between gap-3">
         <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                {{ $followUp->description }}
-            </p>
+            @if($followUp->is_private)
+                <x-tl.privacy-shield :isPrivate="true">
+                    <div class="flex flex-wrap items-start gap-2">
+                        <p class="flex-1 text-sm font-medium text-gray-800 dark:text-white/90">
+                            {{ $followUp->title }}
+                        </p>
+                    </div>
+                </x-tl.privacy-shield>
+            @else
+                <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                    {{ $followUp->title }}
+                </p>
+            @endif
 
             @if($followUp->waiting_on)
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -67,6 +77,24 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
+        <x-tl.inline-select-pill
+            :value="$followUp->priority"
+            :options="[
+                'urgent' => 'Urgent',
+                'high' => 'High',
+                'normal' => 'Normal',
+                'low' => 'Low',
+            ]"
+            :color-map="[
+                'urgent' => 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400',
+                'high' => 'bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400',
+                'normal' => 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400',
+                'low' => 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400',
+            ]"
+            endpoint="/api/v1/follow-ups/{{ $followUp->id }}"
+            field="priority"
+        />
+
         <button
             type="button"
             x-on:click="markDone()"

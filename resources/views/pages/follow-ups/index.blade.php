@@ -12,6 +12,9 @@
                 ['field' => 'search', 'type' => 'search', 'label' => 'Search'],
                 ['field' => 'team_id', 'type' => 'select', 'label' => 'Team', 'options' => $teamOptions],
                 ['field' => 'team_member_id', 'type' => 'select', 'label' => 'Member', 'options' => $memberOptions, 'linked_to' => 'team_id'],
+                ['field' => 'priority', 'type' => 'select', 'label' => 'Priority', 'options' => $priorityOptions],
+                ['field' => 'status', 'type' => 'select', 'label' => 'Status', 'options' => $statusOptions],
+                ['field' => 'is_private', 'type' => 'boolean', 'label' => 'Private'],
             ]"
         />
 

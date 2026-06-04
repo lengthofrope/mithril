@@ -107,7 +107,7 @@ test('create creates a follow-up and links it', function (): void {
         ->assertStatus(201)
         ->assertJsonPath('success', true);
 
-    expect(\App\Models\FollowUp::where('description', 'Follow up Jira issue')->exists())->toBeTrue();
+    expect(\App\Models\FollowUp::where('title', 'Follow up Jira issue')->exists())->toBeTrue();
 });
 
 test('create creates a note and links it', function (): void {

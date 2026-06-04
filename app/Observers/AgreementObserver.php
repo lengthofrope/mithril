@@ -57,7 +57,7 @@ class AgreementObserver
             'user_id' => $agreement->user_id,
             'task_id' => null,
             'team_member_id' => $agreement->team_member_id,
-            'description' => "Agreement: {$agreement->description}",
+            'title' => "Agreement: {$agreement->description}",
             'waiting_on' => null,
             'follow_up_date' => $agreement->follow_up_date,
             'status' => FollowUpStatus::Open->value,

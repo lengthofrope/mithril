@@ -239,9 +239,14 @@ class ExportImportController extends Controller
         $model = new $modelClass();
         $allowedFields = $model->getFillable();
         $dateCasts = $this->getDateCastFields($model);
+        $isFollowUp = $modelClass === FollowUp::class;
 
         foreach (array_chunk($data[$key], 500) as $chunk) {
-            $rows = array_map(function (array $row) use ($allowedFields, $userId, $dateCasts): array {
+            $rows = array_map(function (array $row) use ($allowedFields, $userId, $dateCasts, $isFollowUp): array {
+                if ($isFollowUp) {
+                    $row = $this->normalizeLegacyFollowUpRow($row);
+                }
+
                 $allowed = array_merge($allowedFields, ['id']);
                 $filtered = array_intersect_key($row, array_flip($allowed));
                 unset($filtered['user_id']);
@@ -253,6 +258,26 @@ class ExportImportController extends Controller
 
             DB::table($model->getTable())->insert($rows);
         }
+    }
+
+    /**
+     * Normalize a legacy follow-up import row.
+     *
+     * Legacy export payloads used 'description' as the short-label field (now 'title').
+     * If a row has no 'title' key but has a 'description' key, the description value is
+     * moved into 'title' so no data is lost during import of old exports.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function normalizeLegacyFollowUpRow(array $row): array
+    {
+        if (!array_key_exists('title', $row) && array_key_exists('description', $row)) {
+            $row['title'] = $row['description'];
+            unset($row['description']);
+        }
+
+        return $row;
     }
 
     /**

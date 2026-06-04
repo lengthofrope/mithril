@@ -130,7 +130,7 @@ describe('Task model', function (): void {
         it('returns related follow-ups', function (): void {
             $user = User::factory()->create();
             $task = Task::create(['title' => 'Task', 'user_id' => $user->id]);
-            FollowUp::create(['task_id' => $task->id, 'description' => 'Follow up', 'status' => 'open', 'user_id' => $user->id]);
+            FollowUp::create(['task_id' => $task->id, 'title' => 'Follow up', 'status' => 'open', 'user_id' => $user->id]);
 
             expect($task->followUps)->toHaveCount(1);
         });
