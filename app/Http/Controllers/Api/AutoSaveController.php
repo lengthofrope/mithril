@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Priority;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AutoSaveRequest;
 use App\Http\Traits\ApiResponse;
@@ -126,6 +127,12 @@ class AutoSaveController extends Controller
             ],
             'user' => [
                 'activity_sort_order' => ['required', 'string', Rule::in(['asc', 'desc'])],
+            ],
+            'follow_up' => [
+                'title' => ['required', 'string', 'max:255'],
+                'description' => ['nullable', 'string'],
+                'priority' => ['required', Rule::enum(Priority::class)],
+                'is_private' => ['boolean'],
             ],
         ];
 

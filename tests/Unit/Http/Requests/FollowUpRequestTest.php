@@ -15,7 +15,10 @@ test('follow up request rules method returns expected rule keys', function () {
     expect($rules)->toHaveKeys([
         'task_id',
         'team_member_id',
+        'title',
         'description',
+        'priority',
+        'is_private',
         'waiting_on',
         'follow_up_date',
         'snoozed_until',
@@ -31,29 +34,8 @@ test('follow up request is authorized', function () {
 
 test('follow up request passes with valid required data', function () {
     $validator = Validator::make(
-        ['description' => 'Waiting for feedback on the proposal.'],
+        ['title' => 'Waiting for feedback on the proposal.'],
         (new FollowUpRequest())->rules()
-    );
-
-    expect($validator->passes())->toBeTrue();
-});
-
-test('follow up request fails when description is missing on store', function () {
-    $request = FollowUpRequest::create('/api/v1/follow-ups', 'POST');
-    $validator = Validator::make(
-        [],
-        $request->rules()
-    );
-
-    expect($validator->fails())->toBeTrue();
-    expect($validator->errors()->has('description'))->toBeTrue();
-});
-
-test('follow up request allows missing description on update', function () {
-    $request = FollowUpRequest::create('/api/v1/follow-ups/1', 'PATCH');
-    $validator = Validator::make(
-        ['status' => 'open'],
-        $request->rules()
     );
 
     expect($validator->passes())->toBeTrue();
@@ -61,7 +43,7 @@ test('follow up request allows missing description on update', function () {
 
 test('follow up request fails when status has invalid value', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'status' => 'pending'],
+        ['title' => 'Some title', 'status' => 'pending'],
         (new FollowUpRequest())->rules()
     );
 
@@ -71,7 +53,7 @@ test('follow up request fails when status has invalid value', function () {
 
 test('follow up request passes with valid status values', function (string $status) {
     $validator = Validator::make(
-        ['description' => 'Some description', 'status' => $status],
+        ['title' => 'Some title', 'status' => $status],
         (new FollowUpRequest())->rules()
     );
 
@@ -80,7 +62,7 @@ test('follow up request passes with valid status values', function (string $stat
 
 test('follow up request fails when follow_up_date is not a valid date', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'follow_up_date' => 'not-a-date'],
+        ['title' => 'Some title', 'follow_up_date' => 'not-a-date'],
         (new FollowUpRequest())->rules()
     );
 
@@ -90,7 +72,7 @@ test('follow up request fails when follow_up_date is not a valid date', function
 
 test('follow up request passes when follow_up_date is a valid date', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'follow_up_date' => '2026-04-15'],
+        ['title' => 'Some title', 'follow_up_date' => '2026-04-15'],
         (new FollowUpRequest())->rules()
     );
 
@@ -99,7 +81,7 @@ test('follow up request passes when follow_up_date is a valid date', function ()
 
 test('follow up request fails when snoozed_until is not a valid date', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'snoozed_until' => 'not-a-date'],
+        ['title' => 'Some title', 'snoozed_until' => 'not-a-date'],
         (new FollowUpRequest())->rules()
     );
 
@@ -109,7 +91,7 @@ test('follow up request fails when snoozed_until is not a valid date', function 
 
 test('follow up request passes when snoozed_until is a valid date', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'snoozed_until' => '2026-04-20'],
+        ['title' => 'Some title', 'snoozed_until' => '2026-04-20'],
         (new FollowUpRequest())->rules()
     );
 
@@ -118,7 +100,7 @@ test('follow up request passes when snoozed_until is a valid date', function () 
 
 test('follow up request fails when task_id references nonexistent record', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'task_id' => 9999],
+        ['title' => 'Some title', 'task_id' => 9999],
         (new FollowUpRequest())->rules()
     );
 
@@ -128,7 +110,7 @@ test('follow up request fails when task_id references nonexistent record', funct
 
 test('follow up request fails when team_member_id references nonexistent record', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'team_member_id' => 9999],
+        ['title' => 'Some title', 'team_member_id' => 9999],
         (new FollowUpRequest())->rules()
     );
 
@@ -139,7 +121,7 @@ test('follow up request fails when team_member_id references nonexistent record'
 test('follow up request passes when all optional fields are null', function () {
     $validator = Validator::make(
         [
-            'description' => 'Some description',
+            'title' => 'Some title',
             'task_id' => null,
             'team_member_id' => null,
             'waiting_on' => null,
@@ -156,7 +138,7 @@ test('follow up request passes when all optional fields are null', function () {
 test('follow up request converts empty string foreign keys to null via prepareForValidation', function () {
     $request = new FollowUpRequest();
     $request->merge([
-        'description' => 'Test',
+        'title' => 'Test',
         'task_id' => '',
         'team_member_id' => '',
     ]);
@@ -171,7 +153,7 @@ test('follow up request converts empty string foreign keys to null via prepareFo
 test('follow up request preserves valid foreign key values via prepareForValidation', function () {
     $request = new FollowUpRequest();
     $request->merge([
-        'description' => 'Test',
+        'title' => 'Test',
         'task_id' => 5,
         'team_member_id' => 3,
     ]);
@@ -185,10 +167,63 @@ test('follow up request preserves valid foreign key values via prepareForValidat
 
 test('follow up request fails when waiting_on exceeds max length', function () {
     $validator = Validator::make(
-        ['description' => 'Some description', 'waiting_on' => str_repeat('a', 256)],
+        ['title' => 'Some title', 'waiting_on' => str_repeat('a', 256)],
         (new FollowUpRequest())->rules()
     );
 
     expect($validator->fails())->toBeTrue();
     expect($validator->errors()->has('waiting_on'))->toBeTrue();
+});
+
+test('follow up request fails when title is missing on store', function () {
+    $request = FollowUpRequest::create('/api/v1/follow-ups', 'POST');
+    $validator = Validator::make([], $request->rules());
+
+    expect($validator->fails())->toBeTrue('title must be required on create');
+    expect($validator->errors()->has('title'))->toBeTrue();
+});
+
+test('follow up request allows missing title on update', function () {
+    $request = FollowUpRequest::create('/api/v1/follow-ups/1', 'PATCH');
+    $validator = Validator::make(['status' => 'open'], $request->rules());
+
+    expect($validator->passes())->toBeTrue('title must be optional on update');
+});
+
+test('follow up request allows a missing description body', function () {
+    $validator = Validator::make(
+        ['title' => 'Some title'],
+        (new FollowUpRequest())->rules()
+    );
+
+    expect($validator->passes())->toBeTrue('description body must be optional');
+});
+
+test('follow up request fails when priority is not a valid enum value', function () {
+    $validator = Validator::make(
+        ['title' => 'Some title', 'priority' => 'critical'],
+        (new FollowUpRequest())->rules()
+    );
+
+    expect($validator->fails())->toBeTrue('an invalid priority must be rejected');
+    expect($validator->errors()->has('priority'))->toBeTrue();
+});
+
+test('follow up request passes with each valid priority value', function (string $priority) {
+    $validator = Validator::make(
+        ['title' => 'Some title', 'priority' => $priority],
+        (new FollowUpRequest())->rules()
+    );
+
+    expect($validator->passes())->toBeTrue();
+})->with(['urgent', 'high', 'normal', 'low']);
+
+test('follow up request fails when is_private is not a boolean', function () {
+    $validator = Validator::make(
+        ['title' => 'Some title', 'is_private' => 'maybe'],
+        (new FollowUpRequest())->rules()
+    );
+
+    expect($validator->fails())->toBeTrue('a non-boolean is_private must be rejected');
+    expect($validator->errors()->has('is_private'))->toBeTrue();
 });

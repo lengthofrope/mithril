@@ -31,3 +31,4 @@
 | 027 | docker, gpu, speech, infrastructure | GPU support via Docker Compose override file | Unified Speech Service (Phase 1) | Accepted | 2026-03-22 |
 | 028 | security, csp, vite, middleware | Use Vite hot file detection instead of APP_ENV for CSP relaxation | PLAN-026 Phase 1 | Accepted | 2026-03-30 |
 | 029 | frontend, calendar, meetings, ux | Allow meeting creation from calendar events without attendee match | PLAN-027 Phase 3 | Accepted | 2026-03-30 |
+| 030 | backend, database, migration, data-contract, follow-ups | Follow-up `description` column renamed to `title` | PLAN-033 Phase 1 | Accepted | 2026-06-04 |
