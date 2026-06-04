@@ -107,13 +107,13 @@ and dashboard read filtered, priority-ordered queries server-side and return Bla
 - **Model:** sonnet
 - **PRD criteria:** 7, 8, 16-21, 22-25; sorting 5 (server side)
 - **Specs:**
-  - [ ] `FollowUpPageController::index` applies `priority`, `is_private`, and `status` filters (via `applyFilters`) alongside the existing team/member/search, and orders each dated section by `follow_up_date` then `priorityOrdered()`; the Prep section keeps `orderByDesc('updated_at')`.
-  - [ ] `index` passes `priorityOptions` and `statusOptions` to the view; `store` requires `title` and accepts optional `description`/`priority`/`is_private`; `show` title uses `->title`.
-  - [ ] Dashboard today + upcoming follow-up queries order by date then `priorityOrdered()` (tasks ordering unchanged).
-  - [ ] `convertToTask` (FollowUp→Task) and `createFollowUpFromTask` (Task→FollowUp) map title↔title, description↔description, priority↔priority, is_private↔is_private (verify `MetadataTransferService`).
-  - [ ] `SearchController::searchFollowUps`, `BreadcrumbBuilder::forFollowUp`, and `CreateFollowUpOnWaiting` use `->title` / set `title`.
-  - [ ] A search matching text only in the `description` body returns the follow-up.
-  - [ ] `ExportImportController` exports the four fields and imports legacy payloads (old `description` key) into `title` with no loss.
+  - [x] `FollowUpPageController::index` applies `priority`, `is_private`, and `status` filters (via `applyFilters`) alongside the existing team/member/search, and orders each dated section by `follow_up_date` then `priorityOrdered()`; the Prep section keeps `orderByDesc('updated_at')`.
+  - [x] `index` passes `priorityOptions` and `statusOptions` to the view; `store` requires `title` and accepts optional `description`/`priority`/`is_private`; `show` title uses `->title`.
+  - [x] Dashboard today + upcoming follow-up queries order by date then `priorityOrdered()` (tasks ordering unchanged).
+  - [x] `convertToTask` (FollowUp→Task) and `createFollowUpFromTask` (Task→FollowUp) map title↔title, description↔description, priority↔priority, is_private↔is_private (verify `MetadataTransferService`).
+  - [x] `SearchController::searchFollowUps`, `BreadcrumbBuilder::forFollowUp`, and `CreateFollowUpOnWaiting` use `->title` / set `title`.
+  - [x] A search matching text only in the `description` body returns the follow-up.
+  - [x] `ExportImportController` exports the four fields and imports legacy payloads (old `description` key) into `title` with no loss.
 - **Files:** `app/Http/Controllers/Web/FollowUpPageController.php`, `app/Http/Controllers/Web/DashboardController.php`, `app/Http/Controllers/Web/TaskPageController.php`, `app/Services/MetadataTransferService.php`, `app/Http/Controllers/Api/SearchController.php`, `app/Services/BreadcrumbBuilder.php`, `app/Listeners/CreateFollowUpOnWaiting.php`, `app/Http/Controllers/Api/ExportImportController.php`, `tests/Feature/Http/Controllers/`
 
 ### Phase 3: Frontend views (cards, detail, create modal, filters, dashboard)

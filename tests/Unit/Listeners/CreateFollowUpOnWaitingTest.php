@@ -17,7 +17,7 @@ test('creates a follow-up when task transitions to waiting status', function () 
 
     $this->assertDatabaseHas('follow_ups', [
         'task_id' => $task->id,
-        'description' => 'Blocked on review',
+        'title' => 'Blocked on review',
         'status' => FollowUpStatus::Open->value,
     ]);
 });
@@ -100,14 +100,14 @@ test('creates follow-up when only a done follow-up exists for the task', functio
     $this->assertDatabaseCount('follow_ups', 2);
 });
 
-test('follow-up description matches task title', function () {
+test('follow-up title matches task title', function () {
     $task = Task::factory()->create(['title' => 'Awaiting client feedback']);
 
     $event = new TaskStatusChanged($task, TaskStatus::InProgress, TaskStatus::Waiting);
     (new CreateFollowUpOnWaiting())->handle($event);
 
     $followUp = FollowUp::where('task_id', $task->id)->first();
-    expect($followUp->description)->toBe('Awaiting client feedback');
+    expect($followUp->title)->toBe('Awaiting client feedback');
 });
 
 test('follow-up waiting_on is null by default', function () {

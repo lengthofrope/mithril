@@ -33,7 +33,7 @@
     <div class="flex items-start justify-between gap-3">
         <div class="min-w-0 flex-1">
             <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                {{ $followUp->description }}
+                {{ $followUp->title }}
             </p>
 
             @if($followUp->waiting_on)

@@ -299,10 +299,10 @@ describe('AnalyticsDataService', function (): void {
         });
 
         it('counts follow-ups per status correctly', function (): void {
-            FollowUp::create(['description' => 'Open 1', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
-            FollowUp::create(['description' => 'Open 2', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
-            FollowUp::create(['description' => 'Snoozed 1', 'status' => FollowUpStatus::Snoozed, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
-            FollowUp::create(['description' => 'Done 1', 'status' => FollowUpStatus::Done, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
+            FollowUp::create(['title' => 'Open 1', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
+            FollowUp::create(['title' => 'Open 2', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
+            FollowUp::create(['title' => 'Snoozed 1', 'status' => FollowUpStatus::Snoozed, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
+            FollowUp::create(['title' => 'Done 1', 'status' => FollowUpStatus::Done, 'follow_up_date' => now()->addDay(), 'user_id' => $this->user->id]);
 
             $result = $this->service->resolve(DataSource::FollowUpsByStatus);
 
@@ -396,7 +396,7 @@ describe('AnalyticsDataService', function (): void {
 
         it('excludes done follow-ups', function (): void {
             FollowUp::create([
-                'description'    => 'Done overdue',
+                'title'          => 'Done overdue',
                 'status'         => FollowUpStatus::Done,
                 'follow_up_date' => now()->subDay()->toDateString(),
                 'user_id'        => $this->user->id,
@@ -409,7 +409,7 @@ describe('AnalyticsDataService', function (): void {
 
         it('correctly classifies overdue follow-ups', function (): void {
             FollowUp::create([
-                'description'    => 'Past item',
+                'title'          => 'Past item',
                 'status'         => FollowUpStatus::Open,
                 'follow_up_date' => now()->subDay()->toDateString(),
                 'user_id'        => $this->user->id,
@@ -423,7 +423,7 @@ describe('AnalyticsDataService', function (): void {
 
         it('correctly classifies follow-ups due today', function (): void {
             FollowUp::create([
-                'description'    => 'Today item',
+                'title'          => 'Today item',
                 'status'         => FollowUpStatus::Open,
                 'follow_up_date' => now()->toDateString(),
                 'user_id'        => $this->user->id,

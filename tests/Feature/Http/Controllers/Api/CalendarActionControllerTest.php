@@ -159,11 +159,11 @@ it('creates a follow-up from a calendar event', function (): void {
     $response->assertStatus(201)
         ->assertJson(['success' => true]);
 
-    expect($response->json('data.resource.description'))->toBe($event->subject);
+    expect($response->json('data.resource.title'))->toBe($event->subject);
 
     $this->assertDatabaseHas('follow_ups', [
-        'description' => $event->subject,
-        'user_id'     => $user->id,
+        'title'   => $event->subject,
+        'user_id' => $user->id,
     ]);
 });
 

@@ -99,7 +99,7 @@ class BreadcrumbBuilder
             $this->crumbs[] = ['label' => 'Follow-ups', 'url' => route('follow-ups.index')];
         }
 
-        $this->crumbs[] = ['label' => $followUp->description, 'url' => null];
+        $this->crumbs[] = ['label' => $followUp->title, 'url' => null];
 
         return $this;
     }

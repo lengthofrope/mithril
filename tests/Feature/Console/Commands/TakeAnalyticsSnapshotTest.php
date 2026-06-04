@@ -79,10 +79,10 @@ describe('analytics:snapshot command', function (): void {
 
     it('counts follow-up statuses correctly', function (): void {
         $user = User::factory()->create();
-        FollowUp::create(['description' => 'a', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
-        FollowUp::create(['description' => 'b', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
-        FollowUp::create(['description' => 'c', 'status' => FollowUpStatus::Snoozed, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
-        FollowUp::create(['description' => 'd', 'status' => FollowUpStatus::Done, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
+        FollowUp::create(['title' => 'a', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
+        FollowUp::create(['title' => 'b', 'status' => FollowUpStatus::Open, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
+        FollowUp::create(['title' => 'c', 'status' => FollowUpStatus::Snoozed, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
+        FollowUp::create(['title' => 'd', 'status' => FollowUpStatus::Done, 'follow_up_date' => now()->addDay(), 'user_id' => $user->id]);
 
         $this->artisan('analytics:snapshot');
 

@@ -91,7 +91,7 @@ class SearchController extends Controller
     }
 
     /**
-     * Search follow-ups by description and waiting_on fields.
+     * Search follow-ups by title, description, and waiting_on fields.
      *
      * @param string $term
      * @return \Illuminate\Support\Collection
@@ -101,7 +101,7 @@ class SearchController extends Controller
         return FollowUp::search($term)
             ->with('teamMember')
             ->limit(self::RESULTS_PER_TYPE)
-            ->get(['id', 'description', 'status', 'follow_up_date', 'team_member_id']);
+            ->get(['id', 'title', 'status', 'follow_up_date', 'team_member_id']);
     }
 
     /**

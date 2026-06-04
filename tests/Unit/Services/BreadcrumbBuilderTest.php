@@ -262,7 +262,7 @@ test('follow-up show without member produces three crumbs', function () {
     expect($crumbs)->toHaveCount(3)
         ->and($crumbs[0])->toBe(['label' => 'Home', 'url' => '/'])
         ->and($crumbs[1])->toBe(['label' => 'Follow-ups', 'url' => route('follow-ups.index')])
-        ->and($crumbs[2])->toBe(['label' => $followUp->description, 'url' => null]);
+        ->and($crumbs[2])->toBe(['label' => $followUp->title, 'url' => null]);
 });
 
 test('follow-up show with team member produces full hierarchy', function () {
@@ -281,7 +281,7 @@ test('follow-up show with team member produces full hierarchy', function () {
         ->and($crumbs[1])->toBe(['label' => 'Teams', 'url' => route('teams.index')])
         ->and($crumbs[2])->toBe(['label' => $team->name, 'url' => route('teams.show', $team)])
         ->and($crumbs[3])->toBe(['label' => $member->name, 'url' => route('teams.member', $member)])
-        ->and($crumbs[4])->toBe(['label' => $followUp->description, 'url' => null]);
+        ->and($crumbs[4])->toBe(['label' => $followUp->title, 'url' => null]);
 });
 
 test('last crumb always has null url', function () {
