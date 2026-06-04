@@ -8,7 +8,6 @@ This directory contains implementation plans for the project. Each plan captures
 |---|-------|--------|------|
 | [PLAN-031](PLAN-031-speech-service-progress-streaming.md) | Speech Service Progress Streaming via SSE | Approved | 2026-04-21 |
 | [PLAN-032](PLAN-032-ux-tweaks-comments-dates-calendar.md) | UX Tweaks — Comment Ordering, Optional Dates, Monday-First Calendar | In Progress | 2026-04-21 |
-| [PLAN-033](PLAN-033-follow-up-field-parity.md) | Follow-up Field Parity with Tasks (Priority, Private, Description) | In Progress | 2026-06-04 |
 
 ## Archived Plans
 
@@ -45,3 +44,4 @@ This directory contains implementation plans for the project. Each plan captures
 | [PLAN-028](archive/PLAN-028-global-search.md) | Global Search | Complete | 2026-03-30 |
 | [PLAN-029](archive/PLAN-029-email-full-sync-and-pagination.md) | Email Full Sync and Pagination | Complete | 2026-04-08 |
 | [PLAN-030](archive/PLAN-030-whisper-hallucination-fix.md) | Whisper Transcription Hallucination Fix | Complete | 2026-04-21 |
+| [PLAN-033](archive/PLAN-033-follow-up-field-parity.md) | Follow-up Field Parity with Tasks (Priority, Private, Description) | Complete | 2026-06-04 |

@@ -1,7 +1,7 @@
 # PLAN-033: Follow-up Field Parity with Tasks (Priority, Private, Description)
 
 **Created:** 2026-06-04
-**Status:** In Progress
+**Status:** Complete
 **Author:** Bas de Kort
 **PRDs:** PRD-008
 
