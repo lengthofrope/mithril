@@ -23,6 +23,7 @@ Follow-ups gain Task-grade fields: priority, a private content mask, and a long-
 ### Fixed
 
 - **Follow-ups not reordering on inline priority change** the live-refresh partial endpoints sorted only by date, so changing a follow-up's priority did not reorder the list until a full page reload. They now apply the same date-then-priority ordering as the page load
+- **Member availability sync failing on multi-batch requests** the Microsoft Graph `getSchedule` call sent its `schedules` list with non-sequential array keys (from `unique()`/`chunk()`), which serialised as a JSON object and triggered a 400 "Expected array for value of property: Collection(Edm.String)" for every batch after the first. Email lists are now reindexed (and empty addresses dropped) before the request
 
 ## [1.14.0] - 2026-04-21
 
