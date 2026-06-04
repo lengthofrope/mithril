@@ -128,6 +128,17 @@ and dashboard read filtered, priority-ordered queries server-side and return Bla
   - [x] `partials/dashboard/follow-ups` shows the priority badge and applies private masking to private items.
 - **Files:** `resources/views/components/tl/follow-up-card.blade.php`, `resources/views/pages/follow-ups/show.blade.php`, `resources/views/partials/follow-up-create-modal.blade.php`, `resources/views/pages/follow-ups/index.blade.php`, `resources/views/partials/dashboard/follow-ups.blade.php`
 
+### Phase 4: Live-refresh priority ordering parity (amendment)
+- **Goal:** Make the follow-up live-refresh endpoints apply the same date-then-priority ordering as the full-page load, so changing a follow-up's priority inline reorders the list immediately (via the existing `data-changed` -> `refreshable` re-fetch) without a manual page refresh ; matching the Task dashboard behavior.
+- **Model:** sonnet
+- **PRD criteria:** 5, 8 (extends the ordering guarantee to the partial-refresh path)
+- **Rationale:** `PartialController::followUpsList` and `dashboardFollowUps` (the endpoints the `refreshable` regions poll/re-fetch) sorted only by `follow_up_date`; the date-then-priority sort added in Phase 2 lived only on `FollowUpPageController::index` and `DashboardController`, so live refreshes did not reorder. This was a missed file in the original Phase 2 scope.
+- **Specs:**
+  - [x] `PartialController::followUpsList` orders each dated section by `follow_up_date` then `priorityOrdered()` (reuse the `FollowUp` scope).
+  - [x] `PartialController::dashboardFollowUps` orders `todayFollowUps` and `upcomingFollowUps` by `follow_up_date` then `priorityOrdered()`.
+  - [x] A test asserts the `partials.follow-ups` endpoint returns same-date follow-ups urgent-first, and the dashboard follow-up partial likewise.
+- **Files:** `app/Http/Controllers/Web/PartialController.php`, `tests/Feature/Http/Controllers/Web/PartialControllerTest.php`
+
 ## Parallelization
 
 **Strategy:** Sequential
@@ -167,3 +178,4 @@ contract errors before dependent work is built on them.
 
 | Date | Phase | Change | Reason | ADR |
 |------|-------|--------|--------|-----|
+| 2026-06-04 | 4 | Added Phase 4: apply date-then-priority ordering in `PartialController::followUpsList` and `dashboardFollowUps`. | User reported follow-ups do not reorder on inline priority change without a manual refresh; the live-refresh partial endpoints were missed in Phase 2's sort work. | — |
